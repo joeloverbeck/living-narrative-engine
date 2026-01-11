@@ -1,0 +1,154 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-social-aversions:resentful_simmer",
+    "description": "Long-simmering unfairness: a cold, sticky sense of being wronged that stays narrative-active without tipping into explosive anger.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.resentment"
+                            },
+                            0.58
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            70
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.resentment"
+                                            },
+                                            {
+                                                "var": "previousEmotions.resentment"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Needs a meaningful resentment level grounded in negative valence and reduced agency (feeling stuck), with arousal kept below hot anger. Engagement stays mid so it’s narrative-sticky, not checked-out. Blocks rage/explosive tone and major panic/grief takeover. Triggers on a resentment rise or a notable agency drop to prevent spam."
+        }
+    ],
+    "actor_description": "It sits in me like a cold stone I keep turning over. My jaw stays tight, my thoughts loop on the same sharp ledger of wrongs, and everything feels slightly rigged against me. I’m not exploding—I’m collecting. The irritation isn’t loud; it’s persistent, and it makes every next step feel heavier than it should.",
+    "description_text": "{actor} moves with a contained, tight patience—eyes hard, mouth set, reactions a beat delayed like they’re choosing restraint. The mood reads less like anger and more like a quiet, stubborn refusal to let it go.",
+    "alternate_descriptions": {
+        "auditory": "I hear clipped replies, a flatter tone, and the kind of controlled exhale that sounds like swallowing a retort.",
+        "tactile": "The air feels braced—small tensions in posture, a tight stillness in shoulders and hands, like pressure held behind a closed door.",
+        "limited": "There’s a restrained edge to {actor}: controlled, cool, and hard to budge."
+    },
+    "tags": [
+        "resentment",
+        "unfairness",
+        "simmering",
+        "stuck",
+        "cold_anger",
+        "rumination",
+        "restraint"
+    ],
+    "diagnosticStatus": "unknown"
+}

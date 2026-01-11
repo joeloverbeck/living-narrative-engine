@@ -54,6 +54,9 @@ class HierarchicalClauseNode {
   /** @type {number} Maximum observed value for this clause's variable */
   #maxObservedValue = -Infinity;
 
+  /** @type {number} Minimum observed value for this clause's variable */
+  #minObservedValue = Infinity;
+
   /** @type {number[]} All observed values for p99 calculation */
   #observedValues = [];
 
@@ -71,6 +74,21 @@ class HierarchicalClauseNode {
 
   /** @type {boolean|null} Whether this is the only clause in the prerequisite */
   #isSingleClause = null;
+
+  /** @type {number} Samples where all sibling clauses (in same compound) passed */
+  #siblingsPassedCount = 0;
+
+  /** @type {number} Failures when all sibling clauses (in same compound) passed */
+  #siblingConditionedFailCount = 0;
+
+  /** @type {number} Count of times this OR alternative was the first to pass when parent OR succeeded */
+  #orContributionCount = 0;
+
+  /** @type {number} Count of times parent OR block succeeded (for OR contribution rate) */
+  #orSuccessCount = 0;
+
+  /** @type {'and' | 'or' | 'root' | null} Parent node type for context-aware analysis */
+  #parentNodeType = null;
 
   /**
    * @param {object} params
@@ -217,6 +235,47 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Get the minimum observed value for this clause's variable.
+   *
+   * @returns {number|null} Min value, or null if no observations
+   */
+  get observedMin() {
+    return this.#minObservedValue === Infinity ? null : this.#minObservedValue;
+  }
+
+  /**
+   * Get the minimum observed value (alias for minObservedValue).
+   * This is tracked efficiently during recording.
+   *
+   * @returns {number|null} Min value, or null if no observations
+   */
+  get minObservedValue() {
+    return this.#minObservedValue === Infinity ? null : this.#minObservedValue;
+  }
+
+  /**
+   * Get the mean (average) observed value for this clause's variable.
+   *
+   * @returns {number|null} Mean value, or null if no observations
+   */
+  get observedMean() {
+    if (this.#observedValues.length === 0) {
+      return null;
+    }
+    const sum = this.#observedValues.reduce((acc, val) => acc + val, 0);
+    return sum / this.#observedValues.length;
+  }
+
+  /**
+   * Get the 95th percentile of observed values.
+   *
+   * @returns {number|null}
+   */
+  get observedP95() {
+    return this.#getObservedPercentile(0.95);
+  }
+
+  /**
    * Get the 99th percentile of observed values.
    *
    * @returns {number|null}
@@ -226,14 +285,44 @@ class HierarchicalClauseNode {
   }
 
   /**
-   * Calculate the gap between threshold and max observed.
+   * Calculate the gap between threshold and observed values.
+   * Direction-aware: uses maxObserved for >= operators, minObserved for <= operators.
+   * Positive value means there's a ceiling effect (threshold unreachable).
    * Negative value means threshold is achievable.
-   * Positive value means there's a ceiling effect.
+   *
+   * For >= and > operators: gap = threshold - maxObserved
+   *   Positive means: we never observe values high enough
+   * For <= and < operators: gap = minObserved - threshold
+   *   Positive means: we never observe values low enough
    *
    * @returns {number|null} Gap, or null if threshold not set or no observations
    */
   get ceilingGap() {
-    if (this.#thresholdValue === null || this.#maxObservedValue === -Infinity) {
+    if (this.#thresholdValue === null) {
+      return null;
+    }
+
+    // Direction-aware gap calculation
+    const op = this.#comparisonOperator;
+
+    if (op === '>=' || op === '>') {
+      // For "value >= threshold": we need values HIGH enough
+      // Gap = threshold - maxObserved; positive = ceiling effect
+      if (this.#maxObservedValue === -Infinity) {
+        return null;
+      }
+      return this.#thresholdValue - this.#maxObservedValue;
+    } else if (op === '<=' || op === '<') {
+      // For "value <= threshold": we need values LOW enough
+      // Gap = minObserved - threshold; positive = floor effect (values never low enough)
+      if (this.#minObservedValue === Infinity) {
+        return null;
+      }
+      return this.#minObservedValue - this.#thresholdValue;
+    }
+
+    // For == or unknown operators, fall back to maxObserved-based calculation
+    if (this.#maxObservedValue === -Infinity) {
       return null;
     }
     return this.#thresholdValue - this.#maxObservedValue;
@@ -321,6 +410,92 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Get the count of samples where all sibling clauses passed.
+   * Only meaningful for leaves within compound nodes (AND/OR).
+   *
+   * @returns {number}
+   */
+  get siblingsPassedCount() {
+    return this.#siblingsPassedCount;
+  }
+
+  /**
+   * Get the count of failures when all sibling clauses passed.
+   *
+   * @returns {number}
+   */
+  get siblingConditionedFailCount() {
+    return this.#siblingConditionedFailCount;
+  }
+
+  /**
+   * Get the sibling-conditioned failure rate.
+   * Failure rate among samples where all sibling clauses (within same compound) passed.
+   * This isolates the contribution of this specific leaf to the compound's failure.
+   *
+   * @returns {number|null} Rate [0, 1], or null if no samples with siblings passed
+   */
+  get siblingConditionedFailRate() {
+    if (this.#siblingsPassedCount === 0) {
+      return null;
+    }
+    return this.#siblingConditionedFailCount / this.#siblingsPassedCount;
+  }
+
+  /**
+   * Get the count of times this OR alternative was the first to pass.
+   * Only meaningful for direct children of OR nodes.
+   *
+   * @returns {number}
+   */
+  get orContributionCount() {
+    return this.#orContributionCount;
+  }
+
+  /**
+   * Get the count of times the parent OR block succeeded.
+   * Used as denominator for OR contribution rate.
+   *
+   * @returns {number}
+   */
+  get orSuccessCount() {
+    return this.#orSuccessCount;
+  }
+
+  /**
+   * Get the OR contribution rate.
+   * The proportion of parent OR successes where this alternative was the first to pass.
+   * Helps identify which OR alternatives are "carrying" the block.
+   *
+   * @returns {number|null} Rate [0, 1], or null if parent OR never succeeded
+   */
+  get orContributionRate() {
+    if (this.#orSuccessCount === 0) {
+      return null;
+    }
+    return this.#orContributionCount / this.#orSuccessCount;
+  }
+
+  /**
+   * Get the parent node type for context-aware analysis.
+   * Indicates whether this node is inside an AND block, OR block, or at root.
+   *
+   * @returns {'and' | 'or' | 'root' | null}
+   */
+  get parentNodeType() {
+    return this.#parentNodeType;
+  }
+
+  /**
+   * Set the parent node type.
+   *
+   * @param {'and' | 'or' | 'root' | null} value
+   */
+  set parentNodeType(value) {
+    this.#parentNodeType = value;
+  }
+
+  /**
    * Calculate the percentile of violation values.
    * Uses linear interpolation for non-integer indices.
    *
@@ -374,6 +549,24 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * 95th percentile of violation values.
+   *
+   * @returns {number|null}
+   */
+  get violationP95() {
+    return this.getViolationPercentile(0.95);
+  }
+
+  /**
+   * 99th percentile of violation values.
+   *
+   * @returns {number|null}
+   */
+  get violationP99() {
+    return this.getViolationPercentile(0.99);
+  }
+
+  /**
    * Calculate the percentile of observed values.
    * Uses linear interpolation for non-integer indices.
    *
@@ -412,6 +605,7 @@ class HierarchicalClauseNode {
   /**
    * Record an observed value for this clause's variable.
    * Called for EVERY evaluation, not just failures.
+   * Tracks both min and max for direction-aware ceiling gap calculation.
    *
    * @param {number} value - The actual value observed
    */
@@ -422,6 +616,10 @@ class HierarchicalClauseNode {
 
     if (value > this.#maxObservedValue) {
       this.#maxObservedValue = value;
+    }
+
+    if (value < this.#minObservedValue) {
+      this.#minObservedValue = value;
     }
 
     this.#observedValues.push(value);
@@ -465,6 +663,39 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Record that all sibling clauses (within the same compound) passed for this sample.
+   * Called regardless of whether this clause passed.
+   */
+  recordSiblingsPassed() {
+    this.#siblingsPassedCount++;
+  }
+
+  /**
+   * Record a sibling-conditioned failure.
+   * Called when this clause fails AND all sibling clauses (within same compound) passed.
+   */
+  recordSiblingConditionedFail() {
+    this.#siblingConditionedFailCount++;
+  }
+
+  /**
+   * Record that this OR alternative was the first to pass when the parent OR succeeded.
+   * Called for the first passing alternative when an OR block evaluates to true.
+   */
+  recordOrContribution() {
+    this.#orContributionCount++;
+  }
+
+  /**
+   * Record that the parent OR block succeeded.
+   * Called for ALL children of an OR block when it evaluates to true.
+   * This provides the denominator for OR contribution rate calculation.
+   */
+  recordOrSuccess() {
+    this.#orSuccessCount++;
+  }
+
+  /**
    * Record an evaluation result for this node.
    *
    * @param {boolean} passed - Whether the node evaluated to true
@@ -490,11 +721,16 @@ class HierarchicalClauseNode {
     this.#violationSum = 0;
     this.#violationValues = [];
     this.#maxObservedValue = -Infinity;
+    this.#minObservedValue = Infinity;
     this.#observedValues = [];
     this.#nearMissCount = 0;
     this.#epsilonUsed = null;
     this.#lastMileFailCount = 0;
     this.#othersPassedCount = 0;
+    this.#siblingsPassedCount = 0;
+    this.#siblingConditionedFailCount = 0;
+    this.#orContributionCount = 0;
+    this.#orSuccessCount = 0;
     // Note: Do NOT reset #isSingleClause - it's metadata, not a stat
     for (const child of this.#children) {
       child.resetStats();
@@ -530,12 +766,18 @@ class HierarchicalClauseNode {
       averageViolation: this.averageViolation,
       violationP50: this.violationP50,
       violationP90: this.violationP90,
+      violationP95: this.violationP95,
+      violationP99: this.violationP99,
       isCompound: this.isCompound,
       thresholdValue: this.#thresholdValue,
       comparisonOperator: this.#comparisonOperator,
       variablePath: this.#variablePath,
       violationSampleCount: this.#violationValues.length,
+      observedMin: this.observedMin,
+      minObservedValue: this.minObservedValue,
+      observedMean: this.observedMean,
       maxObservedValue: this.maxObservedValue,
+      observedP95: this.observedP95,
       observedP99: this.observedP99,
       ceilingGap: this.ceilingGap,
       nearMissCount: this.nearMissCount,
@@ -544,7 +786,14 @@ class HierarchicalClauseNode {
       lastMileFailCount: this.#lastMileFailCount,
       othersPassedCount: this.#othersPassedCount,
       lastMileFailRate: this.lastMileFailRate,
+      siblingsPassedCount: this.#siblingsPassedCount,
+      siblingConditionedFailCount: this.#siblingConditionedFailCount,
+      siblingConditionedFailRate: this.siblingConditionedFailRate,
+      orContributionCount: this.#orContributionCount,
+      orSuccessCount: this.#orSuccessCount,
+      orContributionRate: this.orContributionRate,
       isSingleClause: this.isSingleClause,
+      parentNodeType: this.#parentNodeType,
       children: this.#children.map((c) => c.toJSON()),
     };
   }
@@ -575,6 +824,10 @@ class HierarchicalClauseNode {
       } else {
         node.recordEvaluation(true);
       }
+    }
+    // Restore parentNodeType if present
+    if (obj.parentNodeType) {
+      node.parentNodeType = obj.parentNodeType;
     }
     return node;
   }

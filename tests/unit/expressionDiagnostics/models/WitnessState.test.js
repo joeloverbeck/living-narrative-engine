@@ -1226,4 +1226,251 @@ describe('WitnessState Model', () => {
       });
     });
   });
+
+  describe('Previous State (Temporal Expressions)', () => {
+    describe('Constructor with Previous State', () => {
+      it('should accept previousMood and previousSexual in constructor', () => {
+        const state = new WitnessState({
+          mood: createValidMood({ valence: 50 }),
+          sexual: createValidSexual(),
+          previousMood: createValidMood({ valence: -30, threat: 60 }),
+          previousSexual: createValidSexual({ sex_excitation: 30 }),
+        });
+
+        expect(state.hasPreviousState).toBe(true);
+        expect(state.previousMood.valence).toBe(-30);
+        expect(state.previousMood.threat).toBe(60);
+        expect(state.previousSexual.sex_excitation).toBe(30);
+      });
+
+      it('should have hasPreviousState=false when no previous state provided', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+        });
+
+        expect(state.hasPreviousState).toBe(false);
+        expect(state.previousMood).toBeNull();
+        expect(state.previousSexual).toBeNull();
+      });
+
+      it('should validate previousMood values within range', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              previousMood: createValidMood({ valence: 150 }),
+              previousSexual: createValidSexual(),
+            })
+        ).toThrow();
+      });
+
+      it('should validate previousSexual values within range', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              previousMood: createValidMood(),
+              previousSexual: createValidSexual({ sex_excitation: 150 }),
+            })
+        ).toThrow();
+      });
+
+      it('should require both previousMood and previousSexual together', () => {
+        expect(
+          () =>
+            new WitnessState({
+              mood: createValidMood(),
+              sexual: createValidSexual(),
+              previousMood: createValidMood(),
+              // Missing previousSexual
+            })
+        ).toThrow('previousMood and previousSexual must both be provided or both be null');
+      });
+    });
+
+    describe('createRandomPair()', () => {
+      it('should create state with both current and previous state', () => {
+        const state = WitnessState.createRandomPair();
+
+        expect(state).toBeInstanceOf(WitnessState);
+        expect(state.hasPreviousState).toBe(true);
+        expect(state.previousMood).not.toBeNull();
+        expect(state.previousSexual).not.toBeNull();
+      });
+
+      it('should generate valid previous mood values within range', () => {
+        for (let i = 0; i < 10; i++) {
+          const state = WitnessState.createRandomPair();
+
+          for (const axis of WitnessState.MOOD_AXES) {
+            expect(state.previousMood[axis]).toBeGreaterThanOrEqual(
+              WitnessState.MOOD_RANGE.min
+            );
+            expect(state.previousMood[axis]).toBeLessThanOrEqual(
+              WitnessState.MOOD_RANGE.max
+            );
+            expect(Number.isInteger(state.previousMood[axis])).toBe(true);
+          }
+        }
+      });
+
+      it('should generate valid previous sexual values within range', () => {
+        for (let i = 0; i < 10; i++) {
+          const state = WitnessState.createRandomPair();
+
+          for (const axis of WitnessState.SEXUAL_AXES) {
+            const range = WitnessState.SEXUAL_RANGES[axis];
+            expect(state.previousSexual[axis]).toBeGreaterThanOrEqual(
+              range.min
+            );
+            expect(state.previousSexual[axis]).toBeLessThanOrEqual(range.max);
+            expect(Number.isInteger(state.previousSexual[axis])).toBe(true);
+          }
+        }
+      });
+
+      it('should create correlated state pairs (current derived from previous)', () => {
+        // Run multiple iterations - current and previous should differ but be related
+        let differencesFound = 0;
+        for (let i = 0; i < 20; i++) {
+          const state = WitnessState.createRandomPair();
+
+          // Check that at least some axes differ (correlation, not identity)
+          for (const axis of WitnessState.MOOD_AXES) {
+            if (state.mood[axis] !== state.previousMood[axis]) {
+              differencesFound++;
+            }
+          }
+        }
+
+        // Should find differences in most cases (not identical states)
+        expect(differencesFound).toBeGreaterThan(0);
+      });
+    });
+
+    describe('withPreviousState()', () => {
+      it('should create new state with previous state added', () => {
+        const original = new WitnessState({
+          mood: createValidMood({ valence: 80 }),
+          sexual: createValidSexual(),
+        });
+
+        const prevMood = createValidMood({ valence: -20, threat: 50 });
+        const prevSexual = createValidSexual({ sex_excitation: 20 });
+
+        const withPrev = original.withPreviousState(prevMood, prevSexual);
+
+        // Original unchanged
+        expect(original.hasPreviousState).toBe(false);
+
+        // New state has previous
+        expect(withPrev.hasPreviousState).toBe(true);
+        expect(withPrev.previousMood.valence).toBe(-20);
+        expect(withPrev.previousMood.threat).toBe(50);
+        expect(withPrev.previousSexual.sex_excitation).toBe(20);
+
+        // Current state preserved
+        expect(withPrev.mood.valence).toBe(80);
+      });
+    });
+
+    describe('toJSON() with Previous State', () => {
+      it('should include previousMood and previousSexual when present', () => {
+        const state = new WitnessState({
+          mood: createValidMood({ valence: 50 }),
+          sexual: createValidSexual(),
+          previousMood: createValidMood({ valence: -30 }),
+          previousSexual: createValidSexual({ sex_excitation: 25 }),
+        });
+
+        const json = state.toJSON();
+
+        expect(json).toHaveProperty('previousMood');
+        expect(json).toHaveProperty('previousSexual');
+        expect(json.previousMood.valence).toBe(-30);
+        expect(json.previousSexual.sex_excitation).toBe(25);
+      });
+
+      it('should not include previousMood and previousSexual when absent', () => {
+        const state = new WitnessState({
+          mood: createValidMood(),
+          sexual: createValidSexual(),
+        });
+
+        const json = state.toJSON();
+
+        expect(json).not.toHaveProperty('previousMood');
+        expect(json).not.toHaveProperty('previousSexual');
+      });
+    });
+
+    describe('toClipboardJSON() with Previous State', () => {
+      it('should use nested structure (current/previous) when previous state present', () => {
+        const state = new WitnessState({
+          mood: createValidMood({ valence: 50 }),
+          sexual: createValidSexual(),
+          previousMood: createValidMood({ valence: -30 }),
+          previousSexual: createValidSexual({ sex_excitation: 25 }),
+        });
+
+        const parsed = JSON.parse(state.toClipboardJSON());
+
+        expect(parsed).toHaveProperty('current');
+        expect(parsed).toHaveProperty('previous');
+        expect(parsed.current).toHaveProperty('mood');
+        expect(parsed.current).toHaveProperty('sexual');
+        expect(parsed.previous).toHaveProperty('mood');
+        expect(parsed.previous).toHaveProperty('sexual');
+        expect(parsed.current.mood.valence).toBe(50);
+        expect(parsed.previous.mood.valence).toBe(-30);
+      });
+
+      it('should use flat structure when no previous state', () => {
+        const state = new WitnessState({
+          mood: createValidMood({ valence: 42 }),
+          sexual: createValidSexual(),
+        });
+
+        const parsed = JSON.parse(state.toClipboardJSON());
+
+        // Flat structure - mood and sexual at top level
+        expect(parsed).toHaveProperty('mood');
+        expect(parsed).toHaveProperty('sexual');
+        expect(parsed).not.toHaveProperty('current');
+        expect(parsed).not.toHaveProperty('previous');
+        expect(parsed.mood.valence).toBe(42);
+      });
+    });
+
+    describe('fromJSON() with Previous State', () => {
+      it('should reconstruct state with previous state from JSON', () => {
+        const original = new WitnessState({
+          mood: createValidMood({ valence: 50, threat: -40 }),
+          sexual: createValidSexual({ sex_excitation: 70 }),
+          previousMood: createValidMood({ valence: -20, threat: 60 }),
+          previousSexual: createValidSexual({ sex_excitation: 20 }),
+        });
+
+        const json = original.toJSON();
+        const reconstructed = WitnessState.fromJSON(json);
+
+        expect(reconstructed.hasPreviousState).toBe(true);
+        expect(reconstructed.mood.valence).toBe(50);
+        expect(reconstructed.mood.threat).toBe(-40);
+        expect(reconstructed.previousMood.valence).toBe(-20);
+        expect(reconstructed.previousMood.threat).toBe(60);
+        expect(reconstructed.previousSexual.sex_excitation).toBe(20);
+      });
+
+      it('should roundtrip correctly with previous state', () => {
+        const original = WitnessState.createRandomPair();
+        const roundtripped = WitnessState.fromJSON(original.toJSON());
+
+        expect(roundtripped.toJSON()).toEqual(original.toJSON());
+      });
+    });
+  });
 });

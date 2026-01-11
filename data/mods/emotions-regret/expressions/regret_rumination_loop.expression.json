@@ -1,0 +1,144 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-regret:regret_rumination_loop",
+    "description": "Regret rumination loop: counterfactual self-reproach that keeps replaying alternatives—\"I chose wrong / missed it\"—without collapsing into moral guilt or identity-shame.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.regret"
+                            },
+                            0.58
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -8
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.regret"
+                                            },
+                                            {
+                                                "var": "previousEmotions.regret"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.self_evaluation"
+                                            },
+                                            {
+                                                "var": "moodAxes.self_evaluation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.future_expectancy"
+                                            },
+                                            {
+                                                "var": "moodAxes.future_expectancy"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires elevated regret with attention stuck on it (engagement up), alongside a mild hit to self-evaluation and a dip in future expectancy. Caps shame/guilt so it stays 'I chose wrong' rather than 'I am bad' or moral wrongdoing. Triggers on a regret spike or a noticeable drop in self-evaluation/future-expectancy to prevent repetitive firing."
+        }
+    ],
+    "actor_description": "My mind keeps running the same fork in the road, replaying it with tiny edits like I can still reach back and fix it. It isn't rage or moral panic—just this tight, sinking clarity that I picked the worse door. The thought won't resolve; it loops, sharpening the feeling that I've reduced my own future with one avoidable choice.",
+    "description_text": "{actor} grows inwardly preoccupied, gaze fixed but unfocused as if watching a scene play again behind their eyes. Their posture tightens and their responses come a beat late, stuck in a repeating what-if.",
+    "alternate_descriptions": {
+        "auditory": "Their voice gets thin and self-correcting—half-started sentences, small rewinds, a muted \"no, I should've…\" before they trail off.",
+        "tactile": "There's a restless stillness to them—jaw working, fingers worrying at fabric or skin, like their body is trying to scrub the moment clean."
+    },
+    "tags": [
+        "regret",
+        "rumination",
+        "counterfactual",
+        "self_reproach",
+        "stuck_attention",
+        "second_guessing",
+        "withdrawal"
+    ],
+    "diagnosticStatus": "unknown"
+}

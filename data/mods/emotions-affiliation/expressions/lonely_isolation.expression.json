@@ -18,6 +18,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.affiliation"
                             },
                             -15
@@ -48,34 +56,42 @@
                         ]
                     },
                     {
-                        "<=": [
-                            {
-                                "max": [
-                                    {
-                                        "var": "emotions.affection"
-                                    },
-                                    {
-                                        "var": "emotions.love_attachment"
-                                    },
-                                    {
-                                        "var": "emotions.trust"
-                                    },
-                                    {
-                                        "var": "emotions.gratitude"
-                                    }
-                                ]
-                            },
-                            0.45
-                        ]
-                    },
-                    {
                         "<": [
                             {
                                 "var": "emotions.despair"
                             },
                             0.65
                         ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "<=": [
+                    {
+                        "max": [
+                            {
+                                "var": "emotions.affection"
+                            },
+                            {
+                                "var": "emotions.love_attachment"
+                            },
+                            {
+                                "var": "emotions.trust"
+                            },
+                            {
+                                "var": "emotions.gratitude"
+                            }
+                        ]
                     },
+                    0.45
+                ]
+            }
+        },
+        {
+            "logic": {
+                "and": [
                     {
                         "or": [
                             {
@@ -90,7 +106,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -159,7 +175,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             }
                         ]

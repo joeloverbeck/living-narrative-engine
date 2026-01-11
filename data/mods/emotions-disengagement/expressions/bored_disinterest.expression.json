@@ -14,7 +14,7 @@
                                     {
                                         "var": "emotions.boredom"
                                     },
-                                    0.5
+                                    0.55
                                 ]
                             },
                             {
@@ -80,7 +80,7 @@
                             {
                                 "var": "emotions.interest"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -88,7 +88,7 @@
                             {
                                 "var": "emotions.curiosity"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -112,7 +112,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -120,7 +120,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -128,7 +128,7 @@
                             {
                                 "var": "emotions.grief"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {

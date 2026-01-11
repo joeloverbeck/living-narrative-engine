@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-cynicism",
+  "version": "1.0.0",
+  "name": "Emotions - Cynicism",
+  "description": "Cynical, guarded expressions centered on bitter appraisal without hope.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "cynical_detachment.expression.json"
+    ]
+  }
+}

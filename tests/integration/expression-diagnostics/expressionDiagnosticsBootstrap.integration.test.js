@@ -168,6 +168,39 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
       expect(typeof logger.warn).toBe('function');
       expect(typeof logger.error).toBe('function');
     });
+
+    it('should successfully resolve IPrototypeFitRankingService', () => {
+      const prototypeFitRankingService = sharedContainer.resolve(
+        diagnosticsTokens.IPrototypeFitRankingService
+      );
+
+      expect(prototypeFitRankingService).toBeDefined();
+      expect(prototypeFitRankingService).not.toBeNull();
+      expect(typeof prototypeFitRankingService.analyzeAllPrototypeFit).toBe(
+        'function'
+      );
+      expect(typeof prototypeFitRankingService.computeImpliedPrototype).toBe(
+        'function'
+      );
+      expect(typeof prototypeFitRankingService.detectPrototypeGaps).toBe(
+        'function'
+      );
+    });
+
+    it('should successfully resolve IPrototypeConstraintAnalyzer', () => {
+      const prototypeConstraintAnalyzer = sharedContainer.resolve(
+        diagnosticsTokens.IPrototypeConstraintAnalyzer
+      );
+
+      expect(prototypeConstraintAnalyzer).toBeDefined();
+      expect(prototypeConstraintAnalyzer).not.toBeNull();
+      expect(typeof prototypeConstraintAnalyzer.analyzeEmotionThreshold).toBe(
+        'function'
+      );
+      expect(typeof prototypeConstraintAnalyzer.extractAxisConstraints).toBe(
+        'function'
+      );
+    });
   });
 
   describe('Negative Cases', () => {
@@ -225,9 +258,6 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
       const expressionStatusService = sharedContainer.resolve(
         diagnosticsTokens.IExpressionStatusService
       );
-      const witnessStateFinder = sharedContainer.resolve(
-        diagnosticsTokens.IWitnessStateFinder
-      );
       // PathSensitiveAnalyzer requires a complete DataRegistry with getLookupData,
       // which minimal container doesn't provide. Use a mock for controller instantiation test.
       const pathSensitiveAnalyzer = {
@@ -247,6 +277,20 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
           getReachabilityForBranch: () => [],
         }),
       };
+      // Mock report generator (required for controller instantiation)
+      const reportGenerator = {
+        generate: () => 'Mock report',
+      };
+      // Mock report modal (required for controller instantiation)
+      const reportModal = {
+        showReport: () => {},
+      };
+      // Mock prototypeFitRankingService (optional for controller)
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: () => ({ leaderboard: [], currentPrototype: null, bestAlternative: null, improvementFactor: null }),
+        computeImpliedPrototype: () => ({ targetSignature: new Map(), bySimilarity: [], byGatePass: [], byCombined: [] }),
+        detectPrototypeGaps: () => ({ gapDetected: false, kNearestNeighbors: [], nearestDistance: Infinity }),
+      };
 
       // Create controller instance (should not throw)
       const controller = new ExpressionDiagnosticsController({
@@ -257,8 +301,10 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
         monteCarloSimulator,
         failureExplainer,
         expressionStatusService,
-        witnessStateFinder,
         pathSensitiveAnalyzer,
+        reportGenerator,
+        reportModal,
+        prototypeFitRankingService,
       });
 
       expect(controller).toBeDefined();

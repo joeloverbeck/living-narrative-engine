@@ -1,214 +1,214 @@
 {
-    "$schema": "schema://living-narrative-engine/expression.schema.json",
-    "id": "emotions-sexual-conflict:self_disgust_arousal",
-    "description": "Arousal with revulsion - sexual disgust conflict where the body responds while the mind recoils.",
-    "priority": 93,
-    "prerequisites": [
-        {
-            "logic": {
-                "and": [
-                    {
-                        ">=": [
-                            {
-                                "var": "sexualStates.aroused_with_disgust"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "!=": [
-                            {
-                                "var": "sexualArousal"
-                            },
-                            null
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "sexualArousal"
-                            },
-                            0.3
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "emotions.disgust"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.22
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.valence"
-                            },
-                            -15
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            10
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.self_evaluation"
-                            },
-                            -25
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.shame"
-                                    },
-                                    0.3
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.guilt"
-                                    },
-                                    0.25
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.humiliation"
-                                    },
-                                    0.25
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.2
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "sexualStates.sexual_indifference"
-                            },
-                            0.65
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "sexualStates.sexual_repulsion"
-                            },
-                            0.8
-                        ]
-                    }
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "emotions-sexual-conflict:self_disgust_arousal",
+  "description": "Arousal with revulsion - sexual disgust conflict where the body responds while the mind recoils.",
+  "priority": 93,
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          {
+            ">=": [
+              {
+                "var": "sexualStates.aroused_with_disgust"
+              },
+              0.55
+            ]
+          },
+          {
+            "!=": [
+              {
+                "var": "sexualArousal"
+              },
+              null
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "sexualArousal"
+              },
+              0.3
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.disgust"
+              },
+              0.45
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "emotions.freeze"
+              },
+              0.22
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.valence"
+              },
+              -15
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "moodAxes.arousal"
+              },
+              10
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "moodAxes.self_evaluation"
+              },
+              -25
+            ]
+          },
+          {
+            "or": [
+              {
+                ">=": [
+                  {
+                    "var": "emotions.shame"
+                  },
+                  0.3
                 ]
-            },
-            "failure_message": "Disgust + negative self-evaluation with arousal present, plus rigid-freeze-capped below panic so it reads as internal revulsion, not survival hijack."
-        },
-        {
-            "logic": {
-                "or": [
-                    {
-                        ">=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "sexualStates.aroused_with_disgust"
-                                    },
-                                    {
-                                        "var": "previousSexualStates.aroused_with_disgust"
-                                    }
-                                ]
-                            },
-                            0.06
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "emotions.disgust"
-                                    },
-                                    {
-                                        "var": "previousEmotions.disgust"
-                                    }
-                                ]
-                            },
-                            0.06
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "emotions.freeze"
-                                    },
-                                    {
-                                        "var": "previousEmotions.freeze"
-                                    }
-                                ]
-                            },
-                            0.1
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "moodAxes.self_evaluation"
-                                    },
-                                    {
-                                        "var": "previousMoodAxes.self_evaluation"
-                                    }
-                                ]
-                            },
-                            -10
-                        ]
-                    }
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.guilt"
+                  },
+                  0.25
                 ]
-            }
-        }
-    ],
-    "actor_description": "My body lights up and my mind turns on me in the same instant. Heat pools under my skin, breath catches-then disgust snaps inward like a hook: What is wrong with you? I feel filthy in a way that isn't about sweat or dirt, like the wanting itself stains me. I want to pull away and I want more at the same time, and that split makes my stomach knot-arousal tangled with the urge to punish myself for having it.",
-    "description_text": "{actor} looks caught in a contradiction: flushed and reactive, but with a tight, pained edge-lips pressed too hard, eyes darting away, posture closing. Their movements come in small abortive starts, like reaching and stopping mid-gesture. Whatever is happening inside them shows up as tension: rigid shoulders, a wince that doesn't quite fit the moment, a need to create distance while their body still betrays arousal.",
-    "alternate_descriptions": {
-        "auditory": "I hear a sharp inhale that turns into a forced exhale, a sound cut off in the throat-like someone hates the noise they almost made.",
-        "tactile": "I sense that someone's body is hot and stiff at once-tension layered over heat, trembling held down like it's shameful to move.",
-        "olfactory": "I smell warm sweat with a sour, stressed edge-heat and discomfort mixed, like the air itself has turned sharp."
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.humiliation"
+                  },
+                  0.25
+                ]
+              }
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.panic"
+              },
+              0.2
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "sexualStates.sexual_indifference"
+              },
+              0.65
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "sexualStates.sexual_repulsion"
+              },
+              0.8
+            ]
+          }
+        ]
+      },
+      "failure_message": "Disgust + negative self-evaluation with arousal present, plus rigid-freeze-capped below panic so it reads as internal revulsion, not survival hijack."
     },
-    "tags": [
-        "sexual",
-        "conflict",
-        "disgust",
-        "revulsion",
-        "arousal",
-        "shame",
-        "anger"
-    ],
-    "diagnosticStatus": "unknown"
+    {
+      "logic": {
+        "or": [
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "sexualStates.aroused_with_disgust"
+                  },
+                  {
+                    "var": "previousSexualStates.aroused_with_disgust"
+                  }
+                ]
+              },
+              0.06
+            ]
+          },
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "emotions.disgust"
+                  },
+                  {
+                    "var": "previousEmotions.disgust"
+                  }
+                ]
+              },
+              0.06
+            ]
+          },
+          {
+            ">=": [
+              {
+                "-": [
+                  {
+                    "var": "emotions.freeze"
+                  },
+                  {
+                    "var": "previousEmotions.freeze"
+                  }
+                ]
+              },
+              0.1
+            ]
+          },
+          {
+            "<=": [
+              {
+                "-": [
+                  {
+                    "var": "moodAxes.self_evaluation"
+                  },
+                  {
+                    "var": "previousMoodAxes.self_evaluation"
+                  }
+                ]
+              },
+              -10
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "actor_description": "My body lights up and my mind turns on me in the same instant. Heat pools under my skin, breath catches-then disgust snaps inward like a hook: What is wrong with you? I feel filthy in a way that isn't about sweat or dirt, like the wanting itself stains me. I want to pull away and I want more at the same time, and that split makes my stomach knot-arousal tangled with the urge to punish myself for having it.",
+  "description_text": "{actor} looks caught in a contradiction: flushed and reactive, but with a tight, pained edge-lips pressed too hard, eyes darting away, posture closing. Their movements come in small abortive starts, like reaching and stopping mid-gesture. Whatever is happening inside them shows up as tension: rigid shoulders, a wince that doesn't quite fit the moment, a need to create distance while their body still betrays arousal.",
+  "alternate_descriptions": {
+    "auditory": "I hear a sharp inhale that turns into a forced exhale, a sound cut off in the throat-like someone hates the noise they almost made.",
+    "tactile": "I sense that someone's body is hot and stiff at once-tension layered over heat, trembling held down like it's shameful to move.",
+    "olfactory": "I smell warm sweat with a sour, stressed edge-heat and discomfort mixed, like the air itself has turned sharp."
+  },
+  "tags": [
+    "sexual",
+    "conflict",
+    "disgust",
+    "revulsion",
+    "arousal",
+    "shame",
+    "anger"
+  ],
+  "diagnosticStatus": "unknown"
 }

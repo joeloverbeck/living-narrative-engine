@@ -1,0 +1,158 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-anticipation:eager_anticipation",
+    "description": "Bright, forward-leaning anticipation—attention keeps returning to what's coming, energy rising into a restless readiness rather than calm satisfaction.",
+    "actor_description": "I can feel myself leaning into the next moment like it's tugging on a string in my chest. My thoughts keep skipping ahead—quick, bright, rehearsing possibilities with a little fizz under my skin. It's not peace; it's a clean, impatient readiness that makes stillness feel like wasted time.",
+    "description_text": "{actor} looks charged and forward-leaning—attention snapping back to the near future, movements a touch quicker than necessary. They seem unable to fully settle, like they're already half a step ahead of themselves.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.anticipation"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            18
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            12
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            8
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fatigue"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.anticipation"
+                                            },
+                                            {
+                                                "var": "previousEmotions.anticipation"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.anticipation"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.anticipation"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.future_expectancy"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.future_expectancy"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Needs a real anticipation onset (spike/crossing or a sharp hope jump) plus positive future expectancy and engagement with mildly elevated arousal. Blocks threat-heavy states (threat/dread/anxiety) and shutdown (fatigue/numbness) so it reads as 'can't-wait' rather than worry, dread, or depletion."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice comes a little quicker and brighter than usual, with clipped little breaths between thoughts—like they're trying not to rush the words.",
+        "tactile": "There's a faint kinetic buzz in their stillness: fingers tapping, weight shifting, posture angled forward as if the body is already moving.",
+        "limited": "A quickening energy shows in small movements and a forward-focused attention, as if waiting is suddenly hard to do."
+    },
+    "tags": [
+        "anticipation",
+        "eager",
+        "hope",
+        "readiness",
+        "restless",
+        "forward_focus",
+        "energized"
+    ],
+    "diagnosticStatus": "unknown"
+}

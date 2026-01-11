@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.anger"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -86,7 +86,7 @@
                                     {
                                         "var": "emotions.calm"
                                     },
-                                    0.20
+                                    0.2
                                 ]
                             },
                             {
@@ -94,7 +94,7 @@
                                     {
                                         "var": "emotions.confidence"
                                     },
-                                    0.20
+                                    0.2
                                 ]
                             }
                         ]

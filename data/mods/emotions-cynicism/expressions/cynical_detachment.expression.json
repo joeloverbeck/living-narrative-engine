@@ -1,0 +1,131 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-cynicism:cynical_detachment",
+    "description": "Cynical detachment: an armored, bitter disbelief that stays sharp and evaluative—still engaged enough to judge, but refusing hope or sincerity.",
+    "actor_description": "Everything in me goes flat in a precise way, like I’m putting on emotional gloves. My mind starts translating warmth into spin and effort into futility, and it feels almost protective. I’m not empty—I’m alert—but the lens is sour and dismissive. Even when something should matter, I can only find the angle where it doesn’t.",
+    "description_text": "{actor} grows wry and guarded—eyes narrowing, mouth tightening into a faint, humorless half-smile. They stay engaged, but it reads like appraisal without buy-in: watchful, skeptical, hard to impress.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.cynicism"
+                                            },
+                                            {
+                                                "var": "previousEmotions.cynicism"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.future_expectancy"
+                                            },
+                                            {
+                                                "var": "moodAxes.future_expectancy"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a strong cynical lens plus negative valence and lowered future expectancy, while remaining engaged enough to judge (not blank). Caps despair so it stays 'armored disbelief' rather than collapse, and caps apathy/numbness so it stays sharp rather than checked out. Triggers on a cynicism spike or a notable drop in future expectancy."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a dry, clipped laugh that doesn’t reach the eyes—words landing with an edge, like every sentence comes pre-quoted.",
+        "tactile": "The air feels cooler around them, like the room tightened; gestures get smaller, more controlled, as if warmth is being held back on purpose.",
+        "olfactory": "I catch a faint trace of stale coffee or cold metal—an impression of something gone flat and unsentimental.",
+        "limited": "{actor}'s expression hardens into skepticism—present, reactive, but unwilling to believe in the best version of anything."
+    },
+    "tags": [
+        "cynicism",
+        "bitter",
+        "skepticism",
+        "detachment",
+        "disbelief",
+        "armor",
+        "dismissive",
+        "appraisal"
+    ]
+}

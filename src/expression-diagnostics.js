@@ -7,6 +7,9 @@ import { registerExpressionServices } from './dependencyInjection/registrations/
 import { registerExpressionDiagnosticsServices } from './dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
 import ExpressionDiagnosticsController from './domUI/expression-diagnostics/ExpressionDiagnosticsController.js';
 import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
+import MonteCarloReportGenerator from './expressionDiagnostics/services/MonteCarloReportGenerator.js';
+import MonteCarloReportModal from './domUI/expression-diagnostics/MonteCarloReportModal.js';
+import DocumentContext from './domUI/documentContext.js';
 
 let controller = null;
 
@@ -46,12 +49,37 @@ async function initialize() {
         const expressionStatusService = container.resolve(
           diagnosticsTokens.IExpressionStatusService
         );
-        const witnessStateFinder = container.resolve(
-          diagnosticsTokens.IWitnessStateFinder
-        );
         const pathSensitiveAnalyzer = container.resolve(
           diagnosticsTokens.IPathSensitiveAnalyzer
         );
+        const prototypeFitRankingService = container.resolve(
+          diagnosticsTokens.IPrototypeFitRankingService
+        );
+        const prototypeConstraintAnalyzer = container.resolve(
+          diagnosticsTokens.IPrototypeConstraintAnalyzer
+        );
+
+        // Create report generator and modal for Monte Carlo report generation
+        const reportGenerator = new MonteCarloReportGenerator({
+          logger,
+          prototypeConstraintAnalyzer,
+          prototypeFitRankingService,
+        });
+        const documentContext = new DocumentContext(document, logger);
+
+        // Create a minimal noop event dispatcher for the modal
+        // The modal uses it only for VED subscription management which we don't need
+        const noopEventDispatcher = {
+          dispatch: async () => true,
+          subscribe: () => () => {},
+          unsubscribe: () => false,
+        };
+
+        const reportModal = new MonteCarloReportModal({
+          logger,
+          documentContext,
+          validatedEventDispatcher: noopEventDispatcher,
+        });
 
         // Initialize controller
         controller = new ExpressionDiagnosticsController({
@@ -62,8 +90,10 @@ async function initialize() {
           monteCarloSimulator,
           failureExplainer,
           expressionStatusService,
-          witnessStateFinder,
           pathSensitiveAnalyzer,
+          reportGenerator,
+          reportModal,
+          prototypeFitRankingService,
         });
 
         await controller.initialize();

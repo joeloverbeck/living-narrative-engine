@@ -94,7 +94,7 @@
                                     {
                                         "var": "emotions.compassion"
                                     },
-                                    0.30
+                                    0.3
                                 ]
                             },
                             {
@@ -102,7 +102,7 @@
                                     {
                                         "var": "emotions.love_attachment"
                                     },
-                                    0.20
+                                    0.2
                                 ]
                             },
                             {
@@ -194,7 +194,7 @@
                                     {
                                         "var": "emotions.trust"
                                     },
-                                    0.20
+                                    0.2
                                 ]
                             },
                             {
@@ -210,7 +210,7 @@
                                     {
                                         "var": "emotions.sympathy"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             }
                         ]
@@ -229,7 +229,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {

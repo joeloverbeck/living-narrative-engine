@@ -302,13 +302,19 @@ describe('HierarchicalClauseNode', () => {
         averageViolation: 0.2,
         violationP50: 0.2,
         violationP90: 0.2,
+        violationP95: 0.2,
+        violationP99: 0.2,
         isCompound: false,
         thresholdValue: null,
         comparisonOperator: null,
         variablePath: null,
         violationSampleCount: 1,
         maxObservedValue: null,
+        minObservedValue: null,
         observedP99: null,
+        observedP95: null,
+        observedMin: null,
+        observedMean: null,
         ceilingGap: null,
         nearMissCount: 0,
         nearMissRate: 0,
@@ -316,7 +322,14 @@ describe('HierarchicalClauseNode', () => {
         lastMileFailCount: 0,
         othersPassedCount: 0,
         lastMileFailRate: null,
+        siblingsPassedCount: 0,
+        siblingConditionedFailCount: 0,
+        siblingConditionedFailRate: null,
+        orContributionCount: 0,
+        orSuccessCount: 0,
+        orContributionRate: null,
         isSingleClause: false,
+        parentNodeType: null,
         children: [],
       });
     });
@@ -608,6 +621,64 @@ describe('HierarchicalClauseNode', () => {
       expect(node.getViolationPercentile(0)).toBe(0.1);
       expect(node.getViolationPercentile(1)).toBe(0.9);
     });
+
+    it('should calculate violationP95 correctly', () => {
+      // Add 20 values from 0.05 to 1.0 in 0.05 increments
+      for (let i = 1; i <= 20; i++) {
+        node.recordEvaluation(false, i * 0.05);
+      }
+      // sorted = [0.05, 0.10, ..., 0.95, 1.0]
+      // p95 with 20 elements: index = 0.95 * 19 = 18.05
+      // interpolate between sorted[18]=0.95 and sorted[19]=1.0
+      expect(node.violationP95).toBeCloseTo(0.9525, 4);
+    });
+
+    it('should calculate violationP99 correctly', () => {
+      // Add 100 values from 0.01 to 1.0
+      for (let i = 1; i <= 100; i++) {
+        node.recordEvaluation(false, i / 100);
+      }
+      // p99 with 100 elements: index = 0.99 * 99 = 98.01
+      // interpolate between sorted[98]=0.99 and sorted[99]=1.0
+      expect(node.violationP99).toBeCloseTo(0.99, 2);
+    });
+
+    it('should return null for violationP95 when no violations', () => {
+      expect(node.violationP95).toBeNull();
+    });
+
+    it('should return null for violationP99 when no violations', () => {
+      expect(node.violationP99).toBeNull();
+    });
+
+    it('should return single value for violationP95 and violationP99 when one violation', () => {
+      node.recordEvaluation(false, 0.42);
+
+      expect(node.violationP95).toBe(0.42);
+      expect(node.violationP99).toBe(0.42);
+    });
+
+    it('should have violationP99 >= violationP95 >= violationP90', () => {
+      [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0].forEach((v) =>
+        node.recordEvaluation(false, v)
+      );
+
+      expect(node.violationP99).toBeGreaterThanOrEqual(node.violationP95);
+      expect(node.violationP95).toBeGreaterThanOrEqual(node.violationP90);
+    });
+
+    it('should include violationP95 and violationP99 in toJSON()', () => {
+      node.recordEvaluation(false, 0.1);
+      node.recordEvaluation(false, 0.5);
+      node.recordEvaluation(false, 0.9);
+
+      const json = node.toJSON();
+
+      expect(json).toHaveProperty('violationP95');
+      expect(json).toHaveProperty('violationP99');
+      expect(typeof json.violationP95).toBe('number');
+      expect(typeof json.violationP99).toBe('number');
+    });
   });
 
   describe('observed value tracking', () => {
@@ -641,6 +712,64 @@ describe('HierarchicalClauseNode', () => {
     it('should return null when no values observed', () => {
       expect(node.maxObservedValue).toBeNull();
       expect(node.observedP99).toBeNull();
+      expect(node.observedMin).toBeNull();
+      expect(node.observedMean).toBeNull();
+      expect(node.observedP95).toBeNull();
+    });
+
+    it('should track minimum observed value', () => {
+      node.recordObservedValue(0.7);
+      node.recordObservedValue(0.3);
+      node.recordObservedValue(0.5);
+
+      expect(node.observedMin).toBe(0.3);
+    });
+
+    it('should calculate mean of observed values', () => {
+      node.recordObservedValue(0.2);
+      node.recordObservedValue(0.4);
+      node.recordObservedValue(0.6);
+
+      expect(node.observedMean).toBeCloseTo(0.4, 10);
+    });
+
+    it('should calculate p95 of observed values', () => {
+      // Add 20 values from 0.05 to 1.0 in 0.05 increments
+      for (let i = 1; i <= 20; i++) {
+        node.recordObservedValue(i * 0.05);
+      }
+      // p95 with 20 elements: index = 0.95 * 19 = 18.05
+      // interpolate between sorted[18]=0.95 and sorted[19]=1.0
+      expect(node.observedP95).toBeCloseTo(0.9525, 4);
+    });
+
+    it('should return single value for observedMin, observedMean, observedP95 when one observation', () => {
+      node.recordObservedValue(0.42);
+
+      expect(node.observedMin).toBe(0.42);
+      expect(node.observedMean).toBe(0.42);
+      expect(node.observedP95).toBe(0.42);
+    });
+
+    it('should handle negative values for observedMin', () => {
+      // Mood axes use [-100, 100] range
+      node.recordObservedValue(-50);
+      node.recordObservedValue(-20);
+      node.recordObservedValue(-80);
+
+      expect(node.observedMin).toBe(-80);
+      expect(node.observedMean).toBeCloseTo(-50, 10);
+    });
+
+    it('should have observedP99 >= observedP95 >= observedMean (for uniform data)', () => {
+      // Add 100 uniformly distributed values
+      for (let i = 1; i <= 100; i++) {
+        node.recordObservedValue(i / 100);
+      }
+
+      expect(node.observedP99).toBeGreaterThanOrEqual(node.observedP95);
+      // For uniform distribution, p95 should be > mean
+      expect(node.observedP95).toBeGreaterThan(node.observedMean);
     });
 
     it('should calculate p99 of observed values', () => {
@@ -683,6 +812,81 @@ describe('HierarchicalClauseNode', () => {
       expect(node.ceilingGap).toBeNull();
     });
 
+    it('should calculate ceilingGap correctly for <= operator (direction-aware)', () => {
+      // For <= conditions, we need values LOW enough
+      // Gap = minObserved - threshold; positive = floor effect
+      node.setThresholdMetadata(-10, '<=', 'moodAxes.valence');
+      node.recordObservedValue(50);
+      node.recordObservedValue(20);
+      node.recordObservedValue(-5); // min = -5
+
+      // We need values <= -10, but our min is -5
+      // Gap = -5 - (-10) = 5 (positive = we never go low enough)
+      expect(node.ceilingGap).toBeCloseTo(5, 10);
+    });
+
+    it('should have negative ceilingGap for <= operator when threshold is achievable', () => {
+      node.setThresholdMetadata(-10, '<=', 'moodAxes.valence');
+      node.recordObservedValue(-50); // min = -50
+
+      // We need values <= -10, and our min is -50
+      // Gap = -50 - (-10) = -40 (negative = we CAN go low enough)
+      expect(node.ceilingGap).toBeCloseTo(-40, 10);
+    });
+
+    it('should calculate ceilingGap correctly for < operator (direction-aware)', () => {
+      node.setThresholdMetadata(0.5, '<', 'emotions.disgust');
+      node.recordObservedValue(0.3);
+      node.recordObservedValue(0.4); // min = 0.3
+
+      // We need values < 0.5, min is 0.3
+      // Gap = 0.3 - 0.5 = -0.2 (negative = achievable)
+      expect(node.ceilingGap).toBeCloseTo(-0.2, 10);
+    });
+
+    it('should calculate ceilingGap correctly for > operator (direction-aware)', () => {
+      node.setThresholdMetadata(0.5, '>', 'emotions.anger');
+      node.recordObservedValue(0.3);
+      node.recordObservedValue(0.6); // max = 0.6
+
+      // We need values > 0.5, max is 0.6
+      // Gap = 0.5 - 0.6 = -0.1 (negative = achievable)
+      expect(node.ceilingGap).toBeCloseTo(-0.1, 10);
+    });
+
+    it('should return null ceilingGap for <= operator when no observations', () => {
+      node.setThresholdMetadata(-10, '<=', 'moodAxes.valence');
+      expect(node.ceilingGap).toBeNull();
+    });
+
+    it('should track minObservedValue separately from maxObservedValue', () => {
+      node.recordObservedValue(50);
+      node.recordObservedValue(-30);
+      node.recordObservedValue(20);
+
+      expect(node.minObservedValue).toBe(-30);
+      expect(node.maxObservedValue).toBe(50);
+    });
+
+    it('should reset minObservedValue in resetStats()', () => {
+      node.recordObservedValue(-30);
+      expect(node.minObservedValue).toBe(-30);
+
+      node.resetStats();
+
+      expect(node.minObservedValue).toBeNull();
+    });
+
+    it('should include minObservedValue in toJSON()', () => {
+      node.recordObservedValue(50);
+      node.recordObservedValue(-30);
+
+      const json = node.toJSON();
+
+      expect(json).toHaveProperty('minObservedValue', -30);
+      expect(json).toHaveProperty('observedMin', -30);
+    });
+
     it('should reset observed value tracking', () => {
       node.recordObservedValue(0.5);
       node.recordObservedValue(0.6);
@@ -701,9 +905,15 @@ describe('HierarchicalClauseNode', () => {
 
       expect(json).toHaveProperty('maxObservedValue');
       expect(json).toHaveProperty('observedP99');
+      expect(json).toHaveProperty('observedP95');
+      expect(json).toHaveProperty('observedMin');
+      expect(json).toHaveProperty('observedMean');
       expect(json).toHaveProperty('ceilingGap');
       expect(json.maxObservedValue).toBe(0.6);
       expect(json.observedP99).toBeCloseTo(0.599, 2); // p99 of [0.5, 0.6]
+      expect(json.observedP95).toBeCloseTo(0.595, 2); // p95 of [0.5, 0.6]
+      expect(json.observedMin).toBe(0.5);
+      expect(json.observedMean).toBeCloseTo(0.55, 10);
       expect(json.ceilingGap).toBeCloseTo(0.2, 10); // 0.8 - 0.6
     });
 
@@ -1060,6 +1270,310 @@ describe('HierarchicalClauseNode', () => {
       expect(node.lastMileFailRate).toBe(0);
       expect(node.lastMileFailCount).toBe(0);
       expect(node.othersPassedCount).toBe(10);
+    });
+  });
+
+  describe('Sibling-conditioned tracking', () => {
+    it('should track sibling-conditioned failures', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      node.recordSiblingsPassed();
+      node.recordSiblingsPassed();
+      node.recordSiblingConditionedFail(); // Only one of the two
+
+      expect(node.siblingsPassedCount).toBe(2);
+      expect(node.siblingConditionedFailCount).toBe(1);
+      expect(node.siblingConditionedFailRate).toBe(0.5);
+    });
+
+    it('should return null when no samples had siblings pass', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+      expect(node.siblingConditionedFailRate).toBeNull();
+    });
+
+    it('should reset sibling-conditioned tracking', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+      node.recordSiblingsPassed();
+      node.recordSiblingConditionedFail();
+      node.resetStats();
+
+      expect(node.siblingsPassedCount).toBe(0);
+      expect(node.siblingConditionedFailCount).toBe(0);
+      expect(node.siblingConditionedFailRate).toBeNull();
+    });
+
+    it('should include sibling-conditioned fields in toJSON()', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+      node.recordSiblingsPassed();
+      node.recordSiblingConditionedFail();
+
+      const json = node.toJSON();
+
+      expect(json).toHaveProperty('siblingConditionedFailRate', 1);
+      expect(json).toHaveProperty('siblingConditionedFailCount', 1);
+      expect(json).toHaveProperty('siblingsPassedCount', 1);
+    });
+
+    it('should maintain invariant siblingConditionedFailCount <= siblingsPassedCount', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      for (let i = 0; i < 5; i++) {
+        node.recordSiblingsPassed();
+        if (i < 3) {
+          node.recordSiblingConditionedFail();
+        }
+      }
+
+      expect(node.siblingsPassedCount).toBe(5);
+      expect(node.siblingConditionedFailCount).toBe(3);
+      expect(node.siblingConditionedFailRate).toBeCloseTo(0.6, 6);
+    });
+
+    it('should handle case where all sibling-conditioned evaluations pass', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      // Siblings pass, but this one also passes
+      for (let i = 0; i < 10; i++) {
+        node.recordSiblingsPassed();
+        // No recordSiblingConditionedFail() call - this clause passes
+      }
+
+      expect(node.siblingConditionedFailRate).toBe(0);
+      expect(node.siblingConditionedFailCount).toBe(0);
+      expect(node.siblingsPassedCount).toBe(10);
+    });
+  });
+
+  describe('OR contribution tracking', () => {
+    it('should track OR contribution count and success count', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'OR alternative 1',
+      });
+
+      // Simulate OR block succeeding 5 times, with this alternative contributing 3 times
+      for (let i = 0; i < 5; i++) {
+        node.recordOrSuccess();
+        if (i < 3) {
+          node.recordOrContribution();
+        }
+      }
+
+      expect(node.orSuccessCount).toBe(5);
+      expect(node.orContributionCount).toBe(3);
+      expect(node.orContributionRate).toBeCloseTo(0.6, 6);
+    });
+
+    it('should return null contribution rate when OR never succeeded', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      expect(node.orContributionRate).toBeNull();
+      expect(node.orSuccessCount).toBe(0);
+      expect(node.orContributionCount).toBe(0);
+    });
+
+    it('should return 0 contribution rate when OR succeeded but this alternative never contributed', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      // OR succeeded 5 times, but this alternative was never the first to pass
+      for (let i = 0; i < 5; i++) {
+        node.recordOrSuccess();
+      }
+
+      expect(node.orContributionRate).toBe(0);
+      expect(node.orSuccessCount).toBe(5);
+      expect(node.orContributionCount).toBe(0);
+    });
+
+    it('should return 1.0 contribution rate when this alternative always contributes', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      // This alternative is the first to pass every time the OR succeeds
+      for (let i = 0; i < 10; i++) {
+        node.recordOrSuccess();
+        node.recordOrContribution();
+      }
+
+      expect(node.orContributionRate).toBe(1.0);
+      expect(node.orSuccessCount).toBe(10);
+      expect(node.orContributionCount).toBe(10);
+    });
+
+    it('should reset OR contribution tracking', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      node.recordOrSuccess();
+      node.recordOrContribution();
+      node.resetStats();
+
+      expect(node.orSuccessCount).toBe(0);
+      expect(node.orContributionCount).toBe(0);
+      expect(node.orContributionRate).toBeNull();
+    });
+
+    it('should include OR contribution fields in toJSON()', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      node.recordOrSuccess();
+      node.recordOrSuccess();
+      node.recordOrContribution();
+
+      const json = node.toJSON();
+
+      expect(json).toHaveProperty('orContributionCount', 1);
+      expect(json).toHaveProperty('orSuccessCount', 2);
+      expect(json).toHaveProperty('orContributionRate', 0.5);
+    });
+  });
+
+  describe('parentNodeType tracking', () => {
+    it('should have null parentNodeType by default', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      expect(node.parentNodeType).toBeNull();
+    });
+
+    it('should allow setting parentNodeType to "and"', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      node.parentNodeType = 'and';
+
+      expect(node.parentNodeType).toBe('and');
+    });
+
+    it('should allow setting parentNodeType to "or"', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      node.parentNodeType = 'or';
+
+      expect(node.parentNodeType).toBe('or');
+    });
+
+    it('should allow setting parentNodeType to "root"', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+
+      node.parentNodeType = 'root';
+
+      expect(node.parentNodeType).toBe('root');
+    });
+
+    it('should include parentNodeType in toJSON()', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+      node.parentNodeType = 'or';
+
+      const json = node.toJSON();
+
+      expect(json.parentNodeType).toBe('or');
+    });
+
+    it('should restore parentNodeType from fromJSON()', () => {
+      const original = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      });
+      original.parentNodeType = 'and';
+
+      const json = original.toJSON();
+      const restored = HierarchicalClauseNode.fromJSON(json);
+
+      expect(restored.parentNodeType).toBe('and');
+    });
+
+    it('should handle null parentNodeType in fromJSON()', () => {
+      const json = {
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test',
+      };
+
+      const restored = HierarchicalClauseNode.fromJSON(json);
+
+      expect(restored.parentNodeType).toBeNull();
+    });
+
+    it('should correctly identify OR-child nodes', () => {
+      const orChild = new HierarchicalClauseNode({
+        id: '0.1',
+        nodeType: 'leaf',
+        description: 'OR alternative',
+      });
+      orChild.parentNodeType = 'or';
+
+      const andChild = new HierarchicalClauseNode({
+        id: '0.2',
+        nodeType: 'leaf',
+        description: 'AND requirement',
+      });
+      andChild.parentNodeType = 'and';
+
+      expect(orChild.parentNodeType === 'or').toBe(true);
+      expect(andChild.parentNodeType === 'or').toBe(false);
     });
   });
 });

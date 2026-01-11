@@ -78,6 +78,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.contempt"
                             },
                             0.35

@@ -1,14 +1,15 @@
 {
-    "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
-    "id": "emotions-surprise",
-    "version": "1.0.0",
-    "name": "Emotions - Surprise",
-    "description": "Startle and surprise response expressions",
-    "author": "Living Narrative Engine",
-    "gameVersion": ">=0.0.1",
-    "content": {
-        "expressions": [
-            "startle_flinch.expression.json"
-        ]
-    }
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-surprise",
+  "version": "1.0.0",
+  "name": "Emotions - Surprise",
+  "description": "Startle and surprise response expressions",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "delighted_surprise.expression.json",
+      "startle_flinch.expression.json"
+    ]
+  }
 }

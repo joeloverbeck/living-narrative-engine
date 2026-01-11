@@ -11,6 +11,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
 import FailureExplainer from '../../../src/expressionDiagnostics/services/FailureExplainer.js';
+import EmotionCalculatorAdapter from '../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
+import EmotionCalculatorService from '../../../src/emotions/emotionCalculatorService.js';
 import {
   uniformThresholdExpression,
   lastMileExpression,
@@ -21,11 +23,21 @@ import {
   multiDifficultyExpression,
 } from './fixtures/advancedMetricsFixtures.js';
 
+const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
+  new EmotionCalculatorAdapter({
+    emotionCalculatorService: new EmotionCalculatorService({
+      dataRegistry,
+      logger,
+    }),
+    logger,
+  });
+
 describe('Advanced Metrics Integration', () => {
   let mockLogger;
   let mockDataRegistry;
   let simulator;
   let explainer;
+  let mockEmotionCalculatorAdapter;
 
   // Mock emotion prototypes for the simulator
   const mockEmotionPrototypes = {
@@ -65,9 +77,15 @@ describe('Advanced Metrics Integration', () => {
       }),
     };
 
+    mockEmotionCalculatorAdapter = buildEmotionCalculatorAdapter(
+      mockDataRegistry,
+      mockLogger
+    );
+
     simulator = new MonteCarloSimulator({
       logger: mockLogger,
       dataRegistry: mockDataRegistry,
+      emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
     });
 
     explainer = new FailureExplainer({

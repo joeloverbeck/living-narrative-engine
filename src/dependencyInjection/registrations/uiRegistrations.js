@@ -8,6 +8,7 @@
 
 // --- Core & Service Imports ---
 import { tokens } from '../tokens.js';
+import { diagnosticsTokens } from '../tokens/tokens-diagnostics.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
 import { registerWithLog } from '../../utils/registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
@@ -44,6 +45,8 @@ import { VisualizerStateController } from '../../domUI/visualizer/VisualizerStat
 import { PortraitModalRenderer } from '../../domUI/portraitModalRenderer.js';
 import { EngineUIManager } from '../../domUI/engineUIManager.js';
 import PerceptibleEventSenderController from '../../domUI/perceptibleEventSenderController.js';
+import MonteCarloReportGenerator from '../../expressionDiagnostics/services/MonteCarloReportGenerator.js';
+import MonteCarloReportModal from '../../domUI/expression-diagnostics/MonteCarloReportModal.js';
 import { TurnOrderTickerRenderer } from '../../domUI/turnOrderTickerRenderer.js';
 
 // --- JSDoc Imports ---
@@ -421,6 +424,36 @@ export function registerRenderers(registrar, logger) {
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
+    tokens.MonteCarloReportGenerator,
+    (c) =>
+      new MonteCarloReportGenerator({
+        logger: c.resolve(tokens.ILogger),
+        prototypeConstraintAnalyzer: c.resolve(
+          diagnosticsTokens.IPrototypeConstraintAnalyzer
+        ),
+        prototypeFitRankingService: c.resolve(
+          diagnosticsTokens.IPrototypeFitRankingService
+        ),
+      }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+
+  registerWithLog(
+    registrar,
+    tokens.MonteCarloReportModal,
+    (c) =>
+      new MonteCarloReportModal({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       }),
     { lifecycle: 'singletonFactory' },
     logger

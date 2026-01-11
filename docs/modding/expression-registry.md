@@ -18,8 +18,8 @@ Expressions use a numeric priority system where **higher numbers = higher priori
 | 40-49 | 2 | Low-intensity awareness |
 | 50-59 | 5 | Moderate engagement |
 | 60-69 | 14 | Active emotional states |
-| 70-79 | 30 | Elevated emotional responses |
-| 80-89 | 17 | Intense emotional states |
+| 70-79 | 36 | Elevated emotional responses |
+| 80-89 | 18 | Intense emotional states |
 | 90-95 | 7 | Peak intensity expressions |
 
 ## Expressions by Mod
@@ -67,6 +67,22 @@ Expressions of hope and optimism - forward-looking positive emotional states.
 |----------|----|----|
 | 61 | `emotions-hope:optimistic_lift` | Rising hopefulness about possibilities |
 | 64 | `emotions-hope:hopeful_glimmer` | Tentative hope emerging from uncertainty |
+
+### emotions-anticipation (1 expression)
+
+Forward-looking anticipation states - eager readiness and expectant energy.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 72 | `emotions-anticipation:eager_anticipation` | Bright, forward-leaning anticipation with restless readiness |
+
+### emotions-craving (1 expression)
+
+Expressions for craving and urge-pull states - narrowed, insistent wanting with constrained agency.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 74 | `emotions-craving:craving_pull` | Narrowed, insistent "need it" urge that tugs attention forward with restless, slightly painful wanting |
 
 ### emotions-elevation (3 expressions)
 
@@ -163,6 +179,39 @@ Expressions of pressure and overload stress.
 |----------|----|----|
 | 79 | `emotions-stress:stress_overload` | Overloaded-under-pressure stress spike where urgency rises and composure frays |
 
+### emotions-aftershock (1 expression)
+
+Expressions related to adrenaline comedown and aftershock release.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 79 | `emotions-aftershock:adrenaline_aftershock` | Adrenaline aftershock as threat drops while arousal lingers |
+
+### emotions-trust-distrust (2 expressions)
+
+Expressions related to trust, distrust, suspicion, and interpersonal vigilance states.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 72 | `emotions-trust-distrust:guard_lowering` | Guard lowering—trust takes the wheel and the body stops bracing, softening into openness |
+| 73 | `emotions-trust-distrust:wary_suspicion` | Wary suspicion with interpretive vigilance—reading tone, timing, and inconsistencies |
+
+### emotions-cynicism (1 expression)
+
+Expressions of cynical appraisal and guarded skepticism.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 72 | `emotions-cynicism:cynical_detachment` | Cynical detachment: an armored, bitter disbelief that stays sharp and evaluative—still engaged enough to judge, but refusing hope or sincerity. |
+
+### emotions-empathy-distress (1 expression)
+
+Empathic overwhelm expressions—prosocial distress when care is present but the felt load becomes too much.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 82 | `emotions-empathy-distress:empathic_overwhelm` | Prosocial distress flooding the system—care present but overwhelmed |
+
 ### emotions-vigilance (1 expression)
 
 Expressions of scanning and monitoring states.
@@ -170,6 +219,14 @@ Expressions of scanning and monitoring states.
 | Priority | ID | Description |
 |----------|----|----|
 | 84 | `emotions-vigilance:hypervigilant_scanning` | Heightened alertness scanning for threats |
+
+### emotions-alarm (1 expression)
+
+Expressions of alarm-driven mobilization and readiness.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 84 | `emotions-alarm:alarm_surge` | Sharp mobilization into fight/flight readiness without tipping into panic or freeze |
 
 ### emotions-fear-acute (3 expressions)
 
@@ -189,12 +246,13 @@ Expressions of fear regulation and override.
 |----------|----|----|
 | 88 | `emotions-courage:steeled_courage` | Summoned bravery overriding fear response |
 
-### emotions-surprise (1 expression)
+### emotions-surprise (2 expressions)
 
 Expressions of startle and surprise response.
 
 | Priority | ID | Description |
 |----------|----|----|
+| 76 | `emotions-surprise:delighted_surprise` | Pleasant surprise—an upbeat jolt that turns into a bright, spontaneous lift |
 | 78 | `emotions-surprise:startle_flinch` | Sudden reactive jolt from unexpected stimulus |
 
 ### emotions-disgust (1 expression)
@@ -267,6 +325,22 @@ Protective disconnect with distinct anti-collision gates.
 |----------|----|----|
 | 86 | `emotions-dissociation:dissociation` | Emotional disconnection as protective response |
 
+### emotions-regret (1 expression)
+
+Counterfactual self-reproach and rumination—"I chose wrong" without collapsing into moral guilt or identity-shame.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 74 | `emotions-regret:regret_rumination_loop` | Counterfactual self-reproach that keeps replaying alternatives without collapsing into moral guilt or identity-shame |
+
+### emotions-sadness (1 expression)
+
+Everyday sadness expressions - low, heavy moods that weigh down without reaching grief or despair territory.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 66 | `emotions-sadness:heavy_sadness_slump` | Heavy everyday sadness pulling the body down and slowing thought, without tipping into grief-break, despair, or shutdown |
+
 ### emotions-guilt (2 expressions)
 
 Expressions of guilt - "I did bad" repair-oriented responses.
@@ -292,6 +366,25 @@ Expressions of shame - "I am bad" self-condemnation responses.
 |----------|----|----|
 | 60 | `emotions-shame:resigned_shame` | Accepted self-condemnation without hope of repair |
 | 82 | `emotions-shame:shame_spike` | Acute self-condemnation flooding awareness |
+
+### emotions-social-selfconsciousness (2 expressions)
+
+Social self-consciousness expressions capturing embarrassment, awkwardness, and recoverable self-conscious flares.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 66 | `emotions-social-selfconsciousness:embarrassed_blush` | A quick, recoverable self-conscious flare—heat to the face, awkward recalibration, and a brief urge to hide without collapsing into shame |
+| 73 | `emotions-social-selfconsciousness:awkward_stumble` | A brief social fumble: awkwardness spikes, attention narrows, and the body tries to recover smoothness without fully shutting down |
+
+### emotions-social-aversions (3 expressions)
+
+Status-based social aversions like envy, resentment, and contempt—comparison-driven self-worth stings, simmering unfairness, and cool dismissal without possessive or romantic elements.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 72 | `emotions-social-aversions:contemptuous_dismissal` | A cool, superior dismissal—social dominance expressed through minimization and disregard rather than active hostility |
+| 72 | `emotions-social-aversions:envious_pang` | A quick, status-based envy pang: attention narrows into comparison and a self-worth sting, without tipping into possessive jealousy or sexual/romantic pull |
+| 72 | `emotions-social-aversions:resentful_simmer` | Long-simmering unfairness: a cold, sticky sense of being wronged that stays narrative-active without tipping into explosive anger |
 
 ### emotions-sexual-desire (4 expressions)
 
@@ -368,6 +461,8 @@ All expressions sorted by priority for quick reference:
 | 64 | `flirtatious_playfulness` | emotions-sexual-approach |
 | 66 | `curious_lean_in` | emotions-curiosity-attention |
 | 66 | `restless_anxiety` | emotions-anxiety |
+| 66 | `embarrassed_blush` | emotions-social-selfconsciousness |
+| 66 | `heavy_sadness_slump` | emotions-sadness |
 | 67 | `flustered_jealousy` | emotions-jealousy-possessiveness |
 | 68 | `nostalgic_distance` | emotions-nostalgia |
 | 69 | `fatigue_drag` | emotions-fatigue |
@@ -377,12 +472,20 @@ All expressions sorted by priority for quick reference:
 | 71 | `enthusiastic_energy` | emotions-excitement |
 | 71 | `sensual_enjoyment` | emotions-sexual-desire |
 | 71 | `flat_reminiscence` | emotions-nostalgia |
+| 72 | `eager_anticipation` | emotions-anticipation |
 | 72 | `fascinated_lock_on` | emotions-curiosity-attention |
 | 72 | `tearful_gratitude` | emotions-affiliation |
 | 72 | `seductive_confidence` | emotions-sexual-approach |
 | 72 | `apathy_blank` | emotions-shutdown |
+| 72 | `contemptuous_dismissal` | emotions-social-aversions |
 | 72 | `uneasy_restraint` | emotions-anxiety |
+| 72 | `guard_lowering` | emotions-trust-distrust |
+| 72 | `cynical_detachment` | emotions-cynicism |
+| 72 | `envious_pang` | emotions-social-aversions |
+| 72 | `resentful_simmer` | emotions-social-aversions |
+| 73 | `awkward_stumble` | emotions-social-selfconsciousness |
 | 73 | `dread_settling` | emotions-anxiety |
+| 73 | `wary_suspicion` | emotions-trust-distrust |
 | 73 | `euphoric_excitement` | emotions-excitement |
 | 73 | `numb_flatness` | emotions-shutdown |
 | 74 | `entranced_stillness` | emotions-absorption |
@@ -390,8 +493,11 @@ All expressions sorted by priority for quick reference:
 | 74 | `attachment_swell` | emotions-affiliation |
 | 74 | `guilt_driven_repair_impulse` | emotions-guilt |
 | 74 | `anticipatory_edge` | emotions-sexual-desire |
+| 74 | `regret_rumination_loop` | emotions-regret |
+| 74 | `craving_pull` | emotions-craving |
 | 75 | `tearful_sorrow` | emotions-grief |
 | 75 | `erotic_thrill` | emotions-sexual-desire |
+| 76 | `delighted_surprise` | emotions-surprise |
 | 76 | `flow_absorption` | emotions-absorption |
 | 76 | `sigh_of_relief` | emotions-calm |
 | 76 | `determined_focus` | emotions-agency |
@@ -401,17 +507,20 @@ All expressions sorted by priority for quick reference:
 | 78 | `awed_transfixion` | emotions-elevation |
 | 78 | `startle_flinch` | emotions-surprise |
 | 78 | `hurt_anger` | emotions-anger |
+| 79 | `adrenaline_aftershock` | emotions-aftershock |
 | 79 | `stress_overload` | emotions-stress |
 | 79 | `protective_anger` | emotions-anger |
 | 80 | `cold_fury` | emotions-anger |
 | 82 | `triumphant_release` | emotions-agency |
 | 82 | `shame_spike` | emotions-shame |
+| 82 | `empathic_overwhelm` | emotions-empathy-distress |
 | 82 | `passionate_longing` | emotions-sexual-intimacy-style |
 | 82 | `submissive_pleasure` | emotions-sexual-intimacy-style |
 | 83 | `frustrated_helplessness` | emotions-despair |
 | 83 | `nervous_arousal` | emotions-sexual-conflict |
 | 84 | `suppressed_rage` | emotions-anger |
 | 84 | `hypervigilant_scanning` | emotions-vigilance |
+| 84 | `alarm_surge` | emotions-alarm |
 | 85 | `explosive_anger` | emotions-anger |
 | 85 | `deep_despair` | emotions-despair |
 | 86 | `horror_revulsion` | emotions-disgust |
@@ -450,28 +559,12 @@ Create a new mod when:
 3. **Leave gaps**: Space priorities by 2-5 to allow future insertions
 4. **Category coherence**: Similar expressions within a mod should have related priority ranges
 
-### Identified Gaps
-
-Based on current coverage, these emotional areas may benefit from additional expressions:
-
-- **Surprise/Startle** (40-60 range): Only `startle_flinch` exists in emotions-surprise; consider pleasant surprise, shock, astonishment
-- **Disgust** (40-70 range): Only `horror_revulsion` exists in emotions-disgust (mixed with fear); consider pure disgust, revulsion, contempt
-- **Nostalgia/Memory** (50-70 range): `nostalgic_distance` covers inward reminiscence; consider adding longing for specific past, regretful nostalgia
-- **Anticipation** (40-60 range): `dread_settling` covers negative anticipation; consider general excitement, suspense, eager anticipation
-- **Trust/Distrust** (50-70 range): No expressions for building or breaking trust
-- **Embarrassment** (60-80 range): Distinct from shame; social awkwardness, self-consciousness
-- **Envy** (60-80 range): Only `flustered_jealousy` exists in sexuality context; consider general envy
-- **Suspicious watchfulness** (low affiliation + moderate threat + suspicion high)
-- **Stress** (60-85 range): Only `stress_overload` exists in emotions-stress; consider moderate stress, burnout, chronic stress
-- **Vigilance** (60-80 range): Only `hypervigilant_scanning` exists in emotions-vigilance; consider moderate alertness, wary watchfulness
-- **Courage** (60-85 range): Only `steeled_courage` exists in emotions-courage; consider quiet resolve, determined resistance
-
 ## Statistics
 
-- **Total expressions**: 77
-- **Number of mods**: 29
+- **Total expressions**: 93
+- **Number of mods**: 40
 - **Priority range**: 32-95
-- **Average expressions per mod**: 2.7
+- **Average expressions per mod**: 2.3
 
 ---
 

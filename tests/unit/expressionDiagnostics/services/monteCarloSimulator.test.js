@@ -5,10 +5,22 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
+import EmotionCalculatorAdapter from '../../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
+import EmotionCalculatorService from '../../../../src/emotions/emotionCalculatorService.js';
+
+const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
+  new EmotionCalculatorAdapter({
+    emotionCalculatorService: new EmotionCalculatorService({
+      dataRegistry,
+      logger,
+    }),
+    logger,
+  });
 
 describe('MonteCarloSimulator', () => {
   let mockLogger;
   let mockDataRegistry;
+  let mockEmotionCalculatorAdapter;
 
   // Mock emotion prototypes matching real data structure
   const mockEmotionPrototypes = {
@@ -71,6 +83,11 @@ describe('MonteCarloSimulator', () => {
         return null;
       }),
     };
+
+    mockEmotionCalculatorAdapter = buildEmotionCalculatorAdapter(
+      mockDataRegistry,
+      mockLogger
+    );
   });
 
   describe('Constructor', () => {
@@ -78,6 +95,7 @@ describe('MonteCarloSimulator', () => {
       const simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
       expect(simulator).toBeInstanceOf(MonteCarloSimulator);
     });
@@ -87,6 +105,7 @@ describe('MonteCarloSimulator', () => {
         () =>
           new MonteCarloSimulator({
             logger: mockLogger,
+            emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
           })
       ).toThrow();
     });
@@ -96,6 +115,7 @@ describe('MonteCarloSimulator', () => {
         () =>
           new MonteCarloSimulator({
             dataRegistry: mockDataRegistry,
+            emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
           })
       ).toThrow();
     });
@@ -106,6 +126,30 @@ describe('MonteCarloSimulator', () => {
           new MonteCarloSimulator({
             dataRegistry: {},
             logger: mockLogger,
+            emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          })
+      ).toThrow();
+    });
+
+    it('should throw if emotionCalculatorAdapter is missing', () => {
+      expect(
+        () =>
+          new MonteCarloSimulator({
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+          })
+      ).toThrow();
+    });
+
+    it('should validate emotionCalculatorAdapter methods', () => {
+      expect(
+        () =>
+          new MonteCarloSimulator({
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            emotionCalculatorAdapter: {
+              calculateEmotions: jest.fn(),
+            },
           })
       ).toThrow();
     });
@@ -118,6 +162,7 @@ describe('MonteCarloSimulator', () => {
       simulator = new MonteCarloSimulator({
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
       });
     });
 
@@ -1765,6 +1810,10 @@ describe('MonteCarloSimulator', () => {
           const simWithEmptyRegistry = new MonteCarloSimulator({
             dataRegistry: emptyRegistry,
             logger: mockLogger,
+            emotionCalculatorAdapter: buildEmotionCalculatorAdapter(
+              emptyRegistry,
+              mockLogger
+            ),
           });
 
           const expression = {
@@ -2234,6 +2283,258 @@ describe('MonteCarloSimulator', () => {
         expect(tree.children).toHaveLength(2);
         expect(tree.children[0]).toHaveProperty('nearMissRate');
         expect(tree.children[1]).toHaveProperty('nearMissRate');
+      });
+    });
+
+    describe('Ground-truth witness capture', () => {
+      it('should capture multiple witnesses (up to maxWitnesses)', async () => {
+        // Expression that triggers frequently
+        const expression = {
+          id: 'test:witness-capture',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.curiosity' }, 0.3] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 1000,
+          maxWitnesses: 5,
+        });
+
+        expect(result.witnessAnalysis).toBeDefined();
+        expect(result.witnessAnalysis.witnesses).toBeInstanceOf(Array);
+        // Should capture multiple witnesses since expression triggers frequently
+        expect(result.witnessAnalysis.witnesses.length).toBeGreaterThan(0);
+        expect(result.witnessAnalysis.witnesses.length).toBeLessThanOrEqual(5);
+      });
+
+      it('should default to maxWitnesses=5', async () => {
+        const expression = {
+          id: 'test:witness-default',
+          prerequisites: [], // Always triggers
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+        });
+
+        // All samples trigger, so should capture exactly 5
+        expect(result.witnessAnalysis.witnesses.length).toBe(5);
+      });
+
+      it('should capture fewer witnesses if fewer samples trigger', async () => {
+        // Expression that triggers rarely
+        const expression = {
+          id: 'test:witness-rare',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.99] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 50,
+          maxWitnesses: 5,
+        });
+
+        // With very high threshold, likely 0-2 triggers out of 50
+        expect(result.witnessAnalysis.witnesses.length).toBeLessThan(5);
+      });
+
+      it('should include current state in each witness', async () => {
+        const expression = {
+          id: 'test:witness-current',
+          prerequisites: [],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+          maxWitnesses: 3,
+        });
+
+        const witness = result.witnessAnalysis.witnesses[0];
+        expect(witness).toHaveProperty('current');
+        expect(witness.current).toHaveProperty('mood');
+        expect(witness.current).toHaveProperty('sexual');
+      });
+
+      it('should include previous state in each witness', async () => {
+        const expression = {
+          id: 'test:witness-previous',
+          prerequisites: [],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+          maxWitnesses: 3,
+        });
+
+        const witness = result.witnessAnalysis.witnesses[0];
+        expect(witness).toHaveProperty('previous');
+        expect(witness.previous).toHaveProperty('mood');
+        expect(witness.previous).toHaveProperty('sexual');
+      });
+
+      it('should include affectTraits in each witness', async () => {
+        const expression = {
+          id: 'test:witness-traits',
+          prerequisites: [],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+          maxWitnesses: 3,
+        });
+
+        const witness = result.witnessAnalysis.witnesses[0];
+        expect(witness).toHaveProperty('affectTraits');
+        expect(witness.affectTraits).toHaveProperty('affective_empathy');
+        expect(witness.affectTraits).toHaveProperty('cognitive_empathy');
+        expect(witness.affectTraits).toHaveProperty('harm_aversion');
+      });
+
+      it('should maintain bestWitness for backward compatibility', async () => {
+        const expression = {
+          id: 'test:witness-compat',
+          prerequisites: [],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+        });
+
+        expect(result.witnessAnalysis).toHaveProperty('bestWitness');
+        // bestWitness should be the first witness
+        expect(result.witnessAnalysis.bestWitness).toEqual(
+          result.witnessAnalysis.witnesses[0]
+        );
+      });
+
+      it('should have null bestWitness when no triggers', async () => {
+        // Expression that never triggers
+        const expression = {
+          id: 'test:no-triggers',
+          prerequisites: [
+            {
+              logic: { '==': [1, 0] }, // Always false
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+        });
+
+        expect(result.witnessAnalysis.witnesses).toEqual([]);
+        expect(result.witnessAnalysis.bestWitness).toBeNull();
+      });
+
+      it('should include nearestMiss when no triggers', async () => {
+        // Expression that never triggers
+        const expression = {
+          id: 'test:nearest-miss',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.999] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        expect(result.witnessAnalysis.nearestMiss).toBeDefined();
+        expect(result.witnessAnalysis.nearestMiss.sample).toHaveProperty(
+          'current'
+        );
+        expect(result.witnessAnalysis.nearestMiss.sample).toHaveProperty(
+          'previous'
+        );
+        expect(result.witnessAnalysis.nearestMiss).toHaveProperty(
+          'failedLeafCount'
+        );
+        expect(result.witnessAnalysis.nearestMiss).toHaveProperty(
+          'failedLeaves'
+        );
+      });
+
+      it('should capture witnesses with valid mood values', async () => {
+        const expression = {
+          id: 'test:witness-mood-values',
+          prerequisites: [],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+        });
+
+        const witness = result.witnessAnalysis.witnesses[0];
+        // Mood values should be in [-100, 100] range
+        Object.values(witness.current.mood).forEach((value) => {
+          expect(value).toBeGreaterThanOrEqual(-100);
+          expect(value).toBeLessThanOrEqual(100);
+        });
+      });
+
+      it('should capture witnesses with valid sexual state values', async () => {
+        const expression = {
+          id: 'test:witness-sexual-values',
+          prerequisites: [],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+        });
+
+        const witness = result.witnessAnalysis.witnesses[0];
+        // sex_excitation and sex_inhibition are in [0, 100] range
+        expect(witness.current.sexual.sex_excitation).toBeGreaterThanOrEqual(0);
+        expect(witness.current.sexual.sex_excitation).toBeLessThanOrEqual(100);
+        expect(witness.current.sexual.sex_inhibition).toBeGreaterThanOrEqual(0);
+        expect(witness.current.sexual.sex_inhibition).toBeLessThanOrEqual(100);
+        // baseline_libido is in [-50, 50] range
+        expect(witness.current.sexual.baseline_libido).toBeGreaterThanOrEqual(
+          -50
+        );
+        expect(witness.current.sexual.baseline_libido).toBeLessThanOrEqual(50);
+      });
+
+      it('should capture witnesses with valid affectTraits values', async () => {
+        const expression = {
+          id: 'test:witness-trait-values',
+          prerequisites: [],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+        });
+
+        const witness = result.witnessAnalysis.witnesses[0];
+        // Affect traits should be in [0, 100] range
+        Object.values(witness.affectTraits).forEach((value) => {
+          expect(value).toBeGreaterThanOrEqual(0);
+          expect(value).toBeLessThanOrEqual(100);
+        });
+      });
+
+      it('should respect custom maxWitnesses setting', async () => {
+        const expression = {
+          id: 'test:custom-max-witnesses',
+          prerequisites: [], // Always triggers
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          maxWitnesses: 3,
+        });
+
+        // Should capture exactly 3 witnesses
+        expect(result.witnessAnalysis.witnesses.length).toBe(3);
       });
     });
 
