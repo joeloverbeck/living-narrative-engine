@@ -6,6 +6,7 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import DiagnosticResult from '../../expressionDiagnostics/models/DiagnosticResult.js';
+import { advancedMetricsConfig } from '../../expressionDiagnostics/config/advancedMetricsConfig.js';
 import {
   getStatusCircleCssClass,
   getStatusThemeEntry,
@@ -14,6 +15,21 @@ import { copyToClipboard } from '../helpers/clipboardUtils.js';
 import StatusSelectDropdown from './components/StatusSelectDropdown.js';
 import ReportOrchestrator from '../../expressionDiagnostics/services/ReportOrchestrator.js';
 import { buildSamplingCoverageConclusions } from '../../expressionDiagnostics/services/samplingCoverageConclusions.js';
+import GateConstraint from '../../expressionDiagnostics/models/GateConstraint.js';
+import {
+  evaluateConstraint,
+  extractMoodConstraints,
+  filterContextsByConstraints,
+  hasOrMoodConstraints,
+} from '../../expressionDiagnostics/utils/moodRegimeUtils.js';
+import {
+  normalizeAffectTraits,
+  normalizeMoodAxes,
+  normalizeSexualAxes,
+  resolveAxisValue,
+} from '../../expressionDiagnostics/utils/axisNormalizationUtils.js';
+import { evaluateSweepMonotonicity } from '../../expressionDiagnostics/utils/sweepIntegrityUtils.js';
+import { resolveReportWorkerUrl } from './reportWorkerUrl.js';
 
 class ExpressionDiagnosticsController {
   #logger;
@@ -29,6 +45,10 @@ class ExpressionDiagnosticsController {
   #reportOrchestrator;
   #prototypeFitRankingService;
   #sensitivityAnalyzer;
+  #dataRegistry;
+  #reportWorker = null;
+  #reportWorkerTaskId = 0;
+  #reportGenerationInProgress = false;
 
   #selectedExpression = null;
   #currentResult = null;
@@ -58,11 +78,21 @@ class ExpressionDiagnosticsController {
   #mcTriggerRate;
   #mcConfidenceInterval;
   #mcSummary;
+  #mcPopulationSummaryContainer;
+  #mcPopulationSampleCount;
+  #mcPopulationInRegimeSampleCount;
+  #mcPopulationStoredCount;
+  #mcPopulationStoredInRegimeCount;
+  #mcPopulationStoredLimit;
   #mcSamplingCoverageContainer;
   #mcSamplingCoverageSummary;
   #mcSamplingCoverageTables;
   #mcSamplingCoverageConclusionsContainer;
   #mcSamplingCoverageConclusionsList;
+  #mcIntegrityWarningsContainer;
+  #mcIntegrityWarningsSummary;
+  #mcIntegrityWarningsList;
+  #mcIntegrityWarningsImpact;
   #blockersTbody;
   #generateReportBtn;
   // Problematic Expressions DOM elements
@@ -86,6 +116,7 @@ class ExpressionDiagnosticsController {
   #conditionalPassRatesContent;
   #conditionalPassRatesWarning;
   #conditionalGateWarning;
+  #storedContextPopulationLabels = [];
   // Last-Mile Decomposition DOM elements
   #lastMileDecompositionContainer;
   #lastMileDecompositionContent;
@@ -136,6 +167,7 @@ class ExpressionDiagnosticsController {
     reportModal,
     prototypeFitRankingService = null,
     sensitivityAnalyzer,
+    dataRegistry,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -170,6 +202,9 @@ class ExpressionDiagnosticsController {
     validateDependency(sensitivityAnalyzer, 'ISensitivityAnalyzer', logger, {
       requiredMethods: ['computeSensitivityData', 'computeGlobalSensitivityData'],
     });
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['getLookupData'],
+    });
 
     this.#logger = logger;
     this.#expressionRegistry = expressionRegistry;
@@ -183,6 +218,7 @@ class ExpressionDiagnosticsController {
     this.#reportModal = reportModal;
     this.#prototypeFitRankingService = prototypeFitRankingService;
     this.#sensitivityAnalyzer = sensitivityAnalyzer;
+    this.#dataRegistry = dataRegistry;
     this.#reportOrchestrator = new ReportOrchestrator({
       logger,
       sensitivityAnalyzer,
@@ -225,6 +261,24 @@ class ExpressionDiagnosticsController {
       'mc-confidence-interval'
     );
     this.#mcSummary = document.getElementById('mc-summary');
+    this.#mcPopulationSummaryContainer = document.getElementById(
+      'mc-population-summary'
+    );
+    this.#mcPopulationSampleCount = document.getElementById(
+      'mc-population-sample-count'
+    );
+    this.#mcPopulationInRegimeSampleCount = document.getElementById(
+      'mc-population-in-regime-sample-count'
+    );
+    this.#mcPopulationStoredCount = document.getElementById(
+      'mc-population-stored-count'
+    );
+    this.#mcPopulationStoredInRegimeCount = document.getElementById(
+      'mc-population-stored-in-regime-count'
+    );
+    this.#mcPopulationStoredLimit = document.getElementById(
+      'mc-population-stored-limit'
+    );
     this.#mcSamplingCoverageContainer = document.getElementById(
       'mc-sampling-coverage'
     );
@@ -244,6 +298,18 @@ class ExpressionDiagnosticsController {
       this.#mcSamplingCoverageContainer?.querySelector(
         '.sampling-coverage-conclusions-list'
       ) ?? null;
+    this.#mcIntegrityWarningsContainer = document.getElementById(
+      'mc-integrity-warnings'
+    );
+    this.#mcIntegrityWarningsSummary = document.getElementById(
+      'mc-integrity-warnings-summary'
+    );
+    this.#mcIntegrityWarningsList = document.getElementById(
+      'mc-integrity-warnings-list'
+    );
+    this.#mcIntegrityWarningsImpact = document.getElementById(
+      'mc-integrity-warnings-impact'
+    );
     this.#blockersTbody = document.getElementById('blockers-tbody');
     this.#generateReportBtn = document.getElementById('generate-report-btn');
     // Problematic Expressions elements
@@ -265,6 +331,9 @@ class ExpressionDiagnosticsController {
     this.#conditionalPassRatesContent = document.getElementById('conditional-pass-rates-content');
     this.#conditionalPassRatesWarning = document.getElementById('conditional-pass-warning');
     this.#conditionalGateWarning = document.getElementById('conditional-gate-warning');
+    this.#storedContextPopulationLabels = Array.from(
+      document.querySelectorAll('[data-population-role="stored-contexts"]')
+    );
     // Last-Mile Decomposition elements
     this.#lastMileDecompositionContainer = document.getElementById('last-mile-decomposition');
     this.#lastMileDecompositionContent = document.getElementById('last-mile-decomposition-content');
@@ -459,6 +528,25 @@ class ExpressionDiagnosticsController {
     if (this.#mcConfidenceInterval)
       this.#mcConfidenceInterval.textContent = '(-- - --)';
     if (this.#mcSummary) this.#mcSummary.textContent = '';
+    if (this.#mcPopulationSummaryContainer) {
+      this.#mcPopulationSummaryContainer.hidden = true;
+    }
+    if (this.#mcPopulationSampleCount) {
+      this.#mcPopulationSampleCount.textContent = '--';
+    }
+    if (this.#mcPopulationInRegimeSampleCount) {
+      this.#mcPopulationInRegimeSampleCount.textContent = '--';
+    }
+    if (this.#mcPopulationStoredCount) {
+      this.#mcPopulationStoredCount.textContent = '--';
+    }
+    if (this.#mcPopulationStoredInRegimeCount) {
+      this.#mcPopulationStoredInRegimeCount.textContent = '--';
+    }
+    if (this.#mcPopulationStoredLimit) {
+      this.#mcPopulationStoredLimit.textContent = '--';
+    }
+    this.#updateStoredContextPopulationLabels(null);
     if (this.#mcSamplingCoverageContainer) {
       this.#mcSamplingCoverageContainer.hidden = true;
     }
@@ -473,6 +561,18 @@ class ExpressionDiagnosticsController {
     }
     if (this.#mcSamplingCoverageConclusionsList) {
       this.#mcSamplingCoverageConclusionsList.innerHTML = '';
+    }
+    if (this.#mcIntegrityWarningsContainer) {
+      this.#mcIntegrityWarningsContainer.hidden = true;
+    }
+    if (this.#mcIntegrityWarningsSummary) {
+      this.#mcIntegrityWarningsSummary.textContent = '';
+    }
+    if (this.#mcIntegrityWarningsList) {
+      this.#mcIntegrityWarningsList.innerHTML = '';
+    }
+    if (this.#mcIntegrityWarningsImpact) {
+      this.#mcIntegrityWarningsImpact.textContent = '';
     }
     if (this.#blockersTbody) this.#blockersTbody.innerHTML = '';
     // Clear stored blockers for report generation
@@ -708,8 +808,13 @@ class ExpressionDiagnosticsController {
   #displayMonteCarloResults(result, blockers, summary) {
     if (!this.#mcResults) return;
 
+    const enrichedBlockers = this.#attachGateMetricsToBlockers(
+      blockers,
+      result.clauseFailures
+    );
+
     // Store blockers for report generation
-    this.#currentBlockers = blockers;
+    this.#currentBlockers = enrichedBlockers;
 
     this.#mcResults.hidden = false;
 
@@ -738,16 +843,39 @@ class ExpressionDiagnosticsController {
       this.#mcSummary.textContent = summary;
     }
 
+    this.#updatePopulationSummary(result);
+
     this.#displaySamplingCoverage(result.samplingCoverage, result.samplingMode);
 
+    const storedContexts = result?.storedContexts ?? [];
+    const globalSensitivityData =
+      this.#sensitivityAnalyzer.computeGlobalSensitivityData(
+        storedContexts,
+        enrichedBlockers,
+        this.#selectedExpression?.prerequisites ?? null
+      );
+    const sensitivityData = this.#reportGenerator?.collectReportIntegrityWarnings
+      ? this.#sensitivityAnalyzer.computeSensitivityData(
+        storedContexts,
+        enrichedBlockers
+      )
+      : [];
+
+    this.#displayIntegrityWarnings(
+      result,
+      enrichedBlockers,
+      sensitivityData,
+      globalSensitivityData
+    );
+
     // Update blockers table
-    this.#populateBlockersTable(blockers);
+    this.#populateBlockersTable(enrichedBlockers);
 
     // Display ground-truth witnesses from MC simulation
     this.#displayMcWitnesses(result.witnessAnalysis);
 
     // Display global expression sensitivity (how threshold changes affect whole expression)
-    this.#displayGlobalSensitivity();
+    this.#displayGlobalSensitivity(globalSensitivityData);
 
     // Display conditional pass rates (emotion pass rates given mood constraints)
     this.#displayConditionalPassRates();
@@ -759,10 +887,228 @@ class ExpressionDiagnosticsController {
     this.#displayStaticCrossReference();
 
     // Display prototype fit analysis sections (prototype fit, implied prototype, gap detection)
-    // Deferred via requestAnimationFrame to avoid click handler violation (expensive analysis)
-    requestAnimationFrame(() => {
-      this.#displayPrototypeFitAnalysis();
+    // Deferred to idle time to avoid long animation frame handlers.
+    this.#schedulePrototypeFitAnalysis();
+  }
+
+  #attachGateMetricsToBlockers(blockers, clauseFailures) {
+    if (!Array.isArray(blockers) || blockers.length === 0) {
+      return blockers;
+    }
+
+    const lookup = new Map();
+    if (Array.isArray(clauseFailures)) {
+      for (const clause of clauseFailures) {
+        if (clause?.clauseDescription) {
+          lookup.set(clause.clauseDescription, clause);
+        }
+      }
+    }
+
+    if (lookup.size === 0) {
+      return blockers;
+    }
+
+    return blockers.map((blocker) => {
+      const clause = lookup.get(blocker.clauseDescription);
+      if (!clause) return blocker;
+      return {
+        ...blocker,
+        gateClampRateInRegime: clause.gateClampRateInRegime ?? null,
+        passRateGivenGateInRegime: clause.passRateGivenGateInRegime ?? null,
+        gatePassInRegimeCount: clause.gatePassInRegimeCount ?? null,
+        gateFailInRegimeCount: clause.gateFailInRegimeCount ?? null,
+        gatePassAndClausePassInRegimeCount:
+          clause.gatePassAndClausePassInRegimeCount ?? null,
+      };
     });
+  }
+
+  #displayIntegrityWarnings(result, blockers, sensitivityData, globalSensitivityData) {
+    if (!this.#mcIntegrityWarningsContainer) {
+      return;
+    }
+
+    const warnings = this.#resolveIntegrityWarnings(
+      result,
+      blockers,
+      sensitivityData,
+      globalSensitivityData
+    );
+    if (!Array.isArray(warnings) || warnings.length === 0) {
+      this.#mcIntegrityWarningsContainer.hidden = true;
+      if (this.#mcIntegrityWarningsSummary) {
+        this.#mcIntegrityWarningsSummary.textContent = '';
+      }
+      if (this.#mcIntegrityWarningsList) {
+        this.#mcIntegrityWarningsList.innerHTML = '';
+      }
+      if (this.#mcIntegrityWarningsImpact) {
+        this.#mcIntegrityWarningsImpact.textContent = '';
+      }
+      return;
+    }
+
+    this.#mcIntegrityWarningsContainer.hidden = false;
+    if (this.#mcIntegrityWarningsSummary) {
+      const countLabel = warnings.length === 1 ? 'warning' : 'warnings';
+      this.#mcIntegrityWarningsSummary.textContent =
+        `Integrity ${countLabel}: ${warnings.length}`;
+    }
+    if (this.#mcIntegrityWarningsList) {
+      this.#mcIntegrityWarningsList.innerHTML = '';
+      for (const warning of warnings) {
+        const item = document.createElement('li');
+        item.textContent = this.#formatIntegrityWarning(warning);
+        this.#mcIntegrityWarningsList.appendChild(item);
+      }
+    }
+    if (this.#mcIntegrityWarningsImpact) {
+      const hasGateMismatchWarning = warnings.some(
+        (warning) =>
+          typeof warning?.code === 'string' && warning.code.startsWith('I')
+      );
+      this.#mcIntegrityWarningsImpact.textContent = hasGateMismatchWarning
+        ? 'Gate/final mismatches can invalidate pass-rate and blocker metrics; treat threshold feasibility as provisional until resolved.'
+        : '';
+    }
+  }
+
+  #resolveIntegrityWarnings(
+    result,
+    blockers,
+    sensitivityData = [],
+    globalSensitivityData = []
+  ) {
+    if (!result || !Array.isArray(blockers)) {
+      return [];
+    }
+
+    if (Array.isArray(result.reportIntegrityWarnings)) {
+      return result.reportIntegrityWarnings;
+    }
+
+    if (!this.#reportGenerator?.collectReportIntegrityWarnings) {
+      return [];
+    }
+
+    return this.#reportGenerator.collectReportIntegrityWarnings({
+      simulationResult: result,
+      blockers,
+      prerequisites: this.#selectedExpression?.prerequisites ?? null,
+      sensitivityData,
+      globalSensitivityData,
+    });
+  }
+
+  #formatIntegrityWarning(warning) {
+    const parts = [];
+    if (warning?.populationHash) {
+      parts.push(`population=${warning.populationHash}`);
+    }
+    if (warning?.prototypeId) {
+      parts.push(`prototype=${warning.prototypeId}`);
+    }
+    const meta = parts.length > 0 ? ` (${parts.join(', ')})` : '';
+    return `${warning?.code ?? 'WARN'}: ${warning?.message ?? ''}${meta}`;
+  }
+
+  #updatePopulationSummary(result) {
+    const summary = this.#normalizePopulationSummary(result);
+    const populationMeta = result?.populationMeta ?? null;
+    if (!this.#mcPopulationSummaryContainer || !summary) {
+      if (this.#mcPopulationSummaryContainer) {
+        this.#mcPopulationSummaryContainer.hidden = true;
+      }
+      this.#updateStoredContextPopulationLabels(null, null);
+      return;
+    }
+
+    const formatCount = (value) =>
+      Number.isFinite(value) ? value.toLocaleString() : '—';
+
+    if (this.#mcPopulationSampleCount) {
+      this.#mcPopulationSampleCount.textContent = formatCount(summary.sampleCount);
+    }
+    if (this.#mcPopulationInRegimeSampleCount) {
+      this.#mcPopulationInRegimeSampleCount.textContent = formatCount(
+        summary.inRegimeSampleCount
+      );
+    }
+    if (this.#mcPopulationStoredCount) {
+      this.#mcPopulationStoredCount.textContent = formatCount(
+        summary.storedContextCount
+      );
+    }
+    if (this.#mcPopulationStoredInRegimeCount) {
+      this.#mcPopulationStoredInRegimeCount.textContent = formatCount(
+        summary.storedInRegimeCount
+      );
+    }
+    if (this.#mcPopulationStoredLimit) {
+      this.#mcPopulationStoredLimit.textContent = formatCount(
+        summary.storedContextLimit
+      );
+    }
+
+    this.#mcPopulationSummaryContainer.hidden = false;
+    this.#updateStoredContextPopulationLabels(summary, populationMeta);
+  }
+
+  #normalizePopulationSummary(result) {
+    if (!result || typeof result !== 'object') {
+      return null;
+    }
+
+    const summary = result.populationSummary ?? {};
+    const sampleCount = summary.sampleCount ?? result.sampleCount;
+
+    if (!Number.isFinite(sampleCount)) {
+      return null;
+    }
+
+    const storedContexts = Array.isArray(result.storedContexts)
+      ? result.storedContexts
+      : [];
+
+    return {
+      sampleCount,
+      inRegimeSampleCount:
+        summary.inRegimeSampleCount ?? result.inRegimeSampleCount ?? 0,
+      storedContextCount:
+        summary.storedContextCount ?? storedContexts.length ?? 0,
+      storedContextLimit: summary.storedContextLimit ?? 0,
+      storedInRegimeCount:
+        summary.storedInRegimeCount ?? summary.storedContextCount ?? storedContexts.length ?? 0,
+    };
+  }
+
+  #updateStoredContextPopulationLabels(summary, populationMeta) {
+    if (!Array.isArray(this.#storedContextPopulationLabels)) return;
+
+    const storedHash = populationMeta?.storedGlobal?.hash ?? null;
+    const hashLabel = storedHash ? `; hash ${storedHash}` : '';
+    const label =
+      summary && Number.isFinite(summary.storedContextCount)
+        ? `Population: stored contexts (${summary.storedContextCount.toLocaleString()} of ${summary.sampleCount.toLocaleString()}, in-regime ${summary.storedInRegimeCount.toLocaleString()}, limit ${summary.storedContextLimit.toLocaleString()}${hashLabel}).`
+        : '';
+
+    for (const element of this.#storedContextPopulationLabels) {
+      if (!element) continue;
+      element.textContent = label;
+    }
+  }
+
+  #schedulePrototypeFitAnalysis() {
+    const runAnalysis = () => {
+      void this.#displayPrototypeFitAnalysisAsync();
+    };
+
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      globalThis.requestIdleCallback(runAnalysis, { timeout: 500 });
+    } else {
+      setTimeout(runAnalysis, 0);
+    }
   }
 
   #displaySamplingCoverage(samplingCoverage, samplingMode) {
@@ -875,8 +1221,26 @@ class ExpressionDiagnosticsController {
     if (!this.#blockersTbody) return;
 
     this.#blockersTbody.innerHTML = '';
+    const clauseFailures = this.#rawSimulationResult?.clauseFailures ?? [];
+    const clauseLookup = this.#buildClauseFailureLookup(clauseFailures);
+    const storedContexts = this.#rawSimulationResult?.storedContexts ?? null;
+    const prerequisites = this.#selectedExpression?.prerequisites ?? [];
+    const moodConstraints = this.#extractMoodConstraintsForUI(prerequisites);
+    const regimeContexts = this.#getMoodRegimeContextsForGateBreakdown(
+      storedContexts,
+      moodConstraints
+    );
 
     for (const blocker of blockers) {
+      const gateClampMetrics = this.#formatGateClampMetrics(blocker);
+      const passGivenGateMetrics = this.#formatPassGivenGateMetrics(blocker);
+      const classificationBadge = this.#buildGateClassificationBadge(blocker);
+      const clauseFailure = clauseLookup.get(blocker.clauseDescription) ?? null;
+      const gateBreakdownPanel = this.#buildGateBreakdownPanel(
+        clauseFailure,
+        regimeContexts
+      );
+
       // Main blocker row
       const row = document.createElement('tr');
       row.classList.add('blocker-row');
@@ -892,6 +1256,9 @@ class ExpressionDiagnosticsController {
         <td><code>${this.#escapeHtml(blocker.clauseDescription)}</code></td>
         <td>${this.#formatPercentage(blocker.failureRate)}</td>
         <td class="last-mile">${this.#formatLastMile(blocker)}</td>
+        <td class="gate-clamp">${gateClampMetrics}</td>
+        <td class="pass-gate">${passGivenGateMetrics}</td>
+        <td class="gate-classification">${classificationBadge}</td>
         <td class="recommendation">${this.#formatRecommendation(blocker)}</td>
         <td><span class="severity-badge severity-${blocker.explanation.severity}">${blocker.explanation.severity}</span></td>
       `;
@@ -915,8 +1282,9 @@ class ExpressionDiagnosticsController {
         breakdownRow.classList.add('breakdown-row', 'collapsed');
         breakdownRow.dataset.parentId = `blocker-${blocker.rank}`;
         breakdownRow.innerHTML = `
-          <td colspan="7" class="breakdown-cell">
+          <td colspan="10" class="breakdown-cell">
             ${regimeDetails}
+            ${gateBreakdownPanel}
             <div class="blocker-violation-summary">
               <div class="blocker-violation-label">Violation</div>
               <div class="violation-stats">${violationSummary}</div>
@@ -933,7 +1301,7 @@ class ExpressionDiagnosticsController {
     if (blockers.length === 0) {
       const row = document.createElement('tr');
       row.innerHTML =
-        '<td colspan="7" class="no-data">No blockers identified</td>';
+        '<td colspan="10" class="no-data">No blockers identified</td>';
       this.#blockersTbody.appendChild(row);
     }
   }
@@ -944,7 +1312,7 @@ class ExpressionDiagnosticsController {
    *
    * @private
    */
-  #handleGenerateReport() {
+  async #handleGenerateReport() {
     if (!this.#currentResult || !this.#selectedExpression) {
       this.#logger.warn('Cannot generate report: no simulation results');
       return;
@@ -953,6 +1321,15 @@ class ExpressionDiagnosticsController {
     if (!this.#reportGenerator || !this.#reportModal) {
       this.#logger.error('Report generator or modal not available');
       return;
+    }
+
+    if (this.#reportGenerationInProgress) {
+      return;
+    }
+
+    this.#reportGenerationInProgress = true;
+    if (this.#generateReportBtn) {
+      this.#generateReportBtn.disabled = true;
     }
 
     const expressionName = this.#getExpressionName(this.#selectedExpression.id);
@@ -966,7 +1343,7 @@ class ExpressionDiagnosticsController {
     };
 
     try {
-      const report = this.#reportOrchestrator.generateReport({
+      const report = await this.#generateReportContent({
         expressionName,
         simulationResult: this.#rawSimulationResult,
         blockers: this.#currentBlockers,
@@ -979,9 +1356,131 @@ class ExpressionDiagnosticsController {
       this.#logger.debug('Report generated and displayed');
     } catch (err) {
       this.#logger.error('Failed to generate report:', err);
+    } finally {
+      this.#reportGenerationInProgress = false;
+      if (this.#generateReportBtn) {
+        this.#generateReportBtn.disabled = false;
+      }
     }
   }
 
+  async #generateReportContent({
+    expressionName,
+    simulationResult,
+    blockers,
+    summary,
+    prerequisites,
+    staticAnalysis,
+  }) {
+    if (this.#shouldUseReportWorker()) {
+      const lookups = this.#getReportWorkerLookups();
+      return this.#generateReportInWorker({
+        expressionName,
+        simulationResult,
+        blockers,
+        summary,
+        prerequisites,
+        staticAnalysis,
+        lookups,
+      });
+    }
+
+    return this.#reportOrchestrator.generateReport({
+      expressionName,
+      simulationResult,
+      blockers,
+      summary,
+      prerequisites,
+      staticAnalysis,
+    });
+  }
+
+  #shouldUseReportWorker() {
+    return typeof Worker !== 'undefined';
+  }
+
+  #getReportWorkerLookups() {
+    const lookups = {};
+    const emotionPrototypes = this.#dataRegistry?.getLookupData(
+      'core:emotion_prototypes'
+    );
+    const sexualPrototypes = this.#dataRegistry?.getLookupData(
+      'core:sexual_prototypes'
+    );
+
+    if (emotionPrototypes) {
+      lookups['core:emotion_prototypes'] = emotionPrototypes;
+    }
+    if (sexualPrototypes) {
+      lookups['core:sexual_prototypes'] = sexualPrototypes;
+    }
+
+    return lookups;
+  }
+
+  #ensureReportWorker() {
+    if (this.#reportWorker) {
+      return;
+    }
+
+    const workerConfig = resolveReportWorkerUrl({
+      moduleUrl:
+        typeof globalThis !== 'undefined'
+          ? globalThis.__LNE_REPORT_WORKER_MODULE_URL__
+          : undefined,
+      documentBaseUrl: globalThis.document?.baseURI,
+    });
+
+    if (!workerConfig?.url) {
+      this.#logger.error('Report worker URL could not be resolved');
+      return;
+    }
+
+    const workerOptions = workerConfig.type ? { type: workerConfig.type } : {};
+    this.#reportWorker = new Worker(workerConfig.url, workerOptions);
+  }
+
+  #generateReportInWorker(payload) {
+    this.#ensureReportWorker();
+
+    if (!this.#reportWorker) {
+      return this.#reportOrchestrator.generateReport(payload);
+    }
+
+    const taskId = this.#reportWorkerTaskId + 1;
+    this.#reportWorkerTaskId = taskId;
+
+    return new Promise((resolve, reject) => {
+      const handleMessage = (event) => {
+        const data = event?.data;
+        if (!data || data.id !== taskId) {
+          return;
+        }
+
+        cleanup();
+
+        if (data.type === 'report') {
+          resolve(data.report ?? '');
+        } else {
+          reject(new Error(data.error || 'Report worker failed'));
+        }
+      };
+
+      const handleError = (event) => {
+        cleanup();
+        reject(event?.error || new Error('Report worker failed'));
+      };
+
+      const cleanup = () => {
+        this.#reportWorker?.removeEventListener('message', handleMessage);
+        this.#reportWorker?.removeEventListener('error', handleError);
+      };
+
+      this.#reportWorker?.addEventListener('message', handleMessage);
+      this.#reportWorker?.addEventListener('error', handleError);
+      this.#reportWorker?.postMessage({ id: taskId, payload });
+    });
+  }
 
 
   /**
@@ -1411,6 +1910,295 @@ class ExpressionDiagnosticsController {
     if (value < 0.0001) return '<0.01%';
     if (value < 0.01) return (value * 100).toFixed(3) + '%';
     return (value * 100).toFixed(2) + '%';
+  }
+
+  #formatRateWithCounts(rate, count = null, total = null) {
+    if (
+      rate === null ||
+      rate === undefined ||
+      typeof rate !== 'number' ||
+      Number.isNaN(rate)
+    ) {
+      return 'N/A';
+    }
+    const pct = this.#formatPercentage(rate);
+    if (Number.isFinite(count) && Number.isFinite(total) && total > 0) {
+      return `${pct} (${count} / ${total})`;
+    }
+    return pct;
+  }
+
+  #formatGateClampMetrics(blocker) {
+    const rate = blocker.gateClampRateInRegime ?? null;
+    const failCount = blocker.gateFailInRegimeCount ?? null;
+    const passCount = blocker.gatePassInRegimeCount ?? null;
+    const total =
+      Number.isFinite(failCount) && Number.isFinite(passCount)
+        ? failCount + passCount
+        : null;
+    return this.#formatRateWithCounts(rate, failCount, total);
+  }
+
+  #formatPassGivenGateMetrics(blocker) {
+    const rate = blocker.passRateGivenGateInRegime ?? null;
+    const passCount = blocker.gatePassAndClausePassInRegimeCount ?? null;
+    const total = blocker.gatePassInRegimeCount ?? null;
+    return this.#formatRateWithCounts(rate, passCount, total);
+  }
+
+  #buildClauseFailureLookup(clauseFailures) {
+    const lookup = new Map();
+    if (!Array.isArray(clauseFailures)) {
+      return lookup;
+    }
+
+    for (const clause of clauseFailures) {
+      if (clause?.clauseDescription) {
+        lookup.set(clause.clauseDescription, clause);
+      }
+    }
+
+    return lookup;
+  }
+
+  #getMoodRegimeContextsForGateBreakdown(storedContexts, moodConstraints) {
+    if (!Array.isArray(storedContexts) || storedContexts.length === 0) {
+      return null;
+    }
+
+    if (!Array.isArray(moodConstraints) || moodConstraints.length === 0) {
+      return storedContexts;
+    }
+
+    return this.#filterContextsByMoodConstraintsUI(
+      storedContexts,
+      moodConstraints
+    );
+  }
+
+  #getGateClassificationThresholds() {
+    const thresholds = advancedMetricsConfig?.gateClassificationThresholds;
+    return {
+      gateClampRateHigh:
+        typeof thresholds?.gateClampRateHigh === 'number'
+          ? thresholds.gateClampRateHigh
+          : 0.5,
+      passGivenGateLow:
+        typeof thresholds?.passGivenGateLow === 'number'
+          ? thresholds.passGivenGateLow
+          : 0.2,
+    };
+  }
+
+  #buildGateClassificationBadge(blocker) {
+    const gateClampRate = blocker.gateClampRateInRegime;
+    const passGivenGateRate = blocker.passRateGivenGateInRegime;
+
+    if (
+      !Number.isFinite(gateClampRate) &&
+      !Number.isFinite(passGivenGateRate)
+    ) {
+      return '<span class="classification-badge classification-na">N/A</span>';
+    }
+
+    const thresholds = this.#getGateClassificationThresholds();
+    const gateMismatch =
+      Number.isFinite(gateClampRate) &&
+      gateClampRate >= thresholds.gateClampRateHigh;
+    const thresholdTooHigh =
+      Number.isFinite(passGivenGateRate) &&
+      passGivenGateRate <= thresholds.passGivenGateLow;
+
+    let label = 'Balanced';
+    let className = 'classification-balanced';
+
+    if (gateMismatch && thresholdTooHigh) {
+      label = 'Both';
+      className = 'classification-both';
+    } else if (gateMismatch) {
+      label = 'Gate mismatch';
+      className = 'classification-gate';
+    } else if (thresholdTooHigh) {
+      label = 'Threshold too high';
+      className = 'classification-threshold';
+    }
+
+    const tooltip = [
+      `Heuristic: Gate mismatch if Gate clamp (mood) \u2265 ${this.#formatPercentage(thresholds.gateClampRateHigh)}.`,
+      `Threshold too high if Pass | gate (mood) \u2264 ${this.#formatPercentage(thresholds.passGivenGateLow)}.`,
+      'Gate clamp uses mood-regime samples; Pass | gate uses gate-pass samples within mood-regime.',
+    ].join(' ');
+
+    return `<span class="classification-badge ${className}" title="${this.#escapeHtml(tooltip)}">${label}</span>`;
+  }
+
+  #buildGateBreakdownPanel(clauseFailure, regimeContexts) {
+    if (!clauseFailure || !Array.isArray(regimeContexts) || regimeContexts.length === 0) {
+      return '';
+    }
+
+    const variablePath = this.#resolveVariablePathFromClause(clauseFailure);
+    const gateTarget = this.#resolveGateTargetForUi(variablePath);
+    if (!gateTarget) {
+      return '';
+    }
+
+    const prototype = this.#getGatePrototype(gateTarget.prototypeId);
+    const gates = Array.isArray(prototype?.gates) ? prototype.gates : [];
+    if (gates.length === 0) {
+      return '';
+    }
+
+    const failureRates = this.#computeGateFailureRatesForUi(
+      gates,
+      regimeContexts,
+      gateTarget.usePrevious
+    );
+
+    if (failureRates.length === 0) {
+      return '';
+    }
+
+    const rows = failureRates
+      .map((entry) => `
+        <tr>
+          <td><code>${this.#escapeHtml(entry.gate)}</code></td>
+          <td>${this.#formatRateWithCounts(entry.failRate, entry.failCount, entry.total)}</td>
+        </tr>
+      `)
+      .join('');
+
+    return `
+      <details class="gate-breakdown">
+        <summary>Gate breakdown (mood-regime)</summary>
+        <div class="gate-breakdown-meta">Denominator: ${regimeContexts.length} mood-regime samples.</div>
+        <table class="results-table gate-breakdown-table">
+          <thead>
+            <tr>
+              <th>Gate</th>
+              <th title="Gate failure rate within mood-regime samples.">Fail rate (mood)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </details>
+    `;
+  }
+
+  #resolveVariablePathFromClause(clauseFailure) {
+    const variablePath = clauseFailure?.hierarchicalBreakdown?.variablePath
+      ?? clauseFailure?.variablePath;
+    if (typeof variablePath === 'string') {
+      return variablePath;
+    }
+
+    const description = clauseFailure?.clauseDescription ?? '';
+    const match = description.match(/^(previousEmotions|emotions)\.\w+/);
+    return match ? match[0] : null;
+  }
+
+  #resolveGateTargetForUi(variablePath) {
+    if (!variablePath || typeof variablePath !== 'string') {
+      return null;
+    }
+
+    if (variablePath.startsWith('emotions.')) {
+      return {
+        prototypeId: variablePath.slice('emotions.'.length),
+        usePrevious: false,
+      };
+    }
+
+    if (variablePath.startsWith('previousEmotions.')) {
+      return {
+        prototypeId: variablePath.slice('previousEmotions.'.length),
+        usePrevious: true,
+      };
+    }
+
+    return null;
+  }
+
+  #getGatePrototype(prototypeId) {
+    const lookup = this.#dataRegistry?.getLookupData('core:emotion_prototypes');
+    return lookup?.entries?.[prototypeId] ?? null;
+  }
+
+  #normalizeGateContextForUi(context, usePrevious) {
+    const moodSource = usePrevious
+      ? context?.previousMoodAxes
+      : context?.moodAxes ?? context?.mood ?? {};
+    const sexualSource = usePrevious
+      ? context?.previousSexualAxes
+      : context?.sexualAxes ?? context?.sexual ?? null;
+    const sexualArousalSource = usePrevious
+      ? context?.previousSexualArousal ?? null
+      : context?.sexualArousal ?? null;
+
+    const moodAxes = normalizeMoodAxes(moodSource);
+    const sexualAxes = normalizeSexualAxes(sexualSource, sexualArousalSource);
+    const traitAxes = normalizeAffectTraits(context?.affectTraits);
+
+    return { moodAxes, sexualAxes, traitAxes };
+  }
+
+  #computeGateFailureRatesForUi(gates, contexts, usePrevious) {
+    if (!Array.isArray(gates) || gates.length === 0) {
+      return [];
+    }
+    if (!Array.isArray(contexts) || contexts.length === 0) {
+      return [];
+    }
+
+    const parsedGates = gates
+      .map((gate) => {
+        try {
+          return { gate, constraint: GateConstraint.parse(gate) };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    if (parsedGates.length === 0) {
+      return [];
+    }
+
+    const stats = new Map(
+      parsedGates.map(({ gate }) => [gate, { failCount: 0 }])
+    );
+
+    for (const context of contexts) {
+      const normalized = this.#normalizeGateContextForUi(context, usePrevious);
+      for (const { gate, constraint } of parsedGates) {
+        const axisValue = resolveAxisValue(
+          constraint.axis,
+          normalized.moodAxes,
+          normalized.sexualAxes,
+          normalized.traitAxes
+        );
+        if (!constraint.isSatisfiedBy(axisValue)) {
+          const entry = stats.get(gate);
+          if (entry) {
+            entry.failCount += 1;
+          }
+        }
+      }
+    }
+
+    return parsedGates.map(({ gate }) => {
+      const entry = stats.get(gate);
+      const failCount = entry?.failCount ?? 0;
+      const total = contexts.length;
+      return {
+        gate,
+        failCount,
+        total,
+        failRate: total > 0 ? failCount / total : null,
+      };
+    });
   }
 
   #formatCoverageValue(value) {
@@ -2675,14 +3463,15 @@ class ExpressionDiagnosticsController {
    *
    * @private
    */
-  #displayGlobalSensitivity() {
+  #displayGlobalSensitivity(globalSensitivityData = null) {
     if (!this.#globalSensitivityContainer || !this.#globalSensitivityTables) {
       return;
     }
 
     // Compute global sensitivity data
-    const sensitivityData =
-      this.#sensitivityAnalyzer.computeGlobalSensitivityData(
+    const sensitivityData = Array.isArray(globalSensitivityData)
+      ? globalSensitivityData
+      : this.#sensitivityAnalyzer.computeGlobalSensitivityData(
         this.#rawSimulationResult?.storedContexts ?? [],
         this.#currentBlockers,
         this.#selectedExpression?.prerequisites
@@ -2696,6 +3485,16 @@ class ExpressionDiagnosticsController {
     // Clear previous content
     this.#globalSensitivityTables.innerHTML = '';
     this.#globalSensitivityContainer.hidden = false;
+
+    const storedBaselineTriggerRate =
+      this.#getStoredBaselineTriggerRate(sensitivityData);
+    const baselineLabel = this.#buildSensitivityBaselineLabel(
+      this.#rawSimulationResult?.triggerRate,
+      storedBaselineTriggerRate
+    );
+    if (baselineLabel) {
+      this.#globalSensitivityTables.appendChild(baselineLabel);
+    }
 
     // Check for low confidence results
     const lowConfidenceResults = sensitivityData.filter((result) => {
@@ -2715,12 +3514,11 @@ class ExpressionDiagnosticsController {
       warning.innerHTML = `
         <span class="warning-icon">⚠️</span>
         <span class="warning-text">
-          Insufficient data: fewer than 5 baseline expression hits.
-          Global sensitivity tables are suppressed for low-confidence runs.
+          Low confidence: fewer than 5 baseline expression hits.
+          Global sensitivity tables are shown for reference.
         </span>
       `;
       this.#globalSensitivityTables.appendChild(warning);
-      return;
     }
 
     // Generate a table for each sensitivity result
@@ -2728,6 +3526,52 @@ class ExpressionDiagnosticsController {
       const tableContainer = this.#createSensitivityTable(result);
       this.#globalSensitivityTables.appendChild(tableContainer);
     }
+  }
+
+  #getStoredBaselineTriggerRate(sensitivityData) {
+    if (!Array.isArray(sensitivityData)) {
+      return null;
+    }
+
+    for (const result of sensitivityData) {
+      if (!Array.isArray(result?.grid)) {
+        continue;
+      }
+      const baselinePoint = result.grid.find(
+        (point) =>
+          Math.abs(point.threshold - result.originalThreshold) < 0.001
+      );
+      if (baselinePoint && typeof baselinePoint.triggerRate === 'number') {
+        return baselinePoint.triggerRate;
+      }
+    }
+
+    return null;
+  }
+
+  #buildSensitivityBaselineLabel(fullSampleTriggerRate, storedBaselineTriggerRate) {
+    const parts = [];
+    if (typeof fullSampleTriggerRate === 'number') {
+      parts.push(
+        `Baseline (full sample): ${this.#formatPercentage(fullSampleTriggerRate)}`
+      );
+    }
+    if (typeof storedBaselineTriggerRate === 'number') {
+      parts.push(
+        `Baseline (stored contexts): ${this.#formatPercentage(
+          storedBaselineTriggerRate
+        )}`
+      );
+    }
+
+    if (parts.length === 0) {
+      return null;
+    }
+
+    const label = document.createElement('p');
+    label.className = 'population-label';
+    label.textContent = parts.join(' | ');
+    return label;
   }
 
   /**
@@ -2756,6 +3600,27 @@ class ExpressionDiagnosticsController {
     header.className = 'sensitivity-table-header';
     header.innerHTML = `<code>${varPath}</code> ${this.#escapeHtml(operator)} [threshold]`;
     container.appendChild(header);
+
+    const monotonicity = evaluateSweepMonotonicity({
+      grid,
+      rateKey: 'triggerRate',
+      operator,
+    });
+    if (!monotonicity.isMonotonic && monotonicity.direction) {
+      const directionLabel =
+        monotonicity.direction === 'nonincreasing'
+          ? 'non-increasing'
+          : 'non-decreasing';
+      const warning = document.createElement('div');
+      warning.className = 'sensitivity-warning';
+      warning.innerHTML = `
+        <span class="warning-icon">⚠️</span>
+        <span class="warning-text">
+          Sweep is not ${directionLabel} as ${this.#escapeHtml(operator)} thresholds change.
+        </span>
+      `;
+      container.appendChild(warning);
+    }
 
     // Find original threshold index
     const originalIndex = grid.findIndex(
@@ -2829,7 +3694,7 @@ class ExpressionDiagnosticsController {
             : ''
         }
         <td>${isOriginal ? '<strong>' : ''}${this.#formatPercentage(point.triggerRate)}${isOriginal ? '</strong>' : ''}</td>
-        <td class="${changeClass}">${isOriginal ? '<strong>baseline</strong>' : changeStr}</td>
+        <td class="${changeClass}">${isOriginal ? '<strong>baseline (stored contexts)</strong>' : changeStr}</td>
         <td>${point.sampleCount.toLocaleString()}</td>
       `;
       tbody.appendChild(row);
@@ -3082,46 +3947,10 @@ class ExpressionDiagnosticsController {
    * @returns {Array<{varPath: string, operator: string, threshold: number}>}
    */
   #extractMoodConstraintsForUI(prerequisites) {
-    const constraints = [];
-
-    for (const prereq of prerequisites) {
-      this.#extractMoodConstraintsFromLogicUI(prereq.logic, constraints);
-    }
-
-    return constraints;
-  }
-
-  /**
-   * Recursively extract mood constraints from JSON Logic.
-   *
-   * @private
-   * @param {object} logic - JSON Logic expression
-   * @param {Array} constraints - Accumulator for constraints
-   */
-  #extractMoodConstraintsFromLogicUI(logic, constraints) {
-    if (!logic || typeof logic !== 'object') return;
-
-    // Check comparison operators
-    const operators = ['>=', '<=', '>', '<', '=='];
-    for (const op of operators) {
-      if (logic[op]) {
-        const [left, right] = logic[op];
-        if (typeof left === 'object' && left.var) {
-          const varPath = left.var;
-          // Only mood axes, not emotions
-          if (varPath.startsWith('moodAxes.') && typeof right === 'number') {
-            constraints.push({ varPath, operator: op, threshold: right });
-          }
-        }
-      }
-    }
-
-    // Recurse into AND blocks (not OR, since OR alternatives aren't all required)
-    if (logic.and) {
-      for (const clause of logic.and) {
-        this.#extractMoodConstraintsFromLogicUI(clause, constraints);
-      }
-    }
+    return extractMoodConstraints(prerequisites, {
+      includeMoodAlias: true,
+      andOnly: true,
+    });
   }
 
   /**
@@ -3132,65 +3961,7 @@ class ExpressionDiagnosticsController {
    * @returns {boolean}
    */
   #hasOrMoodConstraintsForUI(prerequisites) {
-    if (!Array.isArray(prerequisites)) {
-      return false;
-    }
-
-    for (const prereq of prerequisites) {
-      if (this.#hasOrMoodConstraintsInLogicUI(prereq.logic, false)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Recursively detect mood-axis comparisons inside OR blocks.
-   *
-   * @private
-   * @param {object} logic - JSON Logic expression
-   * @param {boolean} inOrBlock - True if inside OR
-   * @returns {boolean}
-   */
-  #hasOrMoodConstraintsInLogicUI(logic, inOrBlock) {
-    if (!logic || typeof logic !== 'object') return false;
-
-    const operators = ['>=', '<=', '>', '<', '=='];
-    for (const op of operators) {
-      if (logic[op]) {
-        const [left, right] = logic[op];
-        if (
-          inOrBlock &&
-          typeof left === 'object' &&
-          left.var &&
-          typeof right === 'number'
-        ) {
-          const varPath = left.var;
-          if (varPath.startsWith('moodAxes.') || varPath.startsWith('mood.')) {
-            return true;
-          }
-        }
-      }
-    }
-
-    if (logic.or && Array.isArray(logic.or)) {
-      for (const clause of logic.or) {
-        if (this.#hasOrMoodConstraintsInLogicUI(clause, true)) {
-          return true;
-        }
-      }
-    }
-
-    if (logic.and && Array.isArray(logic.and)) {
-      for (const clause of logic.and) {
-        if (this.#hasOrMoodConstraintsInLogicUI(clause, inOrBlock)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
+    return hasOrMoodConstraints(prerequisites, { includeMoodAlias: true });
   }
 
   /**
@@ -3247,12 +4018,7 @@ class ExpressionDiagnosticsController {
    * @returns {object[]} Filtered contexts
    */
   #filterContextsByMoodConstraintsUI(storedContexts, moodConstraints) {
-    return storedContexts.filter((ctx) => {
-      return moodConstraints.every((constraint) => {
-        const value = this.#getNestedValueUI(ctx, constraint.varPath);
-        return this.#evaluateComparisonUI(value, constraint.operator, constraint.threshold);
-      });
-    });
+    return filterContextsByConstraints(storedContexts, moodConstraints);
   }
 
   /**
@@ -3283,15 +4049,7 @@ class ExpressionDiagnosticsController {
    * @returns {boolean} Result of comparison
    */
   #evaluateComparisonUI(value, operator, threshold) {
-    if (value == null) return false;
-    switch (operator) {
-      case '>=': return value >= threshold;
-      case '<=': return value <= threshold;
-      case '>': return value > threshold;
-      case '<': return value < threshold;
-      case '==': return value === threshold;
-      default: return false;
-    }
+    return evaluateConstraint(value, operator, threshold);
   }
 
   /**
@@ -4306,7 +5064,7 @@ class ExpressionDiagnosticsController {
    *
    * @private
    */
-  #displayPrototypeFitAnalysis() {
+  async #displayPrototypeFitAnalysisAsync() {
     // Require service and data
     if (!this.#prototypeFitRankingService) {
       this.#hidePrototypeFitSections();
@@ -4324,15 +5082,15 @@ class ExpressionDiagnosticsController {
 
     try {
       // Perform all three analyses
-      const fitResults = this.#prototypeFitRankingService.analyzeAllPrototypeFit(
+      const fitResults = await this.#prototypeFitRankingService.analyzeAllPrototypeFitAsync(
         prerequisites,
         storedContexts
       );
-      const impliedPrototype = this.#prototypeFitRankingService.computeImpliedPrototype(
+      const impliedPrototype = await this.#prototypeFitRankingService.computeImpliedPrototypeAsync(
         prerequisites,
         storedContexts
       );
-      const gapDetection = this.#prototypeFitRankingService.detectPrototypeGaps(
+      const gapDetection = await this.#prototypeFitRankingService.detectPrototypeGapsAsync(
         prerequisites,
         storedContexts
       );

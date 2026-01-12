@@ -314,6 +314,48 @@
   line-height: 1.5;
 }
 
+.mc-population-summary {
+  padding: 0.75rem;
+  background: var(--secondary-bg-color);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.population-summary-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin-bottom: 0.5rem;
+}
+
+.population-summary-label {
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+  margin-bottom: 0.25rem;
+}
+
+.population-summary-value {
+  font-size: 1rem;
+  color: var(--primary-text-color);
+}
+
+.population-summary-muted {
+  color: var(--secondary-text-color);
+  margin-left: 0.35rem;
+}
+
+.population-summary-note {
+  margin: 0;
+  color: var(--secondary-text-color);
+  font-size: 0.85rem;
+}
+
+.population-label {
+  margin: 0 0 0.75rem;
+  color: var(--secondary-text-color);
+  font-size: 0.85rem;
+}
+
 .mc-sampling-coverage-container {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
@@ -352,6 +394,42 @@
 .severity-badge.severity-high { background: var(--status-extremely-rare-bg); color: var(--status-extremely-rare-text); }
 .severity-badge.severity-medium { background: var(--status-rare-bg); color: var(--status-rare-text); }
 .severity-badge.severity-low { background: var(--status-normal-bg); color: var(--status-normal-text); }
+
+.classification-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.classification-badge.classification-gate {
+  background: var(--status-extremely-rare-bg);
+  color: var(--status-extremely-rare-text);
+}
+
+.classification-badge.classification-threshold {
+  background: var(--status-rare-bg);
+  color: var(--status-rare-text);
+}
+
+.classification-badge.classification-both {
+  background: var(--status-impossible-bg);
+  color: var(--status-impossible-text);
+}
+
+.classification-badge.classification-balanced {
+  background: var(--status-normal-bg);
+  color: var(--status-normal-text);
+}
+
+.classification-badge.classification-na {
+  background: var(--status-unknown-bg);
+  color: var(--status-unknown-text);
+}
 
 .no-data { text-align: center; color: var(--secondary-text-color); font-style: italic; }
 
@@ -420,6 +498,32 @@
 .blocker-regime-details .detail-label {
   color: var(--secondary-text-color);
   white-space: nowrap;
+}
+
+.gate-breakdown {
+  padding: 0.5rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.gate-breakdown summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--primary-text-color);
+}
+
+.gate-breakdown summary:hover {
+  color: var(--primary-text-color);
+}
+
+.gate-breakdown-meta {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  margin-top: 0.35rem;
+}
+
+.gate-breakdown-table {
+  margin-top: 0.5rem;
 }
 
 .feasibility-badge {
@@ -2135,8 +2239,8 @@
 
 /* Monte Carlo Report - Large Modal Variant */
 .modal-content--large {
-  width: min(1200px, 92vw);
-  max-width: 1200px;
+  width: min(1600px, 96vw);
+  max-width: 1600px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;

@@ -1,0 +1,177 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-affiliation:shared_laughter_bond",
+    "description": "Playful social bonding—shared laughter that lands as synchrony. The moment feels easy and mutual, like a quiet agreement to be on the same side of the world for a beat.",
+    "category": "affection",
+    "actor_description": "The laugh slips out and I feel it answered—like the air between us loosens in the same instant. My face warms and my shoulders drop without me deciding to, and the next breath comes easier. For a moment my thoughts stop performing; it’s just the clean comfort of being in sync.",
+    "description_text": "{actor} breaks into an easy laugh that invites rather than deflects—eyes bright, posture opening as if the room just became friendlier. They settle into the moment with a small, unmistakable ease, like they’ve found the same rhythm as everyone else.",
+    "priority": 68,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.amusement"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.gratitude"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.admiration"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.empathic_distress"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.amusement"
+                                            },
+                                            {
+                                                "var": "previousEmotions.amusement"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.amusement"
+                                            },
+                                            0.5
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.amusement"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a warm amusement moment (amusement plus affection/gratitude/admiration), grounded in high affiliation with low threat and present engagement. Blocks brittle/mean tones (contempt/disgust/cynicism), jealousy, and empathic-distress. Fires on a noticeable amusement spike, an affiliation jump, or an amusement crossing so it marks the room ‘clicking’ instead of idling."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a light, genuine laugh that comes out unguarded—then a second one answering it right on the beat, like a small harmony.",
+        "tactile": "The tension in the space eases; shoulders unhook, faces soften, and there’s a faint sense of everyone leaning the same direction at once.",
+        "limited": "I catch a shared laugh and a quick, warm ease—an instant where the mood aligns and then moves on."
+    }
+}

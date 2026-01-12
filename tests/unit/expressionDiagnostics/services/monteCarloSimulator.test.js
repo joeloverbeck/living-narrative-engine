@@ -2337,6 +2337,123 @@ describe('MonteCarloSimulator', () => {
         expect(joyClause.inRegimeAchievableRange).not.toBeNull();
       });
 
+      it('should compute gate clamp metrics within the mood-regime subset', async () => {
+        const sampleStates = [
+          {
+            current: { mood: { valence: 20, arousal: 0 }, sexual: {} },
+            previous: { mood: { valence: 20, arousal: 0 }, sexual: {} },
+            affectTraits: null,
+          },
+          {
+            current: { mood: { valence: 40, arousal: 0 }, sexual: {} },
+            previous: { mood: { valence: 40, arousal: 0 }, sexual: {} },
+            affectTraits: null,
+          },
+          {
+            current: { mood: { valence: 40, arousal: -50 }, sexual: {} },
+            previous: { mood: { valence: 40, arousal: -50 }, sexual: {} },
+            affectTraits: null,
+          },
+          {
+            current: { mood: { valence: 5, arousal: 0 }, sexual: {} },
+            previous: { mood: { valence: 5, arousal: 0 }, sexual: {} },
+            affectTraits: null,
+          },
+        ];
+        let index = 0;
+        const localRandomStateGenerator = {
+          generate: jest.fn(() => sampleStates[index++]),
+        };
+        const localSimulator = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator: localRandomStateGenerator,
+        });
+        const expression = {
+          id: 'test:gate-clamp-metrics',
+          prerequisites: [
+            { logic: { '>=': [{ var: 'moodAxes.valence' }, 10] } },
+            { logic: { '>=': [{ var: 'emotions.joy' }, 0.2] } },
+          ],
+        };
+
+        const result = await localSimulator.simulate(expression, {
+          sampleCount: sampleStates.length,
+          trackClauses: true,
+        });
+
+        const joyClause = result.clauseFailures.find((clause) =>
+          clause.clauseDescription.includes('emotions.joy')
+        );
+        const moodClause = result.clauseFailures.find((clause) =>
+          clause.clauseDescription.includes('moodAxes.valence')
+        );
+
+        expect(joyClause).toBeDefined();
+        expect(moodClause).toBeDefined();
+        expect(joyClause.gatePassInRegimeCount).toBe(2);
+        expect(joyClause.gateFailInRegimeCount).toBe(1);
+        expect(joyClause.gatePassAndClausePassInRegimeCount).toBe(1);
+        expect(joyClause.gatePassAndClauseFailInRegimeCount).toBe(1);
+        expect(joyClause.gatePassRateInRegime).toBeCloseTo(2 / 3, 5);
+        expect(joyClause.gateClampRateInRegime).toBeCloseTo(1 / 3, 5);
+        expect(joyClause.passRateGivenGateInRegime).toBeCloseTo(0.5, 5);
+        expect(moodClause.gatePassRateInRegime).toBeNull();
+        expect(moodClause.gateClampRateInRegime).toBeNull();
+        expect(moodClause.passRateGivenGateInRegime).toBeNull();
+        expect(moodClause.gatePassInRegimeCount).toBeNull();
+        expect(moodClause.gateFailInRegimeCount).toBeNull();
+      });
+
+      it('should return null conditional pass when no gates pass in-regime', async () => {
+        const sampleStates = [
+          {
+            current: { mood: { valence: 20, arousal: 0 }, sexual: {} },
+            previous: { mood: { valence: 20, arousal: 0 }, sexual: {} },
+            affectTraits: null,
+          },
+          {
+            current: { mood: { valence: 20, arousal: 0 }, sexual: {} },
+            previous: { mood: { valence: 20, arousal: 0 }, sexual: {} },
+            affectTraits: null,
+          },
+        ];
+        let index = 0;
+        const localRandomStateGenerator = {
+          generate: jest.fn(() => sampleStates[index++]),
+        };
+        const localSimulator = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator: localRandomStateGenerator,
+        });
+        const expression = {
+          id: 'test:gate-clamp-zero-pass',
+          prerequisites: [
+            { logic: { '>=': [{ var: 'moodAxes.valence' }, 10] } },
+            { logic: { '>=': [{ var: 'emotions.joy' }, 0.2] } },
+          ],
+        };
+
+        const result = await localSimulator.simulate(expression, {
+          sampleCount: sampleStates.length,
+          trackClauses: true,
+        });
+
+        const joyClause = result.clauseFailures.find((clause) =>
+          clause.clauseDescription.includes('emotions.joy')
+        );
+
+        expect(joyClause).toBeDefined();
+        expect(joyClause.gatePassInRegimeCount).toBe(0);
+        expect(joyClause.gateFailInRegimeCount).toBe(2);
+        expect(joyClause.gatePassRateInRegime).toBe(0);
+        expect(joyClause.gateClampRateInRegime).toBe(1);
+        expect(joyClause.passRateGivenGateInRegime).toBeNull();
+      });
+
       it('should mark redundant clauses in-regime based on achievable range', async () => {
         const expression = {
           id: 'test:redundant-in-regime',

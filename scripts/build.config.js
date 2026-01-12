@@ -86,6 +86,11 @@ module.exports = {
       entry: 'src/expression-diagnostics.js',
       output: 'expression-diagnostics.js',
     },
+    {
+      name: 'expression-diagnostics-report-worker',
+      entry: 'src/expressionDiagnostics/workers/MonteCarloReportWorker.js',
+      output: 'expressionDiagnostics/workers/MonteCarloReportWorker.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)

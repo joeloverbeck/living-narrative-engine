@@ -12,6 +12,7 @@ import MonteCarloReportGenerator from '../../../src/expressionDiagnostics/servic
 import RandomStateGenerator from '../../../src/expressionDiagnostics/services/RandomStateGenerator.js';
 import EmotionCalculatorAdapter from '../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import EmotionCalculatorService from '../../../src/emotions/emotionCalculatorService.js';
+import { buildPopulationHash } from '../../../src/expressionDiagnostics/utils/populationHashUtils.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
@@ -118,6 +119,10 @@ describe('Sensitivity analysis integration', () => {
       simulationResult.storedContexts,
       blockers
     );
+    const expectedPopulationHash = buildPopulationHash(
+      simulationResult.storedContexts.map((_, index) => index),
+      'all'
+    );
 
     expect(Array.isArray(sensitivityData)).toBe(true);
     expect(sensitivityData.length).toBeGreaterThan(0);
@@ -127,6 +132,7 @@ describe('Sensitivity analysis integration', () => {
     expect(conditionPaths).toContain('emotions.fear');
 
     for (const result of sensitivityData) {
+      expect(result.populationHash).toBe(expectedPopulationHash);
       expect(Array.isArray(result.grid)).toBe(true);
       expect(result.grid.length).toBeGreaterThan(0);
       for (const point of result.grid) {
@@ -165,11 +171,16 @@ describe('Sensitivity analysis integration', () => {
       blockers,
       expression.prerequisites
     );
+    const expectedPopulationHash = buildPopulationHash(
+      simulationResult.storedContexts.map((_, index) => index),
+      'all'
+    );
 
     expect(Array.isArray(globalSensitivity)).toBe(true);
     expect(globalSensitivity.length).toBeGreaterThan(0);
     for (const result of globalSensitivity) {
       expect(result.isExpressionLevel).toBe(true);
+      expect(result.populationHash).toBe(expectedPopulationHash);
       expect(Array.isArray(result.grid)).toBe(true);
       for (const point of result.grid) {
         expect(point.triggerRate).toBeGreaterThanOrEqual(0);
@@ -203,7 +214,7 @@ describe('Sensitivity analysis integration', () => {
       prerequisites: expression.prerequisites,
     });
 
-    expect(report).toContain('## Sensitivity Analysis');
+    expect(report).toContain('## Marginal Clause Pass-Rate Sweep');
     expect(report).toContain('## Global Expression Sensitivity Analysis');
   });
 
@@ -232,7 +243,7 @@ describe('Sensitivity analysis integration', () => {
       prerequisites: expression.prerequisites,
     });
 
-    expect(report).not.toContain('## Sensitivity Analysis');
+    expect(report).not.toContain('## Marginal Clause Pass-Rate Sweep');
     expect(report).not.toContain('## Global Expression Sensitivity Analysis');
   });
 });

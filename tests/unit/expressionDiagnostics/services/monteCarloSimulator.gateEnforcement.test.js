@@ -574,4 +574,79 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       expect(result.triggerRate).toBeGreaterThan(0);
     });
   });
+
+  describe('Gate Outcome Instrumentation', () => {
+    it('should report gate clamp rates when gates always fail in-regime', async () => {
+      const simulator = new MonteCarloSimulator({
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
+      });
+
+      const expression = {
+        prerequisites: [
+          {
+            logic: { '>=': [{ var: 'emotions.relief' }, 0.5] },
+            failure_message: 'Relief must be high',
+          },
+          {
+            logic: { '>=': [{ var: 'moodAxes.threat' }, 50] },
+            failure_message: 'Threat must be high',
+          },
+        ],
+      };
+
+      const result = await simulator.simulate(expression, {
+        sampleCount: 1000,
+        distribution: 'uniform',
+      });
+
+      const reliefClause = result.clauseFailures.find((clause) =>
+        clause.clauseDescription.includes('emotions.relief')
+      );
+
+      expect(reliefClause).toBeDefined();
+      expect(reliefClause.gatePassRateInRegime).toBe(0);
+      expect(reliefClause.gateClampRateInRegime).toBe(1);
+      expect(reliefClause.passRateGivenGateInRegime).toBeNull();
+      expect(reliefClause.gatePassInRegimeCount).toBe(0);
+    });
+
+    it('should report full gate pass rates when gates always pass in-regime', async () => {
+      const simulator = new MonteCarloSimulator({
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
+      });
+
+      const expression = {
+        prerequisites: [
+          {
+            logic: { '>=': [{ var: 'emotions.fear' }, 0.1] },
+            failure_message: 'Fear must be present',
+          },
+          {
+            logic: { '>=': [{ var: 'moodAxes.threat' }, 50] },
+            failure_message: 'Threat must be high',
+          },
+        ],
+      };
+
+      const result = await simulator.simulate(expression, {
+        sampleCount: 1000,
+        distribution: 'uniform',
+      });
+
+      const fearClause = result.clauseFailures.find((clause) =>
+        clause.clauseDescription.includes('emotions.fear')
+      );
+
+      expect(fearClause).toBeDefined();
+      expect(fearClause.gatePassRateInRegime).toBe(1);
+      expect(fearClause.gateClampRateInRegime).toBe(0);
+      expect(fearClause.passRateGivenGateInRegime).not.toBeNull();
+    });
+  });
 });

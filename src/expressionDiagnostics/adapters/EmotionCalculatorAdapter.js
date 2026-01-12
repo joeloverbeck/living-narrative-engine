@@ -96,12 +96,7 @@ class EmotionCalculatorAdapter {
     if (!map || typeof map[Symbol.iterator] !== 'function') {
       return {};
     }
-
-    const obj = {};
-    for (const [key, value] of map) {
-      obj[key] = value;
-    }
-    return obj;
+    return Object.fromEntries(map);
   }
 }
 

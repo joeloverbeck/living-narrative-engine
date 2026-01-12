@@ -5,6 +5,7 @@
   "dependencies": [],
   "content": {
     "expressions": [
+      "afterglow_soft_closeness.expression.json",
       "passionate_longing.expression.json",
       "submissive_pleasure.expression.json"
     ]

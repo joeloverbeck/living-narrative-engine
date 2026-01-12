@@ -183,6 +183,40 @@
               </div>
             </div>
             <p class="mc-summary" id="mc-summary"></p>
+            <div id="mc-population-summary" class="mc-population-summary" hidden>
+              <h3>Population Summary</h3>
+              <div class="population-summary-grid">
+                <div class="population-summary-item">
+                  <div class="population-summary-label">Total samples</div>
+                  <div class="population-summary-value">
+                    <span id="mc-population-sample-count">--</span>
+                    <span class="population-summary-muted">(in-regime <span id="mc-population-in-regime-sample-count">--</span>)</span>
+                  </div>
+                </div>
+                <div class="population-summary-item">
+                  <div class="population-summary-label">Stored contexts</div>
+                  <div class="population-summary-value">
+                    <span id="mc-population-stored-count">--</span>
+                    <span class="population-summary-muted">(in-regime <span id="mc-population-stored-in-regime-count">--</span>)</span>
+                  </div>
+                </div>
+                <div class="population-summary-item">
+                  <div class="population-summary-label">Stored context limit</div>
+                  <div class="population-summary-value">
+                    <span id="mc-population-stored-limit">--</span>
+                  </div>
+                </div>
+              </div>
+              <p class="population-summary-note">
+                Stored contexts are a capped subset for sensitivity analysis, so counts can differ from full samples.
+              </p>
+            </div>
+            <div id="mc-integrity-warnings" class="mc-integrity-warnings" hidden>
+              <h3>Integrity Warnings</h3>
+              <p id="mc-integrity-warnings-summary" class="mc-integrity-warnings-summary"></p>
+              <ul id="mc-integrity-warnings-list" class="mc-integrity-warnings-list"></ul>
+              <p id="mc-integrity-warnings-impact" class="mc-integrity-warnings-impact"></p>
+            </div>
             <div class="mc-results-actions">
               <button id="generate-report-btn" class="action-button action-button--secondary">
                 Generate Report
@@ -204,13 +238,16 @@
                 <tr>
                   <th class="toggle-header"></th>
                   <th>Rank</th>
-                  <th>Clause</th>
-                  <th>Fail %</th>
-                  <th>Sole-Blocker Rate</th>
-                  <th>Recommendation</th>
-                  <th>Severity</th>
-                </tr>
-              </thead>
+                <th>Clause</th>
+                <th>Fail %</th>
+                <th>Sole-Blocker Rate</th>
+                <th title="Gate clamp (forced 0) within the mood-regime subset. Denominator: mood-regime samples.">Gate clamp (mood)</th>
+                <th title="Pass rate given gates pass within the mood-regime subset. Denominator: gate-pass samples.">Pass | gate (mood)</th>
+                <th title="Heuristic classification based on gate clamp and pass | gate rates (mood-regime denominators).">Gate vs threshold</th>
+                <th>Recommendation</th>
+                <th>Severity</th>
+              </tr>
+            </thead>
               <tbody id="blockers-tbody"></tbody>
             </table>
 
@@ -224,11 +261,12 @@
 
             <!-- Global Expression Sensitivity -->
             <div id="global-sensitivity" class="global-sensitivity-container" hidden>
-              <h3>🎯 Global Expression Sensitivity</h3>
+              <h3>🎯 Global Expression Sensitivity Analysis</h3>
               <p class="sensitivity-intro">
                 Shows how adjusting thresholds affects the <strong>entire expression trigger rate</strong>,
                 not just individual clause pass rates.
               </p>
+              <p class="population-label" data-population-role="stored-contexts"></p>
               <div id="global-sensitivity-tables" class="sensitivity-tables">
                 <!-- Sensitivity tables populated dynamically -->
               </div>
@@ -241,6 +279,7 @@
                 Shows how often each emotion condition passes when the mood state is already suitable.
                 Low rates indicate emotion-specific blockers that persist even in favorable mood regimes.
               </p>
+              <p class="population-label" data-population-role="stored-contexts"></p>
               <p class="conditional-regime-note">
                 Regime context: in-regime rates reflect only samples where all mood constraints pass.
               </p>
@@ -263,6 +302,7 @@
                 For decisive blockers, shows why the emotion value is too low by analyzing
                 axis contributions and identifying dominant suppressors.
               </p>
+              <p class="population-label" data-population-role="stored-contexts"></p>
               <div id="last-mile-decomposition-content" class="decomposition-content">
                 <!-- Decomposition panels populated dynamically -->
               </div>
@@ -286,6 +326,7 @@
               <p class="prototype-fit-intro">
                 Ranking of emotion prototypes by how well they fit this expression's mood regime.
               </p>
+              <p class="population-label" data-population-role="stored-contexts"></p>
               <div id="prototype-fit-warning" class="sensitivity-warning" hidden>
                 <span class="warning-icon">⚠️</span>
                 <span class="warning-text">
@@ -317,6 +358,7 @@
               <p class="implied-prototype-intro">
                 Analysis of which prototypes best match the expression's constraint pattern.
               </p>
+              <p class="population-label" data-population-role="stored-contexts"></p>
               <div id="implied-prototype-warning" class="sensitivity-warning" hidden>
                 <span class="warning-icon">⚠️</span>
                 <span class="warning-text">
@@ -391,6 +433,7 @@
               <p class="gap-detection-intro">
                 Analysis of prototype coverage in "prototype space".
               </p>
+              <p class="population-label" data-population-role="stored-contexts"></p>
               <div id="gap-status" class="gap-status-section">
                 <!-- Gap status indicator populated dynamically -->
               </div>

@@ -1,0 +1,170 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-hatred:vengeful_focus",
+    "description": "Cold, organized intent to punish—emotion congeals into strategy. Attention narrows, feelings go flat-edged, and the body moves with controlled purpose rather than heat.",
+    "category": "anger",
+    "actor_description": "The heat drains out of it and leaves something sharp and clean: a need for vengeance. My mind starts sorting options like tools—steps, timing, leverage—while my face stays still. I can feel my focus tighten into a straight line: not a shout, a plan. I don’t want comfort; I want consequences.",
+    "description_text": "{actor} goes unnervingly calm and intent—jaw set, eyes steady, movements economical. Their attention locks in with a deliberate, controlled edge, like they’re quietly arranging the next move.",
+    "priority": 76,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.hatred"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.anger"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.resentment"
+                                            },
+                                            0.5
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.compassion"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.agency_control"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.agency_control"
+                                    }
+                                ]
+                            },
+                            12
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.hatred"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anger"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a vengeful signal (hatred high OR anger+resentment high) plus high agency and engagement with negative valence and moderate arousal/threat. Blocks 'too hot' rage, panic hijack, and compassion drift. Triggers on a decisive agency_control jump (heat → plan) while hatred/anger remains high."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "The voice goes low and measured—fewer words, cleaner edges. There’s a quiet pause before each sentence, like choices are being weighed.",
+        "tactile": "The air feels tight around them, controlled—stillness with tension underneath, like a coiled spring that isn’t shaking.",
+        "limited": "{actor} becomes intensely deliberate, as if anger has turned into planning."
+    }
+}

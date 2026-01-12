@@ -11,6 +11,20 @@ import { getEpsilonForVariable } from '../config/advancedMetricsConfig.js';
 import GateConstraint from '../models/GateConstraint.js';
 import AxisInterval from '../models/AxisInterval.js';
 import {
+  evaluateConstraint,
+  extractMoodConstraints,
+} from '../utils/moodRegimeUtils.js';
+import {
+  normalizeAffectTraits,
+  normalizeMoodAxes,
+  normalizeSexualAxes,
+  resolveAxisValue,
+} from '../utils/axisNormalizationUtils.js';
+import {
+  buildPopulationHash,
+  buildPopulationPredicate,
+} from '../utils/populationHashUtils.js';
+import {
   createSamplingCoverageCalculator,
 } from './monteCarloSamplingCoverage.js';
 
@@ -73,11 +87,28 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
  */
 
 /**
+ * @typedef {'marginalClausePassRateSweep' | 'expressionTriggerRateSweep'} SensitivityResultKind
+ */
+
+/**
  * @typedef {object} SensitivityResult
+ * @property {SensitivityResultKind} kind - Discriminator for the sweep type
  * @property {string} conditionPath - Path to the condition (e.g., 'emotions.anger')
  * @property {string} operator - Comparison operator (e.g., '>=')
  * @property {number} originalThreshold - Original threshold value
  * @property {SensitivityPoint[]} grid - Sensitivity grid data
+ * @property {string} [populationHash] - Hash for stored-context population
+ */
+
+/**
+ * @typedef {object} ExpressionSensitivityResult
+ * @property {SensitivityResultKind} kind - Discriminator for the sweep type
+ * @property {string} varPath - Variable path to vary (e.g., "emotions.anger")
+ * @property {string} operator - Comparison operator (e.g., ">=", "<=")
+ * @property {number} originalThreshold - Original threshold value
+ * @property {{threshold: number, triggerRate: number, triggerCount: number, sampleCount: number}[]} grid - Trigger rate grid
+ * @property {boolean} isExpressionLevel - Flag for expression-level sweep
+ * @property {string} [populationHash] - Hash for stored-context population
  */
 
 /**
@@ -99,6 +130,13 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
  * @property {number|null} nearMissEpsilon - The epsilon value used
  * @property {number} clauseIndex
  * @property {object | null} [hierarchicalBreakdown] - Tree structure for compound clauses
+ * @property {number|null} [gatePassRateInRegime] - P(gate pass | mood regime) for leaf emotion clauses
+ * @property {number|null} [gateClampRateInRegime] - P(gate fail | mood regime) for leaf emotion clauses
+ * @property {number|null} [passRateGivenGateInRegime] - P(clause pass | gate pass, mood regime)
+ * @property {number|null} [gatePassInRegimeCount] - Gate pass count within mood regime
+ * @property {number|null} [gateFailInRegimeCount] - Gate fail count within mood regime
+ * @property {number|null} [gatePassAndClausePassInRegimeCount] - Gate pass + clause pass within mood regime
+ * @property {number|null} [gatePassAndClauseFailInRegimeCount] - Gate pass + clause fail within mood regime
  */
 
 /**
@@ -110,6 +148,7 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
  * @property {ClauseResult[]} clauseFailures - Per-clause failure data
  * @property {DistributionType} distribution
  * @property {UnseededVarWarning[]} unseededVarWarnings - Warnings for unseeded variable paths
+ * @property {object} [populationSummary] - Population counts for full samples vs stored contexts
  * @property {object} [samplingCoverage] - Coverage payload (when enabled and applicable)
  */
 
@@ -242,9 +281,10 @@ class MonteCarloSimulator {
       ? this.#initClauseTracking(expression)
       : null;
 
-    const moodConstraints = this.#extractMoodConstraints(
-      expression?.prerequisites
-    );
+    const moodConstraints = extractMoodConstraints(expression?.prerequisites, {
+      includeMoodAlias: true,
+      andOnly: true,
+    });
     const moodRegimeDefined = moodConstraints.length > 0;
     const gateCompatibility = this.#computeGateCompatibility(
       expression,
@@ -325,11 +365,16 @@ class MonteCarloSimulator {
           inRegimeSampleCount++;
         }
 
+        const gateContextCache =
+          referencedEmotions.size > 0
+            ? { context, current: null, previous: null }
+            : null;
         const result = this.#evaluateWithTracking(
           expression,
           context,
           clauseTracking,
-          inRegime
+          inRegime,
+          gateContextCache
         );
 
         if (result.triggered) {
@@ -377,7 +422,13 @@ class MonteCarloSimulator {
 
       // Yield to browser and report progress between chunks
       if (processed < sampleCount) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => {
+          if (typeof globalThis.requestIdleCallback === 'function') {
+            globalThis.requestIdleCallback(resolve, { timeout: 0 });
+          } else {
+            setTimeout(resolve, 0);
+          }
+        });
         onProgress?.(processed, sampleCount);
       }
     }
@@ -397,6 +448,57 @@ class MonteCarloSimulator {
         `triggerRate=${triggerRate.toFixed(4)} ` +
         `(${triggerCount}/${sampleCount}, ${distribution})`
     );
+
+    const storedContextCount = storedContexts ? storedContexts.length : 0;
+    let storedInRegimeCount = 0;
+    if (storedContextCount > 0) {
+      storedInRegimeCount = moodRegimeDefined
+        ? storedContexts.filter((context) =>
+            this.#evaluateMoodConstraints(moodConstraints, context)
+          ).length
+        : storedContextCount;
+    }
+
+    const populationMeta = storedContexts !== null
+      ? (() => {
+        const storedGlobalSampleIds = storedContexts.map((_, index) => index);
+        const storedGlobalPredicate = 'all';
+        const storedGlobalHash = buildPopulationHash(
+          storedGlobalSampleIds,
+          storedGlobalPredicate
+        );
+
+        const moodPredicate = buildPopulationPredicate(moodConstraints);
+        const storedMoodRegimeSampleIds =
+          moodConstraints.length > 0
+            ? storedContexts.reduce((acc, context, index) => {
+              if (this.#evaluateMoodConstraints(moodConstraints, context)) {
+                acc.push(index);
+              }
+              return acc;
+            }, [])
+            : storedGlobalSampleIds;
+        const storedMoodRegimeHash = buildPopulationHash(
+          storedMoodRegimeSampleIds,
+          moodPredicate
+        );
+
+        return {
+          storedGlobal: {
+            name: 'stored-global',
+            predicate: storedGlobalPredicate,
+            count: storedGlobalSampleIds.length,
+            hash: storedGlobalHash,
+          },
+          storedMoodRegime: {
+            name: 'stored-mood-regime',
+            predicate: moodPredicate,
+            count: storedMoodRegimeSampleIds.length,
+            hash: storedMoodRegimeHash,
+          },
+        };
+      })()
+      : null;
 
     // Build sampling metadata to clarify what the simulation tests
     const samplingMetadata = {
@@ -440,6 +542,20 @@ class MonteCarloSimulator {
       unseededVarWarnings,
       // Stored contexts for sensitivity analysis (null if not enabled)
       storedContexts,
+      populationSummary: {
+        sampleCount,
+        inRegimeSampleCount,
+        inRegimeSampleRate:
+          sampleCount > 0 ? inRegimeSampleCount / sampleCount : 0,
+        storedContextCount,
+        storedContextLimit: storeSamplesForSensitivity
+          ? sensitivitySampleLimit
+          : 0,
+        storedInRegimeCount,
+        storedInRegimeRate:
+          storedContextCount > 0 ? storedInRegimeCount / storedContextCount : 0,
+      },
+      populationMeta,
     };
 
     if (samplingCoverageCalculator) {
@@ -530,7 +646,13 @@ class MonteCarloSimulator {
    * @param {boolean} inRegime - Whether mood constraints passed for this sample
    * @returns {{triggered: boolean}}
    */
-  #evaluateWithTracking(expression, context, clauseTracking, inRegime) {
+  #evaluateWithTracking(
+    expression,
+    context,
+    clauseTracking,
+    inRegime,
+    gateContextCache
+  ) {
     // Two-phase evaluation for last-mile tracking
     if (clauseTracking && expression?.prerequisites) {
       // Phase 1: Evaluate all clauses and collect results
@@ -545,7 +667,8 @@ class MonteCarloSimulator {
           passed = this.#evaluateHierarchicalNode(
             clause.hierarchicalTree,
             context,
-            inRegime
+            inRegime,
+            gateContextCache
           );
           if (!passed) {
             clause.failureCount++;
@@ -672,12 +795,14 @@ class MonteCarloSimulator {
     return {
       mood: currentState.mood,
       moodAxes: currentState.mood, // Alias for expressions that check moodAxes.*
+      sexualAxes: currentState.sexual,
       emotions,
       sexualStates,
       sexualArousal, // Derived value available for expression evaluation
       previousEmotions,
       previousSexualStates,
       previousMoodAxes,
+      previousSexualAxes: previousState.sexual,
       previousSexualArousal, // Derived value for previous state arousal comparisons
       affectTraits: affectTraits ?? defaultTraits, // Include affect traits in context
     };
@@ -856,6 +981,27 @@ class MonteCarloSimulator {
               max: c.hierarchicalTree?.inRegimeMaxObservedValue ?? null,
             }
           : null;
+        const gatePassRateInRegime = leafOnly
+          ? c.hierarchicalTree?.gatePassRateInRegime ?? null
+          : null;
+        const gateClampRateInRegime = leafOnly
+          ? c.hierarchicalTree?.gateClampRateInRegime ?? null
+          : null;
+        const passRateGivenGateInRegime = leafOnly
+          ? c.hierarchicalTree?.passRateGivenGateInRegime ?? null
+          : null;
+        const gatePassInRegimeCount = leafOnly
+          ? c.hierarchicalTree?.gatePassInRegimeCount ?? null
+          : null;
+        const gateFailInRegimeCount = leafOnly
+          ? c.hierarchicalTree?.gateFailInRegimeCount ?? null
+          : null;
+        const gatePassAndClausePassInRegimeCount = leafOnly
+          ? c.hierarchicalTree?.gatePassAndClausePassInRegimeCount ?? null
+          : null;
+        const gatePassAndClauseFailInRegimeCount = leafOnly
+          ? c.hierarchicalTree?.gatePassAndClauseFailInRegimeCount ?? null
+          : null;
 
         return {
           clauseDescription: c.description,
@@ -889,6 +1035,13 @@ class MonteCarloSimulator {
           tuningDirection: leafOnly
             ? c.hierarchicalTree?.tuningDirection ?? null
             : null,
+          gatePassRateInRegime,
+          gateClampRateInRegime,
+          passRateGivenGateInRegime,
+          gatePassInRegimeCount,
+          gateFailInRegimeCount,
+          gatePassAndClausePassInRegimeCount,
+          gatePassAndClauseFailInRegimeCount,
           // Include hierarchical breakdown if available
           hierarchicalBreakdown: c.hierarchicalTree?.toJSON() ?? null,
         };
@@ -1134,61 +1287,6 @@ class MonteCarloSimulator {
   }
 
   /**
-   * Extract mood constraints from expression prerequisites.
-   * Mood constraints are conditions on moodAxes.* or mood.* paths.
-   *
-   * @private
-   * @param {Array} prerequisites
-   * @returns {Array<{varPath: string, operator: string, threshold: number}>}
-   */
-  #extractMoodConstraints(prerequisites) {
-    const constraints = [];
-    if (!prerequisites || !Array.isArray(prerequisites)) {
-      return constraints;
-    }
-
-    for (const prereq of prerequisites) {
-      this.#extractMoodConstraintsFromLogic(prereq.logic, constraints);
-    }
-
-    return constraints;
-  }
-
-  /**
-   * Recursively extract mood constraints from JSON Logic (AND blocks only).
-   *
-   * @private
-   * @param {object} logic
-   * @param {Array} constraints
-   */
-  #extractMoodConstraintsFromLogic(logic, constraints) {
-    if (!logic || typeof logic !== 'object') return;
-
-    const operators = ['>=', '<=', '>', '<', '=='];
-    for (const op of operators) {
-      if (logic[op]) {
-        const [left, right] = logic[op];
-        if (typeof left === 'object' && left.var && typeof right === 'number') {
-          const varPath = left.var;
-          if (varPath.startsWith('moodAxes.') || varPath.startsWith('mood.')) {
-            constraints.push({
-              varPath,
-              operator: op,
-              threshold: right,
-            });
-          }
-        }
-      }
-    }
-
-    if (logic.and && Array.isArray(logic.and)) {
-      for (const clause of logic.and) {
-        this.#extractMoodConstraintsFromLogic(clause, constraints);
-      }
-    }
-  }
-
-  /**
    * Evaluate mood constraints against a context.
    *
    * @private
@@ -1201,21 +1299,7 @@ class MonteCarloSimulator {
 
     return constraints.every((constraint) => {
       const value = this.#getNestedValue(context, constraint.varPath);
-      if (typeof value !== 'number') return false;
-      switch (constraint.operator) {
-        case '>=':
-          return value >= constraint.threshold;
-        case '>':
-          return value > constraint.threshold;
-        case '<=':
-          return value <= constraint.threshold;
-        case '<':
-          return value < constraint.threshold;
-        case '==':
-          return value === constraint.threshold;
-        default:
-          return false;
-      }
+      return evaluateConstraint(value, constraint.operator, constraint.threshold);
     });
   }
 
@@ -1448,7 +1532,7 @@ class MonteCarloSimulator {
    * @param {object} context
    * @returns {boolean} - Whether the node evaluated to true
    */
-  #evaluateHierarchicalNode(node, context, inRegime) {
+  #evaluateHierarchicalNode(node, context, inRegime, gateContextCache) {
     if (node.nodeType === 'leaf') {
       const passed = this.#evaluateLeafCondition(node.logic, context);
       const violation = passed
@@ -1475,6 +1559,13 @@ class MonteCarloSimulator {
       if (inRegime) {
         node.recordInRegimeEvaluation(passed);
       }
+      this.#recordGateOutcomeIfApplicable(
+        node,
+        context,
+        passed,
+        inRegime,
+        gateContextCache
+      );
       return passed;
     }
 
@@ -1485,7 +1576,8 @@ class MonteCarloSimulator {
         const childPassed = this.#evaluateHierarchicalNode(
           child,
           context,
-          inRegime
+          inRegime,
+          gateContextCache
         );
         childResults.push({ child, passed: childPassed });
       }
@@ -1508,7 +1600,8 @@ class MonteCarloSimulator {
         const childPassed = this.#evaluateHierarchicalNode(
           child,
           context,
-          inRegime
+          inRegime,
+          gateContextCache
         );
         childResults.push({ child, passed: childPassed });
       }
@@ -1566,6 +1659,181 @@ class MonteCarloSimulator {
       }
       return false;
     }
+  }
+
+  /**
+   * Record gate pass/fail outcomes for direct emotion-threshold leaf clauses.
+   *
+   * @private
+   * @param {HierarchicalClauseNode} node
+   * @param {object} context
+   * @param {boolean} clausePassed
+   * @param {boolean} inRegime
+   * @param {object|null} gateContextCache
+   */
+  #recordGateOutcomeIfApplicable(
+    node,
+    context,
+    clausePassed,
+    inRegime,
+    gateContextCache
+  ) {
+    if (!node || node.nodeType !== 'leaf') {
+      return;
+    }
+
+    const gateTarget = this.#resolveGateTarget(node.variablePath);
+    if (!gateTarget) {
+      return;
+    }
+
+    const prototype = this.#getPrototype(gateTarget.prototypeId, 'emotion');
+    if (!prototype) {
+      return;
+    }
+
+    const normalizedContext = this.#resolveGateContext(
+      gateContextCache,
+      context,
+      gateTarget.usePrevious
+    );
+    if (!normalizedContext) {
+      return;
+    }
+
+    const gatePass = this.#evaluateGatePass(
+      prototype.gates,
+      normalizedContext
+    );
+    node.recordGateEvaluation(gatePass, clausePassed, inRegime);
+  }
+
+  /**
+   * Resolve gate evaluation target from a variable path.
+   *
+   * @private
+   * @param {string|null} variablePath
+   * @returns {{ prototypeId: string, usePrevious: boolean }|null}
+   */
+  #resolveGateTarget(variablePath) {
+    if (!variablePath || typeof variablePath !== 'string') {
+      return null;
+    }
+
+    if (variablePath.startsWith('emotions.')) {
+      return {
+        prototypeId: variablePath.slice('emotions.'.length),
+        usePrevious: false,
+      };
+    }
+
+    if (variablePath.startsWith('previousEmotions.')) {
+      return {
+        prototypeId: variablePath.slice('previousEmotions.'.length),
+        usePrevious: true,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Resolve normalized axes for gate evaluation, with simple per-sample caching.
+   *
+   * @private
+   * @param {object|null} gateContextCache
+   * @param {object} context
+   * @param {boolean} usePrevious
+   * @returns {{moodAxes: object, sexualAxes: object, traitAxes: object}|null}
+   */
+  #resolveGateContext(gateContextCache, context, usePrevious) {
+    if (!context) {
+      return null;
+    }
+
+    if (gateContextCache) {
+      if (usePrevious) {
+        if (!gateContextCache.previous) {
+          gateContextCache.previous = this.#normalizeGateContext(
+            context,
+            true
+          );
+        }
+        return gateContextCache.previous;
+      }
+
+      if (!gateContextCache.current) {
+        gateContextCache.current = this.#normalizeGateContext(context, false);
+      }
+      return gateContextCache.current;
+    }
+
+    return this.#normalizeGateContext(context, usePrevious);
+  }
+
+  /**
+   * Normalize axes from context for gate evaluation.
+   *
+   * @private
+   * @param {object} context
+   * @param {boolean} usePrevious
+   * @returns {{moodAxes: object, sexualAxes: object, traitAxes: object}}
+   */
+  #normalizeGateContext(context, usePrevious) {
+    const moodSource = usePrevious
+      ? context?.previousMoodAxes
+      : context?.moodAxes ?? context?.mood ?? {};
+    const sexualSource = usePrevious
+      ? context?.previousSexualAxes
+      : context?.sexualAxes ?? context?.sexual ?? null;
+    const sexualArousalSource = usePrevious
+      ? context?.previousSexualArousal ?? null
+      : context?.sexualArousal ?? null;
+
+    const moodAxes = normalizeMoodAxes(moodSource);
+    const sexualAxes = normalizeSexualAxes(
+      sexualSource,
+      sexualArousalSource
+    );
+    const traitAxes = normalizeAffectTraits(context?.affectTraits);
+
+    return { moodAxes, sexualAxes, traitAxes };
+  }
+
+  /**
+   * Evaluate gate pass/fail for a prototype using normalized axes.
+   *
+   * @private
+   * @param {string[]|undefined} gates
+   * @param {{moodAxes: object, sexualAxes: object, traitAxes: object}} normalized
+   * @returns {boolean}
+   */
+  #evaluateGatePass(gates, normalized) {
+    if (!gates || !Array.isArray(gates) || gates.length === 0) {
+      return true;
+    }
+
+    for (const gate of gates) {
+      let constraint;
+      try {
+        constraint = GateConstraint.parse(gate);
+      } catch {
+        continue;
+      }
+
+      const axisValue = resolveAxisValue(
+        constraint.axis,
+        normalized.moodAxes,
+        normalized.sexualAxes,
+        normalized.traitAxes
+      );
+
+      if (!constraint.isSatisfiedBy(axisValue)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -2201,6 +2469,7 @@ class MonteCarloSimulator {
         'MonteCarloSimulator: No stored contexts for sensitivity analysis'
       );
       return {
+        kind: 'marginalClausePassRateSweep',
         conditionPath: varPath,
         operator,
         originalThreshold,
@@ -2239,6 +2508,7 @@ class MonteCarloSimulator {
     }
 
     return {
+      kind: 'marginalClausePassRateSweep',
       conditionPath: varPath,
       operator,
       originalThreshold,
@@ -2260,7 +2530,7 @@ class MonteCarloSimulator {
    * @param {object} options - Configuration options
    * @param {number} [options.steps=9] - Number of grid points
    * @param {number} [options.stepSize=0.05] - Step size between grid points
-   * @returns {{varPath: string, operator: string, originalThreshold: number, grid: {threshold: number, triggerRate: number, triggerCount: number, sampleCount: number}[], isExpressionLevel: boolean}}
+   * @returns {ExpressionSensitivityResult}
    */
   computeExpressionSensitivity(
     storedContexts,
@@ -2277,6 +2547,7 @@ class MonteCarloSimulator {
         'MonteCarloSimulator: No stored contexts for expression sensitivity analysis'
       );
       return {
+        kind: 'expressionTriggerRateSweep',
         varPath,
         operator,
         originalThreshold,
@@ -2290,6 +2561,7 @@ class MonteCarloSimulator {
         'MonteCarloSimulator: No expression logic for expression sensitivity analysis'
       );
       return {
+        kind: 'expressionTriggerRateSweep',
         varPath,
         operator,
         originalThreshold,
@@ -2332,6 +2604,7 @@ class MonteCarloSimulator {
     }
 
     return {
+      kind: 'expressionTriggerRateSweep',
       varPath,
       operator,
       originalThreshold,
@@ -2353,7 +2626,10 @@ class MonteCarloSimulator {
    */
   #replaceThresholdInLogic(logic, varPath, operator, newThreshold) {
     // Deep clone to avoid mutating original
-    const clone = JSON.parse(JSON.stringify(logic));
+    const clone =
+      typeof globalThis.structuredClone === 'function'
+        ? globalThis.structuredClone(logic)
+        : JSON.parse(JSON.stringify(logic));
     this.#replaceThresholdRecursive(clone, varPath, operator, newThreshold);
     return clone;
   }

@@ -10,6 +10,12 @@
  */
 
 import GateConstraint from '../models/GateConstraint.js';
+import {
+  normalizeAffectTraits,
+  normalizeMoodAxes,
+  normalizeSexualAxes,
+  resolveAxisValue,
+} from '../utils/axisNormalizationUtils.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
@@ -271,6 +277,124 @@ class PrototypeFitRankingService {
     return { leaderboard, currentPrototype, bestAlternative, improvementFactor };
   }
 
+  /**
+   * Analyze all prototypes for fit to the expression's mood regime, yielding between chunks.
+   *
+   * @param {Array|object} prerequisitesOrExpression - Expression prerequisites array OR expression object
+   * @param {Array<object>} storedContexts - MC sample contexts
+   * @param {Map<string, {min: number, max: number}>|undefined} [axisConstraintsParam] - Optional pre-extracted constraints
+   * @param {number} [threshold=0.3] - Expression's emotion threshold
+   * @param {{ maxChunkMs?: number }} [options] - Yield tuning options
+   * @returns {Promise<PrototypeFitAnalysis>}
+   */
+  async analyzeAllPrototypeFitAsync(
+    prerequisitesOrExpression,
+    storedContexts,
+    axisConstraintsParam,
+    threshold = 0.3,
+    options = {}
+  ) {
+    if (!storedContexts || storedContexts.length === 0) {
+      this.#logger.debug('PrototypeFitRankingService: No stored contexts for analysis');
+      return { leaderboard: [], currentPrototype: null, bestAlternative: null, improvementFactor: null };
+    }
+
+    const maxChunkMs = Number.isFinite(options.maxChunkMs) ? options.maxChunkMs : 12;
+    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrExpression);
+    const expression = Array.isArray(prerequisitesOrExpression) ? null : prerequisitesOrExpression;
+
+    if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
+      typesToFetch.hasEmotions = true;
+    }
+
+    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    if (allPrototypes.length === 0) {
+      this.#logger.warn('PrototypeFitRankingService: No prototypes found');
+      return { leaderboard: [], currentPrototype: null, bestAlternative: null, improvementFactor: null };
+    }
+
+    const axisConstraints = axisConstraintsParam instanceof Map
+      ? axisConstraintsParam
+      : this.#normalizeAxisConstraints(prerequisitesOrExpression);
+
+    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    this.#logger.debug(
+      `PrototypeFitRankingService: ${regimeContexts.length}/${storedContexts.length} contexts in regime`
+    );
+
+    const currentProtoRef = this.#extractExpressionPrototype(expression);
+    const results = [];
+    let chunkStart = this.#now();
+
+    for (const proto of allPrototypes) {
+      const gatePassRate = this.#computeGatePassRate(proto, regimeContexts);
+      const intensityDist = this.#computeIntensityDistribution(
+        proto,
+        regimeContexts,
+        threshold
+      );
+      const gateCompatibility = this.#getGateCompatibility(
+        proto,
+        axisConstraints,
+        threshold
+      );
+      const inRegimeAchievableRange = {
+        min: Number.isFinite(intensityDist.min) ? intensityDist.min : null,
+        max: Number.isFinite(intensityDist.max) ? intensityDist.max : null,
+      };
+      const conflicts = this.#analyzeConflicts(proto.weights, axisConstraints);
+      const exclusionCompat = 1.0;
+
+      const compositeScore = this.#computeCompositeScore({
+        gatePassRate,
+        pIntensityAbove: intensityDist.pAboveThreshold,
+        conflictScore: conflicts.score,
+        exclusionCompatibility: exclusionCompat,
+      });
+
+      results.push({
+        prototypeId: proto.id,
+        type: proto.type,
+        gatePassRate,
+        intensityDistribution: intensityDist,
+        conflictScore: conflicts.score,
+        conflictMagnitude: conflicts.magnitude,
+        conflictingAxes: conflicts.axes,
+        compositeScore,
+        gateCompatibility,
+        inRegimeAchievableRange,
+        rank: 0,
+      });
+
+      if (this.#now() - chunkStart >= maxChunkMs) {
+        await this.#yieldToBrowser();
+        chunkStart = this.#now();
+      }
+    }
+
+    results.sort((a, b) => b.compositeScore - a.compositeScore);
+    results.forEach((r, i) => {
+      r.rank = i + 1;
+    });
+
+    const leaderboard = results.slice(0, 10);
+    const currentPrototype = currentProtoRef
+      ? results.find((r) => r.prototypeId === currentProtoRef.id && r.type === currentProtoRef.type) || null
+      : null;
+
+    let bestAlternative = null;
+    let improvementFactor = null;
+
+    if (currentPrototype && leaderboard.length > 0 && leaderboard[0].prototypeId !== currentProtoRef?.id) {
+      bestAlternative = leaderboard[0].prototypeId;
+      if (currentPrototype.compositeScore > 0) {
+        improvementFactor = leaderboard[0].compositeScore / currentPrototype.compositeScore;
+      }
+    }
+
+    return { leaderboard, currentPrototype, bestAlternative, improvementFactor };
+  }
+
   // ============================================================================
   // FEATURE 2: Implied Prototype from Prerequisites
   // ============================================================================
@@ -329,6 +453,79 @@ class PrototypeFitRankingService {
     });
 
     // Sort and get top 5 by each metric
+    const bySimilarity = [...similarities]
+      .sort((a, b) => b.cosineSimilarity - a.cosineSimilarity)
+      .slice(0, 5);
+
+    const byGatePass = [...similarities]
+      .sort((a, b) => b.gatePassRate - a.gatePassRate)
+      .slice(0, 5);
+
+    const byCombined = [...similarities]
+      .sort((a, b) => b.combinedScore - a.combinedScore)
+      .slice(0, 5);
+
+    return { targetSignature, bySimilarity, byGatePass, byCombined };
+  }
+
+  /**
+   * Compute implied prototype from expression prerequisites, yielding between chunks.
+   *
+   * @param {Array|Map<string, {min: number, max: number}>|object} prerequisitesOrAxisConstraintsOrExpression
+   * @param {Array<object>} storedContexts
+   * @param {Array<object>} [clauseFailuresParam]
+   * @param {{ maxChunkMs?: number }} [options]
+   * @returns {Promise<ImpliedPrototypeAnalysis>}
+   */
+  async computeImpliedPrototypeAsync(
+    prerequisitesOrAxisConstraintsOrExpression,
+    storedContexts,
+    clauseFailuresParam,
+    options = {}
+  ) {
+    const axisConstraints = this.#normalizeAxisConstraints(prerequisitesOrAxisConstraintsOrExpression);
+    const clauseFailures = clauseFailuresParam || [];
+    const targetSignature = this.#buildTargetSignature(axisConstraints, clauseFailures);
+    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrAxisConstraintsOrExpression);
+
+    if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
+      typesToFetch.hasEmotions = true;
+    }
+
+    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    if (allPrototypes.length === 0) {
+      return {
+        targetSignature,
+        bySimilarity: [],
+        byGatePass: [],
+        byCombined: [],
+      };
+    }
+
+    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const similarities = [];
+    const maxChunkMs = Number.isFinite(options.maxChunkMs) ? options.maxChunkMs : 12;
+    let chunkStart = this.#now();
+
+    for (const proto of allPrototypes) {
+      const cosineSim = this.#computeCosineSimilarity(targetSignature, proto.weights);
+      const gatePassRate = this.#computeGatePassRate(proto, regimeContexts);
+      const combinedScore = 0.6 * cosineSim + 0.4 * gatePassRate;
+
+      similarities.push({
+        prototypeId: proto.id,
+        type: proto.type,
+        cosineSimilarity: cosineSim,
+        gatePassRate,
+        combinedScore,
+      });
+
+      if (this.#now() - chunkStart >= maxChunkMs) {
+        await this.#yieldToBrowser();
+        chunkStart = this.#now();
+      }
+    }
+
     const bySimilarity = [...similarities]
       .sort((a, b) => b.cosineSimilarity - a.cosineSimilarity)
       .slice(0, 5);
@@ -469,6 +666,149 @@ class PrototypeFitRankingService {
       distancePercentile,
       distanceContext,
     };
+  }
+
+  /**
+   * Detect prototype coverage gaps, yielding between chunks.
+   *
+   * @param {Array|Map<string, TargetSignatureEntry>|object} prerequisitesOrTargetSignatureOrExpression
+   * @param {Array<object>} storedContexts
+   * @param {Map<string, {min: number, max: number}>|undefined} [axisConstraintsParam]
+   * @param {number} [threshold=0.3]
+   * @param {{ maxChunkMs?: number }} [options]
+   * @returns {Promise<GapDetectionResult>}
+   */
+  async detectPrototypeGapsAsync(
+    prerequisitesOrTargetSignatureOrExpression,
+    storedContexts,
+    axisConstraintsParam,
+    threshold = 0.3,
+    options = {}
+  ) {
+    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrTargetSignatureOrExpression);
+
+    if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
+      typesToFetch.hasEmotions = true;
+    }
+
+    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    if (allPrototypes.length === 0) {
+      return {
+        gapDetected: false,
+        nearestDistance: Infinity,
+        kNearestNeighbors: [],
+        coverageWarning: null,
+        suggestedPrototype: null,
+        gapThreshold: GAP_DISTANCE_THRESHOLD,
+        distanceZScore: null,
+        distancePercentile: null,
+        distanceContext: null,
+      };
+    }
+
+    const axisConstraints = axisConstraintsParam instanceof Map
+      ? axisConstraintsParam
+      : this.#normalizeAxisConstraints(prerequisitesOrTargetSignatureOrExpression);
+
+    let targetSignature;
+    if (prerequisitesOrTargetSignatureOrExpression instanceof Map && !Array.isArray(prerequisitesOrTargetSignatureOrExpression)) {
+      const firstVal = prerequisitesOrTargetSignatureOrExpression.values().next().value;
+      if (firstVal && 'direction' in firstVal && 'importance' in firstVal) {
+        targetSignature = prerequisitesOrTargetSignatureOrExpression;
+      } else {
+        targetSignature = this.#buildTargetSignature(prerequisitesOrTargetSignatureOrExpression, []);
+      }
+    } else {
+      targetSignature = this.#buildTargetSignature(axisConstraints, []);
+    }
+
+    const desiredWeights = this.#targetSignatureToWeights(targetSignature);
+    const desiredGates = this.#inferGatesFromConstraints(axisConstraints);
+    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const distances = [];
+    const maxChunkMs = Number.isFinite(options.maxChunkMs) ? options.maxChunkMs : 12;
+    let chunkStart = this.#now();
+
+    for (const proto of allPrototypes) {
+      const weightDist = this.#computeWeightDistance(desiredWeights, proto.weights);
+      const gateDist = this.#computeGateDistance(desiredGates, proto.gates);
+      const combinedDist = 0.7 * weightDist + 0.3 * gateDist;
+
+      const intensityDist = this.#computeIntensityDistribution(
+        proto,
+        regimeContexts,
+        threshold
+      );
+
+      distances.push({
+        prototypeId: proto.id,
+        type: proto.type,
+        weightDistance: weightDist,
+        gateDistance: gateDist,
+        combinedDistance: combinedDist,
+        pIntensityAbove: intensityDist.pAboveThreshold,
+      });
+
+      if (this.#now() - chunkStart >= maxChunkMs) {
+        await this.#yieldToBrowser();
+        chunkStart = this.#now();
+      }
+    }
+
+    distances.sort((a, b) => a.combinedDistance - b.combinedDistance);
+    const kNearest = distances.slice(0, K_NEIGHBORS);
+
+    const nearestDist = kNearest[0]?.combinedDistance ?? Infinity;
+    const bestIntensity = Math.max(...kNearest.map((d) => d.pIntensityAbove));
+    const gapDetected = nearestDist > GAP_DISTANCE_THRESHOLD && bestIntensity < GAP_INTENSITY_THRESHOLD;
+
+    const distanceStatsKey = this.#buildDistanceStatsCacheKey(typesToFetch);
+    const distanceStats = this.#getDistanceDistribution(distanceStatsKey, allPrototypes);
+    const distancePercentile = distanceStats
+      ? this.#computeDistancePercentile(distanceStats.sortedDistances, nearestDist)
+      : null;
+    const distanceZScore = distanceStats
+      ? this.#computeDistanceZScore(distanceStats.mean, distanceStats.std, nearestDist)
+      : null;
+    const distanceContext = distanceStats
+      ? this.#buildDistanceContext(nearestDist, distancePercentile, distanceZScore)
+      : null;
+
+    let coverageWarning = null;
+    let suggestedPrototype = null;
+
+    if (gapDetected) {
+      coverageWarning =
+        `No prototype within distance ${GAP_DISTANCE_THRESHOLD.toFixed(2)}. ` +
+        `Best achieves only ${(bestIntensity * 100).toFixed(1)}% intensity rate.`;
+      suggestedPrototype = this.#synthesizePrototype(kNearest, desiredWeights, axisConstraints);
+    }
+
+    return {
+      gapDetected,
+      nearestDistance: nearestDist,
+      kNearestNeighbors: kNearest,
+      coverageWarning,
+      suggestedPrototype,
+      gapThreshold: GAP_DISTANCE_THRESHOLD,
+      distanceZScore,
+      distancePercentile,
+      distanceContext,
+    };
+  }
+
+  async #yieldToBrowser() {
+    await new Promise((resolve) => {
+      if (typeof globalThis.requestIdleCallback === 'function') {
+        globalThis.requestIdleCallback(resolve, { timeout: 0 });
+      } else {
+        setTimeout(resolve, 0);
+      }
+    });
+  }
+
+  #now() {
+    return typeof globalThis.performance?.now === 'function' ? globalThis.performance.now() : Date.now();
   }
 
   // ============================================================================
@@ -651,8 +991,14 @@ class PrototypeFitRankingService {
     }
 
     return contexts.filter((ctx) => {
+      const normalized = this.#getNormalizedAxes(ctx);
       for (const [axis, constraint] of constraints) {
-        const value = this.#getAxisValue(ctx, axis);
+        const value = resolveAxisValue(
+          axis,
+          normalized.moodAxes,
+          normalized.sexualAxes,
+          normalized.traitAxes
+        );
         if (value < constraint.min || value > constraint.max) {
           return false;
         }
@@ -669,19 +1015,15 @@ class PrototypeFitRankingService {
    * @param {string} axis
    * @returns {number} Normalized value in [-1, 1] for mood axes or [0, 1] for sexual axes
    */
-  #getAxisValue(ctx, axis) {
-    // Try moodAxes first - normalize from [-100, 100] to [-1, 1] if needed
-    if (ctx.moodAxes && axis in ctx.moodAxes) {
-      const raw = ctx.moodAxes[axis];
-      // Monte Carlo contexts store raw [-100, 100] values; normalize for comparison
-      return Math.abs(raw) <= 1 ? raw : raw / 100;
-    }
-    // Try sexualStates - normalize from [0, 100] to [0, 1] if needed
-    if (ctx.sexualStates && axis in ctx.sexualStates) {
-      const raw = ctx.sexualStates[axis];
-      return raw <= 1 ? raw : raw / 100;
-    }
-    return 0;
+  #getNormalizedAxes(ctx) {
+    const moodSource = ctx?.moodAxes ?? ctx?.mood ?? null;
+    const sexualSource = ctx?.sexualAxes ?? ctx?.sexual ?? null;
+
+    return {
+      moodAxes: normalizeMoodAxes(moodSource),
+      sexualAxes: normalizeSexualAxes(sexualSource, ctx?.sexualArousal ?? null),
+      traitAxes: normalizeAffectTraits(ctx?.affectTraits ?? null),
+    };
   }
 
   /**
@@ -711,6 +1053,7 @@ class PrototypeFitRankingService {
    * @returns {boolean}
    */
   #checkAllGatesPass(gates, ctx) {
+    const normalized = this.#getNormalizedAxes(ctx);
     for (const gateStr of gates) {
       let parsed;
       try {
@@ -719,7 +1062,12 @@ class PrototypeFitRankingService {
         continue;
       }
 
-      const value = this.#getAxisValue(ctx, parsed.axis);
+      const value = resolveAxisValue(
+        parsed.axis,
+        normalized.moodAxes,
+        normalized.sexualAxes,
+        normalized.traitAxes
+      );
       if (!parsed.isSatisfiedBy(value)) {
         return false;
       }
@@ -824,11 +1172,17 @@ class PrototypeFitRankingService {
    * @returns {number}
    */
   #computeIntensity(weights, ctx) {
+    const normalized = this.#getNormalizedAxes(ctx);
     let rawSum = 0;
     let sumAbsWeights = 0;
 
     for (const [axis, weight] of Object.entries(weights)) {
-      const value = this.#getAxisValue(ctx, axis);
+      const value = resolveAxisValue(
+        axis,
+        normalized.moodAxes,
+        normalized.sexualAxes,
+        normalized.traitAxes
+      );
       rawSum += weight * value;
       sumAbsWeights += Math.abs(weight);
     }

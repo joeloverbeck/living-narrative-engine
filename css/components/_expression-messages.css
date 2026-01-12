@@ -9,11 +9,10 @@
   padding: 0.75rem 1rem;
   font-family: var(--font-narrative, Georgia, serif);
   font-style: italic;
-  border-left: 3px solid var(--expression-accent-color, #00796b);
-  background: linear-gradient(
-    to right,
-    var(--expression-accent-background, rgba(0, 121, 107, 0.08)),
-    transparent
+  border: 1px solid var(--expression-accent-color, #00796b);
+  background-color: var(
+    --expression-accent-background,
+    rgba(0, 121, 107, 0.08)
   );
   border-radius: var(--border-radius-sm, 4px);
   animation: expressionFadeIn 0.4s ease-out;
@@ -42,72 +41,72 @@
 
 /* Default fallback when category is missing */
 .expression-message--default {
-  border-left-color: #00796b;
-  background: linear-gradient(to right, rgba(0, 121, 107, 0.08), transparent);
+  --expression-accent-color: #00796b;
+  --expression-accent-background: rgba(0, 121, 107, 0.08);
 }
 
 /* Calm: Baseline, peaceful, grounded states (teal) */
 .expression-message--calm {
-  border-left-color: #00796b;
-  background: linear-gradient(to right, rgba(0, 121, 107, 0.08), transparent);
+  --expression-accent-color: #00796b;
+  --expression-accent-background: rgba(0, 121, 107, 0.08);
 }
 
 /* Joy: High-energy positive, excitement, elevation (amber) */
 .expression-message--joy {
-  border-left-color: #ff8f00;
-  background: linear-gradient(to right, rgba(255, 143, 0, 0.1), transparent);
+  --expression-accent-color: #ff8f00;
+  --expression-accent-background: rgba(255, 143, 0, 0.1);
 }
 
 /* Affection: Social bonding, connection, warmth (rose) */
 .expression-message--affection {
-  border-left-color: #ad1457;
-  background: linear-gradient(to right, rgba(173, 20, 87, 0.1), transparent);
+  --expression-accent-color: #ad1457;
+  --expression-accent-background: rgba(173, 20, 87, 0.1);
 }
 
 /* Desire: Sexual/wanting states, passion, craving (vivid pink) */
 .expression-message--desire {
-  border-left-color: #d81b60;
-  background: linear-gradient(to right, rgba(216, 27, 96, 0.1), transparent);
+  --expression-accent-color: #d81b60;
+  --expression-accent-background: rgba(216, 27, 96, 0.1);
 }
 
 /* Attention: Cognitive engagement, curiosity, absorption (orange) */
 .expression-message--attention {
-  border-left-color: #f57c00;
-  background: linear-gradient(to right, rgba(245, 124, 0, 0.1), transparent);
+  --expression-accent-color: #f57c00;
+  --expression-accent-background: rgba(245, 124, 0, 0.1);
 }
 
 /* Threat: Fear, anxiety, vigilance, danger response (purple) */
 .expression-message--threat {
-  border-left-color: #4a148c;
-  background: linear-gradient(to right, rgba(74, 20, 140, 0.1), transparent);
+  --expression-accent-color: #4a148c;
+  --expression-accent-background: rgba(74, 20, 140, 0.1);
 }
 
 /* Anger: Hostility, frustration, disgust, aversion (red) */
 .expression-message--anger {
-  border-left-color: #c62828;
-  background: linear-gradient(to right, rgba(198, 40, 40, 0.1), transparent);
+  --expression-accent-color: #c62828;
+  --expression-accent-background: rgba(198, 40, 40, 0.1);
 }
 
 /* Loss: Grief, sadness, nostalgia, regret (blue-gray) */
 .expression-message--loss {
-  border-left-color: #37474f;
-  background: linear-gradient(to right, rgba(55, 71, 79, 0.1), transparent);
+  --expression-accent-color: #37474f;
+  --expression-accent-background: rgba(55, 71, 79, 0.1);
 }
 
 /* Shame: Self-evaluation, guilt, embarrassment (brown) */
 .expression-message--shame {
-  border-left-color: #5d4037;
-  background: linear-gradient(to right, rgba(93, 64, 55, 0.1), transparent);
+  --expression-accent-color: #5d4037;
+  --expression-accent-background: rgba(93, 64, 55, 0.1);
 }
 
 /* Shutdown: Protective disconnect, numbness, fatigue (gray) */
 .expression-message--shutdown {
-  border-left-color: #607d8b;
-  background: linear-gradient(to right, rgba(96, 125, 139, 0.1), transparent);
+  --expression-accent-color: #607d8b;
+  --expression-accent-background: rgba(96, 125, 139, 0.1);
 }
 
 /* Agency: Personal power, mastery, determination (dark teal) */
 .expression-message--agency {
-  border-left-color: #00695c;
-  background: linear-gradient(to right, rgba(0, 105, 92, 0.1), transparent);
+  --expression-accent-color: #00695c;
+  --expression-accent-background: rgba(0, 105, 92, 0.1);
 }

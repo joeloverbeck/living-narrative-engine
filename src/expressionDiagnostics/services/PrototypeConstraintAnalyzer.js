@@ -9,6 +9,7 @@
 
 import GateConstraint from '../models/GateConstraint.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { extractMoodConstraints } from '../utils/moodRegimeUtils.js';
 
 /**
  * @typedef {object} PrototypeAnalysisResult
@@ -203,8 +204,22 @@ class PrototypeConstraintAnalyzer {
       return constraints;
     }
 
-    for (const prereq of prerequisites) {
-      this.#extractConstraintsFromLogic(prereq.logic, constraints);
+    const moodConstraints = extractMoodConstraints(prerequisites, {
+      includeMoodAlias: true,
+      andOnly: true,
+    });
+
+    for (const constraint of moodConstraints) {
+      const axis = this.#getAxisFromVarPath(constraint.varPath);
+      if (!axis) {
+        continue;
+      }
+      this.#applyConstraint(
+        constraints,
+        axis,
+        constraint.operator,
+        constraint.threshold
+      );
     }
 
     return constraints;
@@ -513,37 +528,17 @@ class PrototypeConstraintAnalyzer {
    * @param {object} logic - JSON Logic expression
    * @param {Map} constraints - Accumulated constraints
    */
-  #extractConstraintsFromLogic(logic, constraints) {
-    if (!logic || typeof logic !== 'object') return;
-
-    // Check comparison operators
-    for (const op of ['>=', '>', '<=', '<']) {
-      if (logic[op]) {
-        const [left, right] = logic[op];
-
-        // Check if this is a moodAxes constraint
-        if (
-          typeof left === 'object' &&
-          left.var &&
-          left.var.startsWith('moodAxes.')
-        ) {
-          const axis = left.var.replace('moodAxes.', '');
-          const value = typeof right === 'number' ? right : null;
-
-          if (value !== null) {
-            this.#applyConstraint(constraints, axis, op, value);
-          }
-        }
-      }
+  #getAxisFromVarPath(varPath) {
+    if (typeof varPath !== 'string') {
+      return null;
     }
-
-    // Recurse into nested logic
-    if (logic.and || logic.or) {
-      const clauses = logic.and || logic.or;
-      for (const clause of clauses) {
-        this.#extractConstraintsFromLogic(clause, constraints);
-      }
+    if (varPath.startsWith('moodAxes.')) {
+      return varPath.replace('moodAxes.', '');
     }
+    if (varPath.startsWith('mood.')) {
+      return varPath.replace('mood.', '');
+    }
+    return null;
   }
 
   /**

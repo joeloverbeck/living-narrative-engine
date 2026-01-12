@@ -116,10 +116,34 @@ describe('SensitivityAnalyzer', () => {
       { stepSize: 1 }
     );
     expect(results).toEqual([
-      { varPath: 'emotions.joy', grid: [], isIntegerDomain: false },
-      { varPath: 'sexual.arousal', grid: [], isIntegerDomain: false },
-      { varPath: 'sexualArousal', grid: [], isIntegerDomain: false },
-      { varPath: 'moodAxes.valence', grid: [], isIntegerDomain: true },
+      {
+        varPath: 'emotions.joy',
+        grid: [],
+        isIntegerDomain: false,
+        kind: 'marginalClausePassRateSweep',
+        populationHash: '77d1a548',
+      },
+      {
+        varPath: 'sexual.arousal',
+        grid: [],
+        isIntegerDomain: false,
+        kind: 'marginalClausePassRateSweep',
+        populationHash: '77d1a548',
+      },
+      {
+        varPath: 'sexualArousal',
+        grid: [],
+        isIntegerDomain: false,
+        kind: 'marginalClausePassRateSweep',
+        populationHash: '77d1a548',
+      },
+      {
+        varPath: 'moodAxes.valence',
+        grid: [],
+        isIntegerDomain: true,
+        kind: 'marginalClausePassRateSweep',
+        populationHash: '77d1a548',
+      },
     ]);
   });
 
@@ -304,8 +328,20 @@ describe('SensitivityAnalyzer', () => {
 
     expect(monteCarloSimulator.computeThresholdSensitivity).toHaveBeenCalledTimes(2);
     expect(results).toEqual([
-      { varPath: 'emotions.joy', grid: [], isIntegerDomain: false },
-      { varPath: 'sexual.arousal', grid: [], isIntegerDomain: false },
+      {
+        varPath: 'emotions.joy',
+        grid: [],
+        isIntegerDomain: false,
+        kind: 'marginalClausePassRateSweep',
+        populationHash: '77d1a548',
+      },
+      {
+        varPath: 'sexual.arousal',
+        grid: [],
+        isIntegerDomain: false,
+        kind: 'marginalClausePassRateSweep',
+        populationHash: '77d1a548',
+      },
     ]);
   });
 

@@ -1,0 +1,165 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-deference-submission:appeasing_fawn_smile",
+    "description": "Safety-seeking friendliness—an automatic, polished warmth used as cover. The body offers cooperation and soft edges first, hoping to reduce risk before it has to fight or flee.",
+    "category": "agency",
+    "actor_description": "A smile snaps onto my face like a reflex, a little too quick, a little too careful. I can feel myself shrinking around the edges—making my voice lighter, my gestures smaller, my tone agreeable. It isn’t trust; it’s strategy dressed up as friendliness, my body trying to buy safety with softness.",
+    "description_text": "{actor} flashes a quick, practiced smile and turns unusually agreeable—voice gentler, posture slightly tucked, movements careful and non-threatening. The warmth reads a touch over-managed, like it’s meant to calm the air more than share it.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.submission"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anxiety"
+                                    },
+                                    0.40
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.unease"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.stress"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.affection"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.love_attachment"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.courage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.submission"
+                                            },
+                                            {
+                                                "var": "previousEmotions.submission"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a fawn-shaped blend: submission plus anxiety/unease/stress, with elevated threat and low agency, but a deliberately high affiliation signal (outward placation). Blocks genuine bonding (trust/affection/attachment) and blocks fight/defiance (rage/protest_anger) and bold approach (courage). Triggers only on a threat jump or submission spike to keep it a reflex beat, not a constant personality."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a soft, quick laugh that arrives half a beat early, and a voice that goes smoother—more polite, more agreeable—than the moment really calls for.",
+        "tactile": "The air feels tight against the skin; someone’s shoulders hold a careful tension even while their face stays pleasantly open, like the body is braced under the smile.",
+        "limited": "I catch a too-bright smile and unusually accommodating body language—pleasant on the surface, but edged with caution."
+    }
+}

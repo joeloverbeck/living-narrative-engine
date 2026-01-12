@@ -8,6 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
+      "bittersweet_smile.expression.json",
       "flat_reminiscence.expression.json",
       "nostalgic_distance.expression.json"
     ]

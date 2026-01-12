@@ -1,0 +1,146 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-social-aversions:schadenfreude_smirk",
+    "description": "A quick, rewarding jolt of satisfaction at another’s setback—less “joy” than superiority-flavored amusement. Style note: consider adding category 'social_aversions' for sharper rivalry/antipathy beats that aren’t cleanly anger or shame.",
+    "category": "anger",
+    "actor_description": "I feel a bright little lift in my chest before I can police it—an ugly spark of pleasure. A smile threatens at the corner of my mouth, and my thoughts sharpen into a petty kind of clarity: good. I have to swallow the satisfaction down or let it show.",
+    "description_text": "{actor} lets out a small, involuntary smirk—eyes narrowing with a quick flash of satisfaction. The reaction is brief but sharp, like a private victory they almost don’t bother to hide.",
+    "priority": 73,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.contempt"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.envy"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.resentment"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.amusement"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            8
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.compassion"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.empathic_distress"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.amusement"
+                                    },
+                                    {
+                                        "var": "previousEmotions.amusement"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires an active social-aversive stance (contempt/envy/resentment) plus a noticeable amusement spike (the ‘smirk moment’). Grounded in slight positive valence, low threat, negative affiliation, and boosted self-evaluation (superiority). Blocks guilt/compassion/empathic distress so it doesn’t mislabel humane concern, and caps rage/panic so it doesn’t steal from bigger hijack beats."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a short, clipped breath that could be a laugh if it weren’t swallowed instantly—like someone almost let their satisfaction out loud.",
+        "tactile": "There’s a tiny warmth in the face and a quick loosening in the chest, followed by a tightening at the jaw as the reaction gets reined back in.",
+        "limited": "A brief lift of the mouth—gone fast—like a private win."
+    }
+}

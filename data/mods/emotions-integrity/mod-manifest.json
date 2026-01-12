@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-integrity",
+  "version": "1.0.0",
+  "name": "Emotions - Integrity",
+  "description": "Quiet integrity and self-respect expressions centered on grounded steadiness.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "quiet_integrity.expression.json"
+    ]
+  }
+}

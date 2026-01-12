@@ -10,6 +10,7 @@
     "expressions": [
       "forgiving_softening.expression.json",
       "guard_lowering.expression.json",
+      "tentative_trust_reach.expression.json",
       "trust_fracture.expression.json",
       "trusting_surrender.expression.json",
       "wary_suspicion.expression.json"
