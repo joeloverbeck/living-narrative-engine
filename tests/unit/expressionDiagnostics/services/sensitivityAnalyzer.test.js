@@ -18,10 +18,10 @@ describe('SensitivityAnalyzer', () => {
     const monteCarloSimulator = {
       computeThresholdSensitivity: jest
         .fn()
-        .mockReturnValueOnce({ varPath: 'emotions.joy' })
-        .mockReturnValueOnce({ varPath: 'sexual.arousal' })
-        .mockReturnValueOnce({ varPath: 'sexualArousal' })
-        .mockReturnValueOnce({ varPath: 'moodAxes.valence' }),
+        .mockReturnValueOnce({ varPath: 'emotions.joy', grid: [] })
+        .mockReturnValueOnce({ varPath: 'sexual.arousal', grid: [] })
+        .mockReturnValueOnce({ varPath: 'sexualArousal', grid: [] })
+        .mockReturnValueOnce({ varPath: 'moodAxes.valence', grid: [] }),
       computeExpressionSensitivity: jest.fn(),
     };
     const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
@@ -88,35 +88,146 @@ describe('SensitivityAnalyzer', () => {
       storedContexts,
       'emotions.joy',
       '>=',
-      0.5
+      0.5,
+      { stepSize: 0.05 }
     );
     expect(monteCarloSimulator.computeThresholdSensitivity).toHaveBeenNthCalledWith(
       2,
       storedContexts,
       'sexual.arousal',
       '>',
-      0.2
+      0.2,
+      { stepSize: 0.05 }
     );
     expect(monteCarloSimulator.computeThresholdSensitivity).toHaveBeenNthCalledWith(
       3,
       storedContexts,
       'sexualArousal',
       '>=',
-      0.35
+      0.35,
+      { stepSize: 0.05 }
     );
     expect(monteCarloSimulator.computeThresholdSensitivity).toHaveBeenNthCalledWith(
       4,
       storedContexts,
       'moodAxes.valence',
       '>=',
-      10
+      10,
+      { stepSize: 1 }
     );
     expect(results).toEqual([
-      { varPath: 'emotions.joy' },
-      { varPath: 'sexual.arousal' },
-      { varPath: 'sexualArousal' },
-      { varPath: 'moodAxes.valence' },
+      { varPath: 'emotions.joy', grid: [], isIntegerDomain: false },
+      { varPath: 'sexual.arousal', grid: [], isIntegerDomain: false },
+      { varPath: 'sexualArousal', grid: [], isIntegerDomain: false },
+      { varPath: 'moodAxes.valence', grid: [], isIntegerDomain: true },
     ]);
+  });
+
+  it('annotates integer-domain sensitivity grids with effective thresholds', () => {
+    const logger = createLogger();
+    const monteCarloSimulator = {
+      computeThresholdSensitivity: jest.fn().mockReturnValue({
+        conditionPath: 'moodAxes.valence',
+        operator: '>=',
+        originalThreshold: 10,
+        grid: [
+          { threshold: 9.2, passRate: 0.1, passCount: 1, sampleCount: 2 },
+          { threshold: 10, passRate: 0.2, passCount: 2, sampleCount: 2 },
+        ],
+      }),
+      computeExpressionSensitivity: jest.fn(),
+    };
+    const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+    const storedContexts = [{ moodAxes: { valence: 9 } }, { moodAxes: { valence: 10 } }];
+    const blockers = [
+      {
+        hierarchicalBreakdown: {
+          isCompound: false,
+          variablePath: 'moodAxes.valence',
+          thresholdValue: 10,
+          comparisonOperator: '>=',
+        },
+      },
+    ];
+
+    const results = analyzer.computeSensitivityData(storedContexts, blockers);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].isIntegerDomain).toBe(true);
+    expect(results[0].grid[0].effectiveThreshold).toBe(10);
+    expect(results[0].grid[1].effectiveThreshold).toBe(10);
+  });
+
+  it('floors effective thresholds for integer-domain <= comparisons', () => {
+    const logger = createLogger();
+    const monteCarloSimulator = {
+      computeThresholdSensitivity: jest.fn().mockReturnValue({
+        conditionPath: 'moodAxes.valence',
+        operator: '<=',
+        originalThreshold: 10,
+        grid: [
+          { threshold: 9.8, passRate: 0.1, passCount: 1, sampleCount: 2 },
+          { threshold: 10.2, passRate: 0.2, passCount: 2, sampleCount: 2 },
+        ],
+      }),
+      computeExpressionSensitivity: jest.fn(),
+    };
+    const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+    const storedContexts = [{ moodAxes: { valence: 9 } }, { moodAxes: { valence: 10 } }];
+    const blockers = [
+      {
+        hierarchicalBreakdown: {
+          isCompound: false,
+          variablePath: 'moodAxes.valence',
+          thresholdValue: 10,
+          comparisonOperator: '<=',
+        },
+      },
+    ];
+
+    const results = analyzer.computeSensitivityData(storedContexts, blockers);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].grid[0].effectiveThreshold).toBe(9);
+    expect(results[0].grid[1].effectiveThreshold).toBe(10);
+  });
+
+  it('omits effective thresholds for float-domain sensitivity grids', () => {
+    const logger = createLogger();
+    const monteCarloSimulator = {
+      computeThresholdSensitivity: jest.fn().mockReturnValue({
+        conditionPath: 'emotions.joy',
+        operator: '>=',
+        originalThreshold: 0.4,
+        grid: [
+          { threshold: 0.35, passRate: 0.1, passCount: 1, sampleCount: 2 },
+          { threshold: 0.45, passRate: 0.2, passCount: 2, sampleCount: 2 },
+        ],
+      }),
+      computeExpressionSensitivity: jest.fn(),
+    };
+    const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+    const storedContexts = [{ emotions: { joy: 0.3 } }, { emotions: { joy: 0.6 } }];
+    const blockers = [
+      {
+        hierarchicalBreakdown: {
+          isCompound: false,
+          variablePath: 'emotions.joy',
+          thresholdValue: 0.4,
+          comparisonOperator: '>=',
+        },
+      },
+    ];
+
+    const results = analyzer.computeSensitivityData(storedContexts, blockers);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].isIntegerDomain).toBe(false);
+    expect('effectiveThreshold' in results[0].grid[0]).toBe(false);
+    expect('effectiveThreshold' in results[0].grid[1]).toBe(false);
   });
 
   it('returns an empty array when stored contexts are missing', () => {
@@ -155,8 +266,8 @@ describe('SensitivityAnalyzer', () => {
     const monteCarloSimulator = {
       computeThresholdSensitivity: jest
         .fn()
-        .mockReturnValueOnce({ varPath: 'emotions.joy' })
-        .mockReturnValueOnce({ varPath: 'sexual.arousal' }),
+        .mockReturnValueOnce({ varPath: 'emotions.joy', grid: [] })
+        .mockReturnValueOnce({ varPath: 'sexual.arousal', grid: [] }),
       computeExpressionSensitivity: jest.fn(),
     };
     const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
@@ -193,8 +304,8 @@ describe('SensitivityAnalyzer', () => {
 
     expect(monteCarloSimulator.computeThresholdSensitivity).toHaveBeenCalledTimes(2);
     expect(results).toEqual([
-      { varPath: 'emotions.joy' },
-      { varPath: 'sexual.arousal' },
+      { varPath: 'emotions.joy', grid: [], isIntegerDomain: false },
+      { varPath: 'sexual.arousal', grid: [], isIntegerDomain: false },
     ]);
   });
 
@@ -395,7 +506,7 @@ describe('SensitivityAnalyzer', () => {
       'moodAxes.valence',
       '>=',
       10,
-      { steps: 9, stepSize: 0.05 }
+      { steps: 9, stepSize: 1 }
     );
     expect(results).toHaveLength(2);
   });

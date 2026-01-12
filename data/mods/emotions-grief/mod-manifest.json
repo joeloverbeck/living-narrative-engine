@@ -9,6 +9,7 @@
   "content": {
     "expressions": [
       "grief_break.expression.json",
+      "hollow_shock_onset.expression.json",
       "quiet_grief.expression.json",
       "tearful_sorrow.expression.json"
     ]

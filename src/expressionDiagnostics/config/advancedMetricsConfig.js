@@ -211,6 +211,28 @@ export function getEpsilonForVariable(variablePath) {
 }
 
 /**
+ * Check if a variable path belongs to an integer-valued domain.
+ *
+ * @param {string} variablePath - The variable path
+ * @returns {boolean}
+ */
+export function isIntegerDomain(variablePath) {
+  const domain = detectDomain(variablePath);
+  return domain === 'moodAxes' || domain === 'traits';
+}
+
+/**
+ * Get sensitivity step size based on variable domain granularity.
+ *
+ * @param {string} variablePath - The variable path
+ * @param {number} [defaultStepSize=0.05] - Default step size for float domains
+ * @returns {number}
+ */
+export function getSensitivityStepSize(variablePath, defaultStepSize = 0.05) {
+  return isIntegerDomain(variablePath) ? 1 : defaultStepSize;
+}
+
+/**
  * Check if advanced metrics are enabled.
  *
  * @returns {boolean} Whether advanced metrics are enabled

@@ -1,0 +1,126 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-guilt:halting_apology_blurt",
+    "description": "A halting apology / confession blurt—guilt pushes outward into speech before it can be fully rehearsed. The impulse is repair: owning it aloud, trying to lessen harm, trying to be understood.",
+    "category": "shame",
+    "actor_description": "I can't keep it inside anymore; the words push out rough and unfinished. My stomach drops as I say it, like I'm stepping off a ledge on purpose. I try to own it cleanly, but my voice keeps catching—half apology, half confession, all urgency to make it right.",
+    "description_text": "{actor} blurts an apology with uneven phrasing, as if the admission outruns their preparation. Their gaze flickers, shoulders tight, but they keep leaning back into the words—owning it even while they stumble through it.",
+    "priority": 76,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.guilt"
+                                            },
+                                            {
+                                                "var": "previousEmotions.guilt"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.guilt"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.guilt"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires guilt strong enough to drive repair, plus mild social anxiety. Grounds in lowered self-evaluation while affiliation stays positive (still caring about connection). Caps shame so it’s not identity-collapse, and caps threat/panic/dissociation so it stays a halting apology rather than panic-flight or shutdown. Triggers only on a guilt spike or crossing to prevent spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a rushed, uneven apology—words tripping over each other, a swallow in the middle, the last syllables coming out smaller than the first.",
+        "tactile": "The air feels tight with held breath and restless hands—fingers worrying at fabric, shoulders locked, posture trying to stay forward while the body wants to shrink.",
+        "limited": "An awkward, earnest apology breaks out—messy but unmistakably meant."
+    }
+}

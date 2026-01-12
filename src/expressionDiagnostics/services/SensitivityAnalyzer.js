@@ -3,7 +3,11 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { isTunableVariable } from '../config/advancedMetricsConfig.js';
+import {
+  getSensitivityStepSize,
+  isIntegerDomain,
+  isTunableVariable,
+} from '../config/advancedMetricsConfig.js';
 
 class SensitivityAnalyzer {
   #logger;
@@ -58,9 +62,12 @@ class SensitivityAnalyzer {
               storedContexts,
               varPath,
               operator,
-              threshold
+              threshold,
+              { stepSize: getSensitivityStepSize(varPath) }
             );
-            sensitivityResults.push(result);
+            sensitivityResults.push(
+              this.#annotateSensitivityResult(result, varPath, operator)
+            );
           } catch (err) {
             this.#logger.warn(
               `Failed to compute sensitivity for ${varPath}: ${err.message}`
@@ -151,9 +158,18 @@ class SensitivityAnalyzer {
           candidate.varPath,
           candidate.operator,
           candidate.threshold,
-          { steps: 9, stepSize: 0.05 }
+          {
+            steps: 9,
+            stepSize: getSensitivityStepSize(candidate.varPath),
+          }
         );
-        globalSensitivityResults.push(result);
+        globalSensitivityResults.push(
+          this.#annotateSensitivityResult(
+            result,
+            candidate.varPath,
+            candidate.operator
+          )
+        );
       } catch (err) {
         this.#logger.warn(
           `Failed to compute global sensitivity for ${candidate.varPath}: ${err.message}`
@@ -174,6 +190,50 @@ class SensitivityAnalyzer {
       leaves.push(...this.#flattenLeavesForSensitivity(child));
     }
     return leaves;
+  }
+
+  #annotateSensitivityResult(result, varPath, operator) {
+    if (!result || typeof result !== 'object') {
+      return result;
+    }
+
+    const integerDomain = isIntegerDomain(varPath);
+    const grid = Array.isArray(result.grid)
+      ? result.grid.map((point) =>
+        integerDomain
+          ? {
+            ...point,
+            effectiveThreshold: this.#getEffectiveThreshold(
+              operator,
+              point.threshold
+            ),
+          }
+          : point
+      )
+      : result.grid;
+
+    return {
+      ...result,
+      isIntegerDomain: integerDomain,
+      grid,
+    };
+  }
+
+  #getEffectiveThreshold(operator, threshold) {
+    if (typeof threshold !== 'number' || Number.isNaN(threshold)) {
+      return null;
+    }
+
+    switch (operator) {
+      case '>=':
+      case '>':
+        return Math.ceil(threshold);
+      case '<=':
+      case '<':
+        return Math.floor(threshold);
+      default:
+        return null;
+    }
   }
 }
 

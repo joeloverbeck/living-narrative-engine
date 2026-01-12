@@ -1,0 +1,145 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-deference-submission:deferential_yielding",
+    "description": "Deferential yielding—compliance without warmth. The stance is: reduce friction by giving ground, even if it tastes a little sour, with attention tuned to risk and social pressure rather than connection.",
+    "category": "agency",
+    "actor_description": "I give ground before I argue myself into it. My voice goes careful, my body smaller; I nod like it costs less than resisting. It isn’t peace—it’s management. I can feel the choice narrowing until compliance looks like the only clean exit.",
+    "description_text": "{actor} yields with a tight, measured compliance—voice softened, posture pulled inward, eyes flicking for cues. They agree quickly, not warmly, as if trying to reduce the chance of backlash.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.submission"
+                            },
+                            0.58
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.unease"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    0.30
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.trusting_surrender"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.submission"
+                                            },
+                                            {
+                                                "var": "previousEmotions.submission"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    -12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.submission"
+                                            },
+                                            0.58
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.submission"
+                                            },
+                                            0.58
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Needs a real submission stance (not just mild agreeableness), paired with unease/fear, grounded in low agency and moderate threat. Blocks warm/safe yielding (trusting_surrender) and 'too offline' detachment (dissociation). Fires only on a submission spike, an agency drop, or a crossing into the submission band."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a quick, quiet agreement—short phrases, softened consonants, a careful steadiness like someone choosing words that won’t ignite anything.",
+        "tactile": "Their movements shrink: shoulders draw in, hands stay close, weight shifting as if making room for someone else to take the space.",
+        "limited": "{actor} becomes noticeably compliant, giving ground quickly with a guarded, uneasy restraint."
+    }
+}

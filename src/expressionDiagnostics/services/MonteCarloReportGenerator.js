@@ -3368,6 +3368,7 @@ ${sections.join('\n\n')}`;
    */
   #formatSensitivityResult(result) {
     const { conditionPath, operator, originalThreshold, grid } = result;
+    const isIntegerDomain = result?.isIntegerDomain === true;
 
     if (!grid || grid.length === 0) {
       return '';
@@ -3382,8 +3383,12 @@ ${sections.join('\n\n')}`;
     const lines = [
       `### ${conditionPath} ${operator} [threshold]`,
       '',
-      '| Threshold | Pass Rate | Change | Samples |',
-      '|-----------|-----------|--------|---------|',
+      isIntegerDomain
+        ? '| Threshold | Effective Threshold | Pass Rate | Change | Samples |'
+        : '| Threshold | Pass Rate | Change | Samples |',
+      isIntegerDomain
+        ? '|-----------|---------------------|-----------|--------|---------|'
+        : '|-----------|-----------|--------|---------|',
     ];
 
     // Build table rows
@@ -3411,16 +3416,32 @@ ${sections.join('\n\n')}`;
 
       // Format the row
       const thresholdStr = isOriginal
-        ? `**${this.#formatNumber(point.threshold)}**`
-        : this.#formatNumber(point.threshold);
+        ? `**${this.#formatThresholdValue(point.threshold, isIntegerDomain)}**`
+        : this.#formatThresholdValue(point.threshold, isIntegerDomain);
       const rateStr = isOriginal
         ? `**${this.#formatPercentage(point.passRate)}**`
         : this.#formatPercentage(point.passRate);
       const samplesStr = point.sampleCount.toLocaleString();
       const changeDisplay = isOriginal ? '**baseline**' : changeStr;
 
+      if (isIntegerDomain) {
+        const effectiveThresholdStr = isOriginal
+          ? `**${this.#formatEffectiveThreshold(point.effectiveThreshold)}**`
+          : this.#formatEffectiveThreshold(point.effectiveThreshold);
+        lines.push(
+          `| ${thresholdStr} | ${effectiveThresholdStr} | ${rateStr} | ${changeDisplay} | ${samplesStr} |`
+        );
+      } else {
+        lines.push(
+          `| ${thresholdStr} | ${rateStr} | ${changeDisplay} | ${samplesStr} |`
+        );
+      }
+    }
+
+    if (isIntegerDomain) {
+      lines.push('');
       lines.push(
-        `| ${thresholdStr} | ${rateStr} | ${changeDisplay} | ${samplesStr} |`
+        '_Thresholds are integer-effective; decimals collapse to integer boundaries._'
       );
     }
 
@@ -3433,8 +3454,9 @@ ${sections.join('\n\n')}`;
       if (betterOption && betterOption.threshold !== originalThreshold) {
         lines.push('');
         lines.push(
-          `**💡 Recommendation**: Consider adjusting threshold to ${this.#formatNumber(
-            betterOption.threshold
+          `**💡 Recommendation**: Consider adjusting threshold to ${this.#formatThresholdValue(
+            betterOption.threshold,
+            isIntegerDomain
           )} for ~${this.#formatPercentage(betterOption.passRate)} pass rate.`
         );
       }
@@ -3454,6 +3476,7 @@ ${sections.join('\n\n')}`;
    */
   #formatGlobalSensitivityResult(result) {
     const { varPath, operator, originalThreshold, grid } = result;
+    const isIntegerDomain = result?.isIntegerDomain === true;
 
     if (!grid || grid.length === 0) {
       return '';
@@ -3470,8 +3493,12 @@ ${sections.join('\n\n')}`;
       '',
       '> **Note**: This shows how the threshold change affects the WHOLE EXPRESSION trigger rate, not just the clause.',
       '',
-      '| Threshold | Trigger Rate | Change | Samples |',
-      '|-----------|--------------|--------|---------|',
+      isIntegerDomain
+        ? '| Threshold | Effective Threshold | Trigger Rate | Change | Samples |'
+        : '| Threshold | Trigger Rate | Change | Samples |',
+      isIntegerDomain
+        ? '|-----------|---------------------|--------------|--------|---------|'
+        : '|-----------|--------------|--------|---------|',
     ];
 
     // Build table rows
@@ -3501,16 +3528,32 @@ ${sections.join('\n\n')}`;
 
       // Format the row
       const thresholdStr = isOriginal
-        ? `**${this.#formatNumber(point.threshold)}**`
-        : this.#formatNumber(point.threshold);
+        ? `**${this.#formatThresholdValue(point.threshold, isIntegerDomain)}**`
+        : this.#formatThresholdValue(point.threshold, isIntegerDomain);
       const rateStr = isOriginal
         ? `**${this.#formatPercentage(point.triggerRate)}**`
         : this.#formatPercentage(point.triggerRate);
       const samplesStr = point.sampleCount.toLocaleString();
       const changeDisplay = isOriginal ? '**baseline**' : changeStr;
 
+      if (isIntegerDomain) {
+        const effectiveThresholdStr = isOriginal
+          ? `**${this.#formatEffectiveThreshold(point.effectiveThreshold)}**`
+          : this.#formatEffectiveThreshold(point.effectiveThreshold);
+        lines.push(
+          `| ${thresholdStr} | ${effectiveThresholdStr} | ${rateStr} | ${changeDisplay} | ${samplesStr} |`
+        );
+      } else {
+        lines.push(
+          `| ${thresholdStr} | ${rateStr} | ${changeDisplay} | ${samplesStr} |`
+        );
+      }
+    }
+
+    if (isIntegerDomain) {
+      lines.push('');
       lines.push(
-        `| ${thresholdStr} | ${rateStr} | ${changeDisplay} | ${samplesStr} |`
+        '_Thresholds are integer-effective; decimals collapse to integer boundaries._'
       );
     }
 
@@ -3523,12 +3566,18 @@ ${sections.join('\n\n')}`;
       if (betterOption && betterOption.threshold !== originalThreshold) {
         lines.push('');
         lines.push(
-          `**🎯 First threshold with triggers**: ${this.#formatNumber(betterOption.threshold)} → ${this.#formatPercentage(betterOption.triggerRate)} trigger rate`
+          `**🎯 First threshold with triggers**: ${this.#formatThresholdValue(
+            betterOption.threshold,
+            isIntegerDomain
+          )} → ${this.#formatPercentage(betterOption.triggerRate)} trigger rate`
         );
         lines.push(
-          `**💡 Actionable Insight**: Adjusting threshold to ${this.#formatNumber(
-            betterOption.threshold
-          )} would achieve ~${this.#formatPercentage(betterOption.triggerRate)} expression trigger rate.`
+          `**💡 Actionable Insight**: Adjusting threshold to ${this.#formatThresholdValue(
+            betterOption.threshold,
+            isIntegerDomain
+          )} would achieve ~${this.#formatPercentage(
+            betterOption.triggerRate
+          )} expression trigger rate.`
         );
       } else {
         // No threshold in the grid produces triggers - suggest expanding search
@@ -3543,9 +3592,12 @@ ${sections.join('\n\n')}`;
       if (betterOption && betterOption.threshold !== originalThreshold) {
         lines.push('');
         lines.push(
-          `**💡 Actionable Insight**: Adjusting threshold to ${this.#formatNumber(
-            betterOption.threshold
-          )} would increase expression trigger rate to ~${this.#formatPercentage(betterOption.triggerRate)}.`
+          `**💡 Actionable Insight**: Adjusting threshold to ${this.#formatThresholdValue(
+            betterOption.threshold,
+            isIntegerDomain
+          )} would increase expression trigger rate to ~${this.#formatPercentage(
+            betterOption.triggerRate
+          )}.`
         );
       }
     }
@@ -4162,6 +4214,39 @@ Analysis of prototype coverage in "prototype space".
       return 'N/A';
     }
     return value.toFixed(decimals);
+  }
+
+  /**
+   * Format threshold values with integer-domain awareness.
+   * @param {number} value
+   * @param {boolean} isIntegerDomain
+   * @returns {string}
+   */
+  #formatThresholdValue(value, isIntegerDomain) {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+      return 'N/A';
+    }
+
+    if (isIntegerDomain) {
+      const rounded = Math.round(value);
+      if (Math.abs(value - rounded) < 0.000001) {
+        return String(rounded);
+      }
+    }
+
+    return this.#formatNumber(value);
+  }
+
+  /**
+   * Format effective thresholds for integer domains.
+   * @param {number|null} value
+   * @returns {string}
+   */
+  #formatEffectiveThreshold(value) {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+      return '—';
+    }
+    return String(Math.round(value));
   }
 
   /**

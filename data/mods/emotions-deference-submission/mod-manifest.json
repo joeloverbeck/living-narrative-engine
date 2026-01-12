@@ -1,0 +1,14 @@
+{
+    "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+    "id": "emotions-deference-submission",
+    "version": "1.0.0",
+    "name": "Emotions - Deference Submission",
+    "description": "Submission expressions focused on compliance without warmth or safety.",
+    "author": "Living Narrative Engine",
+    "gameVersion": ">=0.0.1",
+    "content": {
+        "expressions": [
+            "deferential_yielding.expression.json"
+        ]
+    }
+}

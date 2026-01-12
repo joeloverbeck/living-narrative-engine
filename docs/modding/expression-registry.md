@@ -18,7 +18,7 @@ Expressions use a numeric priority system where **higher numbers = higher priori
 | 40-49 | 2 | Low-intensity awareness |
 | 50-59 | 5 | Moderate engagement |
 | 60-69 | 19 | Active emotional states |
-| 70-79 | 61 | Elevated emotional responses |
+| 70-79 | 63 | Elevated emotional responses |
 | 80-89 | 19 | Intense emotional states |
 | 90-95 | 6 | Peak intensity expressions |
 
@@ -311,13 +311,14 @@ Melancholic disappointment expressions for wistful sadness over unmet expectatio
 |----------|----|----|-------------|
 | 58 | `emotions-disappointment:melancholic_disappointment` | loss | Wistful sadness mixed with lingering disappointment |
 
-### emotions-grief (3 expressions)
+### emotions-grief (4 expressions)
 
 Expressions of mourning, tears, and grief breakdown.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 70 | `emotions-grief:quiet_grief` | loss | Subdued mourning held close to the heart |
+| 74 | `emotions-grief:hollow_shock_onset` | loss | Hollow shock—the first unreal beat of grief where the mind stalls and the body keeps going |
 | 75 | `emotions-grief:tearful_sorrow` | loss | Open weeping from emotional pain |
 | 95 | `emotions-grief:grief_break` | loss | Complete emotional breakdown from overwhelming loss |
 
@@ -381,7 +382,7 @@ Everyday sadness expressions - low, heavy moods that weigh down without reaching
 |----------|----|----|-------------|
 | 66 | `emotions-sadness:heavy_sadness_slump` | loss | Heavy everyday sadness pulling the body down and slowing thought, without tipping into grief-break, despair, or shutdown |
 
-### emotions-guilt (2 expressions)
+### emotions-guilt (3 expressions)
 
 Expressions of guilt - "I did bad" repair-oriented responses.
 
@@ -389,6 +390,7 @@ Expressions of guilt - "I did bad" repair-oriented responses.
 |----------|----|----|-------------|
 | 55 | `emotions-guilt:lingering_guilt` | shame | Persistent low-level remorse over past action |
 | 74 | `emotions-guilt:guilt_driven_repair_impulse` | shame | Urgent need to make amends for wrongdoing |
+| 76 | `emotions-guilt:halting_apology_blurt` | shame | A halting apology / confession blurt—guilt pushes outward into speech before it can be fully rehearsed |
 
 ### emotions-humiliation (1 expression)
 
@@ -407,6 +409,14 @@ Expressions of shame - "I am bad" self-condemnation responses.
 | 60 | `emotions-shame:resigned_shame` | shame | Accepted self-condemnation without hope of repair |
 | 73 | `emotions-shame:imposter_doubt` | shame | Competence-threat wobble with rumination and over-monitoring |
 | 82 | `emotions-shame:shame_spike` | shame | Acute self-condemnation flooding awareness |
+
+### emotions-deference-submission (1 expression)
+
+Expressions of deferential submission: compliance under pressure without warmth or safety.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 72 | `emotions-deference-submission:deferential_yielding` | agency | Deferential yielding—compliance without warmth. The stance is: reduce friction by giving ground, even if it tastes a little sour, with attention tuned to risk and social pressure rather than connection. |
 
 ### emotions-social-selfconsciousness (2 expressions)
 
