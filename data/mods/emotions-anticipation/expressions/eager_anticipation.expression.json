@@ -145,14 +145,6 @@
         "tactile": "There's a faint kinetic buzz in their stillness: fingers tapping, weight shifting, posture angled forward as if the body is already moving.",
         "limited": "A quickening energy shows in small movements and a forward-focused attention, as if waiting is suddenly hard to do."
     },
-    "tags": [
-        "anticipation",
-        "eager",
-        "hope",
-        "readiness",
-        "restless",
-        "forward_focus",
-        "energized"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

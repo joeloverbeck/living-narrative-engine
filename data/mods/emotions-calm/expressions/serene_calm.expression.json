@@ -106,12 +106,6 @@
         "auditory": "I hear slow, even breathing nearby-unstrained, unhurried, the rhythm of someone with nothing to defend against.",
         "limited": "Someone feels steady-no jitter in their movements, no tension radiating off them, just a quiet physical ease you can sense in proximity."
     },
-    "tags": [
-        "calm",
-        "serene",
-        "composed",
-        "low_arousal",
-        "neutral_positive"
-    ],
+    "category": "calm",
     "diagnosticStatus": "unknown"
 }

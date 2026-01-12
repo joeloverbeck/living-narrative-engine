@@ -231,11 +231,6 @@
     "auditory": "There's a change in the breathing-slower, deeper, then a quick catch like someone swallowing a thought. Small movements keep happening: fabric rasping, a foot repositioning, the quiet impatience of a body trying not to reach.",
     "tactile": "Heat radiates from a body, not gentle-tense. The air feels charged by tiny movements, a tremor through the floor or shared surface as someone keeps adjusting like they're being pulled."
   },
-  "tags": [
-    "desire",
-    "arousal",
-    "intense",
-    "sexual"
-  ],
+  "category": "desire",
   "diagnosticStatus": "unknown"
 }

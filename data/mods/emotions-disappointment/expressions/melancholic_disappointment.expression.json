@@ -253,11 +253,6 @@
         "auditory": "I hear a slow exhale-longer than it needs to be-like someone letting go of a hope without saying it out loud.",
         "tactile": "Someone's body slackens, tension draining away; their movements turn careful and heavy, like they've accepted a small loss."
     },
-    "tags": [
-        "disappointment",
-        "sadness",
-        "wistful",
-        "nostalgia"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

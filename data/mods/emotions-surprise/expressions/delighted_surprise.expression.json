@@ -188,13 +188,6 @@
     "auditory": "I hear a sharp, happy inhale—then a small laugh or an excited, breathy \"oh!\" that spills out before words can line up.",
     "tactile": "A quick, buoyant energy runs through the air—like someone’s shoulders lifted and then melted into an eager lean."
   },
-  "tags": [
-    "surprise",
-    "delight",
-    "joy",
-    "positive_shift",
-    "attention_spike",
-    "brightening"
-  ],
+  "category": "joy",
   "diagnosticStatus": "unknown"
 }

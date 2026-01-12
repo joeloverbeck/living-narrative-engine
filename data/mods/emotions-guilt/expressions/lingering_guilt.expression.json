@@ -159,12 +159,6 @@
         "auditory": "Words start and stop. There are pauses that don't feel thoughtful-more like someone swallowing what they meant to say. A small sigh repeats, the kind that sounds like an apology with no audience.",
         "tactile": "A body holds itself guarded-muscles tight in the shoulders, a careful stillness, like someone bracing to be blamed even if nobody's speaking."
     },
-    "tags": [
-        "guilt",
-        "sheepish",
-        "apology",
-        "minor_mistake",
-        "lingering"
-    ],
+    "category": "shame",
     "diagnosticStatus": "unknown"
 }

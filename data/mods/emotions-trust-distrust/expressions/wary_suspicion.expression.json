@@ -169,14 +169,6 @@
     "tactile": "{actor}'s presence feels edged but contained: posture a touch more rigid, movements economical, hands less expressive. It's the sensation of someone holding space open around themselves, ready to step back without making a scene.",
     "limited": "{actor} looks guarded and watchful, attention repeatedly returning to the same details."
   },
-  "tags": [
-    "suspicion",
-    "distrust",
-    "wary",
-    "tracking",
-    "guarded",
-    "interpretive_vigilance",
-    "cooling_off"
-  ],
+  "category": "threat",
   "diagnosticStatus": "unknown"
 }

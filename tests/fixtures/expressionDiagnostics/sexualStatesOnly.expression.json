@@ -1,0 +1,18 @@
+{
+  "id": "test:sexual_states_only",
+  "description": "Expression referencing only sexual states",
+  "priority": 100,
+  "prerequisites": [
+    {
+      "logic": {
+        ">=": [{ "var": "sexualStates.sexual_lust" }, 0.4]
+      }
+    },
+    {
+      "logic": {
+        ">=": [{ "var": "sexualStates.passion" }, 0.3]
+      }
+    }
+  ],
+  "_comment": "No emotion or mood axis constraints included."
+}

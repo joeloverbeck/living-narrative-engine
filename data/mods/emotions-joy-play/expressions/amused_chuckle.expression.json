@@ -156,11 +156,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a short, quiet laugh-soft, warm, gone almost immediately-followed by an exhale that makes the air feel less tight."
     },
-    "tags": [
-        "positive",
-        "amusement",
-        "social",
-        "deescalation"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

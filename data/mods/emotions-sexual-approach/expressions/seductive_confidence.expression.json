@@ -131,12 +131,6 @@
         "auditory": "A voice drops a register-words spaced with deliberate pauses, as if the silence is part of the touch.",
         "olfactory": "I smell clean warmth-skin, faint fragrance, and the quiet certainty of someone comfortable being desired."
     },
-    "tags": [
-        "sexual",
-        "confidence",
-        "seductive",
-        "control",
-        "swagger"
-    ],
+    "category": "desire",
     "diagnosticStatus": "unknown"
 }

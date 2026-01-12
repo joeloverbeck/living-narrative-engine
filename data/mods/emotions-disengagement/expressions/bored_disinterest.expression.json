@@ -191,12 +191,6 @@
         "auditory": "I hear a long, flattening exhale-silence that feels stretched-plus small impatiences: a tap, a scrape, a slow reply that arrives late and lands dull.",
         "tactile": "Someone's presence feels heavy and withdrawn, like someone has stepped back from the moment without moving their feet."
     },
-    "tags": [
-        "boredom",
-        "apathy",
-        "disinterest",
-        "low_engagement",
-        "impatient"
-    ],
+    "category": "attention",
     "diagnosticStatus": "unknown"
 }

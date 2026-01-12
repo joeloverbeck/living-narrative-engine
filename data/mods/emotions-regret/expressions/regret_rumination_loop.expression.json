@@ -131,14 +131,6 @@
         "auditory": "Their voice gets thin and self-correcting—half-started sentences, small rewinds, a muted \"no, I should've…\" before they trail off.",
         "tactile": "There's a restless stillness to them—jaw working, fingers worrying at fabric or skin, like their body is trying to scrub the moment clean."
     },
-    "tags": [
-        "regret",
-        "rumination",
-        "counterfactual",
-        "self_reproach",
-        "stuck_attention",
-        "second_guessing",
-        "withdrawal"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

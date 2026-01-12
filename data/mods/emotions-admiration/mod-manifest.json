@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-admiration",
+  "version": "1.0.0",
+  "name": "Emotions - Admiration",
+  "description": "Admiration-related emotional expressions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "admiration_swell.expression.json"
+    ]
+  }
+}

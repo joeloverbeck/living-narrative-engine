@@ -177,12 +177,6 @@
         "auditory": "I hear a long, quiet exhale, and then a small, almost involuntary hum-soft appreciation leaking out without words.",
         "olfactory": "I sense mild warmth-skin, fabric, clean air-the faint comfort-smell of someone settling."
     },
-    "tags": [
-        "engagement",
-        "aesthetic",
-        "soothing",
-        "savoring",
-        "calm_attention"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

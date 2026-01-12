@@ -280,11 +280,6 @@
     "tactile": "A presence tightens into readiness-minute vibrations of contained motion, like a spring loaded but not released.",
     "olfactory": "There's a clean edge of adrenaline in the air-sharp and bright, without the sour rot of fear."
   },
-  "tags": [
-    "positive",
-    "anticipation",
-    "readiness",
-    "approach"
-  ],
+  "category": "desire",
   "diagnosticStatus": "unknown"
 }

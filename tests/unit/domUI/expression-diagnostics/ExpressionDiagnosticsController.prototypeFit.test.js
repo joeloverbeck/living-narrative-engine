@@ -142,6 +142,23 @@ describe('ExpressionDiagnosticsController - Prototype Fit Table', () => {
       expect(leaderboard[0].prototypeId).toBe('joy');
     });
 
+    it('should preserve sexual prototype entries when extracting leaderboard', () => {
+      const serviceResult = {
+        leaderboard: [
+          createSampleFitResult({ rank: 1, prototypeId: 'joy', type: 'emotion' }),
+          createSampleFitResult({ rank: 2, prototypeId: 'sexual_lust', type: 'sexual' }),
+        ],
+        currentPrototype: null,
+        bestAlternative: null,
+        improvementFactor: null,
+      };
+
+      const leaderboard = serviceResult?.leaderboard ?? [];
+      const ids = leaderboard.map((result) => result.prototypeId);
+
+      expect(ids).toContain('sexual_lust');
+    });
+
     it('should handle missing leaderboard property', () => {
       mockPrototypeFitRankingService.analyzeAllPrototypeFit.mockReturnValue({
         currentPrototype: null,

@@ -1,0 +1,169 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-confusion:insight_click",
+    "description": "A sudden internal re-ordering: confusion loosens while attention stays locked in, replaced by a clean sense of grasp. Thoughts stop skating and start lining up; the body follows with a small release, like control returning to the hands.",
+    "category": "attention",
+    "actor_description": "Oh—there it is. The static in my head thins out and the pieces slide into place like they were waiting for the right angle. My chest eases and my breath gets smoother, like I’ve been holding it without noticing. I still feel keyed-in, but now it’s steady: I can actually steer the thought instead of being dragged by it.",
+    "description_text": "{actor} stills with focused attention, then visibly relaxes—eyes sharpening, posture settling as if a handle just appeared on the problem. Their expression shifts from strained searching to quiet certainty, like they can finally move forward.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.confusion"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.interest"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.curiosity"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.confusion"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.confusion"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.confusion"
+                                            },
+                                            {
+                                                "var": "emotions.confusion"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires engaged attention with confusion present, plus an 'unlock' moment: confusion drops noticeably (crossing or drop magnitude) or agency/control jumps upward. Excludes boredom/apathy (not checked-out) and caps panic (not a threat spiral)."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear the searching stop—speech smooths out, fewer false starts, and a small, satisfied exhale slips through like the tension finally released.",
+        "tactile": "The tightness in the face and shoulders lets go. Hands get steadier, movements more deliberate, like the body found the right grip.",
+        "limited": "Something shifts in {actor}'s focus—less scattered, more certain—like a solution just snapped into place."
+    }
+}

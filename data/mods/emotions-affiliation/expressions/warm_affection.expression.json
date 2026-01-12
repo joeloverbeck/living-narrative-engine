@@ -191,11 +191,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a voice go gentler at the edges-same words, different temperature. Even mundane phrases sound like they're meant for someone specific."
     },
-    "tags": [
-        "affection",
-        "love",
-        "warmth",
-        "connection"
-    ],
+    "category": "affection",
     "diagnosticStatus": "unknown"
 }

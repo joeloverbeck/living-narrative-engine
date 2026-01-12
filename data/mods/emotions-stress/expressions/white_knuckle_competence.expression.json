@@ -1,0 +1,149 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-stress:white_knuckle_competence",
+    "description": "Pressure held in a tight grip—high load, high focus, and stubborn follow-through. The body runs hot, the mind stays task-locked, and the will refuses to slip, even while tension leaks through the edges.",
+    "category": "agency",
+    "actor_description": "I’m running hot, but I’m still here—hands steady by force of will, jaw set like a clamp. My thoughts narrow into a workable tunnel: next step, next step, don’t look down. It doesn’t feel good; it feels controlled. I can hear my own breathing like a metronome I’m using to keep the whole thing from shaking apart.",
+    "description_text": "{actor} moves with clipped precision—focused, fast, and a little too controlled. Their posture is rigidly functional, breath measured, eyes fixed as if they’re refusing to give the pressure any room.",
+    "priority": 76,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.58
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.determination"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.stress"
+                                            },
+                                            {
+                                                "var": "previousEmotions.stress"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.stress"
+                                            },
+                                            0.58
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.stress"
+                                            },
+                                            0.58
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.determination"
+                                            },
+                                            {
+                                                "var": "previousEmotions.determination"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires elevated stress plus determination with high engagement and at least moderately high arousal. Caps threat so it reads as pressure, not terror/panic. Blocks shutdown drift (apathy/despair) and triggers only on a fresh stress spike/crossing or a determination lift."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice comes out tight and efficient—short phrases, quick corrections, a controlled exhale between words like they’re keeping tempo.",
+        "tactile": "Being near them feels like standing next to a vibrating cable—contained tension, heat, and small tremors of effort held just under the skin.",
+        "limited": "{actor} looks intensely focused and tightly wound, pushing through with visible effort."
+    }
+}

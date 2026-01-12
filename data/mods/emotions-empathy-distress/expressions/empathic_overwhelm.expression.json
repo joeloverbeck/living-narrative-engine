@@ -106,15 +106,6 @@
         "tactile": "The air around them feels tight and braced—small tremors in their hands, shoulders set hard, like their body is holding back a flood.",
         "limited": "{actor} looks overwhelmed—present, caring, and strained, as if they're fighting to keep it together."
     },
-    "tags": [
-        "empathic_distress",
-        "compassion",
-        "overwhelm",
-        "prosocial",
-        "helplessness",
-        "locked_in_attention",
-        "withdrawal_urge",
-        "urgent_repair"
-    ],
+    "category": "affection",
     "diagnosticStatus": "unknown"
 }

@@ -1,0 +1,117 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-affiliation:lonely_yearning_reach",
+    "description": "Lonely yearning reach: an aching pull toward connection that turns attention outward even while it hurts—wanting warmth, not withdrawing into isolation.",
+    "category": "affection",
+    "actor_description": "I feel a quiet pull in my chest like my body is leaning toward someone who isn't here. My attention keeps snagging on the idea of closeness—messages unsent, names half-formed, a warmth I can almost touch. It hurts in a clean, persistent way, like a bruise pressed on purpose. I want to reach out, and the wanting is the sharpest part.",
+    "description_text": "{actor} grows visibly tender and a little distant at the same time—gaze lingering, breath shallow, posture subtly angled as if listening for an answer. Their expression softens, but the softness looks like ache, not peace.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            {
+                                                "var": "previousEmotions.lonely_yearning"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.lonely_yearning"
+                                            },
+                                            0.6
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            0.6
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires strong lonely_yearning with a warm-leaning social orientation (affiliation) and enough engagement to ‘reach’ rather than shut down. Caps despair so it isn’t hopeless collapse, and caps jealousy so it doesn’t drift into possessive threat. Triggers only on a spike, a crossing into the band, or a meaningful rise in affiliative pull."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice goes a touch quieter and thinner, words arriving with small pauses like they're weighing whether to say more. A soft exhale slips out between phrases, almost like a held-back sigh.",
+        "tactile": "There’s a restless, careful motion—fingers rubbing a thumb, a hand hovering near a phone or sleeve, shoulders drawing in and then easing as if trying to be held without anyone there.",
+        "limited": "{actor} looks caught on something internal—gentle, aching, and quietly reaching."
+    }
+}

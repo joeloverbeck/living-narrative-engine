@@ -160,12 +160,6 @@
         "tactile": "I feel a deliberate stillness-muscles held, posture guarded around focus, like someone protecting a fragile thread of attention.",
         "olfactory": "The air carries warm skin and faint, dry adrenaline-awake energy without the sour bite of panic."
     },
-    "tags": [
-        "engagement",
-        "fascination",
-        "narrowed_attention",
-        "absorption",
-        "observable"
-    ],
+    "category": "attention",
     "diagnosticStatus": "unknown"
 }

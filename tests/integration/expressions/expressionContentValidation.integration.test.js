@@ -44,6 +44,20 @@ const EXPRESSIONS_DIRS = [
   ),
 ];
 
+const CATEGORY_IDS = new Set([
+  'calm',
+  'joy',
+  'affection',
+  'desire',
+  'attention',
+  'threat',
+  'anger',
+  'loss',
+  'shame',
+  'shutdown',
+  'agency',
+]);
+
 const loadExpressions = async () => {
   const expressions = [];
 
@@ -86,8 +100,9 @@ describe('Expression Content Validation - Integration', () => {
         expect(expression.perception_type).toBe('emotion.expression');
       }
 
-      expect(Array.isArray(expression.tags)).toBe(true);
-      expect(expression.tags.length).toBeGreaterThan(0);
+      expect(expression.category).toEqual(expect.any(String));
+      expect(expression.category.length).toBeGreaterThan(0);
+      expect(CATEGORY_IDS.has(expression.category)).toBe(true);
 
       for (const prerequisite of expression.prerequisites) {
         expect(prerequisite.logic).toEqual(expect.any(Object));

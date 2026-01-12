@@ -1,0 +1,145 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-admiration:admiration_swell",
+    "description": "Admiration swell—respect rises and steadies into a quiet uplift. Attention tightens into appreciation; the mind starts framing what it sees as exemplary or worth emulating. It can feel cleanly inspiring or slightly humbling without tipping into shame.",
+    "priority": 70,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.admiration"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.envy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.admiration"
+                                            },
+                                            {
+                                                "var": "previousEmotions.admiration"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.valence"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.valence"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a clear admiration signal with positive valence and strong engagement. Caps envy/contempt/disgust so the beat stays respectful rather than sour. Keeps threat moderate so it reads as uplifted regard, not wary appraisal. Triggers only on an admiration spike or a noticeable engagement/valence jump to avoid repeated firing during steady admiration."
+        }
+    ],
+    "actor_description": "Respect hits me like a lift under the ribs—clean and surprising. My attention locks in, not hungry or competitive, just honestly impressed. I feel myself straighten without thinking, like my body wants to meet the moment halfway. There's a quiet warmth to it: a sense of 'yes, that matters.'",
+    "description_text": "{actor} stills and leans in with focused regard, their expression softening into open respect. Their posture firms subtly—more upright, more present—like they’ve been pulled into a better version of their attention.",
+    "alternate_descriptions": {
+        "auditory": "I hear a small, involuntary intake of breath—then a steadier tone, like someone choosing their words more carefully because they mean it.",
+        "tactile": "The air shifts with a subtle forward lean; there’s a quiet energy in stillness, like attention has weight and it just moved closer.",
+        "limited": "I sense a brief pause—then a clean, focused regard settling in."
+    },
+    "category": "affection",
+    "diagnosticStatus": "unknown"
+}

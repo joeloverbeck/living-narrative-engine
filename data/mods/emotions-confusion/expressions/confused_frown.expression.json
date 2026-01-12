@@ -124,12 +124,6 @@
         "auditory": "I hear speech that starts, revises, and starts again-half-questions, little “wait-” sounds, the cadence of someone checking their own assumptions.",
         "tactile": "Someone's body holds a searching tension-still, but not relaxed, like their attention is reaching for something it can't quite grasp."
     },
-    "tags": [
-        "confusion",
-        "bewilderment",
-        "puzzled",
-        "uncertainty",
-        "cognitive"
-    ],
+    "category": "attention",
     "diagnosticStatus": "unknown"
 }

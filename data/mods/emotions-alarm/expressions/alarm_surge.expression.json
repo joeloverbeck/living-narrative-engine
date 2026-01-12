@@ -146,16 +146,8 @@
   ],
   "alternate_descriptions": {
     "auditory": "I hear a sharp intake of breath and a clipped, controlled exhale—like someone trying to stay quiet while getting ready to move.",
-    "tactile": "The air feels tight and charged; there’s a restless micro-tremor in their stillness, like a coiled spring held in place."
+    "tactile": "The air feels tight and charged; there's a restless micro-tremor in their stillness, like a coiled spring held in place."
   },
-  "tags": [
-    "alarm",
-    "fear",
-    "fight_flight",
-    "readiness",
-    "mobilization",
-    "scanning",
-    "rapid_shift"
-  ],
+  "category": "threat",
   "diagnosticStatus": "unknown"
 }

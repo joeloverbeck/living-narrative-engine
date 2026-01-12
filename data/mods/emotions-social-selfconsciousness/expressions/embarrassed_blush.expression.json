@@ -146,14 +146,6 @@
     "tactile": "A faint radiating warmth and restless fidgeting—hands touch face or collar, shoulders drawing in as if to make themselves smaller.",
     "limited": "{actor} shows a brief flash of embarrassment—blushing, averting their gaze, and recalibrating their posture before carrying on."
   },
-  "tags": [
-    "embarrassment",
-    "self_consciousness",
-    "blush",
-    "awkwardness",
-    "social_threat",
-    "repair",
-    "recalibration"
-  ],
+  "category": "shame",
   "diagnosticStatus": "unknown"
 }

@@ -253,6 +253,12 @@
   margin-bottom: 1rem;
 }
 
+.mc-sampling-note {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+}
+
 .control-group {
   display: flex;
   flex-direction: column;
@@ -306,6 +312,30 @@
   border-radius: 4px;
   margin-bottom: 1rem;
   line-height: 1.5;
+}
+
+.mc-sampling-coverage-container {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color-subtle);
+  border-radius: 6px;
+  background: var(--secondary-bg-color);
+}
+
+.sampling-coverage-summary {
+  margin: 0 0 0.75rem;
+  color: var(--primary-text-color);
+}
+
+.sampling-coverage-tables {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sampling-coverage-tables h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
 }
 
 /* Severity badges */
@@ -369,6 +399,70 @@
 
 .blockers-table .breakdown-cell {
   padding: 0;
+}
+
+/* Blocker regime details */
+.blocker-regime-details {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem 1.5rem;
+}
+
+.blocker-regime-details .regime-detail {
+  display: flex;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--primary-text-color);
+}
+
+.blocker-regime-details .detail-label {
+  color: var(--secondary-text-color);
+  white-space: nowrap;
+}
+
+.feasibility-badge {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.feasibility-always {
+  background: var(--status-normal-bg);
+  color: var(--status-normal-text);
+}
+
+.feasibility-sometimes {
+  background: var(--status-rare-bg);
+  color: var(--status-rare-text);
+}
+
+.feasibility-impossible {
+  background: var(--status-impossible-bg);
+  color: var(--status-impossible-text);
+}
+
+.feasibility-unknown {
+  background: var(--status-unknown-bg);
+  color: var(--status-unknown-text);
+}
+
+/* Blocker violation summary */
+.blocker-violation-summary {
+  padding: 0.75rem 1rem 0.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.blocker-violation-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--secondary-text-color);
+  margin-bottom: 0.25rem;
 }
 
 /* Hierarchical Tree Display */
@@ -484,6 +578,12 @@
 
 .or-contribution-breakdown summary:hover {
   color: var(--primary-text-color);
+}
+
+.contribution-note {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.78rem;
+  color: var(--secondary-text-color);
 }
 
 .contribution-list {
@@ -963,6 +1063,12 @@
   font-size: 0.875rem;
   margin-bottom: 1rem;
   line-height: 1.5;
+}
+
+.conditional-regime-note {
+  color: var(--secondary-text-color);
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
 }
 
 .conditional-pass-rates-table {
@@ -1839,7 +1945,7 @@
 
 /* Violation stats column structure */
 .violation-stats {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .violation-mean,
@@ -1993,6 +2099,12 @@
   margin-top: 1rem;
   display: flex;
   gap: 0.5rem;
+}
+
+.mc-report-note {
+  align-self: center;
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
 }
 
 /* Secondary Action Button Variant */

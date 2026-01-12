@@ -186,14 +186,6 @@
     "tactile": "A body radiates contained energy-muscles tight, movements small but impatient, like a spring kept compressed.",
     "olfactory": "The air carries warm sweat threaded with something sharper-arousal tangled with agitation, close and unsettled."
   },
-  "tags": [
-    "sexual",
-    "frustration",
-    "arousal",
-    "irritation",
-    "anger",
-    "unpleasant",
-    "pent_up"
-  ],
+  "category": "desire",
   "diagnosticStatus": "unknown"
 }

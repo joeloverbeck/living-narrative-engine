@@ -213,12 +213,6 @@
         "auditory": "I hear a consistent cadence-small purposeful sounds without hesitation, breath keeping time like a metronome.",
         "olfactory": "The air carries warm effort rather than stress-clean sweat, steady concentration, none of the sharp sour note of panic."
     },
-    "tags": [
-        "engagement",
-        "flow",
-        "competence",
-        "absorption",
-        "low_self_consciousness"
-    ],
+    "category": "attention",
     "diagnosticStatus": "unknown"
 }

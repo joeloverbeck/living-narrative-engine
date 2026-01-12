@@ -159,11 +159,6 @@
         "auditory": "I hear a broken sound-breath hitching hard, a laugh that doesn't land, a sob that's immediately strangled back. Something scrapes as if someone moved too fast to get away.",
         "tactile": "I feel someone jerking back from closeness, body rigid, as if contact itself could make it worse."
     },
-    "tags": [
-        "humiliation",
-        "shame",
-        "fear",
-        "exposure"
-    ],
+    "category": "shame",
     "diagnosticStatus": "unknown"
 }

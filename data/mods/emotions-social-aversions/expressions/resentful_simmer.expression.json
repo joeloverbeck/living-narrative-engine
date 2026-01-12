@@ -141,14 +141,6 @@
         "tactile": "The air feels braced—small tensions in posture, a tight stillness in shoulders and hands, like pressure held behind a closed door.",
         "limited": "There’s a restrained edge to {actor}: controlled, cool, and hard to budge."
     },
-    "tags": [
-        "resentment",
-        "unfairness",
-        "simmering",
-        "stuck",
-        "cold_anger",
-        "rumination",
-        "restraint"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

@@ -201,11 +201,6 @@
         "auditory": "I hear a thick quiet-one slow breath, a small exhale that sounds like giving up on words.",
         "tactile": "Someone's presence feels weighted and still, like someone holding something they can't set down."
     },
-    "tags": [
-        "grief",
-        "sadness",
-        "mourning",
-        "quiet"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

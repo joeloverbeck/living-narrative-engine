@@ -169,11 +169,6 @@
         "auditory": "I hear a sudden rise in volume-raw, forceful shouting that arrives faster than context. Words slam into each other, powered more by breath and pressure than clarity.",
         "tactile": "I sense a tense, vibrating stillness in someone's posture-like a coiled spring you can feel in the air."
     },
-    "tags": [
-        "anger",
-        "rage",
-        "explosive",
-        "sustained"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

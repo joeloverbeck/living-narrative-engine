@@ -201,12 +201,6 @@
         "auditory": "I hear breathing go uneven, a sound that starts and gets swallowed, the too-quick pause before any word-as if speech itself feels exposing.",
         "olfactory": "I smell warm skin and nervous sweat-clean heat edged with anxiety, like embarrassment made physical."
     },
-    "tags": [
-        "arousal",
-        "shame",
-        "conflict",
-        "suppression",
-        "tension"
-    ],
+    "category": "shame",
     "diagnosticStatus": "unknown"
 }

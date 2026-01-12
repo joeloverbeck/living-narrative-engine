@@ -58,6 +58,9 @@ async function initialize() {
         const prototypeConstraintAnalyzer = container.resolve(
           diagnosticsTokens.IPrototypeConstraintAnalyzer
         );
+        const sensitivityAnalyzer = container.resolve(
+          diagnosticsTokens.ISensitivityAnalyzer
+        );
 
         // Create report generator and modal for Monte Carlo report generation
         const reportGenerator = new MonteCarloReportGenerator({
@@ -94,6 +97,7 @@ async function initialize() {
           reportGenerator,
           reportModal,
           prototypeFitRankingService,
+          sensitivityAnalyzer,
         });
 
         await controller.initialize();

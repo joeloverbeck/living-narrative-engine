@@ -147,6 +147,66 @@ describe('MonteCarloReportGenerator - Prototype Fit Section', () => {
     });
   });
 
+  describe('when sexual prototypes are included in service results', () => {
+    it('should include sexual prototype IDs in prototype fit, implied, and gap sections', () => {
+      const sexualPrototypeId = 'sexual_lust';
+
+      mockPrototypeFitRankingService.analyzeAllPrototypeFit.mockReturnValue({
+        leaderboard: [
+          createSampleFitResult({ rank: 1, prototypeId: sexualPrototypeId, type: 'sexual' }),
+        ],
+        currentPrototype: null,
+        bestAlternative: null,
+        improvementFactor: null,
+      });
+
+      mockPrototypeFitRankingService.computeImpliedPrototype.mockReturnValue({
+        targetSignature: new Map(),
+        bySimilarity: [
+          { prototypeId: sexualPrototypeId, cosineSimilarity: 0.72, gatePassRate: 0.5, combinedScore: 0.64 },
+        ],
+        byGatePass: [
+          { prototypeId: sexualPrototypeId, cosineSimilarity: 0.65, gatePassRate: 0.8, combinedScore: 0.71 },
+        ],
+        byCombined: [
+          { prototypeId: sexualPrototypeId, cosineSimilarity: 0.7, gatePassRate: 0.6, combinedScore: 0.66 },
+        ],
+      });
+
+      mockPrototypeFitRankingService.detectPrototypeGaps.mockReturnValue({
+        gapDetected: false,
+        nearestDistance: 0.12,
+        kNearestNeighbors: [
+          {
+            prototypeId: sexualPrototypeId,
+            weightDistance: 0.12,
+            gateDistance: 0.0,
+            combinedDistance: 0.12,
+            pIntensityAbove: 0.6,
+          },
+        ],
+        coverageWarning: null,
+        suggestedPrototype: null,
+        gapThreshold: 0.5,
+      });
+
+      const simulationResult = createMockSimulationResult();
+
+      const report = generator.generate({
+        expressionName: 'test:expression',
+        simulationResult,
+        blockers: [],
+        summary: 'Test summary',
+        prerequisites: [{ condition: 'test' }],
+      });
+
+      expect(report).toContain('Prototype Fit Analysis');
+      expect(report).toContain('Implied Prototype from Prerequisites');
+      expect(report).toContain('Prototype Gap Detection');
+      expect(report).toContain(sexualPrototypeId);
+    });
+  });
+
   describe('when leaderboard is empty', () => {
     it('should handle empty leaderboard gracefully', () => {
       mockPrototypeFitRankingService.analyzeAllPrototypeFit.mockReturnValue({
@@ -335,6 +395,7 @@ describe('MonteCarloReportGenerator - Prototype Fit Section', () => {
         coverageWarning: null,
         suggestedPrototype: null,
         gapThreshold: 0.5,
+        distanceContext: 'Distance 0.18 is farther than 60% of prototype nearest-neighbor distances (z=0.40).',
       });
     });
 
@@ -352,6 +413,7 @@ describe('MonteCarloReportGenerator - Prototype Fit Section', () => {
       // Report should contain the gap detection section
       expect(report).toContain('Prototype Gap Detection');
       expect(report).toContain('k-Nearest Prototypes');
+      expect(report).toContain('Distance Context');
 
       // The distance column should NOT show "N/A" for valid data
       expect(report).toContain('joy');

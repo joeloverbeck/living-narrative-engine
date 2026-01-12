@@ -181,12 +181,6 @@
         "auditory": "I hear breathing slow into a steady rhythm. There are small, timed sounds-an “mm,” a quiet intake-like someone is following along closely and doesn't want to interrupt.",
         "olfactory": "The air carries warm skin and a faint, clean sweat note-focused presence rather than stress-like someone has leaned in and stayed there."
     },
-    "tags": [
-        "engagement",
-        "attention",
-        "interest",
-        "present",
-        "observable"
-    ],
+    "category": "attention",
     "diagnosticStatus": "unknown"
 }

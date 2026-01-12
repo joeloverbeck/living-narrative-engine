@@ -1,210 +1,202 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-stress:stress_overload",
-  "description": "Overloaded-under-pressure stress spike (fits emotions-threat-response): urgency rises, bandwidth collapses, and composure frays without tipping into panic or hypervigilant scanning.",
-  "priority": 79,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.stress"
-              },
-              0.62
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "emotions.alarm"
-                  },
-                  0.32
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.frustration"
-                  },
-                  0.35
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.irritation"
-                  },
-                  0.35
-                ]
-              }
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              25
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              15
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              45
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.valence"
-              },
-              10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.agency_control"
-              },
-              15
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.dissociation"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.35
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.2
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.terror"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.hypervigilance"
-              },
-              0.55
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.stress"
-                      },
-                      {
-                        "var": "previousEmotions.stress"
-                      }
-                    ]
-                  },
-                  0.12
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.arousal"
-                      },
-                      {
-                        "var": "previousMoodAxes.arousal"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              },
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-stress:stress_overload",
+    "description": "Overloaded-under-pressure stress spike (fits emotions-threat-response): urgency rises, bandwidth collapses, and composure frays without tipping into panic or hypervigilant scanning.",
+    "priority": 79,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    "<": [
-                      {
-                        "var": "previousEmotions.stress"
-                      },
-                      0.7
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.stress"
-                      },
-                      0.7
-                    ]
-                  }
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.62
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.alarm"
+                                    },
+                                    0.32
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.frustration"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.irritation"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.stress"
+                                            },
+                                            {
+                                                "var": "previousEmotions.stress"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.stress"
+                                            },
+                                            0.7
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.stress"
+                                            },
+                                            0.7
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and engagement with threat in the stress band (and non-positive valence). Excludes dissociation and stays below panic/freeze/terror/hypervigilance. Gated by stress/arousal increase."
-    }
-  ],
-  "actor_description": "My mind fills up faster than it can empty. Thoughts stack, priorities blur, and everything starts arriving with the same sharp insistence. I can feel my body trying to sprint while my attention keeps snagging—breath quick, shoulders tight, jaw set. I want to force the moment to behave, and the strain shows in how little room I have left for anything else.",
-  "description_text": "{actor} moves in brisk, clipped bursts—starting, stopping, restarting—like they're juggling too many threads at once. Their breath runs higher, their voice turns sharper, and their focus keeps snapping from one thing to the next with visible strain.",
-  "alternate_descriptions": {
-    "auditory": "I hear quick, controlled breaths that keep failing to stay quiet—short exhales, a rushed cadence, words coming out a touch too tight.",
-    "tactile": "The air around them feels electrically tense—restless energy, tight muscles, a sense of pressure building with nowhere clean to go.",
-    "limited": "Someone is visibly overloaded: urgent, strained, and running out of spare attention."
-  },
-  "tags": [
-    "stress",
-    "overload",
-    "pressure",
-    "urgency",
-    "cognitive_overload",
-    "irritability",
-    "fraying_composure"
-  ],
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and engagement with threat in the stress band (and non-positive valence). Excludes dissociation and stays below panic/freeze/terror/hypervigilance. Gated by stress/arousal increase."
+        }
+    ],
+    "actor_description": "My mind fills up faster than it can empty. Thoughts stack, priorities blur, and everything starts arriving with the same sharp insistence. I can feel my body trying to sprint while my attention keeps snagging—breath quick, shoulders tight, jaw set. I want to force the moment to behave, and the strain shows in how little room I have left for anything else.",
+    "description_text": "{actor} moves in brisk, clipped bursts—starting, stopping, restarting—like they're juggling too many threads at once. Their breath runs higher, their voice turns sharper, and their focus keeps snapping from one thing to the next with visible strain.",
+    "alternate_descriptions": {
+        "auditory": "I hear quick, controlled breaths that keep failing to stay quiet—short exhales, a rushed cadence, words coming out a touch too tight.",
+        "tactile": "The air around them feels electrically tense—restless energy, tight muscles, a sense of pressure building with nowhere clean to go.",
+        "limited": "Someone is visibly overloaded: urgent, strained, and running out of spare attention."
+    },
+    "category": "threat",
+    "diagnosticStatus": "unknown"
 }

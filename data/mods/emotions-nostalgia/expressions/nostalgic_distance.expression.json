@@ -191,14 +191,6 @@
         "tactile": "There's a subtle slackening in {actor}'s energy-shoulders easing, movements losing urgency-like the room's edges have gone slightly dull.",
         "limited": "{actor} seems distracted, attention turned inward for a moment."
     },
-    "tags": [
-        "nostalgia",
-        "distance",
-        "inward",
-        "low_energy",
-        "reminiscence",
-        "bittersweet",
-        "withdrawal"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

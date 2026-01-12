@@ -118,7 +118,7 @@ describe('ExpressionMessageRenderer Integration', () => {
         contextualData: {
           source: 'expression_system',
           expressionId: 'emotions_affection:warm_affection',
-          tags: ['affection', 'warmth'],
+          category: 'affection',
         },
       };
 
@@ -149,13 +149,13 @@ describe('ExpressionMessageRenderer Integration', () => {
       expect(messageList.children[0].textContent).toBe(narrativeText);
     });
 
-    it('should apply tag-based CSS modifiers from expression definition', async () => {
+    it('should apply category-based CSS modifiers from expression definition', async () => {
       // Arrange
       const expressionPayload = {
         perceptionType: 'emotion.expression',
         descriptionText: 'Rage builds within them.',
         contextualData: {
-          tags: ['anger'],
+          category: 'anger',
         },
       };
 
@@ -254,7 +254,7 @@ describe('ExpressionMessageRenderer Integration', () => {
       const expressionPayload = {
         perceptionType: 'emotion.expression',
         descriptionText: 'Fear grips them.',
-        contextualData: { tags: ['fear'] },
+        contextualData: { category: 'threat' },
       };
       const damagePayload = {
         perceptionType: 'damage_received',
@@ -332,17 +332,17 @@ describe('ExpressionMessageRenderer Integration', () => {
         {
           perceptionType: 'emotion.expression',
           descriptionText: 'First expression.',
-          contextualData: { tags: ['anger'] },
+          contextualData: { category: 'anger' },
         },
         {
           perceptionType: 'emotion.expression',
           descriptionText: 'Second expression.',
-          contextualData: { tags: ['affection'] },
+          contextualData: { category: 'affection' },
         },
         {
           perceptionType: 'emotion.expression',
           descriptionText: 'Third expression.',
-          contextualData: { tags: ['fear'] },
+          contextualData: { category: 'threat' },
         },
       ];
 
@@ -376,17 +376,20 @@ describe('ExpressionMessageRenderer Integration', () => {
       );
     });
 
-    it('should render with correct CSS classes based on tags', async () => {
-      // Arrange - test multiple tag mappings
+    it('should render with correct CSS classes based on categories', async () => {
+      // Arrange - test multiple category mappings
       const testCases = [
-        { tags: ['anger'], expectedModifier: 'expression-message--anger' },
-        { tags: ['rage'], expectedModifier: 'expression-message--anger' },
-        { tags: ['affection'], expectedModifier: 'expression-message--affection' },
-        { tags: ['love'], expectedModifier: 'expression-message--affection' },
-        { tags: ['grief'], expectedModifier: 'expression-message--loss' },
-        { tags: ['fear'], expectedModifier: 'expression-message--threat' },
-        { tags: ['confidence'], expectedModifier: 'expression-message--agency' },
-        { tags: ['curious'], expectedModifier: 'expression-message--attention' },
+        { category: 'calm', expectedModifier: 'expression-message--calm' },
+        { category: 'joy', expectedModifier: 'expression-message--joy' },
+        { category: 'affection', expectedModifier: 'expression-message--affection' },
+        { category: 'desire', expectedModifier: 'expression-message--desire' },
+        { category: 'attention', expectedModifier: 'expression-message--attention' },
+        { category: 'threat', expectedModifier: 'expression-message--threat' },
+        { category: 'anger', expectedModifier: 'expression-message--anger' },
+        { category: 'loss', expectedModifier: 'expression-message--loss' },
+        { category: 'shame', expectedModifier: 'expression-message--shame' },
+        { category: 'shutdown', expectedModifier: 'expression-message--shutdown' },
+        { category: 'agency', expectedModifier: 'expression-message--agency' },
       ];
 
       for (const testCase of testCases) {
@@ -396,8 +399,8 @@ describe('ExpressionMessageRenderer Integration', () => {
         // Act
         await mockEventBus.dispatch('core:perceptible_event', {
           perceptionType: 'emotion.expression',
-          descriptionText: `Testing ${testCase.tags[0]}`,
-          contextualData: { tags: testCase.tags },
+          descriptionText: `Testing ${testCase.category}`,
+          contextualData: { category: testCase.category },
         });
 
         // Assert
@@ -408,12 +411,12 @@ describe('ExpressionMessageRenderer Integration', () => {
       }
     });
 
-    it('should apply --default modifier when no matching tags', async () => {
+    it('should apply --default modifier when no matching category', async () => {
       // Arrange
       const expressionPayload = {
         perceptionType: 'emotion.expression',
         descriptionText: 'An unrecognizable emotion.',
-        contextualData: { tags: ['unknown_tag'] },
+        contextualData: { category: 'unknown_category' },
       };
 
       // Act
@@ -429,12 +432,12 @@ describe('ExpressionMessageRenderer Integration', () => {
       ).toBe(true);
     });
 
-    it('should apply --default modifier when tags array is empty', async () => {
+    it('should apply --default modifier when category is empty', async () => {
       // Arrange
       const expressionPayload = {
         perceptionType: 'emotion.expression',
         descriptionText: 'A neutral expression.',
-        contextualData: { tags: [] },
+        contextualData: { category: '' },
       };
 
       // Act
@@ -447,11 +450,11 @@ describe('ExpressionMessageRenderer Integration', () => {
       ).toBe(true);
     });
 
-    it('should apply --default modifier when contextualData.tags is undefined', async () => {
+    it('should apply --default modifier when contextualData.category is undefined', async () => {
       // Arrange
       const expressionPayload = {
         perceptionType: 'emotion.expression',
-        descriptionText: 'No tags provided.',
+        descriptionText: 'No category provided.',
         contextualData: {},
       };
 

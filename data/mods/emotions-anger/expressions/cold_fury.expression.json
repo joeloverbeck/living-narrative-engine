@@ -228,11 +228,6 @@
     "alternate_descriptions": {
         "tactile": "The air feels tight; a body held in restraint, tension coiled rather than spilled."
     },
-    "tags": [
-        "anger",
-        "cold",
-        "controlled",
-        "focused"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

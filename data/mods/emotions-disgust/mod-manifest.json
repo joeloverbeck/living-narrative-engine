@@ -9,6 +9,7 @@
   "content": {
     "expressions": [
       "horror_revulsion.expression.json",
+      "moral_revulsion.expression.json",
       "visceral_recoil.expression.json"
     ]
   }

@@ -1,0 +1,155 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-anxiety:worry_rumination_spiral",
+    "description": "A catastrophizing thought-loop: attention clamps down, control feels slippery, and each answer breeds a new worry. The mind keeps trying to solve safety with thinking, but the thinking becomes the threat.",
+    "category": "threat",
+    "actor_description": "My mind won’t let go—it keeps circling the same worry, tightening it, testing it, finding fresh angles to dread. I can feel my attention narrowing until everything else fades, like I’m staring down a tunnel made of “what if.” The more I try to reason my way out, the less in control I feel, like my own thoughts are crowding me. I’m not collapsing—I’m stuck looping, restless and trapped inside my head.",
+    "description_text": "{actor} goes tense and inward, gaze fixed and unfocused at once, as if tracking a problem only they can see. They repeat themselves, ask the same question in different words, or go quiet mid-thought—caught in a tight loop of worry they can’t quite break.",
+    "priority": 76,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.58
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.dread"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.unease"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            28
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.28
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.22
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.anxiety"
+                                            },
+                                            {
+                                                "var": "previousEmotions.anxiety"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.future_expectancy"
+                                            },
+                                            {
+                                                "var": "moodAxes.future_expectancy"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            {
+                                                "var": "previousEmotions.lonely_yearning"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires elevated anxiety plus dread/unease with high engagement and low agency (a cognitive loop, not a shutdown). Caps panic/freeze so it doesn’t steal acute-collapse beats, and caps overly positive valence. Triggers only on a notable change (anxiety spike, hope-drop, lonely-yearning rise, or a sudden affiliation reach) to prevent repetitive spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear {actor} talking faster in short bursts, then stopping to restart—same worry, new wording. There’s a thin edge to their breath, like they keep forgetting to fully exhale.",
+        "tactile": "The air around {actor} feels restless—small shifts, foot tapping, fingers worrying at a seam, tension that never quite discharges.",
+        "limited": "{actor} looks preoccupied and tense, attention snagging on something they can’t seem to put down."
+    }
+}

@@ -1,0 +1,132 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-anger:cooling_down_regain_composure",
+    "description": "Anger de-escalation—heat still in the system, but control returns. The edge dulls, breathing steadies, and the urge to lash out gets replaced by a quieter, more deliberate stance.",
+    "category": "agency",
+    "actor_description": "I’m still angry, but it’s no longer driving with both hands on the wheel. My chest loosens a notch and the noise in my head drops from a roar to a rough, manageable hum. I can feel myself choosing my next move instead of being dragged into it. The fight is still there—just no longer climbing.",
+    "description_text": "{actor}'s posture eases from rigid to controlled—jaw unclenching, shoulders lowering, movements less sharp. The irritation remains, but it’s tempered by a returning steadiness, like they’re re-taking the reins.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anger"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.frustration"
+                                    },
+                                    0.50
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.anger"
+                                            }
+                                        ]
+                                    },
+                                    -0.10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.frustration"
+                                            },
+                                            {
+                                                "var": "previousEmotions.frustration"
+                                            }
+                                        ]
+                                    },
+                                    -0.10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    -12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires anger or frustration still meaningfully present, but de-escalating (negative delta) or accompanied by a notable arousal drop. Relief must be rising enough to read as regulation rather than mere exhaustion. Blocks high rage (too late—already a snap) and high contempt (cooling calcifies into dismissal instead of composure)."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear the breath slow and deepen—less hissing through teeth, more controlled exhale. If words come, they’re lower and more measured, the sharpness sanded down.",
+        "tactile": "The air feels less tight around them, like tension is bleeding out through their shoulders and hands. The heat is still there, but it’s contained—no longer spilling over.",
+        "limited": "Something in {actor} settles: the agitation eases, and their control becomes visible again."
+    }
+}

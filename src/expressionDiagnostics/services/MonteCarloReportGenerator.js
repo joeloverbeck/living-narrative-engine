@@ -3,7 +3,9 @@
  * @see specs/monte-carlo-report-generator.md
  */
 
+import { getTunableVariableInfo } from '../config/advancedMetricsConfig.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { buildSamplingCoverageConclusions } from './samplingCoverageConclusions.js';
 
 /**
  * Generates comprehensive markdown reports from Monte Carlo simulation results.
@@ -61,6 +63,8 @@ class MonteCarloReportGenerator {
 
     // Extract axis constraints from prerequisites if analyzer is available
     const axisConstraints = this.#extractAxisConstraints(prerequisites);
+    const hasOrMoodConstraints = this.#hasOrMoodConstraints(prerequisites);
+    const moodConstraints = this.#extractMoodConstraints(prerequisites);
 
     // Perform prototype fit analysis if service is available
     const prototypeFitAnalysis = this.#performPrototypeFitAnalysis(
@@ -71,15 +75,35 @@ class MonteCarloReportGenerator {
     const sections = [
       this.#generateHeader(expressionName, simulationResult),
       this.#generateExecutiveSummary(simulationResult, summary),
+      this.#generateSamplingCoverageSection(
+        simulationResult.samplingCoverage,
+        simulationResult.samplingMode
+      ),
       this.#generateWitnessSection(simulationResult),
-      this.#generateBlockerAnalysis(blockers, simulationResult.sampleCount, axisConstraints, simulationResult.storedContexts),
-      this.#generateConditionalPassRatesSection(prerequisites, blockers, simulationResult.storedContexts),
+      this.#generateBlockerAnalysis(
+        blockers,
+        simulationResult.sampleCount,
+        axisConstraints,
+        simulationResult.storedContexts,
+        hasOrMoodConstraints,
+        moodConstraints,
+        simulationResult.gateCompatibility
+      ),
+      this.#generateConditionalPassRatesSection(
+        prerequisites,
+        blockers,
+        simulationResult.storedContexts,
+        hasOrMoodConstraints
+      ),
       this.#generateLastMileDecompositionSection(blockers, simulationResult.storedContexts),
       this.#generateGlobalSensitivitySection(globalSensitivityData),
       this.#generateSensitivityAnalysis(sensitivityData),
       // Prototype Fit & Gap Analysis sections
-      this.#generatePrototypeFitSection(prototypeFitAnalysis?.fitResults),
-      this.#generateImpliedPrototypeSection(prototypeFitAnalysis?.impliedPrototype),
+      this.#generatePrototypeFitSection(prototypeFitAnalysis?.fitResults, hasOrMoodConstraints),
+      this.#generateImpliedPrototypeSection(
+        prototypeFitAnalysis?.impliedPrototype,
+        hasOrMoodConstraints
+      ),
       this.#generateGapDetectionSection(prototypeFitAnalysis?.gapDetection),
       this.#generateStaticCrossReference(staticAnalysis, blockers),
       this.#generateLegend(),
@@ -170,6 +194,82 @@ class MonteCarloReportGenerator {
     // DO NOT recurse into OR blocks for mood regime filtering
     // OR blocks represent alternatives - constraints within are not mandatory
     // Filtering by ALL OR-block constraints incorrectly reduces sample count
+  }
+
+  /**
+   * Detect whether any mood-axis constraints live inside an OR block.
+   * @private
+   * @param {Array|null} prerequisites - Expression prerequisites
+   * @returns {boolean}
+   */
+  #hasOrMoodConstraints(prerequisites) {
+    if (!prerequisites || !Array.isArray(prerequisites)) {
+      return false;
+    }
+
+    for (const prereq of prerequisites) {
+      if (this.#hasOrMoodConstraintsInLogic(prereq.logic, false)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Recursively detect mood-axis comparisons inside OR blocks.
+   * @private
+   * @param {object} logic - JSON Logic expression
+   * @param {boolean} inOrBlock - True if inside an OR branch
+   * @returns {boolean}
+   */
+  #hasOrMoodConstraintsInLogic(logic, inOrBlock) {
+    if (!logic || typeof logic !== 'object') return false;
+
+    const operators = ['>=', '<=', '>', '<', '=='];
+    for (const op of operators) {
+      if (logic[op]) {
+        const [left, right] = logic[op];
+        if (
+          inOrBlock &&
+          typeof left === 'object' &&
+          left.var &&
+          typeof right === 'number'
+        ) {
+          const varPath = left.var;
+          if (varPath.startsWith('moodAxes.') || varPath.startsWith('mood.')) {
+            return true;
+          }
+        }
+      }
+    }
+
+    if (logic.or && Array.isArray(logic.or)) {
+      for (const clause of logic.or) {
+        if (this.#hasOrMoodConstraintsInLogic(clause, true)) {
+          return true;
+        }
+      }
+    }
+
+    if (logic.and && Array.isArray(logic.and)) {
+      for (const clause of logic.and) {
+        if (this.#hasOrMoodConstraintsInLogic(clause, inOrBlock)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Format a warning for OR mood constraints in AND-only analyses.
+   * @private
+   * @returns {string}
+   */
+  #formatOrMoodConstraintWarning() {
+    return '> ⚠️ This analysis treats mood-axis constraints as AND-only. OR-based mood constraints are present, so results are conservative (may be overly strict).\n\n';
   }
 
   /**
@@ -370,7 +470,12 @@ class MonteCarloReportGenerator {
    * @param {Array} storedContexts - Stored simulation contexts
    * @returns {string} Markdown section
    */
-  #generateConditionalPassRatesSection(prerequisites, blockers, storedContexts) {
+  #generateConditionalPassRatesSection(
+    prerequisites,
+    blockers,
+    storedContexts,
+    hasOrMoodConstraints = false
+  ) {
     if (!prerequisites || !storedContexts || storedContexts.length === 0) {
       return '';
     }
@@ -388,10 +493,14 @@ class MonteCarloReportGenerator {
     const filteredContexts = this.#filterContextsByMoodConstraints(storedContexts, moodConstraints);
 
     // If very few contexts pass mood constraints, this analysis isn't reliable
+    const orConstraintWarning = hasOrMoodConstraints
+      ? this.#formatOrMoodConstraintWarning()
+      : '';
+
     if (filteredContexts.length < 10) {
       return `## Conditional Pass Rates
 
-**Note**: Only ${filteredContexts.length} out of ${storedContexts.length} samples passed all mood constraints.
+${orConstraintWarning}**Note**: Only ${filteredContexts.length} out of ${storedContexts.length} samples passed all mood constraints.
 Conditional analysis requires more samples for reliable estimates.
 
 ---
@@ -418,7 +527,7 @@ Conditional analysis requires more samples for reliable estimates.
 
     return `## Conditional Pass Rates (Given Mood Constraints Satisfied)
 
-**Mood regime filter**: ${filteredContexts.length} contexts where all mood constraints pass
+${orConstraintWarning}**Mood regime filter**: ${filteredContexts.length} contexts where all mood constraints pass
 - Constraints: ${moodConstraintsList}
 
 ${tableHeader}
@@ -493,11 +602,14 @@ blockers that persist even in favorable mood regimes.
 
     const sorted = [...values].sort((a, b) => a - b);
     const n = sorted.length;
+    const p90Index = Math.min(n - 1, Math.floor(n * 0.9));
+    const p95Index = Math.min(n - 1, Math.floor(n * 0.95));
 
     return {
       min: sorted[0],
       median: sorted[Math.floor(n / 2)],
-      p90: sorted[Math.floor(n * 0.9)],
+      p90: sorted[p90Index],
+      p95: sorted[p95Index],
       max: sorted[n - 1],
       mean: values.reduce((a, b) => a + b, 0) / n,
       count: n,
@@ -631,13 +743,15 @@ blockers that persist even in favorable mood regimes.
 
       // Match both emotion and sexual state conditions where we can get prototype weights
       const varPath = hb.variablePath ?? '';
-      const emotionMatch = varPath.match(/^emotions\.(\w+)$/);
-      const sexualMatch = varPath.match(/^sexualStates\.(\w+)$/);
-      if (!emotionMatch && !sexualMatch) continue;
+      const tunableInfo = getTunableVariableInfo(varPath);
+      if (!tunableInfo) continue;
+      if (tunableInfo.domain !== 'emotions' && tunableInfo.domain !== 'sexualStates') {
+        continue;
+      }
 
-      const prototypeId = emotionMatch ? emotionMatch[1] : sexualMatch[1];
-      const prototypeType = emotionMatch ? 'emotion' : 'sexual';
-      const contextKey = emotionMatch ? 'emotions' : 'sexualStates';
+      const prototypeId = tunableInfo.name;
+      const prototypeType = tunableInfo.domain === 'emotions' ? 'emotion' : 'sexual';
+      const contextKey = tunableInfo.domain === 'emotions' ? 'emotions' : 'sexualStates';
       const threshold = hb.thresholdValue;
 
       // Get prototype weights
@@ -722,8 +836,7 @@ ${suppressorInsight}
 
 ${interpretation}
 
----
-`);
+---`);
     }
 
     if (sections.length === 0) {
@@ -754,7 +867,7 @@ ${sections.join('\n')}`;
     const samplingDescription =
       samplingMetadata.description ??
       (samplingMode === 'static'
-        ? 'Independent sampling (tests logical feasibility)'
+        ? 'Prototype-gated sampling (emotions derived from mood axes; not independent)'
         : 'Coupled sampling (tests fixed transition model)');
 
     return `# Monte Carlo Analysis Report
@@ -764,6 +877,7 @@ ${sections.join('\n')}`;
 **Distribution**: ${distribution}
 **Sample Size**: ${sampleCount}
 **Sampling Mode**: ${samplingMode} - ${samplingDescription}
+**Regime Note**: Report includes global vs in-regime (mood-pass) statistics
 
 ${samplingMetadata.note ? `> **Note**: ${samplingMetadata.note}` : ''}
 
@@ -797,6 +911,133 @@ ${summary || 'No summary available.'}
 
 ---
 `;
+  }
+
+  /**
+   * Generate the Sampling Coverage section.
+   * @private
+   * @param {object|null} samplingCoverage
+   * @param {string|null} samplingMode
+   * @returns {string}
+   */
+  #generateSamplingCoverageSection(samplingCoverage, samplingMode) {
+    if (!samplingCoverage) {
+      return '';
+    }
+
+    const summaryByDomain = samplingCoverage.summaryByDomain ?? [];
+    const variables = samplingCoverage.variables ?? [];
+    const config = samplingCoverage.config ?? {};
+
+    if (summaryByDomain.length === 0 && variables.length === 0) {
+      return '';
+    }
+
+    let section = '## Sampling Coverage\n\n';
+
+    if (samplingMode) {
+      section += `**Sampling Mode**: ${samplingMode}\n\n`;
+    }
+
+    if (summaryByDomain.length > 0) {
+      section += '### Summary by Domain\n\n';
+      section += '| Domain | Variables | Range Coverage | Bin Coverage | Tail Low | Tail High | Rating |\n';
+      section += '|--------|-----------|----------------|--------------|----------|-----------|--------|\n';
+
+      for (const summary of summaryByDomain) {
+        section += `| ${summary.domain} | ${summary.variableCount} | ${this.#formatPercentage(summary.rangeCoverageAvg)} | ${this.#formatPercentage(summary.binCoverageAvg)} | ${this.#formatPercentage(summary.tailCoverageAvg?.low)} | ${this.#formatPercentage(summary.tailCoverageAvg?.high)} | ${summary.rating} |\n`;
+      }
+      section += '\n';
+    }
+
+    const lowestCoverageVariables = this.#getLowestCoverageVariables(variables, 5);
+    if (lowestCoverageVariables.length > 0) {
+      section += '### Lowest Coverage Variables\n\n';
+      section += '| Variable | Range Coverage | Bin Coverage | Tail Low | Tail High | Rating |\n';
+      section += '|----------|----------------|--------------|----------|-----------|--------|\n';
+
+      for (const variable of lowestCoverageVariables) {
+        section += `| ${variable.variablePath} | ${this.#formatPercentage(variable.rangeCoverage)} | ${this.#formatPercentage(variable.binCoverage)} | ${this.#formatPercentage(variable.tailCoverage?.low)} | ${this.#formatPercentage(variable.tailCoverage?.high)} | ${variable.rating} |\n`;
+      }
+      section += '\n';
+    }
+
+    const binCount = Number.isFinite(config.binCount) ? config.binCount : null;
+    const tailPercent = Number.isFinite(config.tailPercent) ? config.tailPercent : null;
+    section += 'Notes:\n';
+    section += '- Range coverage is observed span divided by domain span.\n';
+    section += binCount
+      ? `- Bin coverage is occupancy across ${binCount} equal-width bins.\n`
+      : '- Bin coverage is occupancy across equal-width bins.\n';
+    section += tailPercent !== null
+      ? `- Tail coverage is the share of samples in the bottom/top ${this.#formatPercentage(tailPercent)} of the domain.\n`
+      : '- Tail coverage is the share of samples in the bottom/top of the domain.\n';
+    section += '- Variables with unknown domain ranges are excluded from summaries.\n\n';
+
+    const warningDomains = summaryByDomain.filter((summary) => summary.rating === 'poor');
+    if (warningDomains.length > 0) {
+      const domainList = warningDomains.map((summary) => summary.domain).join(', ');
+      const modeNote = samplingMode ? ` (sampling mode: ${samplingMode})` : '';
+      section += `> ⚠️ Sampling coverage is low for ${domainList}${modeNote}. Trigger rates may be understated.\n\n`;
+    }
+
+    const conclusions = buildSamplingCoverageConclusions(samplingCoverage, {
+      includeWatchlist: true,
+    });
+    const conclusionItems = [
+      ...conclusions.domainConclusions,
+      ...conclusions.variableSummary,
+      ...conclusions.globalImplications,
+      ...conclusions.watchlist,
+    ];
+
+    if (conclusionItems.length > 0) {
+      section += '### Coverage Conclusions\n\n';
+      section += `${conclusionItems
+        .map((item) => `- ${item.text}`)
+        .join('\n')}\n\n`;
+    }
+
+    section += '---\n';
+    return section;
+  }
+
+  /**
+   * Select lowest coverage variables, ordered by rating then coverage.
+   * @private
+   * @param {object[]} variables
+   * @param {number} limit
+   * @returns {object[]}
+   */
+  #getLowestCoverageVariables(variables, limit) {
+    if (!Array.isArray(variables) || variables.length === 0) {
+      return [];
+    }
+
+    const ratingRank = {
+      poor: 0,
+      partial: 1,
+      good: 2,
+    };
+
+    return variables
+      .filter((variable) => variable && variable.rating && variable.rating !== 'unknown')
+      .sort((a, b) => {
+        const rankA = ratingRank[a.rating] ?? 99;
+        const rankB = ratingRank[b.rating] ?? 99;
+        if (rankA !== rankB) return rankA - rankB;
+
+        const rangeA = typeof a.rangeCoverage === 'number' ? a.rangeCoverage : 1;
+        const rangeB = typeof b.rangeCoverage === 'number' ? b.rangeCoverage : 1;
+        if (rangeA !== rangeB) return rangeA - rangeB;
+
+        const binA = typeof a.binCoverage === 'number' ? a.binCoverage : 1;
+        const binB = typeof b.binCoverage === 'number' ? b.binCoverage : 1;
+        if (binA !== binB) return binA - binB;
+
+        return String(a.variablePath).localeCompare(String(b.variablePath));
+      })
+      .slice(0, limit);
   }
 
   /**
@@ -1041,7 +1282,15 @@ ${traits}`;
    * @param {object[]|null} storedContexts - Stored simulation contexts for gate failure rate computation
    * @returns {string}
    */
-  #generateBlockerAnalysis(blockers, sampleCount, axisConstraints, storedContexts = null) {
+  #generateBlockerAnalysis(
+    blockers,
+    sampleCount,
+    axisConstraints,
+    storedContexts = null,
+    hasOrMoodConstraints = false,
+    moodConstraints = [],
+    gateCompatibility = null
+  ) {
     if (!blockers || blockers.length === 0) {
       return `## Blocker Analysis
 
@@ -1052,12 +1301,26 @@ No blockers identified.
     }
 
     const blockerSections = blockers.map((blocker) =>
-      this.#generateBlockerSection(blocker, blocker.rank, sampleCount, axisConstraints, storedContexts)
+      this.#generateBlockerSection(
+        blocker,
+        blocker.rank,
+        sampleCount,
+        axisConstraints,
+        storedContexts,
+        hasOrMoodConstraints,
+        moodConstraints,
+        gateCompatibility
+      )
     );
+
+    const note = `
+> **Note on Sole-Blocker N values**: Each clause's N represents samples where all *other* clauses passed (excluding itself). Different clauses have different "others" sets, so N naturally varies. This is correct behavior indicating which clause is the decisive blocker when others succeed.
+`;
 
     return `## Blocker Analysis
 
-${blockerSections.join('\n')}`;
+${blockerSections.join('\n')}
+${note}`;
   }
 
   /**
@@ -1069,14 +1332,42 @@ ${blockerSections.join('\n')}`;
    * @param {object[]|null} storedContexts - Stored simulation contexts for gate failure rate computation
    * @returns {string}
    */
-  #generateBlockerSection(blocker, rank, sampleCount, axisConstraints, storedContexts = null) {
+  #generateBlockerSection(
+    blocker,
+    rank,
+    sampleCount,
+    axisConstraints,
+    storedContexts = null,
+    hasOrMoodConstraints = false,
+    moodConstraints = [],
+    gateCompatibility = null
+  ) {
     const clauseDesc = blocker.clauseDescription ?? 'Unknown clause';
     const failureRate = blocker.failureRate ?? 0;
     const failureCount = Math.round(failureRate * sampleCount);
+    const inRegimeFailureRate =
+      blocker.inRegimeFailureRate ?? blocker.hierarchicalBreakdown?.inRegimeFailureRate ?? null;
+    const inRegimeFailureCount =
+      blocker.hierarchicalBreakdown?.inRegimeFailureCount ?? null;
+    const inRegimeEvaluationCount =
+      blocker.hierarchicalBreakdown?.inRegimeEvaluationCount ?? null;
     const severity = blocker.severity ?? 'unknown';
 
     // Extract condition details from hierarchicalBreakdown if available
     const hb = blocker.hierarchicalBreakdown ?? {};
+    const redundantInRegime =
+      blocker.redundantInRegime ?? hb.redundantInRegime ?? null;
+    const redundancyStr = this.#formatBooleanValue(redundantInRegime);
+    const globalFailStr = this.#formatFailRate(
+      failureRate,
+      failureCount,
+      sampleCount
+    );
+    const inRegimeFailStr = this.#formatFailRate(
+      inRegimeFailureRate,
+      inRegimeFailureCount,
+      inRegimeEvaluationCount
+    );
 
     // For compound nodes (AND/OR), show compound type instead of trying to extract leaf fields
     let conditionLine;
@@ -1095,13 +1386,22 @@ ${blockerSections.join('\n')}`;
     const worstOffenderAnalysis = this.#generateWorstOffenderAnalysis(blocker, sampleCount);
 
     // Generate prototype math section for emotion/sexual threshold conditions
-    const prototypeMath = this.#generatePrototypeMathSection(blocker, axisConstraints, storedContexts);
+    const prototypeMath = this.#generatePrototypeMathSection(
+      blocker,
+      axisConstraints,
+      storedContexts,
+      hasOrMoodConstraints,
+      moodConstraints,
+      gateCompatibility
+    );
 
     return `### Blocker #${rank}: \`${clauseDesc}\`
 
 ${conditionLine}
-**Failure Rate**: ${this.#formatPercentage(failureRate)} (${failureCount} / ${sampleCount})
+**Fail% global**: ${globalFailStr}
+**Fail% | mood-pass**: ${inRegimeFailStr}
 **Severity**: ${severity}
+**Redundant in regime**: ${redundancyStr}
 
 ${this.#generateFlags(blocker)}
 
@@ -1508,17 +1808,17 @@ ${flagsStr}`;
       const worstLastMile = this.#findWorstLastMileLeaf(hb);
 
       if (worstLastMile) {
-        return `#### Last-Mile Analysis
+        return `#### Sole-Blocker Analysis
 - **Compound Node**: This is the only prerequisite block
 - **Most Decisive Condition**: \`${worstLastMile.description}\`
-- **Last-Mile Failure Rate**: ${this.#formatPercentage(worstLastMile.lastMileFailRate)}
+- **Sole-Blocker Rate**: ${this.#formatPercentage(worstLastMile.lastMileFailRate)}
 - **Insight**: This condition is the primary bottleneck among the leaf conditions`;
       }
 
-      return `#### Last-Mile Analysis
+      return `#### Sole-Blocker Analysis
 - **Compound Node**: This is the only prerequisite block
 - **Note**: Analyze individual leaf conditions to identify bottlenecks
-- **Insight**: ${adv.lastMileAnalysis?.insight ?? 'See leaf conditions for last-mile analysis'}`;
+- **Insight**: ${adv.lastMileAnalysis?.insight ?? 'See leaf conditions for sole-blocker analysis'}`;
     }
 
     // Standard last-mile analysis
@@ -1529,8 +1829,8 @@ ${flagsStr}`;
     const insight =
       adv.lastMileAnalysis?.insight ?? 'No last-mile insight available.';
 
-    return `#### Last-Mile Analysis
-- **Last-Mile Failure Rate**: ${this.#formatPercentage(lastMileFailRate)}
+    return `#### Sole-Blocker Analysis
+- **Sole-Blocker Rate**: ${this.#formatPercentage(lastMileFailRate)}
 - **Others Passed Count**: ${othersPassedCount}
 - **Is Decisive**: ${isDecisive ? 'yes' : 'no'}
 - **Insight**: ${insight}`;
@@ -1595,7 +1895,14 @@ ${flagsStr}`;
    * @param {object[]|null} storedContexts - Stored simulation contexts for gate failure rate computation
    * @returns {string} Markdown section or empty string
    */
-  #generatePrototypeMathSection(blocker, axisConstraints, storedContexts = null) {
+  #generatePrototypeMathSection(
+    blocker,
+    axisConstraints,
+    storedContexts = null,
+    hasOrMoodConstraints = false,
+    moodConstraints = [],
+    gateCompatibility = null
+  ) {
     if (!this.#prototypeConstraintAnalyzer || !axisConstraints) {
       return '';
     }
@@ -1607,31 +1914,42 @@ ${flagsStr}`;
       return '';
     }
 
-    const analyses = emotionConditions.map((cond) =>
-      this.#analyzeEmotionCondition(cond, axisConstraints)
-    );
+    const analyses = emotionConditions.map((cond) => ({
+      analysis: this.#analyzeEmotionCondition(cond, axisConstraints),
+      operator: cond.operator ?? '>=',
+    }));
 
     // Filter out null analyses
-    const validAnalyses = analyses.filter((a) => a !== null);
+    const validAnalyses = analyses.filter((entry) => entry.analysis !== null);
 
     if (validAnalyses.length === 0) {
       return '';
     }
 
-    const sections = validAnalyses.map((analysis) =>
-      this.#formatPrototypeAnalysis(analysis, storedContexts)
+    const sections = validAnalyses.map(({ analysis, operator }) =>
+      this.#formatPrototypeAnalysis(
+        analysis,
+        operator,
+        storedContexts,
+        moodConstraints,
+        gateCompatibility
+      )
     );
+
+    const orConstraintWarning = hasOrMoodConstraints
+      ? this.#formatOrMoodConstraintWarning()
+      : '';
 
     return `#### Prototype Math Analysis
 
-${sections.join('\n\n')}`;
+${orConstraintWarning}${sections.join('\n\n')}`;
   }
 
   /**
    * Extract emotion/sexual threshold conditions from a blocker.
    * @private
    * @param {object} blocker - Blocker object
-   * @returns {Array<{prototypeId: string, type: string, threshold: number, description: string}>}
+   * @returns {Array<{prototypeId: string, type: string, threshold: number, operator: string, description: string}>}
    */
   #extractEmotionConditions(blocker) {
     const conditions = [];
@@ -1643,24 +1961,25 @@ ${sections.join('\n\n')}`;
     for (const leaf of leaves) {
       const varPath = leaf.variablePath ?? '';
       const threshold = leaf.thresholdValue;
+      const operator = leaf.comparisonOperator ?? leaf.operator;
       const desc = leaf.description ?? '';
 
       // Match patterns like "emotions.anger" or "sexual.arousal"
-      const emotionMatch = varPath.match(/^emotions\.(\w+)$/);
-      const sexualMatch = varPath.match(/^sexual\.(\w+)$/);
-
-      if (emotionMatch && typeof threshold === 'number') {
+      const tunableInfo = getTunableVariableInfo(varPath);
+      if (tunableInfo?.domain === 'emotions' && typeof threshold === 'number') {
         conditions.push({
-          prototypeId: emotionMatch[1],
+          prototypeId: tunableInfo.name,
           type: 'emotion',
           threshold,
+          operator,
           description: desc,
         });
-      } else if (sexualMatch && typeof threshold === 'number') {
+      } else if (tunableInfo?.domain === 'sexual' && typeof threshold === 'number') {
         conditions.push({
-          prototypeId: sexualMatch[1],
+          prototypeId: tunableInfo.name,
           type: 'sexual',
           threshold,
+          operator,
           description: desc,
         });
       }
@@ -1682,7 +2001,8 @@ ${sections.join('\n\n')}`;
         condition.prototypeId,
         condition.type,
         condition.threshold,
-        axisConstraints
+        axisConstraints,
+        condition.operator ?? '>='
       );
     } catch (err) {
       this.#logger.warn(
@@ -1697,17 +2017,23 @@ ${sections.join('\n\n')}`;
    * Format a prototype analysis result as markdown.
    * @private
    * @param {object} analysis - Result from PrototypeConstraintAnalyzer
+   * @param {string} operator - Comparison operator from the clause
    * @param {object[]|null} storedContexts - Stored simulation contexts for gate failure rate computation
    * @returns {string} Markdown section
    */
-  #formatPrototypeAnalysis(analysis, storedContexts = null) {
+  #formatPrototypeAnalysis(
+    analysis,
+    operator,
+    storedContexts = null,
+    moodConstraints = [],
+    gateCompatibility = null
+  ) {
     const {
       prototypeId,
       type,
       threshold,
       maxAchievable,
-      isReachable,
-      gap,
+      minAchievable,
       weights,
       gates,
       gateStatus,
@@ -1718,8 +2044,14 @@ ${sections.join('\n\n')}`;
       explanation,
     } = analysis;
 
-    const reachableIcon = isReachable ? '✅' : '⚠️';
-    const reachableText = isReachable ? 'REACHABLE' : 'UNREACHABLE';
+    const comparisonOperator = analysis.operator ?? operator ?? '>=';
+    const feasibility = this.#buildFeasibilitySummary({
+      minAchievable,
+      maxAchievable,
+      threshold,
+      operator: comparisonOperator,
+    });
+    const feasibilityBlock = this.#formatFeasibilityBlock(feasibility);
 
     // Format weights table
     const weightsTable = this.#formatWeightsTable(axisAnalysis);
@@ -1728,18 +2060,42 @@ ${sections.join('\n\n')}`;
     const gateFailureRates = this.#computeGateFailureRates(gates, storedContexts);
 
     // Format gate status with failure rates
-    const gateStatusStr = this.#formatGateStatus(gates, gateStatus, gateFailureRates);
+    const gateStatusStr = this.#formatGateStatus(
+      gates,
+      gateStatus,
+      gateFailureRates,
+      comparisonOperator
+    );
 
     // Format binding axes summary
     const bindingStr = this.#formatBindingAxes(bindingAxes);
 
     // Generate recommendations
-    const recommendations = this.#generatePrototypeRecommendations(analysis);
+    const recommendations = this.#generatePrototypeRecommendations(
+      analysis,
+      comparisonOperator
+    );
 
-    return `##### ${type === 'emotion' ? '🧠' : '💗'} ${prototypeId} >= ${threshold.toFixed(2)} ${reachableIcon} ${reachableText}
+    const regimeStats = this.#formatPrototypeRegimeStats({
+      prototypeId,
+      type,
+      gates,
+      storedContexts,
+      moodConstraints,
+    });
+    const gateCompatibilityBlock = this.#formatGateCompatibilityBlock(
+      { prototypeId, type },
+      gateCompatibility
+    );
 
-**Max Achievable**: ${maxAchievable.toFixed(3)} | **Required**: ${threshold.toFixed(2)} | **Gap**: ${gap >= 0 ? '+' : ''}${gap.toFixed(3)}
+    return `##### ${type === 'emotion' ? '🧠' : '💗'} ${prototypeId} ${comparisonOperator} ${this.#formatNumber(threshold)} ${feasibility.statusIcon} ${feasibility.statusLabel}
+
+${feasibilityBlock}
 **Sum|Weights|**: ${sumAbsWeights.toFixed(2)} | **Required Raw Sum**: ${requiredRawSum.toFixed(2)}
+
+${regimeStats}
+
+${gateCompatibilityBlock}
 
 ${weightsTable}
 
@@ -1869,7 +2225,12 @@ ${recommendations}`;
    * @param {Map<string, number>} gateFailureRates - Gate failure rates from samples
    * @returns {string} Markdown section
    */
-  #formatGateStatus(gates, gateStatus, gateFailureRates = new Map()) {
+  #formatGateStatus(
+    gates,
+    gateStatus,
+    gateFailureRates = new Map(),
+    operator = '>='
+  ) {
     if (!gates || gates.length === 0) {
       return '**Gates**: None';
     }
@@ -1888,7 +2249,12 @@ ${recommendations}`;
     });
 
     const overallIcon = gateStatus.allSatisfiable ? '✅' : '❌';
-    return `**Gates** ${overallIcon}:\n${gateLines.join('\n')}`;
+    const isUpperBound = operator === '<=' || operator === '<';
+    const gateNote =
+      !gateStatus.allSatisfiable && isUpperBound
+        ? '\n- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.'
+        : '';
+    return `**Gates** ${overallIcon}:\n${gateLines.join('\n')}${gateNote}`;
   }
 
   /**
@@ -1926,10 +2292,22 @@ ${recommendations}`;
    * @param {object} analysis - Prototype analysis result
    * @returns {string} Markdown recommendations
    */
-  #generatePrototypeRecommendations(analysis) {
-    const { isReachable, gap, bindingAxes, gateStatus, threshold } = analysis;
+  #generatePrototypeRecommendations(analysis, operator) {
+    const { isReachable, gap, bindingAxes, gateStatus, threshold, maxAchievable } = analysis;
 
     const recommendations = [];
+    const isUpperBound = operator === '<=' || operator === '<';
+
+    if (isUpperBound) {
+      if (maxAchievable <= threshold) {
+        recommendations.push('**Recommendation**: Always satisfies threshold within constraints.');
+      } else {
+        recommendations.push(
+          '**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.'
+        );
+      }
+      return recommendations.join('\n');
+    }
 
     if (!isReachable) {
       if (!gateStatus.allSatisfiable) {
@@ -1953,14 +2331,374 @@ ${recommendations}`;
         );
       }
     } else {
-      if (gap < 0.05) {
+      const reachMargin = maxAchievable - threshold;
+      if (reachMargin >= 0 && reachMargin < 0.05) {
         recommendations.push(
-          `**Note**: Threshold is achievable but with narrow margin (gap: ${gap.toFixed(3)}). Consider lowering threshold for more reliable triggering.`
+          `**Note**: Threshold is achievable but with narrow margin (gap: ${reachMargin.toFixed(3)}). Consider lowering threshold for more reliable triggering.`
         );
       }
     }
 
     return recommendations.length > 0 ? recommendations.join('\n') : '';
+  }
+
+  /**
+   * Build feasibility summary values for standardized feasibility reporting.
+   * @private
+   * @param {object} params
+   * @returns {object}
+   */
+  #buildFeasibilitySummary({ minAchievable, maxAchievable, threshold, operator }) {
+    const tuningDirection = this.#formatTuningDirection(operator);
+    const isUpperBound = operator === '<=' || operator === '<';
+    const hasNumbers =
+      typeof minAchievable === 'number' &&
+      typeof maxAchievable === 'number' &&
+      typeof threshold === 'number';
+
+    let status = 'unknown';
+    if (hasNumbers) {
+      if (isUpperBound) {
+        const impossible = operator === '<'
+          ? minAchievable >= threshold
+          : minAchievable > threshold;
+        const always = operator === '<'
+          ? maxAchievable < threshold
+          : maxAchievable <= threshold;
+        status = impossible ? 'impossible' : always ? 'always' : 'sometimes';
+      } else {
+        const impossible = operator === '>'
+          ? maxAchievable <= threshold
+          : maxAchievable < threshold;
+        const always = operator === '>'
+          ? minAchievable > threshold
+          : minAchievable >= threshold;
+        status = impossible ? 'impossible' : always ? 'always' : 'sometimes';
+      }
+    }
+
+    const statusIcon =
+      status === 'always' ? '✅' : status === 'sometimes' ? '⚠️' : status === 'impossible' ? '❌' : '❓';
+
+    const feasibilitySlack = hasNumbers
+      ? (isUpperBound ? threshold - minAchievable : maxAchievable - threshold)
+      : null;
+    const alwaysSlack = hasNumbers
+      ? (isUpperBound ? threshold - maxAchievable : minAchievable - threshold)
+      : null;
+
+    return {
+      minAchievable,
+      maxAchievable,
+      threshold,
+      status,
+      statusIcon,
+      statusLabel: status.toUpperCase(),
+      feasibilitySlack,
+      alwaysSlack,
+      tuningDirection,
+    };
+  }
+
+  /**
+   * Format feasibility block as markdown.
+   * @private
+   * @param {object} feasibility
+   * @returns {string}
+   */
+  #formatFeasibilityBlock(feasibility) {
+    const minStr = this.#formatNumber(feasibility.minAchievable);
+    const maxStr = this.#formatNumber(feasibility.maxAchievable);
+    const thresholdStr = this.#formatNumber(feasibility.threshold);
+    const slackStr = this.#formatSignedNumber(feasibility.feasibilitySlack);
+    const alwaysSlackStr = this.#formatSignedNumber(feasibility.alwaysSlack);
+    const tuning = feasibility.tuningDirection;
+
+    return `**Feasibility (gated)**
+- **Achievable range**: [${minStr}, ${maxStr}]
+- **Threshold**: ${thresholdStr}
+- **Status**: ${feasibility.status}
+- **Slack**: feasibility ${slackStr}; always ${alwaysSlackStr}
+- **Tuning direction**: loosen -> ${tuning.loosen}, tighten -> ${tuning.tighten}`;
+  }
+
+  /**
+   * Format regime statistics for a prototype from stored contexts.
+   * @private
+   * @param {object} params
+   * @returns {string}
+   */
+  #formatPrototypeRegimeStats({ prototypeId, type, gates, storedContexts, moodConstraints }) {
+    if (!storedContexts || storedContexts.length === 0) {
+      return '*Regime stats unavailable (no stored contexts).*';
+    }
+
+    const path = this.#getPrototypeContextPath(type, prototypeId);
+    if (!path) {
+      return '*Regime stats unavailable (unknown prototype path).*';
+    }
+
+    const inRegimeContexts = this.#filterContextsByMoodConstraints(
+      storedContexts,
+      moodConstraints
+    );
+    const globalStats = this.#computePrototypeRegimeStats(
+      storedContexts,
+      path,
+      gates
+    );
+    const inRegimeStats = this.#computePrototypeRegimeStats(
+      inRegimeContexts,
+      path,
+      gates
+    );
+    const inRegimeLabel =
+      moodConstraints && moodConstraints.length > 0
+        ? 'In mood regime'
+        : 'In mood regime (no mood constraints)';
+
+    const header = '| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |';
+    const divider = '|--------|-----|-----|-----|-----|-----|----------|';
+    const rows = [
+      this.#formatPrototypeRegimeRow('Global', globalStats),
+      this.#formatPrototypeRegimeRow(inRegimeLabel, inRegimeStats),
+    ];
+
+    return `**Regime Stats**:\n${header}\n${divider}\n${rows.join('\n')}`;
+  }
+
+  /**
+   * Compute distribution and gate pass rate for a regime.
+   * @private
+   * @param {Array} contexts
+   * @param {string} varPath
+   * @param {string[]} gates
+   * @returns {object|null}
+   */
+  #computePrototypeRegimeStats(contexts, varPath, gates) {
+    if (!contexts || contexts.length === 0) {
+      return null;
+    }
+
+    const values = contexts
+      .map((ctx) => this.#getNestedValue(ctx, varPath))
+      .filter((value) => typeof value === 'number');
+    const distribution = this.#computeDistributionStats(values);
+    const gatePassRate = this.#computeGatePassRate(gates, contexts);
+
+    return {
+      distribution,
+      gatePassRate,
+      count: values.length,
+    };
+  }
+
+  /**
+   * Format a single regime row for the prototype stats table.
+   * @private
+   * @param {string} label
+   * @param {object|null} stats
+   * @returns {string}
+   */
+  #formatPrototypeRegimeRow(label, stats) {
+    if (!stats || !stats.distribution) {
+      return `| ${label} | N/A | N/A | N/A | N/A | N/A | ${this.#formatPercentage(stats?.gatePassRate)} |`;
+    }
+
+    return `| ${label} | ${this.#formatNumber(stats.distribution.median)} | ${this.#formatNumber(stats.distribution.p90)} | ${this.#formatNumber(stats.distribution.p95)} | ${this.#formatNumber(stats.distribution.min)} | ${this.#formatNumber(stats.distribution.max)} | ${this.#formatPercentage(stats.gatePassRate)} |`;
+  }
+
+  /**
+   * Format gate compatibility status for a prototype.
+   * @private
+   * @param {{prototypeId: string, type: string}} params
+   * @param {object|null} gateCompatibility
+   * @returns {string}
+   */
+  #formatGateCompatibilityBlock({ prototypeId, type }, gateCompatibility) {
+    if (!gateCompatibility) {
+      return '**Gate Compatibility (mood regime)**: N/A';
+    }
+
+    const compatibilityMap =
+      type === 'sexual'
+        ? gateCompatibility.sexualStates
+        : gateCompatibility.emotions;
+    const status = compatibilityMap?.[prototypeId];
+
+    if (!status) {
+      return '**Gate Compatibility (mood regime)**: N/A';
+    }
+
+    if (status.compatible) {
+      return '**Gate Compatibility (mood regime)**: ✅ compatible';
+    }
+
+    const reason = status.reason ? ` - ${status.reason}` : '';
+    return `**Gate Compatibility (mood regime)**: ❌ incompatible${reason}`;
+  }
+
+  /**
+   * Compute overall gate pass rate for a set of contexts.
+   * @private
+   * @param {string[]} gates
+   * @param {object[]|null} storedContexts
+   * @returns {number|null}
+   */
+  #computeGatePassRate(gates, storedContexts) {
+    if (!storedContexts || storedContexts.length === 0) return null;
+    if (!gates || gates.length === 0) return 1;
+
+    const gateRegex = /^(\w+)\s*(>=|<=|>|<|==|!=)\s*([\d.]+)$/;
+
+    let passCount = 0;
+    let validCount = 0;
+
+    for (const context of storedContexts) {
+      let allValid = true;
+      let allPass = true;
+
+      for (const gateStr of gates) {
+        const match = gateStr.match(gateRegex);
+        if (!match) {
+          continue;
+        }
+        const [, axis, operator, valueStr] = match;
+        const threshold = parseFloat(valueStr);
+        if (isNaN(threshold)) {
+          continue;
+        }
+
+        const axisValue = context.moodAxes?.[axis];
+        if (axisValue === undefined || axisValue === null) {
+          allValid = false;
+          break;
+        }
+
+        switch (operator) {
+          case '>=':
+            allPass = allPass && axisValue >= threshold;
+            break;
+          case '<=':
+            allPass = allPass && axisValue <= threshold;
+            break;
+          case '>':
+            allPass = allPass && axisValue > threshold;
+            break;
+          case '<':
+            allPass = allPass && axisValue < threshold;
+            break;
+          case '==':
+            allPass = allPass && axisValue === threshold;
+            break;
+          case '!=':
+            allPass = allPass && axisValue !== threshold;
+            break;
+          default:
+            break;
+        }
+      }
+
+      if (!allValid) {
+        continue;
+      }
+
+      validCount++;
+      if (allPass) {
+        passCount++;
+      }
+    }
+
+    if (validCount === 0) {
+      return null;
+    }
+
+    return passCount / validCount;
+  }
+
+  /**
+   * Map prototype type to stored context path.
+   * @private
+   * @param {string} type
+   * @param {string} prototypeId
+   * @returns {string|null}
+   */
+  #getPrototypeContextPath(type, prototypeId) {
+    if (type === 'emotion') {
+      return `emotions.${prototypeId}`;
+    }
+    if (type === 'sexual') {
+      return `sexualStates.${prototypeId}`;
+    }
+    return null;
+  }
+
+  /**
+   * Format fail rate with optional counts.
+   * @private
+   * @param {number|null} rate
+   * @param {number|null} failures
+   * @param {number|null} total
+   * @returns {string}
+   */
+  #formatFailRate(rate, failures = null, total = null) {
+    if (rate === null || rate === undefined || typeof rate !== 'number' || isNaN(rate)) {
+      return 'N/A';
+    }
+    const pct = this.#formatPercentage(rate);
+    if (
+      typeof failures === 'number' &&
+      typeof total === 'number' &&
+      total > 0
+    ) {
+      return `${pct} (${failures} / ${total})`;
+    }
+    return pct;
+  }
+
+  /**
+   * Format boolean values with yes/no/N/A.
+   * @private
+   * @param {boolean|null} value
+   * @returns {string}
+   */
+  #formatBooleanValue(value) {
+    if (value === true) return 'yes';
+    if (value === false) return 'no';
+    return 'N/A';
+  }
+
+  /**
+   * Format tuning direction labels.
+   * @private
+   * @param {string} operator
+   * @returns {{loosen: string, tighten: string}}
+   */
+  #formatTuningDirection(operator) {
+    switch (operator) {
+      case '>=':
+      case '>':
+        return { loosen: 'threshold down', tighten: 'threshold up' };
+      case '<=':
+      case '<':
+        return { loosen: 'threshold up', tighten: 'threshold down' };
+      default:
+        return { loosen: 'unknown', tighten: 'unknown' };
+    }
+  }
+
+  /**
+   * Format signed numbers for slack display.
+   * @private
+   * @param {number|null} value
+   * @returns {string}
+   */
+  #formatSignedNumber(value) {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+      return 'N/A';
+    }
+    const formatted = this.#formatNumber(Math.abs(value), 3);
+    return value >= 0 ? `+${formatted}` : `-${formatted}`;
   }
 
   // ========================================================================
@@ -2060,11 +2798,24 @@ ${recommendations}`;
   #generateLeafRow(leaf, index, _sampleCount, isOrLeaf = false) {
     const description = leaf.description ?? 'Unknown';
     const failureRate = leaf.failureRate ?? 0;
+    const inRegimeFailureRate = leaf.inRegimeFailureRate ?? null;
+    const inRegimeFailureCount = leaf.inRegimeFailureCount ?? null;
+    const inRegimeEvaluationCount = leaf.inRegimeEvaluationCount ?? null;
+    const redundantInRegime = leaf.redundantInRegime ?? null;
     const evaluationCount = leaf.evaluationCount ?? 0;
-    const maxObserved = leaf.maxObservedValue;
     const threshold = leaf.thresholdValue;
     const ceilingGap = leaf.ceilingGap;
     const nearMissRate = leaf.nearMissRate;
+
+    // Select the appropriate observed bound based on operator type.
+    // For >= and > operators: use maxObserved (we need high values)
+    // For <= and < operators: use minObserved (we need low values)
+    // This ensures the displayed bound matches what's used in Gap calculation.
+    const operator = leaf.comparisonOperator;
+    const isLowBound = operator === '<=' || operator === '<';
+    const boundObserved = isLowBound
+      ? leaf.minObservedValue
+      : leaf.maxObservedValue;
 
     // For leaf nodes within compounds, prefer sibling-conditioned stats
     // (tracks when all OTHER leaves in the same compound passed)
@@ -2081,13 +2832,21 @@ ${recommendations}`;
     const effectiveSupportCount =
       siblingsPassedCount > 0 ? siblingsPassedCount : othersPassedCount;
 
-    // Format max observed
-    const maxObsStr =
-      typeof maxObserved === 'number' ? this.#formatNumber(maxObserved) : '-';
+    // Format bound observed (max for >=, min for <=)
+    const boundObsStr =
+      typeof boundObserved === 'number' ? this.#formatNumber(boundObserved) : '-';
 
     // Format threshold
     const thresholdStr =
       typeof threshold === 'number' ? this.#formatNumber(threshold) : '-';
+
+    const globalFailStr = this.#formatFailRate(failureRate);
+    const inRegimeFailStr = this.#formatFailRate(
+      inRegimeFailureRate,
+      inRegimeFailureCount,
+      inRegimeEvaluationCount
+    );
+    const redundantStr = this.#formatBooleanValue(redundantInRegime);
 
     // Format ceiling gap with indicator
     let gapStr = '-';
@@ -2134,7 +2893,7 @@ ${recommendations}`;
       lastMileStr = '-';
     }
 
-    return `| ${index} | \`${description}\` | ${this.#formatPercentage(failureRate)} | ${evaluationCount} | ${maxObsStr} | ${thresholdStr} | ${gapStr} | ${tunabilityStr} | ${lastMileStr} |`;
+    return `| ${index} | \`${description}\` | ${globalFailStr} | ${inRegimeFailStr} | ${evaluationCount} | ${boundObsStr} | ${thresholdStr} | ${gapStr} | ${tunabilityStr} | ${redundantStr} | ${lastMileStr} |`;
   }
 
   /**
@@ -2219,7 +2978,8 @@ ${recommendations}`;
           orBlock.children,
           sampleCount,
           rowIndex,
-          orPassRate
+          orPassRate,
+          orBlock.node?.inRegimeFailureRate ?? null
         );
 
         // Add OR contribution breakdown after the table
@@ -2240,7 +3000,8 @@ ${recommendations}`;
         structured.children,
         sampleCount,
         rowIndex,
-        orPassRate
+        orPassRate,
+        structured.node?.inRegimeFailureRate ?? null
       );
 
       // Add OR contribution breakdown after the table
@@ -2271,7 +3032,14 @@ ${sections.join('\n\n')}`;
    * @param {number|null} combinedPassRate - For OR blocks, the combined pass rate
    * @returns {{markdown: string, nextRowIndex: number}}
    */
-  #generateConditionGroup(title, children, sampleCount, startIndex, combinedPassRate) {
+  #generateConditionGroup(
+    title,
+    children,
+    sampleCount,
+    startIndex,
+    combinedPassRate,
+    combinedInRegimeFailureRate = null
+  ) {
     // For OR blocks, preserve nested AND structure for better readability
     // This helps users understand that conditions in a nested AND must ALL pass together
     const isOrBlock = combinedPassRate !== null;
@@ -2305,9 +3073,10 @@ ${sections.join('\n\n')}`;
     }
 
     // Build header with appropriate columns
+    // "Bound" column shows maxObserved for >= operators, minObserved for <= operators
     let header = `**${title}**\n\n`;
-    header += '| # | Condition | Fail % | Support | Max Obs | Threshold | Gap | Tunable | Last-Mile |\n';
-    header += '|---|-----------|--------|---------|---------|-----------|-----|---------|-----------|';
+    header += '| # | Condition | Fail% global | Fail% \\| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Sole-Blocker Rate |\n';
+    header += '|---|-----------|--------------|-------------------|---------|-------|-----------|-----|---------|-------------------|-------------------|';
 
     // Generate rows with group labels for nested AND blocks
     const rows = [];
@@ -2320,7 +3089,7 @@ ${sections.join('\n\n')}`;
         rowIndex++;
       } else if (entry.type === 'grouped_and') {
         // Add a group marker row for nested AND blocks
-        rows.push(`| | **${entry.groupLabel}** | | | | | | | |`);
+        rows.push(`| | **${entry.groupLabel}** | | | | | | | | | |`);
         // Add each leaf in the group with indentation
         // Note: Leaves inside a grouped AND within an OR are still OR alternatives
         // (the whole AND group is one alternative), so they also get isOrBlock=true
@@ -2340,7 +3109,11 @@ ${sections.join('\n\n')}`;
     let footer = '';
     if (combinedPassRate !== null) {
       const combinedFailRate = 1 - combinedPassRate;
-      footer = `\n\n**Combined OR Block**: ${this.#formatPercentage(combinedPassRate)} pass rate (${this.#formatPercentage(combinedFailRate)} fail when ALL alternatives fail)`;
+      const combinedFailStr = this.#formatFailRate(combinedFailRate);
+      const combinedInRegimeFailStr = this.#formatFailRate(
+        combinedInRegimeFailureRate
+      );
+      footer = `\n\n**Combined OR Block**: ${this.#formatPercentage(combinedPassRate)} pass rate (Fail% global: ${combinedFailStr} | Fail% \\| mood-pass: ${combinedInRegimeFailStr})`;
     }
 
     return {
@@ -2364,33 +3137,25 @@ ${sections.join('\n\n')}`;
     const contributions = [];
 
     for (const child of children) {
-      if (child.type === 'leaf' && child.node) {
+      if (child.node) {
         const node = child.node;
-        const desc = node.description ?? 'Unknown condition';
-        const orContributionRate = node.orContributionRate;
-        const orContributionCount = node.orContributionCount ?? 0;
-        const orSuccessCount = node.orSuccessCount ?? 0;
-
+        let desc = node.description ?? 'Unknown condition';
+        if (child.type === 'and') {
+          const leaves = this.#flattenLeaves(node);
+          desc = leaves.length > 0
+            ? `(AND: ${leaves.map((l) => l.description ?? '?').join(' & ')})`
+            : 'AND group';
+        }
         contributions.push({
           description: desc,
-          contributionRate: orContributionRate,
-          contributionCount: orContributionCount,
-          successCount: orSuccessCount,
+          passRate: node.orPassRate,
+          passCount: node.orPassCount ?? 0,
+          exclusiveRate: node.orExclusivePassRate,
+          exclusiveCount: node.orExclusivePassCount ?? 0,
+          contributionRate: node.orContributionRate,
+          contributionCount: node.orContributionCount ?? 0,
+          successCount: node.orSuccessCount ?? 0,
         });
-      } else if (child.type === 'and' && child.node) {
-        // For nested AND groups, aggregate from all leaves
-        const leaves = this.#flattenLeaves(child.node);
-        if (leaves.length > 0) {
-          // Use the first leaf's stats since all leaves in AND have same OR success count
-          const firstLeaf = leaves[0];
-          const groupDesc = `(AND: ${leaves.map((l) => l.description ?? '?').join(' & ')})`;
-          contributions.push({
-            description: groupDesc,
-            contributionRate: firstLeaf.orContributionRate,
-            contributionCount: firstLeaf.orContributionCount ?? 0,
-            successCount: firstLeaf.orSuccessCount ?? 0,
-          });
-        }
       }
     }
 
@@ -2403,34 +3168,44 @@ ${sections.join('\n\n')}`;
       return '';
     }
 
-    // Sort by contribution rate descending
+    // Sort by pass rate descending, then contribution rate
     validContributions.sort((a, b) => {
-      const rateA = a.contributionRate ?? 0;
-      const rateB = b.contributionRate ?? 0;
-      return rateB - rateA;
+      const rateA = a.passRate ?? 0;
+      const rateB = b.passRate ?? 0;
+      if (rateB !== rateA) return rateB - rateA;
+      const contribA = a.contributionRate ?? 0;
+      const contribB = b.contributionRate ?? 0;
+      return contribB - contribA;
     });
 
     const totalSuccesses = validContributions[0]?.successCount ?? 0;
     if (totalSuccesses === 0) {
-      return `\n\n**${orBlockTitle} Success Breakdown**: No OR successes observed.`;
+      return `\n\n**${orBlockTitle} OR Alternative Coverage**: No OR successes observed.`;
     }
 
-    // Build tree-style breakdown
-    const lines = [`\n\n**${orBlockTitle} Success Breakdown** (${totalSuccesses} total successes):`];
+    const header = `\n\n**${orBlockTitle} OR Alternative Coverage** (${totalSuccesses} total successes):`;
+    const tableHeader = '| Alternative | P(alt passes \\| OR pass) | P(alt exclusively passes \\| OR pass) | First-pass share (order-dependent) |';
+    const tableDivider = '|------------|---------------------------|------------------------------------|------------------------------------|';
+    const rows = validContributions.map((c) => {
+      const passRate =
+        typeof c.passRate === 'number' ? this.#formatPercentage(c.passRate) : 'N/A';
+      const exclusiveRate =
+        typeof c.exclusiveRate === 'number'
+          ? this.#formatPercentage(c.exclusiveRate)
+          : 'N/A';
+      const contributionRate =
+        typeof c.contributionRate === 'number'
+          ? this.#formatPercentage(c.contributionRate)
+          : 'N/A';
+      const passCountStr = `${c.passCount}/${c.successCount}`;
+      const exclusiveCountStr = `${c.exclusiveCount}/${c.successCount}`;
+      const contribCountStr = `${c.contributionCount}/${c.successCount}`;
+      return `| \`${c.description}\` | ${passRate} (${passCountStr}) | ${exclusiveRate} (${exclusiveCountStr}) | ${contributionRate} (${contribCountStr}) |`;
+    });
 
-    for (let i = 0; i < validContributions.length; i++) {
-      const c = validContributions[i];
-      const isLast = i === validContributions.length - 1;
-      const prefix = isLast ? '└─' : '├─';
-      const rate = c.contributionRate;
-      const rateStr =
-        typeof rate === 'number' ? this.#formatPercentage(rate) : 'N/A';
-      const countStr = `${c.contributionCount}/${c.successCount}`;
+    const note = '\n*First-pass share is order-dependent; use pass/exclusive rates for order-independent attribution.*';
 
-      lines.push(`${prefix} \`${c.description}\`: ${rateStr} of OR passes (${countStr})`);
-    }
-
-    return lines.join('\n');
+    return `${header}\n\n${tableHeader}\n${tableDivider}\n${rows.join('\n')}${note}`;
   }
 
   /**
@@ -2502,6 +3277,9 @@ ${sections.join('\n\n')}`;
       const rank = index + 1;
       const desc = offender.description ?? 'Unknown';
       const failureRate = offender.failureRate ?? 0;
+      const inRegimeFailureRate = offender.inRegimeFailureRate ?? null;
+      const inRegimeFailureCount = offender.inRegimeFailureCount ?? null;
+      const inRegimeEvaluationCount = offender.inRegimeEvaluationCount ?? null;
       // Prefer sibling-conditioned rate for leaves in compounds
       const lastMileRate =
         offender.siblingConditionedFailRate ?? offender.lastMileFailRate;
@@ -2512,10 +3290,16 @@ ${sections.join('\n\n')}`;
       const isOrChild = offender.parentNodeType === 'or' || offender.isOrChild;
 
       let lines = [];
+      const globalFailStr = this.#formatFailRate(failureRate);
+      const inRegimeFailStr = this.#formatFailRate(
+        inRegimeFailureRate,
+        inRegimeFailureCount,
+        inRegimeEvaluationCount
+      );
       // Add OR-alternative annotation if this is inside an OR block
       const orAnnotation = isOrChild ? ' ⚠️ OR-alternative' : '';
       lines.push(
-        `**#${rank}: \`${desc}\`**${orAnnotation} (${this.#formatPercentage(failureRate)} failure${typeof lastMileRate === 'number' ? `, ${this.#formatPercentage(lastMileRate)} last-mile` : ''})`
+        `**#${rank}: \`${desc}\`**${orAnnotation} (Fail% global: ${globalFailStr} | Fail% \\| mood-pass: ${inRegimeFailStr}${typeof lastMileRate === 'number' ? `, ${this.#formatPercentage(lastMileRate)} last-mile` : ''})`
       );
 
       // Add context note for OR alternatives
@@ -2796,25 +3580,21 @@ ${sections.join('\n\n')}`;
       return estimatedHits < 5;
     });
 
+    if (lowConfidenceResults.length > 0) {
+      return `## Global Expression Sensitivity Analysis
+
+**Insufficient data**: fewer than 5 baseline expression hits. Global sensitivity tables are suppressed for low-confidence runs.
+`;
+    }
+
     const sections = globalSensitivityData.map((result) =>
       this.#formatGlobalSensitivityResult(result)
     );
-
-    let warningNote = '';
-    if (lowConfidenceResults.length > 0) {
-      warningNote = `
-> ⚠️ **Low Confidence Warning**: ${lowConfidenceResults.length === globalSensitivityData.length ? 'All' : 'Some'} sensitivity analyses below have fewer than 5 baseline expression hits.
-> With rare expressions, sampling noise dominates and threshold comparisons may not be statistically meaningful.
-> Consider increasing sample count or using importance sampling for reliable sensitivity analysis.
-
-`;
-    }
 
     return `## Global Expression Sensitivity Analysis
 
 This section shows how adjusting thresholds affects the **entire expression trigger rate**, not just individual clause pass rates.
 This is the key metric for tuning—it answers "What actually happens to the expression if I change this?"
-${warningNote}
 ${sections.join('\n\n')}`;
   }
 
@@ -2869,7 +3649,7 @@ ${sections.join('\n\n')}`;
    * @param {Array|null} fitResults - Results from analyzeAllPrototypeFit
    * @returns {string} Markdown section
    */
-  #generatePrototypeFitSection(fitResults) {
+  #generatePrototypeFitSection(fitResults, hasOrMoodConstraints = false) {
     // Defensive: ensure fitResults is an array
     const results = Array.isArray(fitResults) ? fitResults : [];
     if (results.length === 0) {
@@ -2878,11 +3658,16 @@ ${sections.join('\n\n')}`;
 
     const top10 = results.slice(0, 10);
 
-    let section = `## 🎯 Prototype Fit Analysis
+    const orConstraintWarning = hasOrMoodConstraints
+      ? this.#formatOrMoodConstraintWarning()
+      : '';
+
+    let section = `
+## 🎯 Prototype Fit Analysis
 
 Ranking of emotion prototypes by how well they fit this expression's mood regime.
 
-| Rank | Prototype | Gate Pass | P(I≥t) | Conflict | Composite |
+${orConstraintWarning}| Rank | Prototype | Gate Pass | P(I≥t) | Conflict | Composite |
 |------|-----------|-----------|--------|----------|-----------|
 `;
 
@@ -2941,15 +3726,20 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
    * @param {Object|null} impliedAnalysis - Results from computeImpliedPrototype
    * @returns {string} Markdown section
    */
-  #generateImpliedPrototypeSection(impliedAnalysis) {
+  #generateImpliedPrototypeSection(impliedAnalysis, hasOrMoodConstraints = false) {
     if (!impliedAnalysis) {
       return '';
     }
+
+    const orConstraintWarning = hasOrMoodConstraints
+      ? this.#formatOrMoodConstraintWarning()
+      : '';
 
     let section = `## 🧭 Implied Prototype from Prerequisites
 
 Analysis of which prototypes best match the expression's constraint pattern.
 
+${orConstraintWarning}
 `;
 
     // Target signature
@@ -3033,6 +3823,9 @@ Analysis of prototype coverage in "prototype space".
 **Nearest Distance**: ${this.#formatNumber(gapResult.nearestDistance)} (threshold: 0.5)
 
 `;
+      if (gapResult.distanceContext) {
+        section += `**Distance Context**: ${gapResult.distanceContext}\n\n`;
+      }
       if (gapResult.coverageWarning) {
         section += `> ${gapResult.coverageWarning}\n\n`;
       }
@@ -3042,6 +3835,9 @@ Analysis of prototype coverage in "prototype space".
 **Nearest Distance**: ${this.#formatNumber(gapResult.nearestDistance)} - within acceptable range.
 
 `;
+      if (gapResult.distanceContext) {
+        section += `**Distance Context**: ${gapResult.distanceContext}\n\n`;
+      }
     }
 
     // k-Nearest neighbors
@@ -3109,7 +3905,8 @@ Analysis of prototype coverage in "prototype space".
 - **Rarity Categories**: impossible (0%), extremely_rare (<0.001%), rare (<0.05%), normal (<2%), frequent (>=2%)
 
 ### Per-Clause Metrics
-- **Failure Rate**: Percentage of samples where this specific clause evaluated to false
+- **Fail% global**: Percentage of samples where this specific clause evaluated to false (unconditional)
+- **Fail% | mood-pass**: Percentage of samples where this clause evaluated to false within the mood regime
 - **Support**: Number of samples evaluated for this clause (evaluation count)
 - **Violation Magnitude**: How far the actual value was from the threshold when the clause failed
 - **P50 (Median)**: Middle value of violations; 50% of failures had violations at or below this
@@ -3120,8 +3917,9 @@ Analysis of prototype coverage in "prototype space".
 - **Mean Observed**: Average value observed for this variable across all samples
 - **Near-Miss Rate**: Percentage of ALL samples where the value was within epsilon of the threshold (close calls)
 - **Epsilon**: The tolerance distance used to detect near-misses (typically 5% of value range)
-- **Last-Mile Failure Rate**: Failure rate only among samples where ALL OTHER clauses passed; reveals if this clause is the final bottleneck
-- **Ceiling Gap**: (Threshold - Max Observed). Positive = threshold is unreachable; negative = threshold is achievable
+- **Sole-Blocker Rate (N)**: Failure rate among samples where ALL OTHER clauses passed. N differs per clause because each clause excludes itself from the "others" check: Clause A's N = samples where B,C,D... passed; Clause B's N = samples where A,C,D... passed. This variance is mathematically correct and order-invariant
+- **Bound**: The relevant extreme value for verifying Gap. For \`>=\` operators: Max Observed (highest value seen). For \`<=\` operators: Min Observed (lowest value seen)
+- **Ceiling Gap**: Direction-aware calculation. For \`>=\` operators: (Threshold - Max Observed). For \`<=\` operators: (Min Observed - Threshold). Positive = threshold unreachable; negative = threshold achievable
 
 ### Tunability Levels
 - **High**: >10% near-miss rate; threshold adjustments will help significantly
@@ -3276,8 +4074,9 @@ Analysis of prototype coverage in "prototype space".
       const varPath = blocker.hierarchicalBreakdown?.variablePath || '';
       if (varPath.includes(axis) || varPath.includes(`moodAxes.${axis}`)) {
         const failRate = blocker.hierarchicalBreakdown?.failureRate;
+        const inRegimeFailRate = blocker.hierarchicalBreakdown?.inRegimeFailureRate;
         if (typeof failRate === 'number') {
-          return `✅ Fails ${this.#formatPercentage(failRate)}`;
+          return `✅ Fail% global: ${this.#formatPercentage(failRate)} | Fail% \\| mood-pass: ${this.#formatPercentage(inRegimeFailRate)}`;
         }
         return '✅ Confirmed';
       }
@@ -3302,8 +4101,9 @@ Analysis of prototype coverage in "prototype space".
       const varPath = blocker.hierarchicalBreakdown?.variablePath || '';
       if (varPath.includes(`emotions.${prototypeId}`) || varPath.includes(`sexualStates.${prototypeId}`)) {
         const failRate = blocker.hierarchicalBreakdown?.failureRate;
+        const inRegimeFailRate = blocker.hierarchicalBreakdown?.inRegimeFailureRate;
         if (typeof failRate === 'number') {
-          return `✅ Fails ${this.#formatPercentage(failRate)}`;
+          return `✅ Fail% global: ${this.#formatPercentage(failRate)} | Fail% \\| mood-pass: ${this.#formatPercentage(inRegimeFailRate)}`;
         }
         return '✅ Confirmed';
       }

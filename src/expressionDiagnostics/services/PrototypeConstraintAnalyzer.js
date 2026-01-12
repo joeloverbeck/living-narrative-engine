@@ -14,10 +14,12 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @typedef {object} PrototypeAnalysisResult
  * @property {string} prototypeId - The emotion/sexual state ID
  * @property {string} type - 'emotion' or 'sexual'
+ * @property {string} operator - Comparison operator used
  * @property {number} threshold - Required threshold value
  * @property {number} maxAchievable - Max intensity achievable given constraints
+ * @property {number} minAchievable - Min intensity achievable given constraints
  * @property {boolean} isReachable - Whether threshold can be reached
- * @property {number} gap - threshold - maxAchievable (positive = unreachable)
+ * @property {number} gap - Operator-aware distance from satisfiability
  * @property {object} weights - Prototype weights by axis
  * @property {string[]} gates - Prototype gate conditions
  * @property {object} gateStatus - Status of each gate
@@ -81,16 +83,29 @@ class PrototypeConstraintAnalyzer {
    * @param {string} type - 'emotion' or 'sexual'
    * @param {number} threshold - Required threshold value
    * @param {Map<string, AxisConstraint>} axisConstraints - Axis constraints from expression
+   * @param {string} [operator='>='] - Comparison operator from the clause
    * @returns {PrototypeAnalysisResult}
    */
-  analyzeEmotionThreshold(prototypeId, type, threshold, axisConstraints) {
+  analyzeEmotionThreshold(
+    prototypeId,
+    type,
+    threshold,
+    axisConstraints,
+    operator = '>='
+  ) {
+    const comparisonOperator = operator ?? '>=';
     const prototype = this.#getPrototype(prototypeId, type);
 
     if (!prototype) {
       this.#logger.warn(
         `PrototypeConstraintAnalyzer: Prototype not found: ${prototypeId} (${type})`
       );
-      return this.#createNotFoundResult(prototypeId, type, threshold);
+      return this.#createNotFoundResult(
+        prototypeId,
+        type,
+        threshold,
+        comparisonOperator
+      );
     }
 
     const weights = prototype.weights || {};
@@ -108,7 +123,8 @@ class PrototypeConstraintAnalyzer {
         type,
         threshold,
         weights,
-        gates
+        gates,
+        comparisonOperator
       );
     }
 
@@ -121,6 +137,7 @@ class PrototypeConstraintAnalyzer {
     // Calculate max raw sum and max intensity
     const maxRawSum = axisAnalysis.reduce((sum, a) => sum + a.contribution, 0);
     const maxAchievable = Math.min(1.0, Math.max(0, maxRawSum / sumAbsWeights));
+    const minAchievable = 0;
 
     // Identify binding axes
     const bindingAxes = axisAnalysis.filter((a) => a.isBinding);
@@ -128,22 +145,40 @@ class PrototypeConstraintAnalyzer {
     // Check gate feasibility
     const gateStatus = this.#checkGateFeasibility(gates, axisConstraints);
 
+    const isReachable = this.#calculateReachability(
+      maxAchievable,
+      minAchievable,
+      threshold,
+      comparisonOperator,
+      gateStatus.allSatisfiable
+    );
+    const gap = this.#calculateGap(
+      maxAchievable,
+      minAchievable,
+      threshold,
+      comparisonOperator
+    );
+
     // Generate explanation
     const explanation = this.#generateExplanation(
       prototypeId,
       threshold,
       maxAchievable,
+      minAchievable,
       bindingAxes,
-      gateStatus
+      gateStatus,
+      comparisonOperator
     );
 
     return {
       prototypeId,
       type,
+      operator: comparisonOperator,
       threshold,
       maxAchievable,
-      isReachable: maxAchievable >= threshold && gateStatus.allSatisfiable,
-      gap: threshold - maxAchievable,
+      minAchievable,
+      isReachable,
+      gap,
       weights,
       gates,
       gateStatus,
@@ -325,27 +360,71 @@ class PrototypeConstraintAnalyzer {
    * @param prototypeId
    * @param threshold
    * @param maxAchievable
+   * @param minAchievable
    * @param bindingAxes
    * @param gateStatus
+   * @param operator
    * @private
    */
   #generateExplanation(
     prototypeId,
     threshold,
     maxAchievable,
+    minAchievable,
     bindingAxes,
-    gateStatus
+    gateStatus,
+    operator
   ) {
     const parts = [];
 
-    if (maxAchievable >= threshold) {
-      if (gateStatus.allSatisfiable) {
-        parts.push(`Threshold ${threshold} is achievable (max: ${maxAchievable.toFixed(3)})`);
+    if (operator === '>=' || operator === '>') {
+      const meetsThreshold =
+        operator === '>' ? maxAchievable > threshold : maxAchievable >= threshold;
+
+      if (meetsThreshold) {
+        if (gateStatus.allSatisfiable) {
+          parts.push(
+            `Threshold ${threshold} is achievable (max: ${maxAchievable.toFixed(3)})`
+          );
+        } else {
+          parts.push(`Intensity ${threshold} is achievable but gates are blocked`);
+        }
       } else {
         parts.push(
-          `Intensity ${threshold} is achievable but gates are blocked`
+          `Threshold ${threshold} is NOT achievable (max: ${maxAchievable.toFixed(3)})`
         );
       }
+    } else if (operator === '<=' || operator === '<') {
+      const meetsThreshold =
+        operator === '<' ? minAchievable < threshold : minAchievable <= threshold;
+      const alwaysSatisfied =
+        operator === '<' ? maxAchievable < threshold : maxAchievable <= threshold;
+
+      if (!meetsThreshold) {
+        parts.push(
+          `Threshold ${threshold} is NOT achievable (min: ${minAchievable.toFixed(3)})`
+        );
+      } else if (alwaysSatisfied) {
+        if (gateStatus.allSatisfiable) {
+          parts.push(
+            `Condition always satisfied (max: ${maxAchievable.toFixed(3)} ${operator} ${threshold.toFixed(3)})`
+          );
+        } else {
+          parts.push(
+            'Condition always satisfied by axis bounds but gates are blocked'
+          );
+        }
+      } else if (gateStatus.allSatisfiable) {
+        parts.push(
+          `Threshold ${threshold} is achievable (min: ${minAchievable.toFixed(3)})`
+        );
+      } else {
+        parts.push(`Threshold ${threshold} is achievable but gates are blocked`);
+      }
+    } else if (maxAchievable >= threshold) {
+      parts.push(
+        `Threshold ${threshold} is achievable (max: ${maxAchievable.toFixed(3)})`
+      );
     } else {
       parts.push(
         `Threshold ${threshold} is NOT achievable (max: ${maxAchievable.toFixed(3)})`
@@ -372,6 +451,59 @@ class PrototypeConstraintAnalyzer {
     }
 
     return parts.join('. ');
+  }
+
+  /**
+   * Calculate reachability based on operator semantics.
+   * @private
+   * @param {number} maxAchievable
+   * @param {number} minAchievable
+   * @param {number} threshold
+   * @param {string} operator
+   * @param {boolean} gatesPassable
+   * @returns {boolean}
+   */
+  #calculateReachability(
+    maxAchievable,
+    minAchievable,
+    threshold,
+    operator,
+    gatesPassable
+  ) {
+    switch (operator) {
+      case '>=':
+        return gatesPassable && maxAchievable >= threshold;
+      case '>':
+        return gatesPassable && maxAchievable > threshold;
+      case '<=':
+        return minAchievable <= threshold;
+      case '<':
+        return minAchievable < threshold;
+      default:
+        return gatesPassable && maxAchievable >= threshold;
+    }
+  }
+
+  /**
+   * Calculate gap with operator-appropriate semantics.
+   * @private
+   * @param {number} maxAchievable
+   * @param {number} minAchievable
+   * @param {number} threshold
+   * @param {string} operator
+   * @returns {number}
+   */
+  #calculateGap(maxAchievable, minAchievable, threshold, operator) {
+    switch (operator) {
+      case '>=':
+      case '>':
+        return threshold - maxAchievable;
+      case '<=':
+      case '<':
+        return minAchievable - threshold;
+      default:
+        return threshold - maxAchievable;
+    }
   }
 
   /**
@@ -488,14 +620,25 @@ class PrototypeConstraintAnalyzer {
    * @param threshold
    * @private
    */
-  #createNotFoundResult(prototypeId, type, threshold) {
+  #createNotFoundResult(prototypeId, type, threshold, operator) {
+    const comparisonOperator = operator ?? '>=';
+    const minAchievable = 0;
+    const maxAchievable = 0;
+    const gap = this.#calculateGap(
+      maxAchievable,
+      minAchievable,
+      threshold,
+      comparisonOperator
+    );
     return {
       prototypeId,
       type,
+      operator: comparisonOperator,
       threshold,
-      maxAchievable: 0,
+      maxAchievable,
+      minAchievable,
       isReachable: false,
-      gap: threshold,
+      gap,
       weights: {},
       gates: [],
       gateStatus: { gates: [], allSatisfiable: true, blockingGates: [] },
@@ -517,17 +660,36 @@ class PrototypeConstraintAnalyzer {
    * @param gates
    * @private
    */
-  #createZeroWeightResult(prototypeId, type, threshold, weights, gates) {
+  #createZeroWeightResult(prototypeId, type, threshold, weights, gates, operator) {
+    const comparisonOperator = operator ?? '>=';
+    const minAchievable = 0;
+    const maxAchievable = 0;
+    const gateStatus = { gates: [], allSatisfiable: true, blockingGates: [] };
+    const isReachable = this.#calculateReachability(
+      maxAchievable,
+      minAchievable,
+      threshold,
+      comparisonOperator,
+      gateStatus.allSatisfiable
+    );
+    const gap = this.#calculateGap(
+      maxAchievable,
+      minAchievable,
+      threshold,
+      comparisonOperator
+    );
     return {
       prototypeId,
       type,
+      operator: comparisonOperator,
       threshold,
-      maxAchievable: 0,
-      isReachable: threshold === 0,
-      gap: threshold,
+      maxAchievable,
+      minAchievable,
+      isReachable,
+      gap,
       weights,
       gates,
-      gateStatus: { gates: [], allSatisfiable: true, blockingGates: [] },
+      gateStatus,
       bindingAxes: [],
       axisAnalysis: [],
       sumAbsWeights: 0,

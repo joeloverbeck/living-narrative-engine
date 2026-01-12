@@ -135,11 +135,6 @@
     ],
     "actor_description": "I notice the shift by what stops happening: my mind quits scanning for the failure mode. The tightness in my chest loosens a notch, and the future stops looking like a trap. I don't have proof. I just feel more willing to spend effort-like the work might actually come back with interest instead of humiliation. My breathing is deeper. My thoughts move forward instead of circling.",
     "description_text": "{actor} looks subtly unburdened-jaw unclenching, shoulders dropping a fraction. Their face settles into an easier readiness, as if they're expecting a good turn for once, and their movements regain a quiet efficiency.",
-    "tags": [
-        "positive",
-        "optimism",
-        "uplift",
-        "future"
-    ],
+    "category": "calm",
     "diagnosticStatus": "unknown"
 }

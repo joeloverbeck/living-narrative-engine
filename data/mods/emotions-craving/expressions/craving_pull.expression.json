@@ -187,14 +187,6 @@
         "auditory": "I hear a quickened breath and small, impatient sounds—foot taps, a tongue click, a muttered half-start of a thought that keeps restarting.",
         "tactile": "The air around them feels restless—fingers fidgeting, posture tilting forward, a jitter of contained motion like they're fighting the urge to move."
     },
-    "tags": [
-        "craving",
-        "urge",
-        "compulsion",
-        "restless",
-        "narrowed_focus",
-        "wanting_hurts",
-        "pull"
-    ],
+    "category": "desire",
     "diagnosticStatus": "unknown"
 }

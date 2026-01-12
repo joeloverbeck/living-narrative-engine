@@ -133,12 +133,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a slow exhale that sounds earned, followed by a quiet, involuntary sound-half hum, half laugh-kept deliberately small."
     },
-    "tags": [
-        "pride",
-        "confidence",
-        "accomplishment",
-        "self_assured",
-        "positive"
-    ],
+    "category": "affection",
     "diagnosticStatus": "unknown"
 }

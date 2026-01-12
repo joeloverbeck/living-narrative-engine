@@ -285,6 +285,10 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
       const reportModal = {
         showReport: () => {},
       };
+      const sensitivityAnalyzer = {
+        computeSensitivityData: () => [],
+        computeGlobalSensitivityData: () => [],
+      };
       // Mock prototypeFitRankingService (optional for controller)
       const prototypeFitRankingService = {
         analyzeAllPrototypeFit: () => ({ leaderboard: [], currentPrototype: null, bestAlternative: null, improvementFactor: null }),
@@ -305,6 +309,7 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
         reportGenerator,
         reportModal,
         prototypeFitRankingService,
+        sensitivityAnalyzer,
       });
 
       expect(controller).toBeDefined();

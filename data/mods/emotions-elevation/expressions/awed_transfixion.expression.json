@@ -184,12 +184,6 @@
         "auditory": "I hear a single soft intake of breath, then a hush-no fidgeting, no speech-like someone's sound has been turned down to make room for what they're sensing.",
         "tactile": "I sense someone becoming unnaturally still. The air feels steadier, as if their movement has stopped so completely it changes the texture of the space."
     },
-    "tags": [
-        "awe",
-        "wonder",
-        "transfixed",
-        "breathtaking",
-        "positive"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

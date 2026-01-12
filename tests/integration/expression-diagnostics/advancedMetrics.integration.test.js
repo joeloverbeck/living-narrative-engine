@@ -11,6 +11,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
 import FailureExplainer from '../../../src/expressionDiagnostics/services/FailureExplainer.js';
+import RandomStateGenerator from '../../../src/expressionDiagnostics/services/RandomStateGenerator.js';
 import EmotionCalculatorAdapter from '../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import EmotionCalculatorService from '../../../src/emotions/emotionCalculatorService.js';
 import {
@@ -82,10 +83,15 @@ describe('Advanced Metrics Integration', () => {
       mockLogger
     );
 
+    const randomStateGenerator = new RandomStateGenerator({
+      logger: mockLogger,
+    });
+
     simulator = new MonteCarloSimulator({
       logger: mockLogger,
       dataRegistry: mockDataRegistry,
       emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+      randomStateGenerator,
     });
 
     explainer = new FailureExplainer({

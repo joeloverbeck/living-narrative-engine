@@ -118,14 +118,5 @@
         "olfactory": "I catch a faint trace of stale coffee or cold metal—an impression of something gone flat and unsentimental.",
         "limited": "{actor}'s expression hardens into skepticism—present, reactive, but unwilling to believe in the best version of anything."
     },
-    "tags": [
-        "cynicism",
-        "bitter",
-        "skepticism",
-        "detachment",
-        "disbelief",
-        "armor",
-        "dismissive",
-        "appraisal"
-    ]
+    "category": "anger"
 }

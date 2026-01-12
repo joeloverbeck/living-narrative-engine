@@ -170,14 +170,6 @@
         "olfactory": "There's a faint sense of stale warmth, like a room that's been lived in too long without a reset.",
         "limited": "A low-energy slump settles in; attention dulls and movement slows."
     },
-    "tags": [
-        "fatigue",
-        "low_energy",
-        "shutdown",
-        "slowed",
-        "withdrawal",
-        "effort_cost",
-        "attention_drift"
-    ],
+    "category": "shutdown",
     "diagnosticStatus": "unknown"
 }

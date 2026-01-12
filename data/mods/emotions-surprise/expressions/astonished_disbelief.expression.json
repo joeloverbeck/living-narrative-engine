@@ -1,0 +1,140 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-surprise:astonished_disbelief",
+    "description": "Astonished disbelief—surprise that doesn’t resolve into glee or fear. Attention locks hard while the mind scrambles to update; there’s a brief processing lag where agency dips and everything feels unreal for a beat.",
+    "category": "attention",
+    "actor_description": "No—wait, what? My brain stalls for a fraction of a second like it hit a missing stair. I feel my face go blank and my breath catch, not scared—just stunned—while I try to make the world make sense again. Then the thoughts come rushing in, late and jostling.",
+    "description_text": "{actor} goes still with a sharp, incredulous focus—eyes fixed, mouth parting as if words forgot how to line up. There’s a beat of silent recalibration before their expression catches up.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.surprise_startle"
+                                    },
+                                    {
+                                        "var": "previousEmotions.surprise_startle"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.arousal"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.arousal"
+                                    }
+                                ]
+                            },
+                            12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            18
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -18
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            22
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.joy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.amusement"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.alarm"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.agency_control"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.agency_control"
+                                    }
+                                ]
+                            },
+                            -8
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a noticeable surprise_startle spike plus high engagement and an arousal jump. Keeps valence near-neutral (blocks delighted surprise) and threat low (blocks startle_flinch), with a brief agency dip to capture the ‘processing lag’ of disbelief."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a short, disbelieving exhale—half laugh, half choke—followed by a beat of silence like the room is waiting for my brain to reboot.",
+        "tactile": "The air feels suddenly sharper against my skin; my hands hover mid-gesture, tingling with the urge to do something before I know what.",
+        "limited": "I freeze in stunned focus for a beat, then snap back with a startled, incredulous look."
+    }
+}

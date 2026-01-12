@@ -120,12 +120,6 @@
         "tactile": "Someone's body shifts from rigid to oriented-weight moving forward, not away.",
         "olfactory": "The air catches a warmer human note-less sharp stress-sweat, more ordinary breath and skin."
     },
-    "tags": [
-        "positive",
-        "hope",
-        "soft",
-        "future",
-        "approach"
-    ],
+    "category": "calm",
     "diagnosticStatus": "unknown"
 }

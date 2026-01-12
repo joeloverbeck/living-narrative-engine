@@ -214,12 +214,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a breath hitch-then a soft exhale that doesn't quite steady. Words start and stop, swallowed and tried again, as if the speaker is fighting not to cry while still needing to say thank you."
     },
-    "tags": [
-        "gratitude",
-        "moved",
-        "relief",
-        "thankful",
-        "positive"
-    ],
+    "category": "affection",
     "diagnosticStatus": "unknown"
 }

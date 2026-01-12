@@ -172,13 +172,6 @@
     "olfactory": "The air seems thin and plain-scents register, but they don't spark appetite or comfort.",
     "limited": "Something in {actor} goes quiet and flat, like the emotional signal has been dampened."
   },
-  "tags": [
-    "numbness",
-    "flat_affect",
-    "shutdown",
-    "withdrawal",
-    "low_arousal",
-    "low_engagement"
-  ],
+  "category": "shutdown",
   "diagnosticStatus": "unknown"
 }

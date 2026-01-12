@@ -523,6 +523,56 @@ describe('PrototypeFitRankingService', () => {
       });
     });
 
+    it('should include distance calibration when multiple prototypes exist', () => {
+      const targetSignature = new Map([
+        ['valence', { direction: 1, importance: 0.7 }],
+        ['arousal', { direction: -1, importance: 0.3 }],
+      ]);
+      const axisConstraints = new Map([
+        ['valence', { min: 0.3, max: 1.0 }],
+        ['arousal', { min: -1.0, max: 0.2 }],
+      ]);
+
+      const result = service.detectPrototypeGaps(
+        targetSignature,
+        sampleContexts,
+        axisConstraints,
+        0.3
+      );
+
+      expect(result.distancePercentile).not.toBeNull();
+      expect(result.distancePercentile).toBeGreaterThanOrEqual(0);
+      expect(result.distancePercentile).toBeLessThanOrEqual(1);
+      expect(result.distanceZScore).not.toBeNull();
+      expect(typeof result.distanceContext).toBe('string');
+    });
+
+    it('should omit distance calibration when only one prototype exists', () => {
+      mockDataRegistry.getLookupData = jest.fn(() => ({
+        entries: {
+          lone: {
+            id: 'lone',
+            weights: { valence: 0.2 },
+            gates: ['valence >= 0.1'],
+          },
+        },
+      }));
+
+      const targetSignature = new Map([['valence', { direction: 1, importance: 0.5 }]]);
+      const axisConstraints = new Map([['valence', { min: 0.3, max: 1.0 }]]);
+
+      const result = service.detectPrototypeGaps(
+        targetSignature,
+        sampleContexts,
+        axisConstraints,
+        0.3
+      );
+
+      expect(result.distancePercentile).toBeNull();
+      expect(result.distanceZScore).toBeNull();
+      expect(result.distanceContext).toBeNull();
+    });
+
     it('should detect gap when nearest distance exceeds threshold and intensity is low', () => {
       // Create a target that is far from all prototypes
       const targetSignature = new Map([
@@ -783,6 +833,54 @@ describe('PrototypeFitRankingService', () => {
       expect(result.leaderboard.length).toBeGreaterThan(0);
     });
 
+    it('should detect sexualStates.* references when given prerequisites array', () => {
+      const prerequisites = [
+        {
+          logic: {
+            '>=': [{ var: 'sexualStates.aroused' }, 0.5],
+          },
+        },
+      ];
+      const sexualContexts = [
+        {
+          moodAxes: { valence: 0.5 },
+          sexualStates: { aroused: 0.6, sex_excitation: 0.5 },
+          emotionIntensities: {},
+        },
+      ];
+      const axisConstraints = new Map([['sex_excitation', { min: 0.2, max: 1.0 }]]);
+
+      service.analyzeAllPrototypeFit(
+        prerequisites,
+        sexualContexts,
+        axisConstraints,
+        0.3
+      );
+
+      expect(mockDataRegistry.getLookupData).toHaveBeenCalledWith('core:sexual_prototypes');
+      expect(mockDataRegistry.getLookupData).not.toHaveBeenCalledWith('core:emotion_prototypes');
+    });
+
+    it('should fall back to emotions when prerequisites array has no prototype references', () => {
+      const prerequisites = [
+        {
+          logic: {
+            '>=': [{ var: 'moodAxes.valence' }, 0.2],
+          },
+        },
+      ];
+      const axisConstraints = new Map([['valence', { min: 0.2, max: 1.0 }]]);
+
+      service.analyzeAllPrototypeFit(
+        prerequisites,
+        sampleContexts,
+        axisConstraints,
+        0.3
+      );
+
+      expect(mockDataRegistry.getLookupData).toHaveBeenCalledWith('core:emotion_prototypes');
+    });
+
     it('should detect both emotions.* and sexualStates.* in mixed prerequisites', () => {
       const mixedContexts = [
         {
@@ -817,6 +915,39 @@ describe('PrototypeFitRankingService', () => {
       // Should fetch both emotion and sexual prototypes
       expect(mockDataRegistry.getLookupData).toHaveBeenCalledWith('core:emotion_prototypes');
       expect(mockDataRegistry.getLookupData).toHaveBeenCalledWith('core:sexual_prototypes');
+    });
+
+    it('should include both emotion and sexual types in leaderboard for mixed prerequisites array', () => {
+      const mixedContexts = [
+        {
+          moodAxes: { valence: 0.5, arousal: 0.3 },
+          sexualStates: { aroused: 0.6, inhibited: 0.2 },
+          emotionIntensities: { joy: 0.5 },
+        },
+      ];
+
+      const prerequisites = [
+        {
+          logic: {
+            and: [
+              { '>=': [{ var: 'emotions.joy' }, 0.4] },
+              { '>=': [{ var: 'sexualStates.aroused' }, 0.3] },
+            ],
+          },
+        },
+      ];
+      const axisConstraints = new Map([['valence', { min: 0.3, max: 1.0 }]]);
+
+      const result = service.analyzeAllPrototypeFit(
+        prerequisites,
+        mixedContexts,
+        axisConstraints,
+        0.3
+      );
+
+      const types = new Set(result.leaderboard.map((item) => item.type));
+      expect(types.has('emotion')).toBe(true);
+      expect(types.has('sexual')).toBe(true);
     });
 
     it('should NOT fetch sexual prototypes when only emotions referenced', () => {
@@ -944,6 +1075,30 @@ describe('PrototypeFitRankingService', () => {
         expect(item).toHaveProperty('type');
       });
     });
+
+    it('should use prerequisites array to fetch sexual prototypes', () => {
+      const prerequisites = [
+        { logic: { '>=': [{ var: 'sexualStates.aroused' }, 0.5] } },
+      ];
+
+      const result = service.computeImpliedPrototype(
+        prerequisites,
+        sampleContexts
+      );
+
+      expect(mockDataRegistry.getLookupData).toHaveBeenCalledWith('core:sexual_prototypes');
+      expect(mockDataRegistry.getLookupData).not.toHaveBeenCalledWith('core:emotion_prototypes');
+      expect(result.bySimilarity.length).toBeGreaterThan(0);
+      result.bySimilarity.forEach((item) => {
+        expect(item.type).toBe('sexual');
+      });
+      result.byGatePass.forEach((item) => {
+        expect(item.type).toBe('sexual');
+      });
+      result.byCombined.forEach((item) => {
+        expect(item.type).toBe('sexual');
+      });
+    });
   });
 
   describe('detectPrototypeGaps with type awareness', () => {
@@ -991,6 +1146,24 @@ describe('PrototypeFitRankingService', () => {
       // Neighbors should have type field
       result.kNearestNeighbors.forEach((neighbor) => {
         expect(neighbor).toHaveProperty('type');
+      });
+    });
+
+    it('should use prerequisites array to fetch sexual prototypes', () => {
+      const prerequisites = [
+        { logic: { '>=': [{ var: 'sexualStates.aroused' }, 0.5] } },
+      ];
+
+      const result = service.detectPrototypeGaps(
+        prerequisites,
+        sampleContexts
+      );
+
+      expect(mockDataRegistry.getLookupData).toHaveBeenCalledWith('core:sexual_prototypes');
+      expect(mockDataRegistry.getLookupData).not.toHaveBeenCalledWith('core:emotion_prototypes');
+      expect(result.kNearestNeighbors.length).toBeGreaterThan(0);
+      result.kNearestNeighbors.forEach((neighbor) => {
+        expect(neighbor.type).toBe('sexual');
       });
     });
   });

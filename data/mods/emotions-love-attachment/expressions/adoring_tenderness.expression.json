@@ -1,0 +1,135 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-love-attachment:adoring_tenderness",
+    "description": "A soft, reverent warmth—attention settles into quiet appreciation, protective fondness, and the feeling that simply being near is enough.",
+    "actor_description": "I don’t need anything from this moment. My chest feels quietly full, like I’m holding something delicate without gripping it. I can just stay here—watch, listen, breathe—letting tenderness pool behind my ribs until it softens my face.",
+    "description_text": "{actor} grows noticeably gentle—gaze lingering, shoulders easing, the corners of their mouth lifting into something quiet and sincere. They move with careful warmth, as if they don’t want to disturb what they’re feeling.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.adoration"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.affection"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_lust"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_craving"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.adoration"
+                                            },
+                                            0.6
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.adoration"
+                                            },
+                                            0.6
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.adoration"
+                                            },
+                                            {
+                                                "var": "previousEmotions.adoration"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires adoration with a supporting affection layer, grounded in high affiliation and low threat. Caps lust/craving (and sexualArousal) so it reads as non-sexual tenderness; caps jealousy/contempt to prevent possessive or judgmental drift. Fires only on an adoration crossing or a noticeable adoration spike to avoid spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice drops softer without trying—words slower, warmer, like they’re speaking from closer in the chest.",
+        "tactile": "The air around them feels unhurried; their movements carry a careful gentleness, as if they’re holding the moment in open hands.",
+        "limited": "{actor} looks quietly tender—warm-eyed, softened, and unforced."
+    },
+    "category": "affection",
+    "diagnosticStatus": "unknown"
+}

@@ -12,3 +12,4 @@ export { default as ExpressionStatusService } from './ExpressionStatusService.js
 export { default as PathSensitiveAnalyzer } from './PathSensitiveAnalyzer.js';
 export { default as MonteCarloReportGenerator } from './MonteCarloReportGenerator.js';
 export { default as PrototypeConstraintAnalyzer } from './PrototypeConstraintAnalyzer.js';
+export { buildSamplingCoverageConclusions } from './samplingCoverageConclusions.js';

@@ -180,14 +180,6 @@
     "tactile": "Heat seems to radiate nearby; a faint tremor runs through the air like someone's holding perfectly still to keep from lunging.",
     "olfactory": "I smell warm skin, a hint of sweat, and something faintly sweet-adrenaline turning into appetite."
   },
-  "tags": [
-    "sexual",
-    "arousal",
-    "fear",
-    "thrill",
-    "danger",
-    "conflict",
-    "exhilaration"
-  ],
+  "category": "desire",
   "diagnosticStatus": "unknown"
 }

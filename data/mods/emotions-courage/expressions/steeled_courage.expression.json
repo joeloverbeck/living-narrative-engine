@@ -163,13 +163,6 @@
         "olfactory": "I smell a clean spike of adrenaline-sweat, sharp but controlled.",
         "tactile": "Someone's body goes rigid for a beat, then steadies-tension reorganizing into readiness instead of panic."
     },
-    "tags": [
-        "courage",
-        "fear",
-        "determination",
-        "resolve",
-        "bravery",
-        "visible"
-    ],
+    "category": "threat",
     "diagnosticStatus": "unknown"
 }

@@ -140,12 +140,6 @@
     "auditory": "I hear repeated small movements-fabric whispering, a shoe repositioning, breath carefully controlled and never fully released.",
     "tactile": "Someone radiates tension. Even without seeing them, I can feel the constant readiness in the way they shift and tighten, like a spring that refuses to uncoil."
   },
-  "tags": [
-    "hypervigilance",
-    "fear",
-    "scanning",
-    "alert",
-    "watchful"
-  ],
+  "category": "threat",
   "diagnosticStatus": "unknown"
 }

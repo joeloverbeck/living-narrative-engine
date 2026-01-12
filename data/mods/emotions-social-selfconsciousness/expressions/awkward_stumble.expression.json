@@ -173,14 +173,6 @@
         "tactile": "The air feels briefly tense, like a tiny snag in the room; {actor}'s movements go slightly stiff, then loosen as they try to reset.",
         "limited": "{actor} falters for a moment, then steadies themselves and continues."
     },
-    "tags": [
-        "awkwardness",
-        "selfconscious",
-        "social_misstep",
-        "recovering",
-        "hesitation",
-        "overcorrection",
-        "presence"
-    ],
+    "category": "shame",
     "diagnosticStatus": "unknown"
 }

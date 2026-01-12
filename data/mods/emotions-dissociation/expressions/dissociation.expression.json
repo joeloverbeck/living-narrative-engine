@@ -188,11 +188,6 @@
     "alternate_descriptions": {
         "auditory": "The voice I hear is oddly flat-too even, too quiet, like someone reading their lines without being in the scene."
     },
-    "tags": [
-        "numbness",
-        "dissociation",
-        "detachment",
-        "acute"
-    ],
+    "category": "shutdown",
     "diagnosticStatus": "unknown"
 }

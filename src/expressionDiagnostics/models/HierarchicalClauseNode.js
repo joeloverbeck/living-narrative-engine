@@ -6,6 +6,8 @@
  * @see FailureExplainer.js - Analyzes trees for reporting
  */
 
+import { advancedMetricsConfig } from '../config/advancedMetricsConfig.js';
+
 /**
  * @typedef {'and' | 'or' | 'leaf'} NodeType
  */
@@ -51,6 +53,9 @@ class HierarchicalClauseNode {
   /** @type {number[]} Individual violation values for percentile calculation */
   #violationValues = [];
 
+  /** @type {number} Total violation values observed (including unsampled) */
+  #violationValueCount = 0;
+
   /** @type {number} Maximum observed value for this clause's variable */
   #maxObservedValue = -Infinity;
 
@@ -59,6 +64,9 @@ class HierarchicalClauseNode {
 
   /** @type {number[]} All observed values for p99 calculation */
   #observedValues = [];
+
+  /** @type {number} Total observed values recorded (including unsampled) */
+  #observedValueCount = 0;
 
   /** @type {number} Count of samples within epsilon of threshold */
   #nearMissCount = 0;
@@ -87,9 +95,26 @@ class HierarchicalClauseNode {
   /** @type {number} Count of times parent OR block succeeded (for OR contribution rate) */
   #orSuccessCount = 0;
 
+  /** @type {number} Count of times this OR alternative passed when the parent OR succeeded */
+  #orPassCount = 0;
+
+  /** @type {number} Count of times this OR alternative passed exclusively when the parent OR succeeded */
+  #orExclusivePassCount = 0;
+
   /** @type {'and' | 'or' | 'root' | null} Parent node type for context-aware analysis */
   #parentNodeType = null;
 
+  /** @type {number} In-regime evaluations (mood constraints satisfied) */
+  #inRegimeEvaluationCount = 0;
+
+  /** @type {number} In-regime failures (mood constraints satisfied) */
+  #inRegimeFailureCount = 0;
+
+  /** @type {number} Maximum observed value for this clause's variable in-regime */
+  #inRegimeMaxObservedValue = -Infinity;
+
+  /** @type {number} Minimum observed value for this clause's variable in-regime */
+  #inRegimeMinObservedValue = Infinity;
   /**
    * @param {object} params
    * @param {string} params.id - Path-based ID (e.g., "0.2.1")
@@ -226,6 +251,15 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Get the total number of violation values observed (including unsampled).
+   *
+   * @returns {number}
+   */
+  get violationTotalCount() {
+    return this.#violationValueCount;
+  }
+
+  /**
    * Get the maximum observed value for this clause's variable.
    *
    * @returns {number|null} Max value, or null if no observations
@@ -254,6 +288,48 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Get the maximum observed value for this clause's variable in-regime.
+   *
+   * @returns {number|null} Max value, or null if no in-regime observations
+   */
+  get inRegimeMaxObservedValue() {
+    return this.#inRegimeMaxObservedValue === -Infinity
+      ? null
+      : this.#inRegimeMaxObservedValue;
+  }
+
+  /**
+   * Get the minimum observed value for this clause's variable in-regime.
+   *
+   * @returns {number|null} Min value, or null if no in-regime observations
+   */
+  get inRegimeMinObservedValue() {
+    return this.#inRegimeMinObservedValue === Infinity
+      ? null
+      : this.#inRegimeMinObservedValue;
+  }
+
+  /**
+   * Computed in-regime failure rate (0-1), or null when no in-regime samples exist.
+   *
+   * @returns {number|null}
+   */
+  get inRegimeFailureRate() {
+    if (this.#inRegimeEvaluationCount === 0) return null;
+    return this.#inRegimeFailureCount / this.#inRegimeEvaluationCount;
+  }
+
+  /**
+   * Computed in-regime pass rate (0-1), or null when no in-regime samples exist.
+   *
+   * @returns {number|null}
+   */
+  get inRegimePassRate() {
+    if (this.#inRegimeEvaluationCount === 0) return null;
+    return 1 - this.#inRegimeFailureCount / this.#inRegimeEvaluationCount;
+  }
+
+  /**
    * Get the mean (average) observed value for this clause's variable.
    *
    * @returns {number|null} Mean value, or null if no observations
@@ -264,6 +340,24 @@ class HierarchicalClauseNode {
     }
     const sum = this.#observedValues.reduce((acc, val) => acc + val, 0);
     return sum / this.#observedValues.length;
+  }
+
+  /**
+   * Get the count of stored observed samples.
+   *
+   * @returns {number}
+   */
+  get observedSampleCount() {
+    return this.#observedValues.length;
+  }
+
+  /**
+   * Get the total number of observed values recorded (including unsampled).
+   *
+   * @returns {number}
+   */
+  get observedTotalCount() {
+    return this.#observedValueCount;
   }
 
   /**
@@ -391,6 +485,53 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Whether this clause is redundant within the mood regime.
+   *
+   * @returns {boolean|null} Null when in-regime stats are unavailable or not a leaf.
+   */
+  get redundantInRegime() {
+    if (this.#nodeType !== 'leaf') return null;
+    if (this.#thresholdValue === null || !this.#comparisonOperator) return null;
+
+    const inRegimeMin = this.inRegimeMinObservedValue;
+    const inRegimeMax = this.inRegimeMaxObservedValue;
+    if (inRegimeMin === null || inRegimeMax === null) return null;
+
+    switch (this.#comparisonOperator) {
+      case '>=':
+        return inRegimeMin >= this.#thresholdValue;
+      case '>':
+        return inRegimeMin > this.#thresholdValue;
+      case '<=':
+        return inRegimeMax <= this.#thresholdValue;
+      case '<':
+        return inRegimeMax < this.#thresholdValue;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Tuning direction labels derived from the comparison operator.
+   *
+   * @returns {{loosen: string, tighten: string}|null}
+   */
+  get tuningDirection() {
+    if (this.#nodeType !== 'leaf' || !this.#comparisonOperator) return null;
+
+    switch (this.#comparisonOperator) {
+      case '>=':
+      case '>':
+        return { loosen: 'threshold_down', tighten: 'threshold_up' };
+      case '<=':
+      case '<':
+        return { loosen: 'threshold_up', tighten: 'threshold_down' };
+      default:
+        return null;
+    }
+  }
+
+  /**
    * Whether this is a single-clause prerequisite.
    * For single clauses, last-mile rate equals failure rate by definition.
    *
@@ -463,6 +604,26 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Get the count of times this OR alternative passed when parent OR succeeded.
+   * Only meaningful for direct children of OR nodes.
+   *
+   * @returns {number}
+   */
+  get orPassCount() {
+    return this.#orPassCount;
+  }
+
+  /**
+   * Get the count of times this OR alternative passed exclusively.
+   * Only meaningful for direct children of OR nodes.
+   *
+   * @returns {number}
+   */
+  get orExclusivePassCount() {
+    return this.#orExclusivePassCount;
+  }
+
+  /**
    * Get the OR contribution rate.
    * The proportion of parent OR successes where this alternative was the first to pass.
    * Helps identify which OR alternatives are "carrying" the block.
@@ -474,6 +635,32 @@ class HierarchicalClauseNode {
       return null;
     }
     return this.#orContributionCount / this.#orSuccessCount;
+  }
+
+  /**
+   * Get the OR pass rate.
+   * The proportion of parent OR successes where this alternative passed.
+   *
+   * @returns {number|null} Rate [0, 1], or null if parent OR never succeeded
+   */
+  get orPassRate() {
+    if (this.#orSuccessCount === 0) {
+      return null;
+    }
+    return this.#orPassCount / this.#orSuccessCount;
+  }
+
+  /**
+   * Get the OR exclusive pass rate.
+   * The proportion of parent OR successes where only this alternative passed.
+   *
+   * @returns {number|null} Rate [0, 1], or null if parent OR never succeeded
+   */
+  get orExclusivePassRate() {
+    if (this.#orSuccessCount === 0) {
+      return null;
+    }
+    return this.#orExclusivePassCount / this.#orSuccessCount;
   }
 
   /**
@@ -603,6 +790,36 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Reservoir-sample a value into an array with a fixed maximum size.
+   *
+   * @private
+   * @param {number[]} values - Stored sample array
+   * @param {number} value - New value to consider
+   * @param {number} maxSamples - Maximum sample size
+   * @param {number} totalCount - Total values observed so far (after increment)
+   */
+  #sampleValue(values, value, maxSamples, totalCount) {
+    if (!Number.isFinite(maxSamples) || maxSamples === Infinity) {
+      values.push(value);
+      return;
+    }
+
+    if (maxSamples <= 0) {
+      return;
+    }
+
+    if (values.length < maxSamples) {
+      values.push(value);
+      return;
+    }
+
+    const index = Math.floor(Math.random() * totalCount);
+    if (index < maxSamples) {
+      values[index] = value;
+    }
+  }
+
+  /**
    * Record an observed value for this clause's variable.
    * Called for EVERY evaluation, not just failures.
    * Tracks both min and max for direction-aware ceiling gap calculation.
@@ -614,6 +831,8 @@ class HierarchicalClauseNode {
       return; // Skip non-numeric values (boolean conditions)
     }
 
+    this.#observedValueCount++;
+
     if (value > this.#maxObservedValue) {
       this.#maxObservedValue = value;
     }
@@ -622,7 +841,44 @@ class HierarchicalClauseNode {
       this.#minObservedValue = value;
     }
 
-    this.#observedValues.push(value);
+    this.#sampleValue(
+      this.#observedValues,
+      value,
+      advancedMetricsConfig.maxObservedSampled,
+      this.#observedValueCount
+    );
+  }
+
+  /**
+   * Record an observed value in-regime (also updates global).
+   *
+   * @param {number} value - The actual value observed
+   */
+  recordObservedValueInRegime(value) {
+    this.recordObservedValue(value);
+    if (typeof value !== 'number' || isNaN(value)) {
+      return;
+    }
+
+    if (value > this.#inRegimeMaxObservedValue) {
+      this.#inRegimeMaxObservedValue = value;
+    }
+
+    if (value < this.#inRegimeMinObservedValue) {
+      this.#inRegimeMinObservedValue = value;
+    }
+  }
+
+  /**
+   * Record an in-regime evaluation result for this node.
+   *
+   * @param {boolean} passed - Whether the node evaluated to true
+   */
+  recordInRegimeEvaluation(passed) {
+    this.#inRegimeEvaluationCount++;
+    if (!passed) {
+      this.#inRegimeFailureCount++;
+    }
   }
 
   /**
@@ -696,6 +952,20 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Record that this OR alternative passed when the parent OR succeeded.
+   */
+  recordOrPass() {
+    this.#orPassCount++;
+  }
+
+  /**
+   * Record that this OR alternative passed exclusively when the parent OR succeeded.
+   */
+  recordOrExclusivePass() {
+    this.#orExclusivePassCount++;
+  }
+
+  /**
    * Record an evaluation result for this node.
    *
    * @param {boolean} passed - Whether the node evaluated to true
@@ -707,7 +977,13 @@ class HierarchicalClauseNode {
       this.#failureCount++;
       if (typeof violation === 'number' && violation > 0) {
         this.#violationSum += violation;
-        this.#violationValues.push(violation);
+        this.#violationValueCount++;
+        this.#sampleValue(
+          this.#violationValues,
+          violation,
+          advancedMetricsConfig.maxViolationsSampled,
+          this.#violationValueCount
+        );
       }
     }
   }
@@ -720,9 +996,11 @@ class HierarchicalClauseNode {
     this.#evaluationCount = 0;
     this.#violationSum = 0;
     this.#violationValues = [];
+    this.#violationValueCount = 0;
     this.#maxObservedValue = -Infinity;
     this.#minObservedValue = Infinity;
     this.#observedValues = [];
+    this.#observedValueCount = 0;
     this.#nearMissCount = 0;
     this.#epsilonUsed = null;
     this.#lastMileFailCount = 0;
@@ -731,6 +1009,12 @@ class HierarchicalClauseNode {
     this.#siblingConditionedFailCount = 0;
     this.#orContributionCount = 0;
     this.#orSuccessCount = 0;
+    this.#orPassCount = 0;
+    this.#orExclusivePassCount = 0;
+    this.#inRegimeEvaluationCount = 0;
+    this.#inRegimeFailureCount = 0;
+    this.#inRegimeMaxObservedValue = -Infinity;
+    this.#inRegimeMinObservedValue = Infinity;
     // Note: Do NOT reset #isSingleClause - it's metadata, not a stat
     for (const child of this.#children) {
       child.resetStats();
@@ -773,12 +1057,15 @@ class HierarchicalClauseNode {
       comparisonOperator: this.#comparisonOperator,
       variablePath: this.#variablePath,
       violationSampleCount: this.#violationValues.length,
+      violationTotalCount: this.#violationValueCount,
       observedMin: this.observedMin,
       minObservedValue: this.minObservedValue,
       observedMean: this.observedMean,
       maxObservedValue: this.maxObservedValue,
       observedP95: this.observedP95,
       observedP99: this.observedP99,
+      observedSampleCount: this.observedSampleCount,
+      observedTotalCount: this.observedTotalCount,
       ceilingGap: this.ceilingGap,
       nearMissCount: this.nearMissCount,
       nearMissRate: this.nearMissRate,
@@ -792,8 +1079,20 @@ class HierarchicalClauseNode {
       orContributionCount: this.#orContributionCount,
       orSuccessCount: this.#orSuccessCount,
       orContributionRate: this.orContributionRate,
+      orPassCount: this.#orPassCount,
+      orExclusivePassCount: this.#orExclusivePassCount,
+      orPassRate: this.orPassRate,
+      orExclusivePassRate: this.orExclusivePassRate,
       isSingleClause: this.isSingleClause,
       parentNodeType: this.#parentNodeType,
+      inRegimeEvaluationCount: this.#inRegimeEvaluationCount,
+      inRegimeFailureCount: this.#inRegimeFailureCount,
+      inRegimeFailureRate: this.inRegimeFailureRate,
+      inRegimePassRate: this.inRegimePassRate,
+      inRegimeMinObservedValue: this.inRegimeMinObservedValue,
+      inRegimeMaxObservedValue: this.inRegimeMaxObservedValue,
+      redundantInRegime: this.redundantInRegime,
+      tuningDirection: this.tuningDirection,
       children: this.#children.map((c) => c.toJSON()),
     };
   }
@@ -828,6 +1127,36 @@ class HierarchicalClauseNode {
     // Restore parentNodeType if present
     if (obj.parentNodeType) {
       node.parentNodeType = obj.parentNodeType;
+    }
+    node.#orContributionCount = Number.isFinite(obj.orContributionCount)
+      ? obj.orContributionCount
+      : 0;
+    node.#orSuccessCount = Number.isFinite(obj.orSuccessCount)
+      ? obj.orSuccessCount
+      : 0;
+    node.#orPassCount = Number.isFinite(obj.orPassCount) ? obj.orPassCount : 0;
+    node.#orExclusivePassCount = Number.isFinite(obj.orExclusivePassCount)
+      ? obj.orExclusivePassCount
+      : 0;
+    node.#inRegimeEvaluationCount = Number.isFinite(obj.inRegimeEvaluationCount)
+      ? obj.inRegimeEvaluationCount
+      : 0;
+    node.#inRegimeFailureCount = Number.isFinite(obj.inRegimeFailureCount)
+      ? obj.inRegimeFailureCount
+      : 0;
+    node.#inRegimeMinObservedValue =
+      typeof obj.inRegimeMinObservedValue === 'number'
+        ? obj.inRegimeMinObservedValue
+        : Infinity;
+    node.#inRegimeMaxObservedValue =
+      typeof obj.inRegimeMaxObservedValue === 'number'
+        ? obj.inRegimeMaxObservedValue
+        : -Infinity;
+    if (Number.isFinite(obj.violationTotalCount)) {
+      node.#violationValueCount = obj.violationTotalCount;
+    }
+    if (Number.isFinite(obj.observedTotalCount)) {
+      node.#observedValueCount = obj.observedTotalCount;
     }
     return node;
   }

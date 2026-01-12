@@ -251,6 +251,96 @@ describe('PrototypeConstraintAnalyzer', () => {
       expect(result.sumAbsWeights).toBeCloseTo(1.9, 5);
       expect(result.requiredRawSum).toBeCloseTo(0.4 * 1.9, 5);
     });
+
+    describe('operator handling', () => {
+      it('should return REACHABLE when maxAchievable >= threshold for >=', () => {
+        const result = analyzer.analyzeEmotionThreshold(
+          'anger',
+          'emotion',
+          0.4,
+          new Map(),
+          '>='
+        );
+
+        expect(result.isReachable).toBe(true);
+        expect(result.gap).toBeLessThanOrEqual(0);
+      });
+
+      it('should return UNREACHABLE when maxAchievable < threshold for >=', () => {
+        const axisConstraints = new Map([
+          ['arousal', { min: -1, max: -0.5 }],
+        ]);
+
+        const result = analyzer.analyzeEmotionThreshold(
+          'anger',
+          'emotion',
+          0.9,
+          axisConstraints,
+          '>='
+        );
+
+        expect(result.isReachable).toBe(false);
+        expect(result.gap).toBeGreaterThan(0);
+      });
+
+      it('should return REACHABLE when threshold exceeds maxAchievable for <=', () => {
+        const axisConstraints = new Map([
+          ['affiliation', { min: -0.3, max: 1 }],
+        ]);
+
+        const result = analyzer.analyzeEmotionThreshold(
+          'lonely_yearning',
+          'emotion',
+          0.65,
+          axisConstraints,
+          '<='
+        );
+
+        expect(result.isReachable).toBe(true);
+        expect(result.gap).toBeLessThan(0);
+        expect(result.explanation).toContain('always satisfied');
+      });
+
+      it('should return REACHABLE when threshold > 0 for <=', () => {
+        const result = analyzer.analyzeEmotionThreshold(
+          'anger',
+          'emotion',
+          0.55,
+          new Map(),
+          '<='
+        );
+
+        expect(result.isReachable).toBe(true);
+      });
+
+      it('should return REACHABLE when threshold > 0 for <', () => {
+        const result = analyzer.analyzeEmotionThreshold(
+          'joy',
+          'emotion',
+          0.4,
+          new Map(),
+          '<'
+        );
+
+        expect(result.isReachable).toBe(true);
+      });
+
+      it('should return UNREACHABLE when maxAchievable <= threshold for >', () => {
+        const axisConstraints = new Map([
+          ['arousal', { min: -1, max: -0.5 }],
+        ]);
+
+        const result = analyzer.analyzeEmotionThreshold(
+          'anger',
+          'emotion',
+          0.75,
+          axisConstraints,
+          '>'
+        );
+
+        expect(result.isReachable).toBe(false);
+      });
+    });
   });
 
   describe('extractAxisConstraints', () => {

@@ -9,6 +9,33 @@ import HierarchicalClauseNode from '../models/HierarchicalClauseNode.js';
 import { collectVarPaths } from '../../utils/jsonLogicVarExtractor.js';
 import { getEpsilonForVariable } from '../config/advancedMetricsConfig.js';
 import GateConstraint from '../models/GateConstraint.js';
+import AxisInterval from '../models/AxisInterval.js';
+import {
+  createSamplingCoverageCalculator,
+} from './monteCarloSamplingCoverage.js';
+
+const DEFAULT_SAMPLING_COVERAGE_CONFIG = {
+  enabled: true,
+  binCount: 10,
+  minSamplesPerBin: 1,
+  tailPercent: 0.1,
+};
+
+const SAMPLING_COVERAGE_DOMAIN_RANGES = [
+  { pattern: /^previousMoodAxes\./, domain: 'previousMoodAxes', min: -100, max: 100 },
+  { pattern: /^previousEmotions\./, domain: 'previousEmotions', min: 0, max: 1 },
+  {
+    pattern: /^previousSexualStates\./,
+    domain: 'previousSexualStates',
+    min: 0,
+    max: 1,
+  },
+  { pattern: /^moodAxes\./, domain: 'moodAxes', min: -100, max: 100 },
+  { pattern: /^mood\./, domain: 'moodAxes', min: -100, max: 100 },
+  { pattern: /^emotions\./, domain: 'emotions', min: 0, max: 1 },
+  { pattern: /^sexualStates\./, domain: 'sexualStates', min: 0, max: 1 },
+  { pattern: /^sexual\./, domain: 'sexualStates', min: 0, max: 1 },
+];
 
 /**
  * @typedef {'uniform' | 'gaussian'} DistributionType
@@ -26,6 +53,15 @@ import GateConstraint from '../models/GateConstraint.js';
  * @property {boolean} [storeSamplesForSensitivity=false] - Store contexts for sensitivity analysis
  * @property {number} [sensitivitySampleLimit=10000] - Max samples to store for sensitivity (memory optimization)
  * @property {number} [maxWitnesses=5] - Maximum number of ground-truth witnesses to capture
+ * @property {SamplingCoverageConfig} [samplingCoverageConfig] - Coverage tracking config
+ */
+
+/**
+ * @typedef {object} SamplingCoverageConfig
+ * @property {boolean} [enabled=true] - Toggle coverage tracking
+ * @property {number} [binCount=10] - Histogram bin count
+ * @property {number} [minSamplesPerBin=1] - Minimum samples per bin
+ * @property {number} [tailPercent=0.1] - Tail percent for low/high buckets
  */
 
 /**
@@ -74,6 +110,7 @@ import GateConstraint from '../models/GateConstraint.js';
  * @property {ClauseResult[]} clauseFailures - Per-clause failure data
  * @property {DistributionType} distribution
  * @property {UnseededVarWarning[]} unseededVarWarnings - Warnings for unseeded variable paths
+ * @property {object} [samplingCoverage] - Coverage payload (when enabled and applicable)
  */
 
 /**
@@ -91,13 +128,22 @@ class MonteCarloSimulator {
   /** @type {object} */
   #emotionCalculatorAdapter;
 
+  /** @type {object} */
+  #randomStateGenerator;
+
   /**
    * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry
    * @param {object} deps.logger - ILogger
    * @param {object} deps.emotionCalculatorAdapter - IEmotionCalculatorAdapter
+   * @param {object} deps.randomStateGenerator - IRandomStateGenerator
    */
-  constructor({ dataRegistry, logger, emotionCalculatorAdapter }) {
+  constructor({
+    dataRegistry,
+    logger,
+    emotionCalculatorAdapter,
+    randomStateGenerator,
+  }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['get'],
     });
@@ -111,15 +157,25 @@ class MonteCarloSimulator {
       {
         requiredMethods: [
           'calculateEmotions',
+          'calculateEmotionsFiltered',
           'calculateSexualArousal',
           'calculateSexualStates',
         ],
+      }
+    );
+    validateDependency(
+      randomStateGenerator,
+      'IRandomStateGenerator',
+      logger,
+      {
+        requiredMethods: ['generate'],
       }
     );
 
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
     this.#emotionCalculatorAdapter = emotionCalculatorAdapter;
+    this.#randomStateGenerator = randomStateGenerator;
   }
 
   /**
@@ -145,14 +201,15 @@ class MonteCarloSimulator {
       onProgress,
       validateVarPaths = true,
       failOnUnseededVars = false,
-      // Sampling mode: 'static' (independent) or 'dynamic' (coupled with Gaussian delta)
-      // Default is 'static' - tests logical feasibility without transition model assumptions
+      // Sampling mode: 'static' (prototype-gated) or 'dynamic' (coupled with Gaussian delta)
+      // Default is 'static' - tests logical feasibility within the emotion model
       samplingMode = 'static',
       // Sensitivity analysis options
       storeSamplesForSensitivity = false,
       sensitivitySampleLimit = 10000,
       // Maximum number of ground-truth witnesses to capture (states that triggered the expression)
       maxWitnesses = 5,
+      samplingCoverageConfig = {},
     } = config;
 
     // Pre-simulation variable path validation
@@ -185,6 +242,16 @@ class MonteCarloSimulator {
       ? this.#initClauseTracking(expression)
       : null;
 
+    const moodConstraints = this.#extractMoodConstraints(
+      expression?.prerequisites
+    );
+    const moodRegimeDefined = moodConstraints.length > 0;
+    const gateCompatibility = this.#computeGateCompatibility(
+      expression,
+      moodConstraints
+    );
+    let inRegimeSampleCount = 0;
+
     // Track ground-truth witnesses (first N triggered samples) and nearest miss
     const witnesses = [];
     let nearestMiss = null;
@@ -196,6 +263,26 @@ class MonteCarloSimulator {
     // Sensitivity analysis: store built contexts for post-hoc threshold evaluation
     const storedContexts = storeSamplesForSensitivity ? [] : null;
 
+    const resolvedSamplingCoverageConfig = {
+      ...DEFAULT_SAMPLING_COVERAGE_CONFIG,
+      ...(samplingCoverageConfig ?? {}),
+    };
+
+    const samplingCoverageVariables = resolvedSamplingCoverageConfig.enabled
+      ? this.#collectSamplingCoverageVariables(expression)
+      : [];
+
+    const samplingCoverageCalculator =
+      resolvedSamplingCoverageConfig.enabled &&
+      samplingCoverageVariables.length > 0
+        ? createSamplingCoverageCalculator({
+            variables: samplingCoverageVariables,
+            binCount: resolvedSamplingCoverageConfig.binCount,
+            minSamplesPerBin: resolvedSamplingCoverageConfig.minSamplesPerBin,
+            tailPercent: resolvedSamplingCoverageConfig.tailPercent,
+          })
+        : null;
+
     // Process samples in chunks to avoid blocking the main thread
     for (let processed = 0; processed < sampleCount; ) {
       const chunkEnd = Math.min(processed + CHUNK_SIZE, sampleCount);
@@ -203,10 +290,15 @@ class MonteCarloSimulator {
       // Process chunk synchronously (fast enough not to block)
       for (let i = processed; i < chunkEnd; i++) {
         const { current, previous, affectTraits } =
-          this.#generateRandomState(distribution, samplingMode);
+          this.#randomStateGenerator.generate(distribution, samplingMode);
 
         // Build context once for potential storage and evaluation
-        const context = this.#buildContext(current, previous, affectTraits);
+        const context = this.#buildContext(
+          current,
+          previous,
+          affectTraits,
+          referencedEmotions
+        );
 
         // Store context for sensitivity analysis if enabled and within limit
         if (
@@ -216,12 +308,28 @@ class MonteCarloSimulator {
           storedContexts.push(context);
         }
 
+        if (samplingCoverageCalculator) {
+          for (const variable of samplingCoverageVariables) {
+            const value = this.#getNestedValue(context, variable.variablePath);
+            samplingCoverageCalculator.recordObservation(
+              variable.variablePath,
+              value
+            );
+          }
+        }
+
+        const inRegime = moodRegimeDefined
+          ? this.#evaluateMoodConstraints(moodConstraints, context)
+          : true;
+        if (inRegime) {
+          inRegimeSampleCount++;
+        }
+
         const result = this.#evaluateWithTracking(
           expression,
-          current,
-          previous,
-          affectTraits,
-          clauseTracking
+          context,
+          clauseTracking,
+          inRegime
         );
 
         if (result.triggered) {
@@ -245,13 +353,21 @@ class MonteCarloSimulator {
           }
         } else if (clauseTracking) {
           // Track nearest miss: sample with fewest failing clauses
-          const failedCount = this.#countFailedClauses(clauseTracking, expression, current, previous, affectTraits);
+          const failedCount = this.#countFailedClauses(
+            clauseTracking,
+            expression,
+            context
+          );
           if (failedCount < nearestMissFailedCount) {
             nearestMissFailedCount = failedCount;
             nearestMiss = {
               sample: { current, previous, affectTraits },
               failedLeafCount: failedCount,
-              failedLeaves: this.#getFailedLeavesSummary(clauseTracking, expression, current, previous, affectTraits),
+              failedLeaves: this.#getFailedLeavesSummary(
+                clauseTracking,
+                expression,
+                context
+              ),
             };
           }
         }
@@ -287,11 +403,11 @@ class MonteCarloSimulator {
       mode: samplingMode,
       description:
         samplingMode === 'static'
-          ? 'Independent sampling (tests logical feasibility)'
+          ? 'Prototype-gated sampling (emotions derived from mood axes; not independent)'
           : 'Coupled sampling with Gaussian deltas (tests fixed transition model)',
       note:
         samplingMode === 'static'
-          ? 'Trigger rates reflect logical feasibility. Actual gameplay rates depend on LLM narrative decisions.'
+          ? 'Emotions are computed via prototype gates, so emotion variables are not independent of mood axes.'
           : 'Uses fixed σ values (mood: 15, sexual: 12) that may not reflect actual LLM behavior.',
     };
 
@@ -304,10 +420,14 @@ class MonteCarloSimulator {
       nearestMiss: nearestMiss ?? null,
     };
 
-    return {
+    const resultPayload = {
       triggerRate,
       triggerCount,
       sampleCount,
+      inRegimeSampleCount,
+      inRegimeSampleRate:
+        sampleCount > 0 ? inRegimeSampleCount / sampleCount : 0,
+      moodRegimeDefined,
       confidenceInterval,
       clauseFailures: clauseTracking
         ? this.#finalizeClauseResults(clauseTracking, sampleCount)
@@ -315,161 +435,18 @@ class MonteCarloSimulator {
       distribution,
       samplingMode,
       samplingMetadata,
+      gateCompatibility,
       witnessAnalysis,
       unseededVarWarnings,
       // Stored contexts for sensitivity analysis (null if not enabled)
       storedContexts,
     };
-  }
 
-  /**
-   * Generate random state pairs based on distribution and sampling mode.
-   *
-   * In 'static' mode (default): Both previous and current states are sampled independently.
-   * This tests logical feasibility - whether the expression CAN be true for any state combination.
-   * This is appropriate when state transitions are controlled by LLMs at runtime.
-   *
-   * In 'dynamic' mode: Previous state is sampled randomly, current state is derived by adding
-   * Gaussian deltas. This tests reachability under a fixed transition model assumption.
-   * Note: Dynamic mode uses arbitrary σ values that don't reflect actual LLM-controlled gameplay.
-   *
-   * @private
-   * @param {DistributionType} distribution - The sampling distribution to use
-   * @param {'static'|'dynamic'} samplingMode - 'static' for independent sampling, 'dynamic' for coupled (previous + delta)
-   * @returns {{current: {mood: object, sexual: object}, previous: {mood: object, sexual: object}, affectTraits: {affective_empathy: number, cognitive_empathy: number, harm_aversion: number}}}
-   */
-  #generateRandomState(distribution, samplingMode = 'static') {
-    // 8 mood axes (affiliation added for AFFTRAANDAFFAXI spec)
-    const moodAxes = [
-      'valence',
-      'arousal',
-      'agency_control',
-      'threat',
-      'engagement',
-      'future_expectancy',
-      'self_evaluation',
-      'affiliation',
-    ];
-    const traitAxes = ['affective_empathy', 'cognitive_empathy', 'harm_aversion'];
-
-    // Generate previous state first (fully random)
-    const previousMood = {};
-    const previousSexual = {};
-
-    // Previous mood axes use [-100, 100] integer scale (matching core:mood component schema)
-    for (const axis of moodAxes) {
-      previousMood[axis] = Math.round(this.#sampleValue(distribution, -100, 100));
+    if (samplingCoverageCalculator) {
+      resultPayload.samplingCoverage = samplingCoverageCalculator.finalize();
     }
 
-    // Previous sexual axes use integer scale matching core:sexual_state component schema
-    previousSexual.sex_excitation = Math.round(this.#sampleValue(distribution, 0, 100));
-    previousSexual.sex_inhibition = Math.round(this.#sampleValue(distribution, 0, 100));
-    previousSexual.baseline_libido = Math.round(this.#sampleValue(distribution, -50, 50));
-
-    // Generate affect traits (stable - same for current and previous)
-    // Traits are personality characteristics, not momentary states
-    const affectTraits = {};
-    for (const axis of traitAxes) {
-      affectTraits[axis] = Math.round(this.#sampleValue(distribution, 0, 100));
-    }
-
-    // Generate current state based on sampling mode
-    const currentMood = {};
-    const currentSexual = {};
-
-    if (samplingMode === 'static') {
-      // Static mode: Generate current state independently (tests logical feasibility)
-      // This is the default because LLMs control state transitions at runtime,
-      // so any state combination is theoretically possible
-      for (const axis of moodAxes) {
-        currentMood[axis] = Math.round(this.#sampleValue(distribution, -100, 100));
-      }
-      currentSexual.sex_excitation = Math.round(this.#sampleValue(distribution, 0, 100));
-      currentSexual.sex_inhibition = Math.round(this.#sampleValue(distribution, 0, 100));
-      currentSexual.baseline_libido = Math.round(this.#sampleValue(distribution, -50, 50));
-    } else {
-      // Dynamic mode: Generate current state as previous + gaussian delta (correlated temporal states)
-      // This tests reachability under a fixed transition model assumption (σ values below)
-      // Note: This does NOT reflect actual gameplay where LLMs control transitions
-
-      // Mood delta: σ=15 gives ~68% of deltas within ±15 units (15% of full range)
-      const MOOD_DELTA_SIGMA = 15;
-      for (const axis of moodAxes) {
-        const delta = this.#sampleGaussianDelta(MOOD_DELTA_SIGMA);
-        const raw = previousMood[axis] + delta;
-        // Clamp to valid range [-100, 100]
-        currentMood[axis] = Math.round(Math.max(-100, Math.min(100, raw)));
-      }
-
-      // Sexual state deltas with appropriate sigma for their ranges
-      // sex_excitation and sex_inhibition: [0, 100], σ=12 (~12% of range)
-      // baseline_libido: [-50, 50], σ=8 (~8% of range)
-      const SEXUAL_DELTA_SIGMA = 12;
-      const LIBIDO_DELTA_SIGMA = 8;
-
-      const excitationDelta = this.#sampleGaussianDelta(SEXUAL_DELTA_SIGMA);
-      currentSexual.sex_excitation = Math.round(
-        Math.max(0, Math.min(100, previousSexual.sex_excitation + excitationDelta))
-      );
-
-      const inhibitionDelta = this.#sampleGaussianDelta(SEXUAL_DELTA_SIGMA);
-      currentSexual.sex_inhibition = Math.round(
-        Math.max(0, Math.min(100, previousSexual.sex_inhibition + inhibitionDelta))
-      );
-
-      const libidoDelta = this.#sampleGaussianDelta(LIBIDO_DELTA_SIGMA);
-      currentSexual.baseline_libido = Math.round(
-        Math.max(-50, Math.min(50, previousSexual.baseline_libido + libidoDelta))
-      );
-    }
-
-    return {
-      current: { mood: currentMood, sexual: currentSexual },
-      previous: { mood: previousMood, sexual: previousSexual },
-      affectTraits, // Same for current and previous (personality is stable)
-    };
-  }
-
-  /**
-   * Sample a value from the specified distribution
-   *
-   * @private
-   * @param {DistributionType} distribution
-   * @param {number} min
-   * @param {number} max
-   * @returns {number}
-   */
-  #sampleValue(distribution, min, max) {
-    if (distribution === 'gaussian') {
-      // Box-Muller transform, clamped to range
-      const u1 = Math.random();
-      const u2 = Math.random();
-      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      const mid = (min + max) / 2;
-      const spread = (max - min) / 6; // 99.7% within range
-      const value = mid + z * spread;
-      return Math.max(min, Math.min(max, value));
-    }
-
-    // Uniform distribution
-    return min + Math.random() * (max - min);
-  }
-
-
-  /**
-   * Samples a Gaussian (normal) random delta centered at zero.
-   * Used for generating correlated temporal state pairs where
-   * current = previous + delta.
-   *
-   * @param {number} sigma - Standard deviation (default 10 for mood axes on [-100,100] scale)
-   * @returns {number} A random delta from N(0, sigma²)
-   */
-  #sampleGaussianDelta(sigma = 10) {
-    // Box-Muller transform for standard normal
-    const u1 = Math.random();
-    const u2 = Math.random();
-    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    return z * sigma;
+    return resultPayload;
   }
 
   /**
@@ -490,6 +467,8 @@ class MonteCarloSimulator {
         description: this.#describeClause(prereq),
         failureCount: 0,
         violationSum: 0,
+        inRegimeFailureCount: 0,
+        inRegimeEvaluationCount: 0,
         // Build hierarchical tree for compound clauses
         hierarchicalTree: this.#buildHierarchicalTree(prereq.logic, `${i}`),
       });
@@ -546,22 +525,12 @@ class MonteCarloSimulator {
    *
    * @private
    * @param {object} expression - The expression to evaluate
-   * @param {{mood: object, sexual: object}} currentState - Current mood/sexual state
-   * @param {{mood: object, sexual: object}} previousState - Previous mood/sexual state (for temporal comparisons)
-   * @param {{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}|null} affectTraits - Affect traits for emotion calculation
+   * @param {object} context - Prebuilt evaluation context
    * @param {Array|null} clauseTracking - Tracking array for clause failures
+   * @param {boolean} inRegime - Whether mood constraints passed for this sample
    * @returns {{triggered: boolean}}
    */
-  #evaluateWithTracking(
-    expression,
-    currentState,
-    previousState,
-    affectTraits,
-    clauseTracking
-  ) {
-    // Build context from current, previous states, and affect traits
-    const context = this.#buildContext(currentState, previousState, affectTraits);
-
+  #evaluateWithTracking(expression, context, clauseTracking, inRegime) {
     // Two-phase evaluation for last-mile tracking
     if (clauseTracking && expression?.prerequisites) {
       // Phase 1: Evaluate all clauses and collect results
@@ -575,7 +544,8 @@ class MonteCarloSimulator {
         if (clause.hierarchicalTree) {
           passed = this.#evaluateHierarchicalNode(
             clause.hierarchicalTree,
-            context
+            context,
+            inRegime
           );
           if (!passed) {
             clause.failureCount++;
@@ -588,6 +558,12 @@ class MonteCarloSimulator {
             clause.failureCount++;
             const violation = this.#estimateViolation(prereq, context);
             clause.violationSum += violation;
+          }
+          if (inRegime) {
+            clause.inRegimeEvaluationCount++;
+            if (!passed) {
+              clause.inRegimeFailureCount++;
+            }
           }
         }
 
@@ -630,15 +606,22 @@ class MonteCarloSimulator {
    * @param {{mood: object, sexual: object}} currentState - Current mood and sexual state
    * @param {{mood: object, sexual: object}} previousState - Previous mood and sexual state
    * @param {{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}|null} [affectTraits] - Affect traits for gate checking
+   * @param {Set<string>|null|undefined} [emotionFilter] - Emotion names to calculate
    * @returns {object} Context object with moodAxes, emotions, sexualStates, affectTraits, and their previous counterparts
    */
-  #buildContext(currentState, previousState, affectTraits = null) {
+  #buildContext(
+    currentState,
+    previousState,
+    affectTraits = null,
+    emotionFilter
+  ) {
     // Calculate current emotions from current mood using prototypes
     // Adapter mirrors runtime calculations (mood, sexual state, optional traits)
-    const emotions = this.#emotionCalculatorAdapter.calculateEmotions(
+    const emotions = this.#emotionCalculatorAdapter.calculateEmotionsFiltered(
       currentState.mood,
       currentState.sexual,
-      affectTraits
+      affectTraits,
+      emotionFilter
     );
 
     // Calculate current sexualArousal from raw sexual state (derived value)
@@ -657,10 +640,11 @@ class MonteCarloSimulator {
 
     // Calculate previous emotions from previous mood (NOT zeroed!)
     // This enables "persistence-style" expressions like lingering_guilt
-    const previousEmotions = this.#emotionCalculatorAdapter.calculateEmotions(
+    const previousEmotions = this.#emotionCalculatorAdapter.calculateEmotionsFiltered(
       previousState.mood,
       previousState.sexual,
-      affectTraits
+      affectTraits,
+      emotionFilter
     );
 
     // Calculate previous sexual arousal and states from previous state
@@ -850,12 +834,36 @@ class MonteCarloSimulator {
       .map((c) => {
         // Extract ceiling data from the worst leaf in the tree
         const ceilingData = this.#extractCeilingData(c.hierarchicalTree);
+        const leafOnly = c.hierarchicalTree?.nodeType === 'leaf';
+        const inRegimeFailureRate =
+          c.hierarchicalTree?.inRegimeFailureRate ??
+          (c.inRegimeEvaluationCount > 0
+            ? c.inRegimeFailureCount / c.inRegimeEvaluationCount
+            : null);
+        const inRegimePassRate =
+          typeof inRegimeFailureRate === 'number'
+            ? 1 - inRegimeFailureRate
+            : null;
+        const achievableRange = leafOnly
+          ? {
+              min: c.hierarchicalTree?.minObservedValue ?? null,
+              max: c.hierarchicalTree?.maxObservedValue ?? null,
+            }
+          : null;
+        const inRegimeAchievableRange = leafOnly
+          ? {
+              min: c.hierarchicalTree?.inRegimeMinObservedValue ?? null,
+              max: c.hierarchicalTree?.inRegimeMaxObservedValue ?? null,
+            }
+          : null;
 
         return {
           clauseDescription: c.description,
           clauseIndex: c.clauseIndex,
           failureCount: c.failureCount,
           failureRate: c.failureCount / sampleCount,
+          inRegimeFailureRate,
+          inRegimePassRate,
           averageViolation:
             c.failureCount > 0 ? c.violationSum / c.failureCount : 0,
           violationP50: c.hierarchicalTree?.violationP50 ?? null,
@@ -873,6 +881,14 @@ class MonteCarloSimulator {
           ceilingGap: ceilingData.ceilingGap,
           maxObserved: ceilingData.maxObserved,
           thresholdValue: ceilingData.thresholdValue,
+          achievableRange,
+          inRegimeAchievableRange,
+          redundantInRegime: leafOnly
+            ? c.hierarchicalTree?.redundantInRegime ?? null
+            : null,
+          tuningDirection: leafOnly
+            ? c.hierarchicalTree?.tuningDirection ?? null
+            : null,
           // Include hierarchical breakdown if available
           hierarchicalBreakdown: c.hierarchicalTree?.toJSON() ?? null,
         };
@@ -1118,6 +1134,311 @@ class MonteCarloSimulator {
   }
 
   /**
+   * Extract mood constraints from expression prerequisites.
+   * Mood constraints are conditions on moodAxes.* or mood.* paths.
+   *
+   * @private
+   * @param {Array} prerequisites
+   * @returns {Array<{varPath: string, operator: string, threshold: number}>}
+   */
+  #extractMoodConstraints(prerequisites) {
+    const constraints = [];
+    if (!prerequisites || !Array.isArray(prerequisites)) {
+      return constraints;
+    }
+
+    for (const prereq of prerequisites) {
+      this.#extractMoodConstraintsFromLogic(prereq.logic, constraints);
+    }
+
+    return constraints;
+  }
+
+  /**
+   * Recursively extract mood constraints from JSON Logic (AND blocks only).
+   *
+   * @private
+   * @param {object} logic
+   * @param {Array} constraints
+   */
+  #extractMoodConstraintsFromLogic(logic, constraints) {
+    if (!logic || typeof logic !== 'object') return;
+
+    const operators = ['>=', '<=', '>', '<', '=='];
+    for (const op of operators) {
+      if (logic[op]) {
+        const [left, right] = logic[op];
+        if (typeof left === 'object' && left.var && typeof right === 'number') {
+          const varPath = left.var;
+          if (varPath.startsWith('moodAxes.') || varPath.startsWith('mood.')) {
+            constraints.push({
+              varPath,
+              operator: op,
+              threshold: right,
+            });
+          }
+        }
+      }
+    }
+
+    if (logic.and && Array.isArray(logic.and)) {
+      for (const clause of logic.and) {
+        this.#extractMoodConstraintsFromLogic(clause, constraints);
+      }
+    }
+  }
+
+  /**
+   * Evaluate mood constraints against a context.
+   *
+   * @private
+   * @param {Array<{varPath: string, operator: string, threshold: number}>} constraints
+   * @param {object} context
+   * @returns {boolean}
+   */
+  #evaluateMoodConstraints(constraints, context) {
+    if (!constraints || constraints.length === 0) return true;
+
+    return constraints.every((constraint) => {
+      const value = this.#getNestedValue(context, constraint.varPath);
+      if (typeof value !== 'number') return false;
+      switch (constraint.operator) {
+        case '>=':
+          return value >= constraint.threshold;
+        case '>':
+          return value > constraint.threshold;
+        case '<=':
+          return value <= constraint.threshold;
+        case '<':
+          return value < constraint.threshold;
+        case '==':
+          return value === constraint.threshold;
+        default:
+          return false;
+      }
+    });
+  }
+
+  /**
+   * Compute gate compatibility for prototypes referenced in prerequisites.
+   *
+   * @private
+   * @param {object} expression
+   * @param {Array<{varPath: string, operator: string, threshold: number}>} moodConstraints
+   * @returns {{emotions: Record<string, {compatible: boolean, reason: string|null}>, sexualStates: Record<string, {compatible: boolean, reason: string|null}>}}
+   */
+  #computeGateCompatibility(expression, moodConstraints) {
+    const references = this.#extractPrototypeReferences(
+      expression?.prerequisites
+    );
+    const axisIntervals = this.#buildAxisIntervalsFromMoodConstraints(
+      moodConstraints
+    );
+
+    const result = { emotions: {}, sexualStates: {} };
+
+    for (const prototypeId of references.emotions) {
+      result.emotions[prototypeId] = this.#checkPrototypeCompatibility(
+        prototypeId,
+        'emotion',
+        axisIntervals
+      );
+    }
+
+    for (const prototypeId of references.sexualStates) {
+      result.sexualStates[prototypeId] = this.#checkPrototypeCompatibility(
+        prototypeId,
+        'sexual',
+        axisIntervals
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Check if a prototype's gates are compatible with mood regime constraints.
+   *
+   * @private
+   * @param {string} prototypeId
+   * @param {'emotion'|'sexual'} type
+   * @param {Map<string, AxisInterval>} axisIntervals
+   * @returns {{compatible: boolean, reason: string|null}}
+   */
+  #checkPrototypeCompatibility(prototypeId, type, axisIntervals) {
+    const prototype = this.#getPrototype(prototypeId, type);
+    if (!prototype) {
+      return { compatible: false, reason: 'prototype not found' };
+    }
+
+    const gates = Array.isArray(prototype.gates) ? prototype.gates : [];
+    if (gates.length === 0) {
+      return { compatible: true, reason: null };
+    }
+
+    for (const gateStr of gates) {
+      let constraint;
+      try {
+        constraint = GateConstraint.parse(gateStr);
+      } catch {
+        continue;
+      }
+
+      const interval =
+        axisIntervals.get(constraint.axis) ??
+        this.#getDefaultIntervalForAxis(constraint.axis);
+      const constrained = constraint.applyTo(interval);
+      if (constrained.isEmpty()) {
+        const reason = `gate \"${gateStr}\" conflicts with mood regime ${constraint.axis} in [${interval.min}, ${interval.max}]`;
+        return { compatible: false, reason };
+      }
+    }
+
+    return { compatible: true, reason: null };
+  }
+
+  /**
+   * Build axis intervals (normalized) from mood constraints.
+   *
+   * @private
+   * @param {Array<{varPath: string, operator: string, threshold: number}>} moodConstraints
+   * @returns {Map<string, AxisInterval>}
+   */
+  #buildAxisIntervalsFromMoodConstraints(moodConstraints) {
+    const intervals = new Map();
+    for (const constraint of moodConstraints || []) {
+      const axis = constraint.varPath
+        .replace('moodAxes.', '')
+        .replace('mood.', '');
+      const normalizedValue = this.#normalizeMoodAxisValue(
+        constraint.threshold
+      );
+      const current =
+        intervals.get(axis) ?? this.#getDefaultIntervalForAxis(axis);
+      const updated = current.applyConstraint(
+        constraint.operator,
+        normalizedValue
+      );
+      intervals.set(axis, updated);
+    }
+    return intervals;
+  }
+
+  /**
+   * Normalize mood axis values to [-1, 1] scale when raw inputs are provided.
+   *
+   * @private
+   * @param {number} value
+   * @returns {number}
+   */
+  #normalizeMoodAxisValue(value) {
+    return Math.abs(value) <= 1 ? value : value / 100;
+  }
+
+  /**
+   * Get default interval bounds for an axis (normalized).
+   *
+   * @private
+   * @param {string} axis
+   * @returns {AxisInterval}
+   */
+  #getDefaultIntervalForAxis(axis) {
+    const sexualAxes = [
+      'sex_excitation',
+      'sex_inhibition',
+      'baseline_libido',
+      'sexual_arousal',
+    ];
+    if (sexualAxes.includes(axis)) {
+      return AxisInterval.forSexualAxis();
+    }
+    return AxisInterval.forMoodAxis();
+  }
+
+  /**
+   * Extract prototype references from prerequisites.
+   *
+   * @private
+   * @param {Array} prerequisites
+   * @returns {{emotions: string[], sexualStates: string[]}}
+   */
+  #extractPrototypeReferences(prerequisites) {
+    const emotions = new Set();
+    const sexualStates = new Set();
+
+    if (!Array.isArray(prerequisites)) {
+      return { emotions: [], sexualStates: [] };
+    }
+
+    for (const prereq of prerequisites) {
+      this.#collectPrototypeReferencesFromLogic(
+        prereq.logic,
+        emotions,
+        sexualStates
+      );
+    }
+
+    return {
+      emotions: [...emotions],
+      sexualStates: [...sexualStates],
+    };
+  }
+
+  /**
+   * Recursively collect prototype references from JSON Logic.
+   *
+   * @private
+   * @param {object} logic
+   * @param {Set<string>} emotions
+   * @param {Set<string>} sexualStates
+   */
+  #collectPrototypeReferencesFromLogic(logic, emotions, sexualStates) {
+    if (!logic || typeof logic !== 'object') return;
+
+    for (const op of ['>=', '<=', '>', '<', '==']) {
+      if (logic[op]) {
+        const [left, right] = logic[op];
+        const candidates = [left, right];
+        for (const candidate of candidates) {
+          if (candidate?.var && typeof candidate.var === 'string') {
+            if (candidate.var.startsWith('emotions.')) {
+              emotions.add(candidate.var.replace('emotions.', ''));
+            } else if (candidate.var.startsWith('sexualStates.')) {
+              sexualStates.add(candidate.var.replace('sexualStates.', ''));
+            }
+          }
+        }
+      }
+    }
+
+    if (logic.and || logic.or) {
+      const clauses = logic.and || logic.or;
+      for (const clause of clauses) {
+        this.#collectPrototypeReferencesFromLogic(
+          clause,
+          emotions,
+          sexualStates
+        );
+      }
+    }
+  }
+
+  /**
+   * Get prototype definition from dataRegistry.
+   *
+   * @private
+   * @param {string} prototypeId
+   * @param {'emotion'|'sexual'} type
+   * @returns {object|null}
+   */
+  #getPrototype(prototypeId, type) {
+    const lookupId =
+      type === 'emotion' ? 'core:emotion_prototypes' : 'core:sexual_prototypes';
+    const lookup = this.#dataRegistry.get('lookups', lookupId);
+    return lookup?.entries?.[prototypeId] || null;
+  }
+
+  /**
    * Recursively evaluate a hierarchical tree node and update stats.
    * Evaluates ALL children (no short-circuit) to collect accurate stats.
    * Also tracks sibling-conditioned stats for leaves within compound nodes.
@@ -1127,7 +1448,7 @@ class MonteCarloSimulator {
    * @param {object} context
    * @returns {boolean} - Whether the node evaluated to true
    */
-  #evaluateHierarchicalNode(node, context) {
+  #evaluateHierarchicalNode(node, context, inRegime) {
     if (node.nodeType === 'leaf') {
       const passed = this.#evaluateLeafCondition(node.logic, context);
       const violation = passed
@@ -1137,7 +1458,11 @@ class MonteCarloSimulator {
       // Record the actual observed value for ceiling analysis
       const actualValue = this.#extractActualValue(node.logic, context);
       if (actualValue !== null) {
-        node.recordObservedValue(actualValue);
+        if (inRegime) {
+          node.recordObservedValueInRegime(actualValue);
+        } else {
+          node.recordObservedValue(actualValue);
+        }
       }
 
       // Record near-miss if threshold metadata available
@@ -1147,6 +1472,9 @@ class MonteCarloSimulator {
       }
 
       node.recordEvaluation(passed, violation);
+      if (inRegime) {
+        node.recordInRegimeEvaluation(passed);
+      }
       return passed;
     }
 
@@ -1154,7 +1482,11 @@ class MonteCarloSimulator {
       // For AND: all children must pass; evaluate ALL to track stats
       const childResults = [];
       for (const child of node.children) {
-        const childPassed = this.#evaluateHierarchicalNode(child, context);
+        const childPassed = this.#evaluateHierarchicalNode(
+          child,
+          context,
+          inRegime
+        );
         childResults.push({ child, passed: childPassed });
       }
 
@@ -1163,6 +1495,9 @@ class MonteCarloSimulator {
 
       const allPassed = childResults.every((r) => r.passed);
       node.recordEvaluation(allPassed);
+      if (inRegime) {
+        node.recordInRegimeEvaluation(allPassed);
+      }
       return allPassed;
     }
 
@@ -1170,7 +1505,11 @@ class MonteCarloSimulator {
       // For OR: any child must pass; evaluate ALL to track stats
       const childResults = [];
       for (const child of node.children) {
-        const childPassed = this.#evaluateHierarchicalNode(child, context);
+        const childPassed = this.#evaluateHierarchicalNode(
+          child,
+          context,
+          inRegime
+        );
         childResults.push({ child, passed: childPassed });
       }
 
@@ -1182,18 +1521,33 @@ class MonteCarloSimulator {
       // Track OR contribution: which alternative fired first when OR succeeded
       if (anyPassed) {
         let firstContributorFound = false;
-        for (const { child, passed } of childResults) {
+        for (let i = 0; i < childResults.length; i++) {
+          const { child, passed } = childResults[i];
           // All children get their orSuccessCount incremented
           child.recordOrSuccess();
+          if (passed) {
+            child.recordOrPass();
+          }
           // Only the first passing alternative gets contribution credit
           if (passed && !firstContributorFound) {
             child.recordOrContribution();
             firstContributorFound = true;
           }
+          if (passed) {
+            const siblingsFailed = childResults.every(
+              (result, j) => j === i || !result.passed
+            );
+            if (siblingsFailed) {
+              child.recordOrExclusivePass();
+            }
+          }
         }
       }
 
       node.recordEvaluation(anyPassed);
+      if (inRegime) {
+        node.recordInRegimeEvaluation(anyPassed);
+      }
       return anyPassed;
     }
 
@@ -1201,9 +1555,15 @@ class MonteCarloSimulator {
     try {
       const passed = jsonLogic.apply(node.logic, context);
       node.recordEvaluation(passed);
+      if (inRegime) {
+        node.recordInRegimeEvaluation(passed);
+      }
       return passed;
     } catch {
       node.recordEvaluation(false);
+      if (inRegime) {
+        node.recordInRegimeEvaluation(false);
+      }
       return false;
     }
   }
@@ -1542,19 +1902,74 @@ class MonteCarloSimulator {
   }
 
   /**
+   * Collect sampling coverage variables referenced by the expression.
+   *
+   * @private
+   * @param {object} expression
+   * @returns {Array<{variablePath: string, domain: string, min: number, max: number}>}
+   */
+  #collectSamplingCoverageVariables(expression) {
+    if (!expression?.prerequisites) {
+      return [];
+    }
+
+    const allPaths = [];
+    for (const prereq of expression.prerequisites) {
+      if (prereq?.logic) {
+        collectVarPaths(prereq.logic, allPaths);
+      }
+    }
+
+    const uniquePaths = new Set(allPaths);
+    const variables = [];
+
+    for (const path of uniquePaths) {
+      const variable = this.#resolveSamplingCoverageVariable(path);
+      if (variable) {
+        variables.push(variable);
+      }
+    }
+
+    return variables;
+  }
+
+  /**
+   * Resolve sampling coverage config for a variable path.
+   *
+   * @private
+   * @param {string} variablePath
+   * @returns {{variablePath: string, domain: string, min: number, max: number} | null}
+   */
+  #resolveSamplingCoverageVariable(variablePath) {
+    if (!variablePath || typeof variablePath !== 'string') {
+      return null;
+    }
+
+    for (const domainConfig of SAMPLING_COVERAGE_DOMAIN_RANGES) {
+      if (domainConfig.pattern.test(variablePath)) {
+        return {
+          variablePath,
+          domain: domainConfig.domain,
+          min: domainConfig.min,
+          max: domainConfig.max,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Count the number of failed leaf clauses for a given sample.
    * Used for nearest-miss tracking.
    *
    * @private
    * @param {object[]} clauseTracking - Clause tracking array
    * @param {object} expression - Expression being evaluated
-   * @param {{mood: object, sexual: object}} current - Current state
-   * @param {{mood: object, sexual: object}} previous - Previous state
-   * @param {object} affectTraits - Affect traits
+   * @param {object} context - Evaluation context
    * @returns {number} Count of failed leaf clauses
    */
-  #countFailedClauses(clauseTracking, expression, current, previous, affectTraits) {
-    const context = this.#buildContext(current, previous, affectTraits);
+  #countFailedClauses(clauseTracking, expression, context) {
     let failedCount = 0;
 
     for (let i = 0; i < expression.prerequisites.length; i++) {
@@ -1610,13 +2025,10 @@ class MonteCarloSimulator {
    * @private
    * @param {object[]} clauseTracking - Clause tracking array
    * @param {object} expression - Expression being evaluated
-   * @param {{mood: object, sexual: object}} current - Current state
-   * @param {{mood: object, sexual: object}} previous - Previous state
-   * @param {object} affectTraits - Affect traits
+   * @param {object} context - Evaluation context
    * @returns {Array<{description: string, actual: number|null, threshold: number|null, violation: number|null}>}
    */
-  #getFailedLeavesSummary(clauseTracking, expression, current, previous, affectTraits) {
-    const context = this.#buildContext(current, previous, affectTraits);
+  #getFailedLeavesSummary(clauseTracking, expression, context) {
     const failedLeaves = [];
 
     for (let i = 0; i < expression.prerequisites.length; i++) {
