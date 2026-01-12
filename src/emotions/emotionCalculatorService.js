@@ -619,6 +619,62 @@ class EmotionCalculatorService {
   }
 
   /**
+   * Calculates emotion intensities for specified prototypes only.
+   *
+   * @param {MoodData} moodData - Mood axis values (including affiliation)
+   * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {SexualState|null|undefined} sexualState - Sexual state data
+   * @param {AffectTraits|null|undefined} [affectTraits] - Affect trait values (optional)
+   * @param {Set<string>|null|undefined} emotionFilter - Emotion names to calculate
+   * @returns {Map<string, number>} Map of emotion name to intensity
+   */
+  calculateEmotionsFiltered(
+    moodData,
+    sexualArousal,
+    sexualState,
+    affectTraits = null,
+    emotionFilter
+  ) {
+    if (!emotionFilter || emotionFilter.size === 0) {
+      return this.calculateEmotions(
+        moodData,
+        sexualArousal,
+        sexualState,
+        affectTraits
+      );
+    }
+
+    const result = new Map();
+
+    const prototypes = this.#ensureEmotionPrototypes();
+    if (!prototypes) {
+      this.#logger.warn(
+        'EmotionCalculatorService: No emotion prototypes available.'
+      );
+      return result;
+    }
+
+    const normalizedAxes = this.#normalizeMoodAxes(moodData);
+    const sexualAxes = this.#normalizeSexualAxes(sexualState, sexualArousal);
+    const traitAxes = this.#normalizeAffectTraits(affectTraits);
+
+    for (const emotionName of emotionFilter) {
+      const prototype = prototypes[emotionName];
+      if (!prototype) continue;
+
+      const intensity = this.#calculatePrototypeIntensity(
+        prototype,
+        normalizedAxes,
+        sexualAxes,
+        traitAxes
+      );
+      result.set(emotionName, intensity);
+    }
+
+    return result;
+  }
+
+  /**
    * Calculates sexual state intensities from mood data.
    *
    * @param {MoodData} moodData - Mood axis values

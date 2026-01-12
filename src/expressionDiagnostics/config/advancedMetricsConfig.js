@@ -4,14 +4,14 @@
  */
 
 /**
- * @typedef {'emotions'|'moodAxes'|'sexualStates'|'traits'|'default'} DomainName
+ * @typedef {'emotions'|'moodAxes'|'sexualStates'|'traits'|'sexualArousal'|'previousSexualArousal'|'default'} DomainName
  */
 
 /**
  * @typedef {object} NearMissEpsilonConfig
  * @property {number} emotions - Epsilon for emotions domain [0, 1] range
  * @property {number} moodAxes - Epsilon for mood axes domain [-100, 100] range
- * @property {number} sexualStates - Epsilon for sexual states domain [0, 100] range
+ * @property {number} sexualStates - Epsilon for sexual states domain [0, 1] range (calculated weighted sums)
  * @property {number} traits - Epsilon for traits domain [0, 1] range
  * @property {number} default - Fallback epsilon for unknown domains
  */
@@ -21,6 +21,7 @@
  * @property {boolean} enabled - Enable/disable advanced metrics
  * @property {NearMissEpsilonConfig} nearMissEpsilon - Epsilon values by domain
  * @property {number} maxViolationsSampled - Memory optimization limit
+ * @property {number} maxObservedSampled - Memory optimization limit for observed values
  * @property {boolean} includePercentiles - Include percentile metrics
  * @property {boolean} includeNearMiss - Include near-miss metrics
  * @property {boolean} includeLastMile - Include last-mile metrics
@@ -45,16 +46,18 @@ export const advancedMetricsConfig = {
   nearMissEpsilon: {
     emotions: 0.05, // [0, 1] range → 5%
     moodAxes: 5, // [-100, 100] range → 2.5%
-    sexualStates: 5, // [0, 100] range → 5%
+    sexualStates: 0.05, // [0, 1] range → 5% (calculated weighted sums)
     traits: 0.1, // [0, 1] range → 10% (traits change slowly)
+    sexualArousal: 0.05, // [0, 1] range → 5% (scalar)
+    previousSexualArousal: 0.05, // [0, 1] range → 5% (scalar)
     default: 0.05, // Fallback for unknown domains
   },
 
   /**
    * Memory optimization settings
-   * (Reservoir sampling deferred to future work)
    */
-  maxViolationsSampled: Infinity, // No limit currently
+  maxViolationsSampled: 2000,
+  maxObservedSampled: 2000,
 
   /**
    * Which metrics to include in output
@@ -79,6 +82,7 @@ export const advancedMetricsConfig = {
  */
 const domainPatterns = [
   { pattern: /^emotions\./, domain: /** @type {DomainName} */ ('emotions') },
+  { pattern: /^moodAxes\./, domain: /** @type {DomainName} */ ('moodAxes') },
   { pattern: /^mood\./, domain: /** @type {DomainName} */ ('moodAxes') },
   {
     pattern: /^sexualStates\./,
@@ -93,7 +97,39 @@ const domainPatterns = [
     pattern: /^personalityTraits\./,
     domain: /** @type {DomainName} */ ('traits'),
   },
+  {
+    pattern: /^sexualArousal$/,
+    domain: /** @type {DomainName} */ ('sexualArousal'),
+  },
+  {
+    pattern: /^previousSexualArousal$/,
+    domain: /** @type {DomainName} */ ('previousSexualArousal'),
+  },
 ];
+
+/**
+ * @typedef {object} TunableVariableInfo
+ * @property {string} domain - The tunable variable domain key
+ * @property {boolean} isScalar - Whether the variable is a scalar path
+ * @property {string} name - The leaf name or full path for scalars
+ */
+
+/**
+ * Complete list of tunable variable patterns, including scalars.
+ *
+ * @type {Record<string, RegExp>}
+ */
+export const TUNABLE_VARIABLE_PATTERNS = {
+  emotions: /^emotions\.(\w+)$/,
+  sexualStates: /^sexualStates\.(\w+)$/,
+  sexual: /^sexual\.(\w+)$/,
+  mood: /^mood\.(\w+)$/,
+  moodAxes: /^moodAxes\.(\w+)$/,
+  traits: /^traits\.(\w+)$/,
+  affectTraits: /^affectTraits\.(\w+)$/,
+  sexualArousal: /^sexualArousal$/,
+  previousSexualArousal: /^previousSexualArousal$/,
+};
 
 /**
  * Detect the domain from a variable path.
@@ -120,6 +156,42 @@ export function detectDomain(variablePath) {
 }
 
 /**
+ * Check if a variable path represents a tunable variable.
+ *
+ * @param {string} variablePath - The variable path (e.g., 'emotions.joy', 'sexualArousal')
+ * @returns {boolean}
+ */
+export function isTunableVariable(variablePath) {
+  return Boolean(getTunableVariableInfo(variablePath));
+}
+
+/**
+ * Get tunable variable metadata.
+ *
+ * @param {string} variablePath - The variable path
+ * @returns {TunableVariableInfo | null}
+ */
+export function getTunableVariableInfo(variablePath) {
+  if (!variablePath || typeof variablePath !== 'string') {
+    return null;
+  }
+
+  for (const [domain, pattern] of Object.entries(TUNABLE_VARIABLE_PATTERNS)) {
+    const match = variablePath.match(pattern);
+    if (match) {
+      return {
+        domain,
+        isScalar:
+          domain === 'sexualArousal' || domain === 'previousSexualArousal',
+        name: match[1] || variablePath,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
  * Get the epsilon value for a given variable path.
  *
  * @param {string} variablePath - The variable path
@@ -127,7 +199,8 @@ export function detectDomain(variablePath) {
  * @example
  * getEpsilonForVariable('emotions.joy')    // → 0.05
  * getEpsilonForVariable('mood.valence')    // → 5
- * getEpsilonForVariable('sexualStates.x')  // → 5
+ * getEpsilonForVariable('sexualStates.x')  // → 0.05
+ * getEpsilonForVariable('sexualArousal')   // → 0.05
  */
 export function getEpsilonForVariable(variablePath) {
   const domain = detectDomain(variablePath);

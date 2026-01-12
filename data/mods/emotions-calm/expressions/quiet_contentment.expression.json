@@ -109,11 +109,6 @@
         "auditory": "I hear unhurried breathing and a comfortable lack of motion-silence that doesn't feel tense.",
         "tactile": "Someone feels warm and steady, not reaching for anything-stillness that reads like satisfaction, not shutdown."
     },
-    "tags": [
-        "contentment",
-        "peace",
-        "satisfaction",
-        "calm"
-    ],
+    "category": "calm",
     "diagnosticStatus": "unknown"
 }

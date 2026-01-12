@@ -152,11 +152,6 @@
         "auditory": "I hear tight, sharp exhales; a muttered string of words; the quick staccato of tapping or fidgeting. Something gets set down with more force than it needed.",
         "tactile": "The space beside jitters-sudden movements, heat, a bristling energy that makes stillness feel unsafe."
     },
-    "tags": [
-        "frustration",
-        "irritation",
-        "spiral",
-        "escalation"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

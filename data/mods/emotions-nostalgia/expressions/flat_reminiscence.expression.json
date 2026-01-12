@@ -204,14 +204,6 @@
         "tactile": "There's a subtle drop in readiness-shoulders slacken, hands move more mechanically, as if effort and interest both got turned down a notch.",
         "limited": "{actor} seems briefly preoccupied, attention drifting to something internal."
     },
-    "tags": [
-        "loss",
-        "flat",
-        "reminiscence",
-        "distance",
-        "low_energy",
-        "hopelessness",
-        "withdrawal"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

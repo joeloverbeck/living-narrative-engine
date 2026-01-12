@@ -103,11 +103,6 @@
         "tactile": "The air feels busier; footsteps, shifting weight, and restless motion radiate like heat from a small fire.",
         "olfactory": "I smell warm breath, a hint of sweat, and that clean edge of adrenaline-energy turning outward."
     },
-    "tags": [
-        "joy",
-        "excitement",
-        "energy",
-        "positive"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

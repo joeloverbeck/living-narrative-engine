@@ -146,13 +146,6 @@
         "tactile": "The air feels cooler around them; their stillness has an edge, like a shut door you can’t push through.",
         "limited": "{actor} looks unimpressed, attention sliding away as if the topic isn’t worth holding."
     },
-    "tags": [
-        "contempt",
-        "disdain",
-        "dismissal",
-        "dominance",
-        "cool_detachment",
-        "social_aversion"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

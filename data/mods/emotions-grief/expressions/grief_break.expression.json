@@ -172,12 +172,6 @@
         "auditory": "I hear breath fracture into sobs-wet, uneven pulls that keep failing halfway through. If words come, they arrive broken, swallowed, reshaped by the body trying not to fall apart.",
         "tactile": "Someone starts to shake in waves-small at first, then unstoppable. Their body has that unmistakable grief rhythm: tight, trembling pulses like the whole frame is trying to hold itself together."
     },
-    "tags": [
-        "grief",
-        "sadness",
-        "tears",
-        "acute",
-        "breakdown"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

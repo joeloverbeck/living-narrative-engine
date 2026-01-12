@@ -165,12 +165,6 @@
     "alternate_descriptions": {
         "auditory": "I hear breathing turn sharp and fast-air dragged in like it's not working. There's a shaky exhale, a small broken sound in the throat, and the scrape of movement that can't settle."
     },
-    "tags": [
-        "panic",
-        "terror",
-        "alarm",
-        "acute",
-        "fear"
-    ],
+    "category": "threat",
     "diagnosticStatus": "unknown"
 }

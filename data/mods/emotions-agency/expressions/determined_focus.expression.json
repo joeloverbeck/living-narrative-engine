@@ -144,11 +144,6 @@
         "tactile": "Someone's presence turns \"solid\"-movements deliberate, weight planted, no fidgeting.",
         "olfactory": "There's warm effort in the air-work-breath, not panic-breath."
     },
-    "tags": [
-        "approach",
-        "determination",
-        "focus",
-        "resolve"
-    ],
+    "category": "agency",
     "diagnosticStatus": "unknown"
 }

@@ -205,13 +205,6 @@
         "tactile": "The air around them tightens-controlled tension held in the chest and shoulders, like a hand hovering over a brake.",
         "limited": "{actor} grows cautious and measured, holding back reflexes and keeping their expression under control."
     },
-    "tags": [
-        "unease",
-        "suspicion",
-        "restraint",
-        "caution",
-        "quiet_alertness",
-        "threat_awareness"
-    ],
+    "category": "threat",
     "diagnosticStatus": "unknown"
 }

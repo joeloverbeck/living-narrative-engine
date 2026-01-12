@@ -60,6 +60,9 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @property {string|null} coverageWarning - Human-readable warning
  * @property {object|null} suggestedPrototype - Auto-synthesized prototype
  * @property {number} gapThreshold - Distance threshold used
+ * @property {number|null} distanceZScore - Z-score vs prototype nearest-neighbor distances
+ * @property {number|null} distancePercentile - Percentile vs prototype nearest-neighbor distances (0-1)
+ * @property {string|null} distanceContext - Human-readable distance calibration context
  */
 
 /**
@@ -98,6 +101,9 @@ class PrototypeFitRankingService {
   /** @type {object|null} */
   #prototypeConstraintAnalyzer;
 
+  /** @type {Map<string, {mean: number, std: number, sortedDistances: number[]}>} */
+  #distanceDistributionCache;
+
   /**
    * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry for prototype lookups
@@ -115,6 +121,7 @@ class PrototypeFitRankingService {
     this.#dataRegistry = dataRegistry;
     this.#logger = logger;
     this.#prototypeConstraintAnalyzer = prototypeConstraintAnalyzer;
+    this.#distanceDistributionCache = new Map();
   }
 
   /**
@@ -163,8 +170,8 @@ class PrototypeFitRankingService {
     }
 
     // Detect which prototype types are referenced in expression
+    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrExpression);
     const expression = Array.isArray(prerequisitesOrExpression) ? null : prerequisitesOrExpression;
-    const typesToFetch = this.#detectReferencedPrototypeTypes(expression);
 
     // Early return if no prototype references found
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
@@ -195,7 +202,20 @@ class PrototypeFitRankingService {
     // Analyze each prototype
     const results = allPrototypes.map((proto) => {
       const gatePassRate = this.#computeGatePassRate(proto, regimeContexts);
-      const intensityDist = this.#computeIntensityDistribution(proto, regimeContexts, threshold);
+      const intensityDist = this.#computeIntensityDistribution(
+        proto,
+        regimeContexts,
+        threshold
+      );
+      const gateCompatibility = this.#getGateCompatibility(
+        proto,
+        axisConstraints,
+        threshold
+      );
+      const inRegimeAchievableRange = {
+        min: Number.isFinite(intensityDist.min) ? intensityDist.min : null,
+        max: Number.isFinite(intensityDist.max) ? intensityDist.max : null,
+      };
       const conflicts = this.#analyzeConflicts(proto.weights, axisConstraints);
       const exclusionCompat = 1.0; // TODO: implement exclusion compatibility
 
@@ -215,6 +235,8 @@ class PrototypeFitRankingService {
         conflictMagnitude: conflicts.magnitude,
         conflictingAxes: conflicts.axes,
         compositeScore,
+        gateCompatibility,
+        inRegimeAchievableRange,
         rank: 0, // Will be set after sorting
       };
     });
@@ -272,10 +294,7 @@ class PrototypeFitRankingService {
     const targetSignature = this.#buildTargetSignature(axisConstraints, clauseFailures);
 
     // Detect which prototype types to fetch (if expression provided)
-    const expression = prerequisitesOrAxisConstraintsOrExpression?.prerequisites
-      ? prerequisitesOrAxisConstraintsOrExpression
-      : null;
-    const typesToFetch = this.#detectReferencedPrototypeTypes(expression);
+    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrAxisConstraintsOrExpression);
 
     // Fall back to emotion prototypes for backward compatibility
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
@@ -340,10 +359,7 @@ class PrototypeFitRankingService {
    */
   detectPrototypeGaps(prerequisitesOrTargetSignatureOrExpression, storedContexts, axisConstraintsParam, threshold = 0.3) {
     // Detect which prototype types to fetch (if expression provided)
-    const expression = prerequisitesOrTargetSignatureOrExpression?.prerequisites
-      ? prerequisitesOrTargetSignatureOrExpression
-      : null;
-    const typesToFetch = this.#detectReferencedPrototypeTypes(expression);
+    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrTargetSignatureOrExpression);
 
     // Fall back to emotion prototypes for backward compatibility
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
@@ -395,7 +411,11 @@ class PrototypeFitRankingService {
       const gateDist = this.#computeGateDistance(desiredGates, proto.gates);
       const combinedDist = 0.7 * weightDist + 0.3 * gateDist;
 
-      const intensityDist = this.#computeIntensityDistribution(proto, regimeContexts, threshold);
+      const intensityDist = this.#computeIntensityDistribution(
+        proto,
+        regimeContexts,
+        threshold
+      );
 
       return {
         prototypeId: proto.id,
@@ -416,6 +436,18 @@ class PrototypeFitRankingService {
 
     const gapDetected = nearestDist > GAP_DISTANCE_THRESHOLD && bestIntensity < GAP_INTENSITY_THRESHOLD;
 
+    const distanceStatsKey = this.#buildDistanceStatsCacheKey(typesToFetch);
+    const distanceStats = this.#getDistanceDistribution(distanceStatsKey, allPrototypes);
+    const distancePercentile = distanceStats
+      ? this.#computeDistancePercentile(distanceStats.sortedDistances, nearestDist)
+      : null;
+    const distanceZScore = distanceStats
+      ? this.#computeDistanceZScore(distanceStats.mean, distanceStats.std, nearestDist)
+      : null;
+    const distanceContext = distanceStats
+      ? this.#buildDistanceContext(nearestDist, distancePercentile, distanceZScore)
+      : null;
+
     let coverageWarning = null;
     let suggestedPrototype = null;
 
@@ -433,6 +465,9 @@ class PrototypeFitRankingService {
       coverageWarning,
       suggestedPrototype,
       gapThreshold: GAP_DISTANCE_THRESHOLD,
+      distanceZScore,
+      distancePercentile,
+      distanceContext,
     };
   }
 
@@ -447,12 +482,15 @@ class PrototypeFitRankingService {
    * @param {object|null} expression - Expression with prerequisites
    * @returns {PrototypeTypeDetection}
    */
-  #detectReferencedPrototypeTypes(expression) {
+  #detectReferencedPrototypeTypes(expressionOrPrerequisites) {
     const result = { hasEmotions: false, hasSexualStates: false };
+    const prerequisites = Array.isArray(expressionOrPrerequisites)
+      ? expressionOrPrerequisites
+      : expressionOrPrerequisites?.prerequisites;
 
-    if (!expression?.prerequisites) return result;
+    if (!prerequisites || prerequisites.length === 0) return result;
 
-    for (const prereq of expression.prerequisites) {
+    for (const prereq of prerequisites) {
       this.#scanLogicForPrototypeTypes(prereq.logic, result);
       // Early exit if both found
       if (result.hasEmotions && result.hasSexualStates) break;
@@ -694,11 +732,18 @@ class PrototypeFitRankingService {
    * @param {{weights: object, gates: string[]}} proto
    * @param {Array<object>} contexts
    * @param {number} threshold
-   * @returns {{p50: number, p90: number, p95: number, pAboveThreshold: number}}
+   * @returns {{p50: number, p90: number, p95: number, pAboveThreshold: number, min: number|null, max: number|null}}
    */
   #computeIntensityDistribution(proto, contexts, threshold) {
     if (!contexts || contexts.length === 0) {
-      return { p50: 0, p90: 0, p95: 0, pAboveThreshold: 0 };
+      return {
+        p50: 0,
+        p90: 0,
+        p95: 0,
+        pAboveThreshold: 0,
+        min: null,
+        max: null,
+      };
     }
 
     // Filter to contexts where gates pass
@@ -707,7 +752,14 @@ class PrototypeFitRankingService {
     );
 
     if (gatePassContexts.length === 0) {
-      return { p50: 0, p90: 0, p95: 0, pAboveThreshold: 0 };
+      return {
+        p50: 0,
+        p90: 0,
+        p95: 0,
+        pAboveThreshold: 0,
+        min: null,
+        max: null,
+      };
     }
 
     // Compute intensity for each context
@@ -720,11 +772,49 @@ class PrototypeFitRankingService {
     const p50 = this.#percentile(intensities, 0.5);
     const p90 = this.#percentile(intensities, 0.9);
     const p95 = this.#percentile(intensities, 0.95);
+    const min = intensities[0];
+    const max = intensities[intensities.length - 1];
 
     const aboveCount = intensities.filter((i) => i >= threshold).length;
     const pAboveThreshold = aboveCount / intensities.length;
 
-    return { p50, p90, p95, pAboveThreshold };
+    return { p50, p90, p95, pAboveThreshold, min, max };
+  }
+
+  /**
+   * Check if prototype gates are compatible with the mood regime constraints.
+   *
+   * @private
+   * @param {object} proto
+   * @param {Map<string, {min: number, max: number}>} axisConstraints
+   * @param {number} threshold
+   * @returns {{compatible: boolean, reason: string|null}|null}
+   */
+  #getGateCompatibility(proto, axisConstraints, threshold) {
+    if (!this.#prototypeConstraintAnalyzer) {
+      return null;
+    }
+
+    try {
+      const analysis =
+        this.#prototypeConstraintAnalyzer.analyzeEmotionThreshold(
+          proto.id,
+          proto.type,
+          threshold,
+          axisConstraints,
+          '>='
+        );
+      const blocking = analysis.gateStatus?.blockingGates ?? [];
+      return {
+        compatible: analysis.gateStatus?.allSatisfiable ?? true,
+        reason: blocking.length > 0 ? blocking[0].reason : null,
+      };
+    } catch (err) {
+      this.#logger.warn(
+        `PrototypeFitRankingService: Gate compatibility check failed for ${proto.id}: ${err.message}`
+      );
+      return null;
+    }
   }
 
   /**
@@ -997,6 +1087,172 @@ class PrototypeFitRankingService {
     }
 
     return total > 0 ? conflicts / total : 0;
+  }
+
+  /**
+   * Build gate constraint ranges from prototype gate strings.
+   * @param {string[]} protoGates
+   * @returns {object}
+   */
+  #buildGateConstraints(protoGates) {
+    const constraints = {};
+    if (!protoGates || protoGates.length === 0) {
+      return constraints;
+    }
+
+    for (const gateStr of protoGates) {
+      let parsed;
+      try {
+        parsed = GateConstraint.parse(gateStr);
+      } catch (err) {
+        continue;
+      }
+
+      const axis = parsed.axis;
+      if (!constraints[axis]) {
+        constraints[axis] = { min: -1, max: 1 };
+      }
+
+      if (parsed.operator === '>=' || parsed.operator === '>') {
+        constraints[axis].min = Math.max(constraints[axis].min, parsed.value);
+      } else if (parsed.operator === '<=' || parsed.operator === '<') {
+        constraints[axis].max = Math.min(constraints[axis].max, parsed.value);
+      } else if (parsed.operator === '==') {
+        constraints[axis].min = parsed.value;
+        constraints[axis].max = parsed.value;
+      }
+    }
+
+    return constraints;
+  }
+
+  /**
+   * Compute combined distance between two prototypes for calibration.
+   * @param {object} protoA
+   * @param {object} protoB
+   * @returns {number}
+   */
+  #computePrototypeCombinedDistance(protoA, protoB) {
+    const weightDist = this.#computeWeightDistance(protoA.weights || {}, protoB.weights || {});
+    const gatesA = this.#buildGateConstraints(protoA.gates);
+    const gatesB = this.#buildGateConstraints(protoB.gates);
+    const gateDistAB = this.#computeGateDistance(gatesA, protoB.gates);
+    const gateDistBA = this.#computeGateDistance(gatesB, protoA.gates);
+    const gateDist = (gateDistAB + gateDistBA) / 2;
+
+    return 0.7 * weightDist + 0.3 * gateDist;
+  }
+
+  /**
+   * Compute nearest-neighbor distance distribution for prototypes.
+   * @param {string} cacheKey
+   * @param {Array<object>} prototypes
+   * @returns {{mean: number, std: number, sortedDistances: number[]} | null}
+   */
+  #getDistanceDistribution(cacheKey, prototypes) {
+    if (this.#distanceDistributionCache.has(cacheKey)) {
+      return this.#distanceDistributionCache.get(cacheKey);
+    }
+
+    if (!prototypes || prototypes.length < 2) {
+      this.#distanceDistributionCache.set(cacheKey, null);
+      return null;
+    }
+
+    const nearestDistances = [];
+
+    for (let i = 0; i < prototypes.length; i++) {
+      let nearest = Infinity;
+      for (let j = 0; j < prototypes.length; j++) {
+        if (i === j) continue;
+        const dist = this.#computePrototypeCombinedDistance(prototypes[i], prototypes[j]);
+        if (dist < nearest) {
+          nearest = dist;
+        }
+      }
+      nearestDistances.push(nearest);
+    }
+
+    const sortedDistances = [...nearestDistances].sort((a, b) => a - b);
+    const mean = sortedDistances.reduce((sum, value) => sum + value, 0) / sortedDistances.length;
+    const variance = sortedDistances.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0)
+      / sortedDistances.length;
+    const std = Math.sqrt(variance);
+
+    const stats = { mean, std, sortedDistances };
+    this.#distanceDistributionCache.set(cacheKey, stats);
+    return stats;
+  }
+
+  /**
+   * Build cache key for distance stats based on prototype types.
+   * @param {PrototypeTypeDetection} typesToFetch
+   * @returns {string}
+   */
+  #buildDistanceStatsCacheKey(typesToFetch) {
+    const emotions = typesToFetch?.hasEmotions ? 'emotion' : 'no-emotion';
+    const sexual = typesToFetch?.hasSexualStates ? 'sexual' : 'no-sexual';
+    return `${emotions}|${sexual}`;
+  }
+
+  /**
+   * Compute percentile for distance value against sorted distances.
+   * @param {number[]} sortedDistances
+   * @param {number} value
+   * @returns {number}
+   */
+  #computeDistancePercentile(sortedDistances, value) {
+    if (!sortedDistances || sortedDistances.length === 0) {
+      return 0;
+    }
+
+    let count = 0;
+    for (const dist of sortedDistances) {
+      if (value >= dist) {
+        count++;
+      } else {
+        break;
+      }
+    }
+
+    return count / sortedDistances.length;
+  }
+
+  /**
+   * Compute z-score for distance value.
+   * @param {number} mean
+   * @param {number} std
+   * @param {number} value
+   * @returns {number}
+   */
+  #computeDistanceZScore(mean, std, value) {
+    if (std <= 0) {
+      return 0;
+    }
+
+    return (value - mean) / std;
+  }
+
+  /**
+   * Build human-readable context string for distance calibration.
+   * @param {number} distance
+   * @param {number|null} percentile
+   * @param {number|null} zScore
+   * @returns {string|null}
+   */
+  #buildDistanceContext(distance, percentile, zScore) {
+    if (percentile === null || percentile === undefined) {
+      return null;
+    }
+
+    const percentileLabel = Math.round(percentile * 100);
+    let context = `Distance ${distance.toFixed(2)} is farther than ${percentileLabel}% of prototype nearest-neighbor distances`;
+
+    if (typeof zScore === 'number') {
+      context += ` (z=${zScore.toFixed(2)})`;
+    }
+
+    return `${context}.`;
   }
 
   /**

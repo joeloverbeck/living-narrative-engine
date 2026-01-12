@@ -12,6 +12,7 @@ class EmotionCalculatorAdapter {
     validateDependency(emotionCalculatorService, 'IEmotionCalculatorService', logger, {
       requiredMethods: [
         'calculateEmotions',
+        'calculateEmotionsFiltered',
         'calculateSexualArousal',
         'calculateSexualStates',
       ],
@@ -33,6 +34,35 @@ class EmotionCalculatorAdapter {
       null,
       sexualState,
       affectTraits
+    );
+    return this.#mapToObject(results);
+  }
+
+  /**
+   * Calculate specified emotions from mood, sexual state, and optional affect traits.
+   * Falls back to full calculation when no filter is provided.
+   * @param {object} mood - Mood axes with values in [-100, 100]
+   * @param {object|null} [sexualState=null] - Optional sexual state axes
+   * @param {object|null} [affectTraits=null] - Optional affect trait modifiers
+   * @param {Set<string>|null|undefined} emotionFilter - Emotion names to calculate
+   * @returns {object} Emotion intensities keyed by emotion ID
+   */
+  calculateEmotionsFiltered(
+    mood,
+    sexualState = null,
+    affectTraits = null,
+    emotionFilter
+  ) {
+    if (!emotionFilter || emotionFilter.size === 0) {
+      return this.calculateEmotions(mood, sexualState, affectTraits);
+    }
+
+    const results = this.#emotionCalculatorService.calculateEmotionsFiltered(
+      mood,
+      null,
+      sexualState,
+      affectTraits,
+      emotionFilter
     );
     return this.#mapToObject(results);
   }

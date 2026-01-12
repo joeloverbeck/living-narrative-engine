@@ -120,12 +120,6 @@
         "auditory": "I hear a sudden, clean laugh nearby-brief, involuntary, the kind that turns into a smile even in the dark.",
         "tactile": "Someone close shifts with an easy looseness-breath deepening, tension leaving their body like a held string finally released."
     },
-    "tags": [
-        "positive",
-        "joy",
-        "uplift",
-        "approach",
-        "social"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

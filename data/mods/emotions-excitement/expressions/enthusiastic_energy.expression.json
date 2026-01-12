@@ -150,12 +150,6 @@
         "tactile": "Someone's presence gets warm and kinetic-small quick movements, a restless readiness to act.",
         "olfactory": "There's clean sweat and warm breath in the air-alive, energized, not sour with fear."
     },
-    "tags": [
-        "positive",
-        "enthusiasm",
-        "energy",
-        "approach",
-        "engaged"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

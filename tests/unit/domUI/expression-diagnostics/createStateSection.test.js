@@ -26,6 +26,7 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
   let mockPathSensitiveAnalyzer;
   let mockReportGenerator;
   let mockReportModal;
+  let mockSensitivityAnalyzer;
   let controller;
 
   beforeEach(() => {
@@ -205,6 +206,11 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
       showReport: jest.fn(),
     };
 
+    mockSensitivityAnalyzer = {
+      computeSensitivityData: jest.fn().mockReturnValue([]),
+      computeGlobalSensitivityData: jest.fn().mockReturnValue([]),
+    };
+
     controller = new ExpressionDiagnosticsController({
       logger: mockLogger,
       expressionRegistry: mockExpressionRegistry,
@@ -216,6 +222,7 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
       pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
       reportGenerator: mockReportGenerator,
       reportModal: mockReportModal,
+      sensitivityAnalyzer: mockSensitivityAnalyzer,
     });
   });
 

@@ -199,11 +199,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a rush of words-apologies, clarifications, offers-stacked on top of each other like someone can't bear a gap in the air."
     },
-    "tags": [
-        "guilt",
-        "repair",
-        "apology",
-        "urgency"
-    ],
+    "category": "shame",
     "diagnosticStatus": "unknown"
 }

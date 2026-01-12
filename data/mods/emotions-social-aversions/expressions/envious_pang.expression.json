@@ -121,15 +121,6 @@
     "tactile": "The air around them feels tighter: shoulders subtly braced, fingers flexing once as if to shake off a prickling irritation.",
     "limited": "A brief shadow crosses their face—attention narrowing, posture tightening—then they smooth it away."
   },
-  "tags": [
-    "envy",
-    "comparison",
-    "status",
-    "self_worth_hit",
-    "fixation",
-    "social_aversions",
-    "cooling",
-    "restraint"
-  ],
+  "category": "anger",
   "diagnosticStatus": "unknown"
 }

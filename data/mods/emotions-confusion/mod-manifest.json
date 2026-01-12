@@ -5,7 +5,8 @@
   "dependencies": [],
   "content": {
     "expressions": [
-      "confused_frown.expression.json"
+      "confused_frown.expression.json",
+      "insight_click.expression.json"
     ]
   }
 }

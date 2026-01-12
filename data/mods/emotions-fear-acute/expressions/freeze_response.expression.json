@@ -127,11 +127,6 @@
     "alternate_descriptions": {
         "auditory": "I hear the faintest sound of controlled breathing, like someone is trying to make their lungs quieter."
     },
-    "tags": [
-        "fear",
-        "freeze",
-        "acute",
-        "paralysis"
-    ],
+    "category": "threat",
     "diagnosticStatus": "unknown"
 }

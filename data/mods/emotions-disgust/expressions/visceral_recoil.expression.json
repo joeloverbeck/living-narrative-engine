@@ -138,13 +138,6 @@
         "tactile": "The air feels wrong up close; there’s a reflexive shiver through the shoulders and a skin-crawl sensation, like the body is trying to pull its surface away.",
         "limited": "I notice a quick flinch away and a tightened expression—contact avoided, posture turning out and back."
     },
-    "tags": [
-        "disgust",
-        "recoil",
-        "avoidance",
-        "visceral",
-        "revulsion",
-        "withdrawal"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

@@ -17,6 +17,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
 import EmotionCalculatorAdapter from '../../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import EmotionCalculatorService from '../../../../src/emotions/emotionCalculatorService.js';
+import RandomStateGenerator from '../../../../src/expressionDiagnostics/services/RandomStateGenerator.js';
 
 const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
   new EmotionCalculatorAdapter({
@@ -32,6 +33,7 @@ describe('MonteCarloSimulator - Temporal State Handling', () => {
   let mockDataRegistry;
   let simulator;
   let mockEmotionCalculatorAdapter;
+  let randomStateGenerator;
 
   // Mock emotion prototypes - must include guilt for persistence tests
   const mockEmotionPrototypes = {
@@ -96,11 +98,13 @@ describe('MonteCarloSimulator - Temporal State Handling', () => {
       mockDataRegistry,
       mockLogger
     );
+    randomStateGenerator = new RandomStateGenerator({ logger: mockLogger });
 
     simulator = new MonteCarloSimulator({
       dataRegistry: mockDataRegistry,
       logger: mockLogger,
       emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+      randomStateGenerator,
     });
   });
 
@@ -571,6 +575,78 @@ describe('MonteCarloSimulator - Temporal State Handling', () => {
       expect(result.triggerRate).toBeLessThanOrEqual(
         result.confidenceInterval.high
       );
+    });
+  });
+
+  describe('Temporal Context Shape', () => {
+    const assertInRange = (value, min, max) => {
+      expect(typeof value).toBe('number');
+      expect(value).toBeGreaterThanOrEqual(min);
+      expect(value).toBeLessThanOrEqual(max);
+    };
+
+    it('should store previousEmotions for all prototypes with normalized values', async () => {
+      const expression = {
+        id: 'test:context_previous_emotions',
+        prerequisites: [],
+      };
+
+      const result = await simulator.simulate(expression, {
+        sampleCount: 20,
+        storeSamplesForSensitivity: true,
+        sensitivitySampleLimit: 5,
+      });
+
+      expect(result.storedContexts.length).toBeGreaterThan(0);
+      const emotionKeys = Object.keys(mockEmotionPrototypes.entries);
+      for (const context of result.storedContexts) {
+        for (const key of emotionKeys) {
+          expect(context.previousEmotions).toHaveProperty(key);
+          assertInRange(context.previousEmotions[key], 0, 1);
+        }
+      }
+    });
+
+    it('should store previousSexualStates for all prototypes with normalized values', async () => {
+      const expression = {
+        id: 'test:context_previous_sexual',
+        prerequisites: [],
+      };
+
+      const result = await simulator.simulate(expression, {
+        sampleCount: 20,
+        storeSamplesForSensitivity: true,
+        sensitivitySampleLimit: 5,
+      });
+
+      expect(result.storedContexts.length).toBeGreaterThan(0);
+      const sexualKeys = Object.keys(mockSexualPrototypes.entries);
+      for (const context of result.storedContexts) {
+        for (const key of sexualKeys) {
+          expect(context.previousSexualStates).toHaveProperty(key);
+          assertInRange(context.previousSexualStates[key], 0, 1);
+        }
+      }
+    });
+
+    it('should expose previousMoodAxes in raw [-100, 100] range', async () => {
+      const expression = {
+        id: 'test:context_previous_mood_axes',
+        prerequisites: [],
+      };
+
+      const result = await simulator.simulate(expression, {
+        sampleCount: 20,
+        storeSamplesForSensitivity: true,
+        sensitivitySampleLimit: 5,
+      });
+
+      expect(result.storedContexts.length).toBeGreaterThan(0);
+      for (const context of result.storedContexts) {
+        for (const value of Object.values(context.previousMoodAxes)) {
+          assertInRange(value, -100, 100);
+        }
+      }
     });
   });
 });

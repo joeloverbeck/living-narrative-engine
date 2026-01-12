@@ -165,11 +165,6 @@
         "auditory": "A long exhale spills out nearby-air pushed out like someone finally stopped bracing.",
         "tactile": "The tension of someone eases abruptly, as if a coiled spring just let go."
     },
-    "tags": [
-        "relief",
-        "tension_release",
-        "fear_resolution",
-        "safety"
-    ],
+    "category": "calm",
     "diagnosticStatus": "unknown"
 }

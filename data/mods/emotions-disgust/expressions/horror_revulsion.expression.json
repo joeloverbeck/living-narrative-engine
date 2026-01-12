@@ -162,14 +162,6 @@
         "tactile": "Someone jerks away hard enough to brush or bump me, the movement all rejection-like contact with the thing would be contamination.",
         "olfactory": "A sour, urgent odor of cold sweat reaches me, the kind that comes with nausea and fear at the same time."
     },
-    "tags": [
-        "horror",
-        "disgust",
-        "revulsion",
-        "fear",
-        "intense",
-        "withdrawal",
-        "visible"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

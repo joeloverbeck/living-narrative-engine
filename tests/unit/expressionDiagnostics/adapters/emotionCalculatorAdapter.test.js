@@ -11,6 +11,7 @@ const createLogger = () => ({
 
 const createEmotionCalculatorService = () => ({
   calculateEmotions: jest.fn(),
+  calculateEmotionsFiltered: jest.fn(),
   calculateSexualArousal: jest.fn(),
   calculateSexualStates: jest.fn(),
 });
@@ -31,6 +32,70 @@ describe('EmotionCalculatorAdapter', () => {
     emotionCalculatorService.calculateEmotions.mockReturnValue(results);
 
     const output = adapter.calculateEmotions(mood, sexualState, affectTraits);
+
+    expect(emotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
+      mood,
+      null,
+      sexualState,
+      affectTraits
+    );
+    expect(output).toEqual({ joy: 0.7 });
+  });
+
+  it('delegates calculateEmotionsFiltered with a filter and converts Map output', () => {
+    const emotionCalculatorService = createEmotionCalculatorService();
+    const logger = createLogger();
+    const adapter = new EmotionCalculatorAdapter({
+      emotionCalculatorService,
+      logger,
+    });
+
+    const mood = { valence: 50, arousal: -25 };
+    const sexualState = { sex_excitation: 10 };
+    const affectTraits = { affective_empathy: 75 };
+    const emotionFilter = new Set(['joy', 'fear']);
+    const results = new Map([['joy', 0.7]]);
+    emotionCalculatorService.calculateEmotionsFiltered.mockReturnValue(results);
+
+    const output = adapter.calculateEmotionsFiltered(
+      mood,
+      sexualState,
+      affectTraits,
+      emotionFilter
+    );
+
+    expect(
+      emotionCalculatorService.calculateEmotionsFiltered
+    ).toHaveBeenCalledWith(
+      mood,
+      null,
+      sexualState,
+      affectTraits,
+      emotionFilter
+    );
+    expect(output).toEqual({ joy: 0.7 });
+  });
+
+  it('falls back to calculateEmotions when no filter is provided', () => {
+    const emotionCalculatorService = createEmotionCalculatorService();
+    const logger = createLogger();
+    const adapter = new EmotionCalculatorAdapter({
+      emotionCalculatorService,
+      logger,
+    });
+
+    const mood = { valence: 50, arousal: -25 };
+    const sexualState = { sex_excitation: 10 };
+    const affectTraits = { affective_empathy: 75 };
+    const results = new Map([['joy', 0.7]]);
+    emotionCalculatorService.calculateEmotions.mockReturnValue(results);
+
+    const output = adapter.calculateEmotionsFiltered(
+      mood,
+      sexualState,
+      affectTraits,
+      null
+    );
 
     expect(emotionCalculatorService.calculateEmotions).toHaveBeenCalledWith(
       mood,

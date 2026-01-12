@@ -1,0 +1,120 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-disgust:moral_revulsion",
+    "description": "Ethical revulsion—disgust blended with contempt. The body recoils, but the mind leans in to judge: a cold, sharp “that’s vile” response that fixates rather than panics.",
+    "category": "anger",
+    "actor_description": "Something in me clenches like I just bit into something rotten, but it isn’t about my stomach—it’s about my sense of right. My face tightens, heat rises under my skin, and my thoughts go narrow and absolute. I can’t stop staring at it, cataloging it, wanting distance while also wanting to name it.",
+    "description_text": "{actor} recoils with a hard look of judgment—lip curling, eyes narrowing, posture pulling back as if the air turned foul. They seem fixated, coldly disgusted rather than afraid.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.disgust"
+                                            },
+                                            {
+                                                "var": "previousEmotions.disgust"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.contempt"
+                                            },
+                                            {
+                                                "var": "previousEmotions.contempt"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a disgust+contempt blend with social warmth dropping (low affiliation) and attention fixating (high engagement). Keeps threat moderate and caps panic/terror/fear so it reads as moral judgment, not horror-fear revulsion. Triggers only on a fresh disgust spike or contempt rise to avoid spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a sharp, disgusted exhale—like a hiss swallowed at the last second—followed by a clipped, hard-edged tone as if every word has to pass a moral filter.",
+        "tactile": "The air feels suddenly wrong—skin prickling, jaw tight, shoulders drawing back as though proximity itself is contaminating."
+    }
+}

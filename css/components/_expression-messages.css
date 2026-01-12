@@ -38,38 +38,76 @@
   }
 }
 
-/* Tag-based modifiers */
+/* Category-based modifiers (11 categories) */
+
+/* Default fallback when category is missing */
 .expression-message--default {
   border-left-color: #00796b;
   background: linear-gradient(to right, rgba(0, 121, 107, 0.08), transparent);
 }
 
-.expression-message--anger {
-  border-left-color: #c62828;
-  background: linear-gradient(to right, rgba(198, 40, 40, 0.1), transparent);
+/* Calm: Baseline, peaceful, grounded states (teal) */
+.expression-message--calm {
+  border-left-color: #00796b;
+  background: linear-gradient(to right, rgba(0, 121, 107, 0.08), transparent);
 }
 
+/* Joy: High-energy positive, excitement, elevation (amber) */
+.expression-message--joy {
+  border-left-color: #ff8f00;
+  background: linear-gradient(to right, rgba(255, 143, 0, 0.1), transparent);
+}
+
+/* Affection: Social bonding, connection, warmth (rose) */
 .expression-message--affection {
   border-left-color: #ad1457;
   background: linear-gradient(to right, rgba(173, 20, 87, 0.1), transparent);
 }
 
-.expression-message--loss {
-  border-left-color: #37474f;
-  background: linear-gradient(to right, rgba(55, 71, 79, 0.1), transparent);
+/* Desire: Sexual/wanting states, passion, craving (vivid pink) */
+.expression-message--desire {
+  border-left-color: #d81b60;
+  background: linear-gradient(to right, rgba(216, 27, 96, 0.1), transparent);
 }
 
+/* Attention: Cognitive engagement, curiosity, absorption (orange) */
+.expression-message--attention {
+  border-left-color: #f57c00;
+  background: linear-gradient(to right, rgba(245, 124, 0, 0.1), transparent);
+}
+
+/* Threat: Fear, anxiety, vigilance, danger response (purple) */
 .expression-message--threat {
   border-left-color: #4a148c;
   background: linear-gradient(to right, rgba(74, 20, 140, 0.1), transparent);
 }
 
+/* Anger: Hostility, frustration, disgust, aversion (red) */
+.expression-message--anger {
+  border-left-color: #c62828;
+  background: linear-gradient(to right, rgba(198, 40, 40, 0.1), transparent);
+}
+
+/* Loss: Grief, sadness, nostalgia, regret (blue-gray) */
+.expression-message--loss {
+  border-left-color: #37474f;
+  background: linear-gradient(to right, rgba(55, 71, 79, 0.1), transparent);
+}
+
+/* Shame: Self-evaluation, guilt, embarrassment (brown) */
+.expression-message--shame {
+  border-left-color: #5d4037;
+  background: linear-gradient(to right, rgba(93, 64, 55, 0.1), transparent);
+}
+
+/* Shutdown: Protective disconnect, numbness, fatigue (gray) */
+.expression-message--shutdown {
+  border-left-color: #607d8b;
+  background: linear-gradient(to right, rgba(96, 125, 139, 0.1), transparent);
+}
+
+/* Agency: Personal power, mastery, determination (dark teal) */
 .expression-message--agency {
   border-left-color: #00695c;
   background: linear-gradient(to right, rgba(0, 105, 92, 0.1), transparent);
-}
-
-.expression-message--attention {
-  border-left-color: #f57c00;
-  background: linear-gradient(to right, rgba(245, 124, 0, 0.1), transparent);
 }

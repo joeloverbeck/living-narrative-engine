@@ -198,12 +198,6 @@
         "auditory": "I hear a sharp breath, a muttered curse, the thud of something hit-not hard enough to break, hard enough to vent.",
         "tactile": "I sense someone's tension spiking and circling with no release-like someone revving an engine in neutral."
     },
-    "tags": [
-        "frustration",
-        "helplessness",
-        "hopelessness",
-        "despair",
-        "trapped"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

@@ -161,14 +161,6 @@
         "tactile": "It feels like the air tightens-gooseflesh, a cold prickle up the arms, muscles bracing as if expecting impact.",
         "limited": "A sudden, sustained jolt of fear snaps attention into a narrow, urgent tunnel."
     },
-    "tags": [
-        "terror",
-        "threat",
-        "arousal",
-        "urgency",
-        "tunnel_vision",
-        "brace_response",
-        "escape_scan"
-    ],
+    "category": "threat",
     "diagnosticStatus": "unknown"
 }

@@ -131,12 +131,6 @@
     "alternate_descriptions": {
         "tactile": "Someone's presence feels grounding-steady and warm, like someone has decided to stay."
     },
-    "tags": [
-        "attachment",
-        "love",
-        "protective",
-        "warmth",
-        "closeness"
-    ],
+    "category": "affection",
     "diagnosticStatus": "unknown"
 }

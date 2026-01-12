@@ -17,29 +17,23 @@
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
-const EXPRESSION_TAG_MODIFIERS = Object.freeze({
-  // Anger family
-  anger: 'expression-message--anger',
-  rage: 'expression-message--anger',
-  fury: 'expression-message--anger',
-  // Affection family
+/**
+ * Maps expression categories to CSS modifier classes.
+ * Each category determines the visual styling (border color, background gradient)
+ * for expression messages in the chat panel.
+ */
+const CATEGORY_CSS_CLASSES = Object.freeze({
+  calm: 'expression-message--calm',
+  joy: 'expression-message--joy',
   affection: 'expression-message--affection',
-  love: 'expression-message--affection',
-  warmth: 'expression-message--affection',
-  // Loss family
-  grief: 'expression-message--loss',
-  despair: 'expression-message--loss',
-  sorrow: 'expression-message--loss',
-  // Threat family
-  fear: 'expression-message--threat',
-  panic: 'expression-message--threat',
-  horror: 'expression-message--threat',
-  // Agency family
-  confidence: 'expression-message--agency',
-  determination: 'expression-message--agency',
-  // Attention family
-  curious: 'expression-message--attention',
-  fascinated: 'expression-message--attention',
+  desire: 'expression-message--desire',
+  attention: 'expression-message--attention',
+  threat: 'expression-message--threat',
+  anger: 'expression-message--anger',
+  loss: 'expression-message--loss',
+  shame: 'expression-message--shame',
+  shutdown: 'expression-message--shutdown',
+  agency: 'expression-message--agency',
 });
 
 /**
@@ -164,7 +158,7 @@ export class ExpressionMessageRenderer extends BoundDomRendererBase {
   // Rendering
   // ────────────────────────────────────────────────────────────────────────────
   /**
-   * Builds the CSS class string based on expression tags.
+   * Builds the CSS class string based on expression category.
    *
    * @private
    * @param {object} payload - The event payload.
@@ -172,17 +166,11 @@ export class ExpressionMessageRenderer extends BoundDomRendererBase {
    */
   #buildCssClasses(payload) {
     const classes = ['expression-message'];
-    const tags = payload?.contextualData?.tags || [];
+    const category = payload?.contextualData?.category;
 
-    for (const tag of tags) {
-      if (typeof tag !== 'string') continue;
-      const modifier = EXPRESSION_TAG_MODIFIERS[tag.toLowerCase()];
-      if (modifier && !classes.includes(modifier)) {
-        classes.push(modifier);
-      }
-    }
-
-    if (classes.length === 1) {
+    if (category && CATEGORY_CSS_CLASSES[category]) {
+      classes.push(CATEGORY_CSS_CLASSES[category]);
+    } else {
       classes.push('expression-message--default');
     }
 

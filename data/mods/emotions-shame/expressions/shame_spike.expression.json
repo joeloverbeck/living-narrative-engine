@@ -154,11 +154,6 @@
     "auditory": "I hear a small, strangled sound-half laugh, half choke-followed by a sudden silence, like someone swallowed the rest of their sentence.",
     "tactile": "A body pulls inward; the air feels tighter, as if someone's trying to occupy less space without moving."
   },
-  "tags": [
-    "shame",
-    "embarrassment",
-    "acute",
-    "avoidance"
-  ],
+  "category": "shame",
   "diagnosticStatus": "unknown"
 }

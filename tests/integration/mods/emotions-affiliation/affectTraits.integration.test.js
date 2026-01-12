@@ -2,10 +2,9 @@
  * @file Integration tests for affect traits with emotions-affiliation expressions.
  * Tests the complete pipeline: expression file loading → JSON Logic evaluation with emotion contexts.
  *
- * Note: Unit tests for sociopath scenario, WitnessState trait support, emotion prototype gates,
+ * Note: Unit tests for sociopath scenario, emotion prototype gates,
  * and serialization are already covered in:
  * - tests/unit/emotions/emotionCalculatorService.affectTraits.test.js
- * - tests/unit/expressionDiagnostics/models/WitnessState.test.js
  * - tests/unit/mods/core/lookups/emotionPrototypes.lookup.test.js
  */
 

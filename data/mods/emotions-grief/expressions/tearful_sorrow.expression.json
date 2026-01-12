@@ -228,11 +228,6 @@
         "auditory": "I hear a breath snag nearby-then a careful attempt to steady it, the thin sound of someone losing that battle.",
         "tactile": "Someone is trembling-small, involuntary shakes that travel through their posture as if they're trying to hold themselves together from the inside."
     },
-    "tags": [
-        "sadness",
-        "crying",
-        "sorrow",
-        "tears"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

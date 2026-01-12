@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
 import FailureExplainer from '../../../src/expressionDiagnostics/services/FailureExplainer.js';
+import RandomStateGenerator from '../../../src/expressionDiagnostics/services/RandomStateGenerator.js';
 import EmotionCalculatorAdapter from '../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import EmotionCalculatorService from '../../../src/emotions/emotionCalculatorService.js';
 
@@ -85,10 +86,15 @@ describe('Hierarchical Blockers Integration', () => {
       mockLogger
     );
 
+    const randomStateGenerator = new RandomStateGenerator({
+      logger: mockLogger,
+    });
+
     simulator = new MonteCarloSimulator({
       logger: mockLogger,
       dataRegistry: mockDataRegistry,
       emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+      randomStateGenerator,
     });
 
     explainer = new FailureExplainer({
@@ -559,6 +565,48 @@ describe('Hierarchical Blockers Integration', () => {
       // Verify deepest level has stats
       const deepestAnd = breakdown.children[0].children[0];
       expect(deepestAnd.children[0].evaluationCount).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Regime-Aware Metrics', () => {
+    const regimeExpression = {
+      id: 'test:regime_metrics',
+      description: 'Expression with mood regime constraints',
+      prerequisites: [
+        {
+          logic: {
+            and: [
+              { '>=': [{ var: 'moodAxes.valence' }, 0] },
+              { '>=': [{ var: 'emotions.joy' }, 0.2] },
+            ],
+          },
+        },
+      ],
+    };
+
+    it('should track in-regime stats and tuning direction for leaf clauses', async () => {
+      const result = await simulator.simulate(regimeExpression, { sampleCount: 1000 });
+
+      const breakdown = result.clauseFailures[0].hierarchicalBreakdown;
+      const joyLeaf = breakdown.children.find(
+        (child) => child.variablePath === 'emotions.joy'
+      );
+
+      expect(joyLeaf).toBeDefined();
+      expect(joyLeaf.inRegimeEvaluationCount).toBeGreaterThan(0);
+      expect(typeof joyLeaf.inRegimeFailureRate).toBe('number');
+      expect(joyLeaf.inRegimeFailureRate).toBeGreaterThanOrEqual(0);
+      expect(joyLeaf.inRegimeFailureRate).toBeLessThanOrEqual(1);
+      expect(Number.isFinite(joyLeaf.inRegimeMinObservedValue)).toBe(true);
+      expect(Number.isFinite(joyLeaf.inRegimeMaxObservedValue)).toBe(true);
+      expect(joyLeaf.inRegimeMinObservedValue).toBeLessThanOrEqual(
+        joyLeaf.inRegimeMaxObservedValue
+      );
+      expect(joyLeaf.redundantInRegime).toBe(false);
+      expect(joyLeaf.tuningDirection).toEqual({
+        loosen: 'threshold_down',
+        tighten: 'threshold_up',
+      });
     });
   });
 });

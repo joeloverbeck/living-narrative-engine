@@ -162,11 +162,6 @@
     "alternate_descriptions": {
         "olfactory": "I smell little sign of stress-sweat; mostly steady breath and warmed skin, the air feeling \"ready\" rather than strained."
     },
-    "tags": [
-        "positive",
-        "confidence",
-        "composure",
-        "control"
-    ],
+    "category": "agency",
     "diagnosticStatus": "unknown"
 }

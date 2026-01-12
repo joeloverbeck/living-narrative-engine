@@ -11,4 +11,3 @@ export { default as GateConstraint, VALID_OPERATORS } from './GateConstraint.js'
 export { default as DiagnosticResult } from './DiagnosticResult.js';
 export { default as KnifeEdge } from './KnifeEdge.js';
 export { default as PathSensitiveResult } from './PathSensitiveResult.js';
-export { default as WitnessState } from './WitnessState.js';

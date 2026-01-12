@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
 import EmotionCalculatorAdapter from '../../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import EmotionCalculatorService from '../../../../src/emotions/emotionCalculatorService.js';
+import RandomStateGenerator from '../../../../src/expressionDiagnostics/services/RandomStateGenerator.js';
 
 const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
   new EmotionCalculatorAdapter({
@@ -21,6 +22,7 @@ describe('MonteCarloSimulator', () => {
   let mockLogger;
   let mockDataRegistry;
   let mockEmotionCalculatorAdapter;
+  let randomStateGenerator;
 
   // Mock emotion prototypes matching real data structure
   const mockEmotionPrototypes = {
@@ -44,6 +46,10 @@ describe('MonteCarloSimulator', () => {
       calm: {
         weights: { valence: 0.2, arousal: -1.0 },
         gates: ['threat <= 0.20'],
+      },
+      melancholy: {
+        weights: { valence: -1.0 },
+        gates: ['valence <= -0.50'],
       },
     },
   };
@@ -88,6 +94,7 @@ describe('MonteCarloSimulator', () => {
       mockDataRegistry,
       mockLogger
     );
+    randomStateGenerator = new RandomStateGenerator({ logger: mockLogger });
   });
 
   describe('Constructor', () => {
@@ -96,6 +103,7 @@ describe('MonteCarloSimulator', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
       expect(simulator).toBeInstanceOf(MonteCarloSimulator);
     });
@@ -106,6 +114,7 @@ describe('MonteCarloSimulator', () => {
           new MonteCarloSimulator({
             logger: mockLogger,
             emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+            randomStateGenerator,
           })
       ).toThrow();
     });
@@ -116,6 +125,7 @@ describe('MonteCarloSimulator', () => {
           new MonteCarloSimulator({
             dataRegistry: mockDataRegistry,
             emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+            randomStateGenerator,
           })
       ).toThrow();
     });
@@ -127,6 +137,7 @@ describe('MonteCarloSimulator', () => {
             dataRegistry: {},
             logger: mockLogger,
             emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+            randomStateGenerator,
           })
       ).toThrow();
     });
@@ -137,6 +148,7 @@ describe('MonteCarloSimulator', () => {
           new MonteCarloSimulator({
             dataRegistry: mockDataRegistry,
             logger: mockLogger,
+            randomStateGenerator,
           })
       ).toThrow();
     });
@@ -150,6 +162,18 @@ describe('MonteCarloSimulator', () => {
             emotionCalculatorAdapter: {
               calculateEmotions: jest.fn(),
             },
+            randomStateGenerator,
+          })
+      ).toThrow();
+    });
+
+    it('should throw if randomStateGenerator is missing', () => {
+      expect(
+        () =>
+          new MonteCarloSimulator({
+            dataRegistry: mockDataRegistry,
+            logger: mockLogger,
+            emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
           })
       ).toThrow();
     });
@@ -163,6 +187,7 @@ describe('MonteCarloSimulator', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
     });
 
@@ -215,6 +240,84 @@ describe('MonteCarloSimulator', () => {
         );
       });
 
+      it('should reuse the prebuilt context for clause analysis', async () => {
+        const localAdapter = {
+          calculateEmotions: jest.fn(() => ({})),
+          calculateEmotionsFiltered: jest.fn(() => ({})),
+          calculateSexualArousal: jest.fn(() => 0),
+          calculateSexualStates: jest.fn(() => ({})),
+        };
+        const localRandomStateGenerator = {
+          generate: jest.fn(() => ({
+            current: { mood: { valence: 0 }, sexual: {} },
+            previous: { mood: { valence: 0 }, sexual: {} },
+            affectTraits: null,
+          })),
+        };
+        const localSimulator = new MonteCarloSimulator({
+          dataRegistry: { get: jest.fn() },
+          logger: mockLogger,
+          emotionCalculatorAdapter: localAdapter,
+          randomStateGenerator: localRandomStateGenerator,
+        });
+        const expression = {
+          id: 'test:context_reuse',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'moodAxes.valence' }, 9999] },
+            },
+          ],
+        };
+
+        await localSimulator.simulate(expression, {
+          sampleCount: 1,
+          validateVarPaths: false,
+        });
+
+        expect(localAdapter.calculateEmotionsFiltered).toHaveBeenCalledTimes(2);
+        expect(localAdapter.calculateSexualArousal).toHaveBeenCalledTimes(2);
+        expect(localAdapter.calculateSexualStates).toHaveBeenCalledTimes(2);
+      });
+
+      it('should pass referenced emotion filters into context building', async () => {
+        const localAdapter = {
+          calculateEmotions: jest.fn(() => ({})),
+          calculateEmotionsFiltered: jest.fn(() => ({})),
+          calculateSexualArousal: jest.fn(() => 0),
+          calculateSexualStates: jest.fn(() => ({})),
+        };
+        const localRandomStateGenerator = {
+          generate: jest.fn(() => ({
+            current: { mood: { valence: 0 }, sexual: {} },
+            previous: { mood: { valence: 0 }, sexual: {} },
+            affectTraits: null,
+          })),
+        };
+        const localSimulator = new MonteCarloSimulator({
+          dataRegistry: { get: jest.fn() },
+          logger: mockLogger,
+          emotionCalculatorAdapter: localAdapter,
+          randomStateGenerator: localRandomStateGenerator,
+        });
+        const expression = {
+          id: 'test:filter',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+          ],
+        };
+
+        await localSimulator.simulate(expression, {
+          sampleCount: 1,
+          validateVarPaths: false,
+        });
+
+        const [[, , , emotionFilter]] =
+          localAdapter.calculateEmotionsFiltered.mock.calls;
+        expect(emotionFilter).toEqual(new Set(['joy']));
+      });
+
       it('should return distribution type in result', async () => {
         const expression = { id: 'test:dist', prerequisites: [] };
 
@@ -229,6 +332,62 @@ describe('MonteCarloSimulator', () => {
 
         expect(uniformResult.distribution).toBe('uniform');
         expect(gaussianResult.distribution).toBe('gaussian');
+      });
+    });
+
+    describe('Sampling coverage', () => {
+      it('should include samplingCoverage when enabled and variables are in scope', async () => {
+        const expression = {
+          id: 'test:sampling_coverage',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'moodAxes.valence' }, 10] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 25 });
+
+        expect(result.samplingCoverage).toBeDefined();
+        expect(result.samplingCoverage.config.binCount).toBe(10);
+        const variable = result.samplingCoverage.variables.find(
+          (entry) => entry.variablePath === 'moodAxes.valence'
+        );
+        expect(variable).toBeDefined();
+        expect(variable.sampleCount).toBe(25);
+      });
+
+      it('should omit samplingCoverage when disabled', async () => {
+        const expression = {
+          id: 'test:sampling_disabled',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 10,
+          samplingCoverageConfig: { enabled: false },
+        });
+
+        expect(result.samplingCoverage).toBeUndefined();
+      });
+
+      it('should omit samplingCoverage when no in-scope numeric variables are referenced', async () => {
+        const expression = {
+          id: 'test:sampling_no_numeric',
+          prerequisites: [
+            {
+              logic: { '>=': [{ var: 'affectTraits.affective_empathy' }, 80] },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 10 });
+
+        expect(result.samplingCoverage).toBeUndefined();
       });
     });
 
@@ -1814,6 +1973,7 @@ describe('MonteCarloSimulator', () => {
               emptyRegistry,
               mockLogger
             ),
+            randomStateGenerator,
           });
 
           const expression = {
@@ -2150,6 +2310,80 @@ describe('MonteCarloSimulator', () => {
 
         // No numeric extraction possible
         expect(tree.maxObservedValue).toBeNull();
+      });
+    });
+
+    describe('Regime-aware metrics', () => {
+      it('should include in-regime rates and ranges for leaf clauses', async () => {
+        const expression = {
+          id: 'test:in-regime-metrics',
+          prerequisites: [
+            { logic: { '>=': [{ var: 'moodAxes.valence' }, 50] } },
+            { logic: { '>=': [{ var: 'emotions.joy' }, 0.3] } },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 200,
+        });
+
+        const joyClause = result.clauseFailures.find((clause) =>
+          clause.clauseDescription.includes('emotions.joy')
+        );
+
+        expect(joyClause.inRegimeFailureRate).not.toBeNull();
+        expect(joyClause.inRegimePassRate).not.toBeNull();
+        expect(joyClause.achievableRange).not.toBeNull();
+        expect(joyClause.inRegimeAchievableRange).not.toBeNull();
+      });
+
+      it('should mark redundant clauses in-regime based on achievable range', async () => {
+        const expression = {
+          id: 'test:redundant-in-regime',
+          prerequisites: [
+            { logic: { '<=': [{ var: 'moodAxes.threat' }, -50] } },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 200,
+        });
+
+        const clause = result.clauseFailures[0];
+        expect(clause.redundantInRegime).toBe(true);
+        expect(clause.inRegimeAchievableRange.max).toBeLessThanOrEqual(-50);
+      });
+
+      it('should include tuning direction labels from operators', async () => {
+        const expression = {
+          id: 'test:tuning-direction',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 50 });
+        const clause = result.clauseFailures[0];
+
+        expect(clause.tuningDirection).toEqual({
+          loosen: 'threshold_down',
+          tighten: 'threshold_up',
+        });
+      });
+
+      it('should report gate compatibility against mood regime constraints', async () => {
+        const expression = {
+          id: 'test:gate-compatibility',
+          prerequisites: [
+            { logic: { '>=': [{ var: 'moodAxes.valence' }, 50] } },
+            { logic: { '>=': [{ var: 'emotions.melancholy' }, 0.2] } },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, { sampleCount: 50 });
+
+        expect(result.gateCompatibility.emotions.melancholy.compatible).toBe(false);
+        expect(result.gateCompatibility.emotions.melancholy.reason).toContain(
+          'gate'
+        );
       });
     });
 

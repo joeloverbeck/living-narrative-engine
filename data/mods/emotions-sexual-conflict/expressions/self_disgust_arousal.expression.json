@@ -201,14 +201,6 @@
     "tactile": "I sense that someone's body is hot and stiff at once-tension layered over heat, trembling held down like it's shameful to move.",
     "olfactory": "I smell warm sweat with a sour, stressed edge-heat and discomfort mixed, like the air itself has turned sharp."
   },
-  "tags": [
-    "sexual",
-    "conflict",
-    "disgust",
-    "revulsion",
-    "arousal",
-    "shame",
-    "anger"
-  ],
+  "category": "shame",
   "diagnosticStatus": "unknown"
 }

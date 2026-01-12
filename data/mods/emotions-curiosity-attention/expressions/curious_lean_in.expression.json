@@ -166,12 +166,6 @@
         "tactile": "I sense a subtle forward pressure, restless micro-movements, the sense of attention crowding the space.",
         "olfactory": "I smell warm skin, fabric, and clean breath; the faint, ordinary scent of someone awake and engaged."
     },
-    "tags": [
-        "engagement",
-        "curiosity",
-        "approach",
-        "inquiry",
-        "observable"
-    ],
+    "category": "attention",
     "diagnosticStatus": "unknown"
 }

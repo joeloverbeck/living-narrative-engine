@@ -294,12 +294,6 @@
         "auditory": "I hear a voice tighten into clarity—firm, low, and decisive. There's less volume than weight; each sentence lands like a rule.",
         "tactile": "The space feels bracketed, as if someone just put their body between harm and what matters. The air gets dense with focus—protective pressure rather than chaos."
     },
-    "tags": [
-        "anger",
-        "protective",
-        "affiliative",
-        "boundary",
-        "focused"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

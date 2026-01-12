@@ -234,12 +234,6 @@
         "auditory": "I hear clipped pacing, a pause that feels like restraint being held in the throat.",
         "tactile": "The air feels prickly-restless heat and tension, like someone is bracing and trying not to show it."
     },
-    "tags": [
-        "jealousy",
-        "envy",
-        "possessive",
-        "social",
-        "tension"
-    ],
+    "category": "desire",
     "diagnosticStatus": "unknown"
 }

@@ -18,6 +18,8 @@ Code is modern ES modules with TypeScript-friendly typings; favor descriptive fo
 
 Jest powers every suite. Use `npm run test:unit` for component and utility coverage, `npm run test:integration` + `test:integration:build` to verify bundle wiring, `npm run test:e2e` for narrative flows, and `npm run test:performance` / `test:memory` for regressions uncovered during profiling. `npm run test:ci` runs validation, type-checks, and the primary suites—treat it as the pre-push gate. Keep snapshots under `tests/__snapshots__` accurate, prefer deterministic fixtures, and mirror file names (`foo.test.js`) with the modules they exercise.
 
+Note: when running subset Jest runs, use `--testPathPatterns` (not `--testPathPattern`) and ignore coverage thresholds (e.g., add `--coverage=false`) to avoid global coverage failures.
+
 ## Commit & Pull Request Guidelines
 
 Commits follow short, imperative summaries (see `git log` entries like "Fixing many tests."). Reference related tickets or PR numbers in the body, include rationale for gameplay-affecting changes, and land schema edits alongside the scripts or data they require. PRs should describe scope, mention new commands or config keys, attach UI screenshots when relevant, and link validation/test logs (paste `npm run test:ci` output or attach coverage deltas).

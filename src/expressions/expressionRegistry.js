@@ -16,8 +16,6 @@ class ExpressionRegistry extends BaseService {
   #logger;
   /** @type {Map<string, object> | null} */
   #expressionCache;
-  /** @type {Map<string, Set<string>> | null} */
-  #tagIndex;
   /** @type {object[] | null} */
   #priorityCache;
 
@@ -35,7 +33,6 @@ class ExpressionRegistry extends BaseService {
 
     this.#dataRegistry = dataRegistry;
     this.#expressionCache = null;
-    this.#tagIndex = null;
     this.#priorityCache = null;
   }
 
@@ -66,35 +63,6 @@ class ExpressionRegistry extends BaseService {
   }
 
   /**
-   * Get expressions by tag for pre-filtering.
-   *
-   * @param {string} tag
-   * @returns {object[]}
-   */
-  getExpressionsByTag(tag) {
-    this.#ensureCache();
-
-    if (typeof tag !== 'string' || tag.trim() === '') {
-      return [];
-    }
-
-    const ids = this.#tagIndex?.get(tag);
-    if (!ids || ids.size === 0) {
-      return [];
-    }
-
-    const expressions = [];
-    for (const id of ids) {
-      const expression = this.#expressionCache?.get(id);
-      if (expression) {
-        expressions.push(expression);
-      }
-    }
-
-    return expressions;
-  }
-
-  /**
    * Get expressions sorted by priority (descending).
    *
    * @returns {object[]}
@@ -117,7 +85,6 @@ class ExpressionRegistry extends BaseService {
       );
 
       this.#expressionCache = new Map();
-      this.#tagIndex = new Map();
       this.#priorityCache = [];
       return;
     }
@@ -138,38 +105,8 @@ class ExpressionRegistry extends BaseService {
     }
 
     this.#expressionCache = cache;
-    this.#buildTagIndex();
     this.#priorityCache = this.#buildPriorityList();
     this.#logger.info(`loaded ${this.#expressionCache.size} expressions`);
-  }
-
-  /**
-   * Build/rebuild tag index for efficient filtering.
-   */
-  #buildTagIndex() {
-    const tagIndex = new Map();
-
-    for (const expression of this.#expressionCache?.values() ?? []) {
-      const tags = expression?.tags;
-      if (!Array.isArray(tags) || tags.length === 0) {
-        continue;
-      }
-
-      for (const tag of tags) {
-        if (typeof tag !== 'string' || tag.trim() === '') {
-          continue;
-        }
-
-        let tagSet = tagIndex.get(tag);
-        if (!tagSet) {
-          tagSet = new Set();
-          tagIndex.set(tag, tagSet);
-        }
-        tagSet.add(expression.id);
-      }
-    }
-
-    this.#tagIndex = tagIndex;
   }
 
   #buildPriorityList() {

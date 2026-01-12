@@ -159,10 +159,6 @@
     "alternate_descriptions": {
         "auditory": "Someone's breathing comes slow and blunt, like each inhale is negotiated. There's long silence where speech should be, and when sound happens it's small-an exhale, a swallowed sob, the creak of weight settling."
     },
-    "tags": [
-        "sadness",
-        "despair",
-        "hopelessness"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

@@ -207,13 +207,6 @@
     "tactile": "It feels like the air around them has thickened; momentum dies quickly, and even small movements seem heavy and damped.",
     "limited": "A subdued, checked-out quiet settles over them, with minimal movement and reduced responsiveness."
   },
-  "tags": [
-    "apathy",
-    "shutdown",
-    "withdrawal",
-    "low_energy",
-    "disengagement",
-    "flat_affect"
-  ],
+  "category": "shutdown",
   "diagnosticStatus": "unknown"
 }

@@ -83,14 +83,22 @@
       "default": "emotion.expression",
       "description": "The perception type for this expression event. Defaults to 'emotion.expression'. Must be registered in the perception type registry."
     },
-    "tags": {
-      "type": "array",
-      "description": "Optional tags for categorization and filtering (e.g., ['anger', 'intense', 'visible']).",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      },
-      "uniqueItems": true
+    "category": {
+      "type": "string",
+      "enum": [
+        "calm",
+        "joy",
+        "affection",
+        "desire",
+        "attention",
+        "threat",
+        "anger",
+        "loss",
+        "shame",
+        "shutdown",
+        "agency"
+      ],
+      "description": "Visual styling category for expression messages. Determines border color and background gradient in chat panel. Categories: calm (peaceful/grounded), joy (excitement/elevation), affection (bonding/warmth), desire (sexual/wanting), attention (curiosity/absorption), threat (fear/anxiety), anger (hostility/aversion), loss (grief/sadness), shame (guilt/embarrassment), shutdown (numbness/fatigue), agency (mastery/determination)."
     },
     "diagnosticStatus": {
       "type": "string",
@@ -98,6 +106,6 @@
       "description": "Diagnostic status determined by static analysis or Monte Carlo simulation. Absence means 'unknown'. This field is managed by the Expression Diagnostics tool."
     }
   },
-  "required": ["id", "description", "actor_description", "description_text"],
+  "required": ["id", "description", "actor_description", "description_text", "category"],
   "additionalProperties": false
 }

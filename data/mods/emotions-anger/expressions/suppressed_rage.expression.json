@@ -189,11 +189,6 @@
         "auditory": "I hear a hard swallow, breath measured through the nose, and the faint grind of teeth-silence with pressure behind it, like a door being held shut.",
         "tactile": "The air feels charged. A body is rigid with restraint-heat, tension, and tiny tremors contained under stillness."
     },
-    "tags": [
-        "anger",
-        "suppression",
-        "restraint",
-        "trapped"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

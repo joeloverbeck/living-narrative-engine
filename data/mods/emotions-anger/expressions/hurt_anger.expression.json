@@ -289,13 +289,6 @@
         "auditory": "I hear a voice catch at the edges—sharp consonants with a tremor beneath them. The rhythm suggests restraint failing in small bursts: a hard question, a tight pause, a quieter admission buried inside anger.",
         "tactile": "The air feels raw—like there's exposed nerve in the room. It's anger with tenderness still attached, making every word feel more personal and more risky."
     },
-    "tags": [
-        "anger",
-        "hurt",
-        "affiliative",
-        "rejection",
-        "betrayal",
-        "vulnerability"
-    ],
+    "category": "anger",
     "diagnosticStatus": "impossible"
 }

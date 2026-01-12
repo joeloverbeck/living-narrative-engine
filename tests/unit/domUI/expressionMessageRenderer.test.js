@@ -221,7 +221,7 @@ describe('ExpressionMessageRenderer', () => {
   });
 
   describe('CSS Class Building', () => {
-    it('should apply base and modifier classes for known tags', async () => {
+    it('should apply base and category modifier classes for known category', async () => {
       createRenderer();
 
       const mockLiElement = {
@@ -235,7 +235,7 @@ describe('ExpressionMessageRenderer', () => {
         payload: {
           perceptionType: 'emotion.expression',
           descriptionText: 'Anger rises.',
-          contextualData: { tags: ['anger'] },
+          contextualData: { category: 'anger' },
         },
       });
 
@@ -249,59 +249,52 @@ describe('ExpressionMessageRenderer', () => {
       );
     });
 
-    it('should handle case-insensitive tag matching', async () => {
-      createRenderer();
+    it('should apply correct modifier for each category', async () => {
+      const categories = [
+        'calm',
+        'joy',
+        'affection',
+        'desire',
+        'attention',
+        'threat',
+        'anger',
+        'loss',
+        'shame',
+        'shutdown',
+        'agency',
+      ];
 
-      const mockLiElement = {
-        textContent: '',
-        classList: { add: jest.fn() },
-      };
-      mockDomElementFactory.li.mockReturnValue(mockLiElement);
+      for (const category of categories) {
+        jest.clearAllMocks();
+        createRenderer();
 
-      const handler = eventListeners['core:perceptible_event'];
-      handler({
-        payload: {
-          perceptionType: 'emotion.expression',
-          descriptionText: 'Warmth settles in.',
-          contextualData: { tags: ['LOVE'] },
-        },
-      });
+        const mockLiElement = {
+          textContent: '',
+          classList: { add: jest.fn() },
+        };
+        mockDomElementFactory.li.mockReturnValue(mockLiElement);
 
-      await Promise.resolve();
+        const handler = eventListeners['core:perceptible_event'];
+        handler({
+          payload: {
+            perceptionType: 'emotion.expression',
+            descriptionText: `Testing ${category}.`,
+            contextualData: { category },
+          },
+        });
 
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
-        'expression-message--affection'
-      );
+        await Promise.resolve();
+
+        expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+          'expression-message'
+        );
+        expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+          `expression-message--${category}`
+        );
+      }
     });
 
-    it('should deduplicate modifier classes when multiple tags match', async () => {
-      createRenderer();
-
-      const mockLiElement = {
-        textContent: '',
-        classList: { add: jest.fn() },
-      };
-      mockDomElementFactory.li.mockReturnValue(mockLiElement);
-
-      const handler = eventListeners['core:perceptible_event'];
-      handler({
-        payload: {
-          perceptionType: 'emotion.expression',
-          descriptionText: 'Rage builds.',
-          contextualData: { tags: ['anger', 'rage'] },
-        },
-      });
-
-      await Promise.resolve();
-
-      const calls = mockLiElement.classList.add.mock.calls.flat();
-      const modifierCalls = calls.filter(
-        (call) => call === 'expression-message--anger'
-      );
-      expect(modifierCalls).toHaveLength(1);
-    });
-
-    it('should apply default modifier when no tags match', async () => {
+    it('should apply default modifier when category is unknown', async () => {
       createRenderer();
 
       const mockLiElement = {
@@ -315,7 +308,7 @@ describe('ExpressionMessageRenderer', () => {
         payload: {
           perceptionType: 'emotion.expression',
           descriptionText: 'An unreadable feeling passes.',
-          contextualData: { tags: ['unknown'] },
+          contextualData: { category: 'unknown_category' },
         },
       });
 
@@ -326,7 +319,7 @@ describe('ExpressionMessageRenderer', () => {
       );
     });
 
-    it('should apply default modifier when tags are absent', async () => {
+    it('should apply default modifier when category is absent', async () => {
       createRenderer();
 
       const mockLiElement = {
@@ -350,7 +343,7 @@ describe('ExpressionMessageRenderer', () => {
       );
     });
 
-    it('should skip non-string tags in contextualData.tags', async () => {
+    it('should apply default modifier when contextualData is missing', async () => {
       createRenderer();
 
       const mockLiElement = {
@@ -363,26 +356,41 @@ describe('ExpressionMessageRenderer', () => {
       handler({
         payload: {
           perceptionType: 'emotion.expression',
-          descriptionText: 'Mixed tags with non-strings.',
-          contextualData: { tags: [null, 123, 'anger', undefined, {}, 'love'] },
+          descriptionText: 'No contextual data.',
+          contextualData: null,
         },
       });
 
       await Promise.resolve();
 
-      // Should have processed the valid string tags 'anger' and 'love'
       expect(mockLiElement.classList.add).toHaveBeenCalledWith(
-        'expression-message'
+        'expression-message--default'
       );
+    });
+
+    it('should apply default modifier when category is empty string', async () => {
+      createRenderer();
+
+      const mockLiElement = {
+        textContent: '',
+        classList: { add: jest.fn() },
+      };
+      mockDomElementFactory.li.mockReturnValue(mockLiElement);
+
+      const handler = eventListeners['core:perceptible_event'];
+      handler({
+        payload: {
+          perceptionType: 'emotion.expression',
+          descriptionText: 'Empty category string.',
+          contextualData: { category: '' },
+        },
+      });
+
+      await Promise.resolve();
+
       expect(mockLiElement.classList.add).toHaveBeenCalledWith(
-        'expression-message--anger'
+        'expression-message--default'
       );
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
-        'expression-message--affection'
-      );
-      // Should NOT have 'default' since valid modifiers were found
-      const calls = mockLiElement.classList.add.mock.calls.flat();
-      expect(calls).not.toContain('expression-message--default');
     });
   });
 

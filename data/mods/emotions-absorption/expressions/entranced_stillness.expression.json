@@ -234,13 +234,6 @@
         "auditory": "Their breathing stretches out-longer inhales, longer silences-small repeated motions landing with the same gentle cadence, like fidgeting has been switched off.",
         "olfactory": "A muted warmth hangs in the air-calm attention with the edges smoothed down, none of the sharp bite of stress or panic."
     },
-    "tags": [
-        "engagement",
-        "entrancement",
-        "stillness",
-        "captured_attention",
-        "reduced_agency",
-        "trance_like"
-    ],
+    "category": "attention",
     "diagnosticStatus": "unknown"
 }

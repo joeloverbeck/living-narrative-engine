@@ -8,8 +8,10 @@ import {
   advancedMetricsConfig,
   detectDomain,
   getEpsilonForVariable,
+  getTunableVariableInfo,
   isAdvancedMetricsEnabled,
   isMetricEnabled,
+  isTunableVariable,
 } from '../../../../src/expressionDiagnostics/config/advancedMetricsConfig.js';
 
 describe('advancedMetricsConfig', () => {
@@ -24,6 +26,7 @@ describe('advancedMetricsConfig', () => {
       expect(detectDomain('mood.valence')).toBe('moodAxes');
       expect(detectDomain('mood.energy')).toBe('moodAxes');
       expect(detectDomain('mood.dominance')).toBe('moodAxes');
+      expect(detectDomain('moodAxes.valence')).toBe('moodAxes');
     });
 
     it('should detect sexual states domain', () => {
@@ -62,7 +65,9 @@ describe('advancedMetricsConfig', () => {
     it('should return correct epsilon for each domain', () => {
       expect(getEpsilonForVariable('emotions.joy')).toBe(0.05);
       expect(getEpsilonForVariable('mood.valence')).toBe(5);
-      expect(getEpsilonForVariable('sexualStates.arousal')).toBe(5);
+      expect(getEpsilonForVariable('moodAxes.valence')).toBe(5);
+      expect(getEpsilonForVariable('sexualStates.arousal')).toBe(0.05);
+      expect(getEpsilonForVariable('sexualArousal')).toBe(0.05);
       expect(getEpsilonForVariable('traits.openness')).toBe(0.1);
     });
 
@@ -74,6 +79,49 @@ describe('advancedMetricsConfig', () => {
       expect(getEpsilonForVariable(null)).toBe(0.05);
       expect(getEpsilonForVariable(undefined)).toBe(0.05);
       expect(getEpsilonForVariable('')).toBe(0.05);
+    });
+
+    it('should use appropriate epsilon for sexualStates 0-1 range', () => {
+      // sexualStates are calculated weighted sums in [0, 1] range
+      // Epsilon should be ~5% of range (0.05), NOT 5 (which is 5x the entire range)
+      const epsilon = getEpsilonForVariable(
+        'sexualStates.sexual_performance_anxiety'
+      );
+      expect(epsilon).toBeLessThan(1); // Must be < 1 since max value is 1
+      expect(epsilon).toBe(0.05); // 5% of [0, 1] range
+    });
+  });
+
+  describe('tunable variable helpers', () => {
+    it('should detect tunable variables across domains', () => {
+      expect(isTunableVariable('emotions.joy')).toBe(true);
+      expect(isTunableVariable('sexualStates.arousal')).toBe(true);
+      expect(isTunableVariable('sexual.arousal')).toBe(true);
+      expect(isTunableVariable('moodAxes.valence')).toBe(true);
+      expect(isTunableVariable('traits.openness')).toBe(true);
+      expect(isTunableVariable('affectTraits.harm_aversion')).toBe(true);
+      expect(isTunableVariable('sexualArousal')).toBe(true);
+      expect(isTunableVariable('previousSexualArousal')).toBe(true);
+    });
+
+    it('should return false for non-tunable variables', () => {
+      expect(isTunableVariable('unknown.variable')).toBe(false);
+      expect(isTunableVariable('moodAxes')).toBe(false);
+      expect(isTunableVariable('')).toBe(false);
+      expect(isTunableVariable(null)).toBe(false);
+    });
+
+    it('should return metadata for scalar paths', () => {
+      expect(getTunableVariableInfo('sexualArousal')).toEqual({
+        domain: 'sexualArousal',
+        isScalar: true,
+        name: 'sexualArousal',
+      });
+      expect(getTunableVariableInfo('previousSexualArousal')).toEqual({
+        domain: 'previousSexualArousal',
+        isScalar: true,
+        name: 'previousSexualArousal',
+      });
     });
   });
 

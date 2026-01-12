@@ -9,8 +9,13 @@
   "content": {
     "expressions": [
       "attachment_swell.expression.json",
+      "camaraderie_click.expression.json",
       "compassionate_concern.expression.json",
       "lonely_isolation.expression.json",
+      "lonely_reach_out.expression.json",
+      "lonely_yearning_reach.expression.json",
+      "quiet_gratitude.expression.json",
+      "steady_sympathy.expression.json",
       "tearful_gratitude.expression.json",
       "warm_affection.expression.json"
     ]

@@ -1,149 +1,141 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-aftershock:adrenaline_aftershock",
-  "description": "Adrenaline aftershock: the body comes down from a threat surge--shaking, breathy laughter, or sudden tears--while danger appraisal drops but arousal lags behind.",
-  "priority": 79,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "previousEmotions.stress"
-                  },
-                  0.6
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-aftershock:adrenaline_aftershock",
+    "description": "Adrenaline aftershock: the body comes down from a threat surge--shaking, breathy laughter, or sudden tears--while danger appraisal drops but arousal lags behind.",
+    "priority": 79,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.stress"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.fear"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.alarm"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            18
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "previousMoodAxes.threat"
+                                    },
+                                    {
+                                        "var": "moodAxes.threat"
+                                    }
+                                ]
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.relief"
+                                            },
+                                            {
+                                                "var": "previousEmotions.relief"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            },
+                                            {
+                                                "var": "moodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    22
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "previousEmotions.fear"
-                  },
-                  0.55
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "previousEmotions.alarm"
-                  },
-                  0.55
-                ]
-              }
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              18
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              25
-            ]
-          },
-          {
-            ">=": [
-              {
-                "-": [
-                  {
-                    "var": "previousMoodAxes.threat"
-                  },
-                  {
-                    "var": "moodAxes.threat"
-                  }
-                ]
-              },
-              15
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.4
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.dissociation"
-              },
-              0.45
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.relief"
-                      },
-                      {
-                        "var": "previousEmotions.relief"
-                      }
-                    ]
-                  },
-                  0.1
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "previousMoodAxes.threat"
-                      },
-                      {
-                        "var": "moodAxes.threat"
-                      }
-                    ]
-                  },
-                  22
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires a recent high-threat activation signature (prior stress/fear/alarm), with arousal still up while threat drops sharply. Blocks panic/freeze/dissociation so it reads as comedown, not hijack or shutdown. Triggers only on a relief spike or a big threat drop to prevent spam."
-    }
-  ],
-  "actor_description": "My body is still running hard even though the danger feeling is already slipping away. I start shaking--hands, knees, breath--like the leftover charge has nowhere to go. A laugh tries to break out, or tears do, and it's not even about sadness; it's my nervous system dumping. I feel wrung out and weirdly light at the same time, like I'm arriving back in my own skin.",
-  "description_text": "{actor} comes apart in small, human ways--shaky hands, unsteady breath, a sudden laugh that borders on a sob. Their posture loosens as if the threat has passed, but their body keeps vibrating with leftover adrenaline.",
-  "alternate_descriptions": {
-    "auditory": "Breath turns uneven--half laugh, half exhale--punctuated by small, involuntary sounds like a broken chuckle or a wet sniff.",
-    "tactile": "A fine tremor runs through {actor}'s limbs; muscles flutter and release in waves, like tension letting go in installments.",
-    "limited": "{actor} visibly shakes as they try to steady themselves, letting out a thin laugh or a choked breath."
-  },
-  "tags": [
-    "aftershock",
-    "adrenaline",
-    "comedown",
-    "shaking",
-    "relief",
-    "mixed_valence",
-    "release",
-    "recovery"
-  ]
+            },
+            "failure_message": "Requires a recent high-threat activation signature (prior stress/fear/alarm), with arousal still up while threat drops sharply. Blocks panic/freeze/dissociation so it reads as comedown, not hijack or shutdown. Triggers only on a relief spike or a big threat drop to prevent spam."
+        }
+    ],
+    "actor_description": "My body is still running hard even though the danger feeling is already slipping away. I start shaking--hands, knees, breath--like the leftover charge has nowhere to go. A laugh tries to break out, or tears do, and it's not even about sadness; it's my nervous system dumping. I feel wrung out and weirdly light at the same time, like I'm arriving back in my own skin.",
+    "description_text": "{actor} comes apart in small, human ways--shaky hands, unsteady breath, a sudden laugh that borders on a sob. Their posture loosens as if the threat has passed, but their body keeps vibrating with leftover adrenaline.",
+    "alternate_descriptions": {
+        "auditory": "Breath turns uneven--half laugh, half exhale--punctuated by small, involuntary sounds like a broken chuckle or a wet sniff.",
+        "tactile": "A fine tremor runs through {actor}'s limbs; muscles flutter and release in waves, like tension letting go in installments.",
+        "limited": "{actor} visibly shakes as they try to steady themselves, letting out a thin laugh or a choked breath."
+    },
+    "category": "threat",
+    "diagnosticStatus": "unknown"
 }

@@ -15,7 +15,10 @@ import {
   jest,
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
+import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import MonteCarloReportGenerator from '../../../src/expressionDiagnostics/services/MonteCarloReportGenerator.js';
+import PrototypeConstraintAnalyzer from '../../../src/expressionDiagnostics/services/PrototypeConstraintAnalyzer.js';
+import PrototypeFitRankingService from '../../../src/expressionDiagnostics/services/PrototypeFitRankingService.js';
 import MonteCarloReportModal from '../../../src/domUI/expression-diagnostics/MonteCarloReportModal.js';
 
 // ============================================================================
@@ -93,6 +96,97 @@ function createTestBlocker(overrides = {}) {
     },
     ...overrides,
   };
+}
+
+/**
+ * Create a minimal emotion prototype lookup for integration tests.
+ *
+ * @returns {object} Lookup data with emotion prototypes
+ */
+function createPrototypeLookup() {
+  return {
+    id: 'core:emotion_prototypes',
+    entries: {
+      joy: {
+        weights: { valence: 1.0, arousal: 0.6 },
+        gates: ['valence >= 0.3'],
+      },
+      fear: {
+        weights: { valence: -0.8, arousal: 0.7, threat: 0.9 },
+        gates: ['threat >= 0.2'],
+      },
+    },
+  };
+}
+
+/**
+ * Create a data registry seeded with prototype lookups.
+ *
+ * @param {object} logger - Logger implementation
+ * @returns {InMemoryDataRegistry} Seeded registry
+ */
+function createPrototypeDataRegistry(logger) {
+  const registry = new InMemoryDataRegistry({ logger });
+  registry.store('lookups', 'core:emotion_prototypes', createPrototypeLookup());
+  return registry;
+}
+
+/**
+ * Create stored contexts for prototype fit analysis.
+ *
+ * @returns {Array<object>} Stored contexts
+ */
+function createPrototypeStoredContexts() {
+  return [
+    { moodAxes: { valence: 0.65, arousal: 0.5, threat: 0.1 } },
+    { moodAxes: { valence: 0.7, arousal: 0.6, threat: 0.25 } },
+    { moodAxes: { valence: 0.8, arousal: 0.7, threat: 0.4 } },
+    { moodAxes: { valence: -0.5, arousal: 0.6, threat: 0.6 } },
+  ];
+}
+
+/**
+ * Create prerequisites that constrain mood axes for prototype analysis.
+ *
+ * @returns {Array<object>} Prerequisites array
+ */
+function createPrototypePrerequisites() {
+  return [
+    {
+      logic: {
+        and: [
+          { '>=': [{ var: 'moodAxes.valence' }, 0.4] },
+          { '>=': [{ var: 'moodAxes.arousal' }, 0.3] },
+          { '<=': [{ var: 'moodAxes.threat' }, 0.6] },
+        ],
+      },
+    },
+  ];
+}
+
+/**
+ * Create a report generator wired for prototype analysis.
+ *
+ * @param {object} logger - Logger implementation
+ * @returns {MonteCarloReportGenerator} Configured report generator
+ */
+function createPrototypeReportGenerator(logger) {
+  const dataRegistry = createPrototypeDataRegistry(logger);
+  const prototypeConstraintAnalyzer = new PrototypeConstraintAnalyzer({
+    dataRegistry,
+    logger,
+  });
+  const prototypeFitRankingService = new PrototypeFitRankingService({
+    dataRegistry,
+    logger,
+    prototypeConstraintAnalyzer,
+  });
+
+  return new MonteCarloReportGenerator({
+    logger,
+    prototypeConstraintAnalyzer,
+    prototypeFitRankingService,
+  });
 }
 
 // ============================================================================
@@ -251,6 +345,202 @@ describe('Monte Carlo Report System - Integration', () => {
       expect(report).toContain('## Executive Summary');
       expect(report).toContain('## Blocker Analysis');
       expect(report).toContain('## Legend');
+    });
+
+    it('should render sampling coverage section when coverage data is present', () => {
+      const generator = new MonteCarloReportGenerator({ logger: mockLogger });
+      const result = createTestSimulationResult({
+        samplingMode: 'static',
+        samplingCoverage: {
+          summaryByDomain: [
+            {
+              domain: 'emotions',
+              variableCount: 1,
+              rangeCoverageAvg: 0.25,
+              binCoverageAvg: 0.2,
+              tailCoverageAvg: { low: 0.02, high: 0.01 },
+              rating: 'poor',
+            },
+          ],
+          variables: [
+            {
+              variablePath: 'emotions.fear',
+              domain: 'emotions',
+              rangeCoverage: 0.25,
+              binCoverage: 0.2,
+              tailCoverage: { low: 0.02, high: 0.01 },
+              rating: 'poor',
+              sampleCount: 10000,
+            },
+          ],
+          config: {
+            binCount: 10,
+            tailPercent: 0.1,
+          },
+        },
+      });
+
+      const report = generator.generate({
+        expressionName: 'test:expression',
+        simulationResult: result,
+        blockers: [],
+        summary: 'Test summary',
+      });
+
+      expect(report).toContain('## Sampling Coverage');
+      expect(report).toContain('**Sampling Mode**: static');
+      expect(report).toContain('emotions.fear');
+    });
+
+    it('should include in-regime fail rate formatting and redundancy in blocker output', () => {
+      const generator = new MonteCarloReportGenerator({ logger: mockLogger });
+      const result = createTestSimulationResult({ sampleCount: 10 });
+      const blockers = [
+        createTestBlocker({
+          failureRate: 0.4,
+          hierarchicalBreakdown: {
+            variablePath: 'emotions.joy',
+            comparisonOperator: '>=',
+            thresholdValue: 0.5,
+            inRegimeFailureRate: 0.5,
+            inRegimeFailureCount: 5,
+            inRegimeEvaluationCount: 10,
+            redundantInRegime: false,
+          },
+        }),
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test:expression',
+        simulationResult: result,
+        blockers,
+        summary: 'Test summary',
+      });
+
+      expect(report).toContain('**Fail% | mood-pass**: 50.00% (5 / 10)');
+      expect(report).toContain('**Redundant in regime**: no');
+    });
+  });
+
+  describe('Prototype Fit Analysis Integration', () => {
+    it('should include prototype fit section with ranked prototypes', () => {
+      const generator = createPrototypeReportGenerator(mockLogger);
+      const result = createTestSimulationResult({
+        storedContexts: createPrototypeStoredContexts(),
+      });
+
+      const report = generator.generate({
+        expressionName: 'test:prototype_fit',
+        simulationResult: result,
+        blockers: [],
+        summary: 'Prototype fit summary',
+        prerequisites: createPrototypePrerequisites(),
+      });
+
+      expect(report).toContain('Prototype Fit Analysis');
+      expect(report).toMatch(/\|\s*\d+\s*\|\s*\*\*joy\*\*/);
+      expect(report).toMatch(/\|\s*\d+\s*\|\s*\*\*fear\*\*/);
+    });
+
+    it('should render implied prototype and gap detection sections', () => {
+      const generator = createPrototypeReportGenerator(mockLogger);
+      const result = createTestSimulationResult({
+        storedContexts: createPrototypeStoredContexts(),
+      });
+
+      const report = generator.generate({
+        expressionName: 'test:prototype_gap',
+        simulationResult: result,
+        blockers: [],
+        summary: 'Prototype fit summary',
+        prerequisites: createPrototypePrerequisites(),
+      });
+
+      expect(report).toContain('Implied Prototype from Prerequisites');
+      expect(report).toContain('Target Signature');
+      expect(report).toContain('Prototype Gap Detection');
+      expect(report).toMatch(/Coverage Gap Detected|Good Coverage/);
+    });
+
+    it('should render feasibility block and regime stats in prototype math', () => {
+      const generator = createPrototypeReportGenerator(mockLogger);
+      const storedContexts = [
+        {
+          moodAxes: { valence: 0.65, arousal: 0.5, threat: 0.2 },
+          emotions: { joy: 0.6 },
+        },
+        {
+          moodAxes: { valence: 0.7, arousal: 0.6, threat: 0.4 },
+          emotions: { joy: 0.7 },
+        },
+        {
+          moodAxes: { valence: -0.2, arousal: 0.2, threat: 0.5 },
+          emotions: { joy: 0.0 },
+        },
+      ];
+      const result = createTestSimulationResult({ storedContexts });
+      const blockers = [
+        createTestBlocker({
+          clauseDescription: 'emotions.joy >= 0.5',
+          hierarchicalBreakdown: {
+            variablePath: 'emotions.joy',
+            comparisonOperator: '>=',
+            thresholdValue: 0.5,
+          },
+        }),
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test:regime',
+        simulationResult: result,
+        blockers,
+        summary: 'Prototype regime summary',
+        prerequisites: createPrototypePrerequisites(),
+      });
+
+      expect(report).toContain('**Feasibility (gated)**');
+      expect(report).toContain('**Achievable range**');
+      expect(report).toContain('**Regime Stats**');
+      expect(report).toContain('In mood regime');
+      expect(report).toContain('**Gate Compatibility (mood regime)**: N/A');
+    });
+
+    it('should include gate compatibility details only when provided', () => {
+      const generator = createPrototypeReportGenerator(mockLogger);
+      const result = createTestSimulationResult({
+        storedContexts: createPrototypeStoredContexts(),
+        gateCompatibility: {
+          emotions: {
+            joy: {
+              compatible: false,
+              reason: 'valence >= 0.9 conflicts with mood regime',
+            },
+          },
+          sexualStates: {},
+        },
+      });
+      const blockers = [
+        createTestBlocker({
+          clauseDescription: 'emotions.joy >= 0.5',
+          hierarchicalBreakdown: {
+            variablePath: 'emotions.joy',
+            comparisonOperator: '>=',
+            thresholdValue: 0.5,
+          },
+        }),
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test:gate_compat',
+        simulationResult: result,
+        blockers,
+        summary: 'Prototype gate summary',
+        prerequisites: createPrototypePrerequisites(),
+      });
+
+      expect(report).toContain(
+        '**Gate Compatibility (mood regime)**: ❌ incompatible - valence >= 0.9 conflicts with mood regime'
+      );
     });
   });
 

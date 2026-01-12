@@ -9,12 +9,14 @@
   "content": {
     "expressions": [
       "cold_fury.expression.json",
+      "cooling_down_regain_composure.expression.json",
       "explosive_anger.expression.json",
       "frustration_spiral.expression.json",
       "hurt_anger.expression.json",
       "mild_irritation.expression.json",
       "protective_anger.expression.json",
       "rage_surge.expression.json",
+      "righteous_indignation.expression.json",
       "suppressed_rage.expression.json"
     ]
   }

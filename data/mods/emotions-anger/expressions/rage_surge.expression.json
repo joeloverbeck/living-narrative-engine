@@ -115,11 +115,6 @@
     "alternate_descriptions": {
         "auditory": "I hear teeth grind and a breath pulled in like a hiss. If they speak, it's low and tight-words forced through a clenched throat."
     },
-    "tags": [
-        "rage",
-        "anger",
-        "explosive",
-        "acute"
-    ],
+    "category": "anger",
     "diagnosticStatus": "unknown"
 }

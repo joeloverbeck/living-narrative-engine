@@ -220,6 +220,235 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain(summaryText);
     });
 
+    it('should note global vs in-regime statistics in the header', () => {
+      const report = generator.generate({
+        expressionName: 'test:exp',
+        simulationResult: createMockSimulationResult(),
+        blockers: [],
+        summary: '',
+      });
+
+      expect(report).toContain('Regime Note');
+      expect(report).toContain('global vs in-regime');
+    });
+
+    it('should include sampling coverage section when coverage data is present', () => {
+      const samplingCoverage = {
+        summaryByDomain: [
+          {
+            domain: 'emotions',
+            variableCount: 2,
+            rangeCoverageAvg: 0.2,
+            binCoverageAvg: 0.1,
+            tailCoverageAvg: { low: 0.01, high: 0.02 },
+            rating: 'poor',
+          },
+          {
+            domain: 'moodAxes',
+            variableCount: 1,
+            rangeCoverageAvg: 0.8,
+            binCoverageAvg: 0.7,
+            tailCoverageAvg: { low: 0.1, high: 0.1 },
+            rating: 'good',
+          },
+        ],
+        variables: [
+          {
+            variablePath: 'emotions.anger',
+            domain: 'emotions',
+            rangeCoverage: 0.2,
+            binCoverage: 0.1,
+            tailCoverage: { low: 0.01, high: 0.02 },
+            rating: 'poor',
+            sampleCount: 10000,
+          },
+          {
+            variablePath: 'emotions.joy',
+            domain: 'emotions',
+            rangeCoverage: 0.3,
+            binCoverage: 0.2,
+            tailCoverage: { low: 0.02, high: 0.01 },
+            rating: 'partial',
+            sampleCount: 10000,
+          },
+          {
+            variablePath: 'moodAxes.valence',
+            domain: 'moodAxes',
+            rangeCoverage: 0.8,
+            binCoverage: 0.7,
+            tailCoverage: { low: 0.1, high: 0.1 },
+            rating: 'good',
+            sampleCount: 10000,
+          },
+        ],
+        config: {
+          binCount: 10,
+          tailPercent: 0.1,
+        },
+      };
+
+      const report = generator.generate({
+        expressionName: 'test:exp',
+        simulationResult: createMockSimulationResult({
+          samplingCoverage,
+          samplingMode: 'dynamic',
+        }),
+        blockers: [],
+        summary: 'Sampling coverage summary.',
+      });
+
+      expect(report).toContain('## Sampling Coverage');
+      expect(report).toContain('**Sampling Mode**: dynamic');
+      expect(report).toContain('### Summary by Domain');
+      expect(report).toContain('### Lowest Coverage Variables');
+      expect(report).toContain('### Coverage Conclusions');
+      expect(report).toContain('emotions.anger');
+      expect(report).toContain('Sampling coverage is low for emotions');
+      expect(report).toContain('Worst range coverage');
+
+      const conclusionsMatch = report.match(
+        /### Coverage Conclusions\n\n([\s\S]*?)\n\n---/
+      );
+      const conclusionsText = conclusionsMatch ? conclusionsMatch[1] : '';
+      const criticalIndex = conclusionsText.indexOf(
+        'observed range spans only'
+      );
+      const warnIndex = conclusionsText.indexOf('bin coverage is');
+      expect(criticalIndex).toBeGreaterThanOrEqual(0);
+      expect(warnIndex).toBeGreaterThanOrEqual(0);
+      expect(criticalIndex).toBeLessThan(warnIndex);
+    });
+
+    it('should omit coverage conclusions subsection when no conclusions are produced', () => {
+      const samplingCoverage = {
+        summaryByDomain: [
+          {
+            domain: 'emotions',
+            variableCount: 1,
+            rating: 'good',
+          },
+        ],
+        variables: [],
+        config: { tailPercent: 0.1 },
+      };
+
+      const report = generator.generate({
+        expressionName: 'test:exp',
+        simulationResult: createMockSimulationResult({
+          samplingCoverage,
+          samplingMode: 'uniform',
+        }),
+        blockers: [],
+        summary: 'Sampling coverage summary.',
+      });
+
+      expect(report).toContain('## Sampling Coverage');
+      expect(report).not.toContain('### Coverage Conclusions');
+    });
+
+    it('should not include variable names in coverage conclusions text', () => {
+      const samplingCoverage = {
+        summaryByDomain: [
+          {
+            domain: 'emotions',
+            variableCount: 1,
+            rangeCoverageAvg: 0.2,
+            binCoverageAvg: 0.1,
+            tailCoverageAvg: { low: 0.01, high: 0.02 },
+            rating: 'poor',
+          },
+        ],
+        variables: [
+          {
+            variablePath: 'emotions.anger',
+            domain: 'emotions',
+            rangeCoverage: 0.2,
+            binCoverage: 0.1,
+            tailCoverage: { low: 0.01, high: 0.02 },
+            rating: 'poor',
+            sampleCount: 10000,
+          },
+        ],
+        config: {
+          binCount: 10,
+          tailPercent: 0.1,
+        },
+      };
+
+      const report = generator.generate({
+        expressionName: 'test:exp',
+        simulationResult: createMockSimulationResult({
+          samplingCoverage,
+          samplingMode: 'dynamic',
+        }),
+        blockers: [],
+        summary: 'Sampling coverage summary.',
+      });
+
+      const conclusionsMatch = report.match(
+        /### Coverage Conclusions\n\n([\s\S]*?)\n\n---/
+      );
+      const conclusionsText = conclusionsMatch ? conclusionsMatch[1] : '';
+
+      expect(conclusionsText).not.toContain('emotions.anger');
+    });
+
+    it('should omit sampling coverage section when coverage data is missing', () => {
+      const report = generator.generate({
+        expressionName: 'test:exp',
+        simulationResult: createMockSimulationResult(),
+        blockers: [],
+        summary: 'No coverage.',
+      });
+
+      expect(report).not.toContain('## Sampling Coverage');
+    });
+
+    it('should use the clause operator in the prototype math header', () => {
+      const mockPrototypeConstraintAnalyzer = {
+        extractAxisConstraints: jest.fn(() => new Map()),
+        analyzeEmotionThreshold: jest.fn(() => ({
+          prototypeId: 'joy',
+          type: 'emotion',
+          threshold: 0.5,
+          maxAchievable: 0.7,
+          isReachable: true,
+          gap: -0.2,
+          weights: {},
+          gates: [],
+          gateStatus: { allSatisfiable: true, conflicts: [] },
+          bindingAxes: [],
+          axisAnalysis: [],
+          sumAbsWeights: 1,
+          requiredRawSum: 0.5,
+          explanation: 'Reachable with constraints.',
+        })),
+      };
+
+      const generatorWithAnalyzer = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeConstraintAnalyzer: mockPrototypeConstraintAnalyzer,
+      });
+
+      const report = generatorWithAnalyzer.generate({
+        expressionName: 'test:exp',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [
+          createMockBlocker({
+            hierarchicalBreakdown: {
+              variablePath: 'emotions.joy',
+              comparisonOperator: '<=',
+              thresholdValue: 0.5,
+            },
+          }),
+        ],
+        summary: '',
+        prerequisites: [],
+      });
+
+      expect(report).toContain('joy <= 0.50');
+    });
+
     it('should show default message when summary is empty', () => {
       const report = generator.generate({
         expressionName: 'test:exp',
@@ -1261,7 +1490,7 @@ describe('MonteCarloReportGenerator', () => {
         summary: '',
       });
 
-      expect(report).toContain('#### Last-Mile Analysis');
+      expect(report).toContain('#### Sole-Blocker Analysis');
       expect(report).toContain('65.00%');
       expect(report).toContain('3000');
       expect(report).toContain('yes');
@@ -1610,13 +1839,14 @@ describe('MonteCarloReportGenerator', () => {
       });
 
       expect(report).toContain('### Per-Clause Metrics');
-      expect(report).toContain('**Failure Rate**');
+      expect(report).toContain('**Fail% global**');
+      expect(report).toContain('**Fail% | mood-pass**');
       expect(report).toContain('**Violation Magnitude**');
       expect(report).toContain('**P50 (Median)**');
       expect(report).toContain('**P90 (90th Percentile)**');
       expect(report).toContain('**Near-Miss Rate**');
       expect(report).toContain('**Epsilon**');
-      expect(report).toContain('**Last-Mile Failure Rate**');
+      expect(report).toContain('**Sole-Blocker Rate (N)**');
       expect(report).toContain('**Ceiling Gap**');
     });
 
@@ -1893,6 +2123,62 @@ describe('MonteCarloReportGenerator', () => {
       // Section header should be present but no table
       expect(report).toContain('## Sensitivity Analysis');
       expect(report).not.toContain('emotions.anger >= [threshold]');
+    });
+  });
+
+  describe('Global Sensitivity Analysis', () => {
+    it('suppresses global sensitivity tables when baseline hits are low', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          grid: [
+            { threshold: 0.35, triggerRate: 0.0003, triggerCount: 3, sampleCount: 10000 },
+            { threshold: 0.40, triggerRate: 0.0004, triggerCount: 4, sampleCount: 10000 },
+          ],
+          isExpressionLevel: true,
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      expect(report).toContain('## Global Expression Sensitivity Analysis');
+      expect(report).toContain('Insufficient data');
+      expect(report).not.toContain('| Threshold | Trigger Rate | Change | Samples |');
+    });
+
+    it('renders global sensitivity tables when baseline hits are sufficient', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          grid: [
+            { threshold: 0.35, triggerRate: 0.001, triggerCount: 10, sampleCount: 10000 },
+            { threshold: 0.40, triggerRate: 0.001, triggerCount: 10, sampleCount: 10000 },
+          ],
+          isExpressionLevel: true,
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      expect(report).toContain('## Global Expression Sensitivity Analysis');
+      expect(report).toContain('| Threshold | Trigger Rate | Change | Samples |');
+      expect(report).not.toContain('Insufficient data');
     });
   });
 
@@ -2278,6 +2564,363 @@ describe('MonteCarloReportGenerator', () => {
         expect(report).toContain('emotions.anger >= [threshold]');
         expect(report).toContain('sexualStates.aroused >= [threshold]');
       });
+    });
+  });
+
+  describe('OR alternative coverage breakdown', () => {
+    it('should include order-independent OR pass and exclusive rates', () => {
+      const orBlocker = createMockBlocker({
+        hierarchicalBreakdown: {
+          id: '0',
+          nodeType: 'or',
+          isCompound: true,
+          description: 'OR of 2 conditions',
+          children: [
+            {
+              id: '0.0',
+              nodeType: 'leaf',
+              isCompound: false,
+              description: 'emotions.joy >= 0.5',
+              failureRate: 0.4,
+              evaluationCount: 100,
+              orSuccessCount: 100,
+              orPassCount: 60,
+              orExclusivePassCount: 20,
+              orContributionCount: 40,
+              orPassRate: 0.6,
+              orExclusivePassRate: 0.2,
+              orContributionRate: 0.4,
+            },
+            {
+              id: '0.1',
+              nodeType: 'leaf',
+              isCompound: false,
+              description: 'emotions.fear >= 0.4',
+              failureRate: 0.5,
+              evaluationCount: 100,
+              orSuccessCount: 100,
+              orPassCount: 50,
+              orExclusivePassCount: 30,
+              orContributionCount: 60,
+              orPassRate: 0.5,
+              orExclusivePassRate: 0.3,
+              orContributionRate: 0.6,
+            },
+          ],
+        },
+      });
+
+      const report = generator.generate({
+        expressionName: 'test:expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [orBlocker],
+        summary: 'Test summary',
+      });
+
+      expect(report).toContain('OR Alternative Coverage');
+      expect(report).toContain('P(alt passes \\| OR pass)');
+      expect(report).toContain('P(alt exclusively passes \\| OR pass)');
+      expect(report).toContain('First-pass share (order-dependent)');
+      expect(report).toContain('First-pass share is order-dependent');
+      expect(report).toContain('60.00% (60/100)');
+      expect(report).toContain('20.00% (20/100)');
+    });
+  });
+
+  describe('Prototype math operator awareness', () => {
+    it('should use upper-bound framing and recommendations for <= operators', () => {
+      const prototypeConstraintAnalyzer = {
+        extractAxisConstraints: jest.fn(() => new Map([['valence', { min: -1, max: 1 }]])),
+        analyzeEmotionThreshold: jest.fn(() => ({
+          prototypeId: 'joy',
+          type: 'emotion',
+          operator: '<=',
+          threshold: 0.5,
+          maxAchievable: 0.7,
+          minAchievable: 0,
+          isReachable: true,
+          gap: -0.2,
+          weights: { valence: 1.0 },
+          gates: ['valence >= 0.3'],
+          gateStatus: {
+            allSatisfiable: false,
+            gates: [{ gate: 'valence >= 0.3', satisfiable: false, reason: 'conflict' }],
+            blockingGates: [{ gate: 'valence >= 0.3' }],
+          },
+          bindingAxes: [],
+          axisAnalysis: [],
+          sumAbsWeights: 1,
+          requiredRawSum: 0.5,
+          explanation: 'Test explanation',
+        })),
+      };
+
+      const operatorAwareGenerator = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeConstraintAnalyzer,
+      });
+
+      const blocker = createMockBlocker({
+        hierarchicalBreakdown: {
+          variablePath: 'emotions.joy',
+          comparisonOperator: '<=',
+          thresholdValue: 0.5,
+        },
+      });
+
+      const report = operatorAwareGenerator.generate({
+        expressionName: 'test:expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [blocker],
+        summary: 'Test summary',
+        prerequisites: [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.2] } }],
+      });
+
+      expect(report).toContain('**Feasibility (gated)**');
+      expect(report).toContain('**Status**: sometimes');
+      expect(report).toContain('**Tuning direction**: loosen -> threshold up, tighten -> threshold down');
+      expect(report).toContain(
+        'Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.'
+      );
+      expect(report).toContain('Gate failure clamps intensity to 0');
+      expect(report).not.toContain('narrow margin');
+    });
+
+    it('should include regime stats and gate compatibility details', () => {
+      const prototypeConstraintAnalyzer = {
+        extractAxisConstraints: jest.fn(() => new Map([['valence', { min: -1, max: 1 }]])),
+        analyzeEmotionThreshold: jest.fn(() => ({
+          prototypeId: 'joy',
+          type: 'emotion',
+          operator: '>=',
+          threshold: 0.5,
+          maxAchievable: 0.8,
+          minAchievable: 0.1,
+          isReachable: true,
+          gap: 0.3,
+          weights: { valence: 1.0 },
+          gates: ['valence >= 0.2'],
+          gateStatus: {
+            allSatisfiable: true,
+            gates: [{ gate: 'valence >= 0.2', satisfiable: true, reason: 'ok' }],
+            blockingGates: [],
+          },
+          bindingAxes: [],
+          axisAnalysis: [],
+          sumAbsWeights: 1,
+          requiredRawSum: 0.5,
+          explanation: 'Test explanation',
+        })),
+      };
+
+      const operatorAwareGenerator = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeConstraintAnalyzer,
+      });
+
+      const blocker = createMockBlocker({
+        hierarchicalBreakdown: {
+          variablePath: 'emotions.joy',
+          comparisonOperator: '>=',
+          thresholdValue: 0.5,
+        },
+      });
+
+      const storedContexts = [
+        { moodAxes: { valence: 0.3 }, emotions: { joy: 0.6 } },
+        { moodAxes: { valence: 0.1 }, emotions: { joy: 0.2 } },
+      ];
+
+      const report = operatorAwareGenerator.generate({
+        expressionName: 'test:expression',
+        simulationResult: createMockSimulationResult({
+          storedContexts,
+          gateCompatibility: {
+            emotions: { joy: { compatible: false, reason: 'gate conflict' } },
+            sexualStates: {},
+          },
+        }),
+        blockers: [blocker],
+        summary: 'Test summary',
+        prerequisites: [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.2] } }],
+      });
+
+      expect(report).toContain('**Regime Stats**');
+      expect(report).toContain('| Global |');
+      expect(report).toContain('In mood regime');
+      expect(report).toContain('**Gate Compatibility (mood regime)**: ❌ incompatible');
+      expect(report).toContain('gate conflict');
+    });
+  });
+
+  describe('OR mood constraint warnings', () => {
+    it('should warn when OR mood constraints are present in conditional pass rates', () => {
+      const prerequisites = [
+        {
+          logic: {
+            and: [
+              { '>=': [{ var: 'moodAxes.valence' }, 0.2] },
+              { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            ],
+            or: [
+              { '>=': [{ var: 'moodAxes.arousal' }, 0.1] },
+            ],
+          },
+        },
+      ];
+
+      const storedContexts = Array.from({ length: 12 }, () => ({
+        moodAxes: { valence: 0.3, arousal: 0.2 },
+        emotions: { joy: 0.6 },
+      }));
+
+      const report = generator.generate({
+        expressionName: 'test:expression',
+        simulationResult: createMockSimulationResult({ storedContexts }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      expect(report).toContain('OR-based mood constraints are present');
+    });
+
+    it('should warn in prototype fit analysis when OR mood constraints are present', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({
+          leaderboard: [
+            {
+              rank: 1,
+              prototypeId: 'joy',
+              gatePassRate: 0.75,
+              intensityDistribution: { pAboveThreshold: 0.6, p50: 0.4, p90: 0.7, p95: 0.8 },
+              conflictScore: 0.1,
+              compositeScore: 1.2,
+              conflictingAxes: [],
+              conflictMagnitude: 0,
+            },
+          ],
+        })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => null),
+      };
+      const generatorWithFit = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [
+        {
+          logic: {
+            or: [{ '>=': [{ var: 'moodAxes.valence' }, 0.2] }],
+          },
+        },
+      ];
+
+      const report = generatorWithFit.generate({
+        expressionName: 'test:expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      expect(report).toMatch(
+        /## 🎯 Prototype Fit Analysis[\s\S]*OR-based mood constraints are present/
+      );
+    });
+
+    it('should warn in implied prototype analysis when OR mood constraints are present', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => ({
+          targetSignature: new Map([['valence', { direction: 1, importance: 0.8 }]]),
+          bySimilarity: [],
+          byGatePass: [],
+          byCombined: [],
+        })),
+        detectPrototypeGaps: jest.fn(() => null),
+      };
+      const generatorWithImplied = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [
+        {
+          logic: {
+            or: [{ '<=': [{ var: 'moodAxes.arousal' }, -0.1] }],
+          },
+        },
+      ];
+
+      const report = generatorWithImplied.generate({
+        expressionName: 'test:expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      expect(report).toMatch(
+        /## 🧭 Implied Prototype from Prerequisites[\s\S]*OR-based mood constraints are present/
+      );
+    });
+
+    it('should warn in prototype math analysis when OR mood constraints are present', () => {
+      const prototypeConstraintAnalyzer = {
+        extractAxisConstraints: jest.fn(() => new Map([['valence', { min: -1, max: 1 }]])),
+        analyzeEmotionThreshold: jest.fn(() => ({
+          prototypeId: 'joy',
+          type: 'emotion',
+          operator: '>=',
+          threshold: 0.5,
+          maxAchievable: 0.7,
+          minAchievable: 0,
+          isReachable: true,
+          gap: -0.2,
+          weights: { valence: 1.0 },
+          gates: [],
+          gateStatus: { allSatisfiable: true, gates: [], blockingGates: [] },
+          bindingAxes: [],
+          axisAnalysis: [],
+          sumAbsWeights: 1,
+          requiredRawSum: 0.5,
+          explanation: 'Reachable with constraints.',
+        })),
+      };
+      const generatorWithPrototypeMath = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeConstraintAnalyzer,
+      });
+
+      const prerequisites = [
+        {
+          logic: {
+            or: [{ '>=': [{ var: 'moodAxes.valence' }, 0.2] }],
+          },
+        },
+      ];
+
+      const report = generatorWithPrototypeMath.generate({
+        expressionName: 'test:expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [
+          createMockBlocker({
+            hierarchicalBreakdown: {
+              variablePath: 'emotions.joy',
+              comparisonOperator: '>=',
+              thresholdValue: 0.5,
+            },
+          }),
+        ],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      expect(report).toMatch(
+        /#### Prototype Math Analysis[\s\S]*OR-based mood constraints are present/
+      );
     });
   });
 

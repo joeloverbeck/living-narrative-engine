@@ -124,12 +124,6 @@
         "tactile": "A nearby presence suddenly gets bigger-energy spilling outward, movements wide and unguarded.",
         "olfactory": "Warm breath and the salt of exertion drift by, but the acrid edge of stress is gone-lighter air, cleaner sweat."
     },
-    "tags": [
-        "positive",
-        "triumph",
-        "victory",
-        "pride",
-        "release"
-    ],
+    "category": "agency",
     "diagnosticStatus": "unknown"
 }

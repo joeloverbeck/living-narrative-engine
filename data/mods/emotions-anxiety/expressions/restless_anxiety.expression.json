@@ -164,13 +164,6 @@
         "olfactory": "I smell a faint edge of stress-sweat, the kind that comes from holding yourself together.",
         "tactile": "Someone's presence vibrates with contained tension-micro-movements, a restless shifting that you can feel through the air and proximity."
     },
-    "tags": [
-        "anxiety",
-        "unease",
-        "restless",
-        "fidgeting",
-        "moderate",
-        "visible"
-    ],
+    "category": "threat",
     "diagnosticStatus": "unknown"
 }

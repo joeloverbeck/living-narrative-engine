@@ -117,11 +117,6 @@
   "alternate_descriptions": {
     "auditory": "I hear a sharp gasp-then a quick scuff or stumble, something bumped or grabbed too fast."
   },
-  "tags": [
-    "startle",
-    "flinch",
-    "surprise",
-    "reactive"
-  ],
+  "category": "threat",
   "diagnosticStatus": "unknown"
 }

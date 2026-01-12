@@ -9,12 +9,14 @@ import { Registrar } from '../../utils/registrarHelpers.js';
 import GateConstraintAnalyzer from '../../expressionDiagnostics/services/GateConstraintAnalyzer.js';
 import IntensityBoundsCalculator from '../../expressionDiagnostics/services/IntensityBoundsCalculator.js';
 import MonteCarloSimulator from '../../expressionDiagnostics/services/MonteCarloSimulator.js';
+import RandomStateGenerator from '../../expressionDiagnostics/services/RandomStateGenerator.js';
 import FailureExplainer from '../../expressionDiagnostics/services/FailureExplainer.js';
 import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
 import PathSensitiveAnalyzer from '../../expressionDiagnostics/services/PathSensitiveAnalyzer.js';
 import PrototypeConstraintAnalyzer from '../../expressionDiagnostics/services/PrototypeConstraintAnalyzer.js';
 import PrototypeFitRankingService from '../../expressionDiagnostics/services/PrototypeFitRankingService.js';
 import EmotionCalculatorAdapter from '../../expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
+import SensitivityAnalyzer from '../../expressionDiagnostics/services/SensitivityAnalyzer.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -62,6 +64,15 @@ export function registerExpressionDiagnosticsServices(container) {
 
   // Phase 2 - Monte Carlo
   registrar.singletonFactory(
+    diagnosticsTokens.IRandomStateGenerator,
+    (c) =>
+      new RandomStateGenerator({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IRandomStateGenerator}`);
+
+  registrar.singletonFactory(
     diagnosticsTokens.IMonteCarloSimulator,
     (c) =>
       new MonteCarloSimulator({
@@ -69,6 +80,9 @@ export function registerExpressionDiagnosticsServices(container) {
         logger: c.resolve(tokens.ILogger),
         emotionCalculatorAdapter: c.resolve(
           diagnosticsTokens.IEmotionCalculatorAdapter
+        ),
+        randomStateGenerator: c.resolve(
+          diagnosticsTokens.IRandomStateGenerator
         ),
       })
   );
@@ -145,6 +159,16 @@ export function registerExpressionDiagnosticsServices(container) {
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.IPrototypeFitRankingService}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.ISensitivityAnalyzer,
+    (c) =>
+      new SensitivityAnalyzer({
+        logger: c.resolve(tokens.ILogger),
+        monteCarloSimulator: c.resolve(diagnosticsTokens.IMonteCarloSimulator),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.ISensitivityAnalyzer}`);
 
   // Note: Additional services will be registered as they're implemented
   // - ISmtSolver (EXPDIA-013)

@@ -178,14 +178,6 @@
         "olfactory": "A faint stress-sour edge to their breath and sweat, like adrenaline without the sprint.",
         "limited": "{actor} looks preoccupied and tense, attention narrowing as they brace themselves."
     },
-    "tags": [
-        "dread",
-        "unease",
-        "bracing",
-        "anticipation",
-        "threat",
-        "quiet_tension",
-        "readiness"
-    ],
+    "category": "threat",
     "diagnosticStatus": "unknown"
 }

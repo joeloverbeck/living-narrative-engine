@@ -183,11 +183,6 @@
         "auditory": "I catch a contained laugh-breath that hitches, words delivered with careful innocence, as if the speaker is enjoying the setup more than the punchline.",
         "tactile": "Someone's energy feels quick and buoyant-close one moment, gone the next-like someone circling for an opening."
     },
-    "tags": [
-        "playful",
-        "mischief",
-        "amusement",
-        "fun"
-    ],
+    "category": "joy",
     "diagnosticStatus": "unknown"
 }

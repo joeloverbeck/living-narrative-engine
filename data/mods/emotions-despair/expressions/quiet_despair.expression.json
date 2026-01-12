@@ -174,11 +174,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a slow breath that sounds far away."
     },
-    "tags": [
-        "despair",
-        "numbness",
-        "hopelessness",
-        "withdrawal"
-    ],
+    "category": "loss",
     "diagnosticStatus": "unknown"
 }

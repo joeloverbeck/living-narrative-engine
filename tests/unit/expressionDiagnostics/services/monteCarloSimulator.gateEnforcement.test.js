@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import MonteCarloSimulator from '../../../../src/expressionDiagnostics/services/MonteCarloSimulator.js';
 import EmotionCalculatorAdapter from '../../../../src/expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import EmotionCalculatorService from '../../../../src/emotions/emotionCalculatorService.js';
+import RandomStateGenerator from '../../../../src/expressionDiagnostics/services/RandomStateGenerator.js';
 
 const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
   new EmotionCalculatorAdapter({
@@ -22,6 +23,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
   let mockLogger;
   let mockDataRegistry;
   let mockEmotionCalculatorAdapter;
+  let randomStateGenerator;
 
   // Emotion prototypes with gates matching production emotion_prototypes.lookup.json
   const mockEmotionPrototypes = {
@@ -99,6 +101,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       mockDataRegistry,
       mockLogger
     );
+    randomStateGenerator = new RandomStateGenerator({ logger: mockLogger });
   });
 
   describe('Emotion Gate Enforcement', () => {
@@ -107,6 +110,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Create expression requiring high fear
@@ -139,6 +143,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Expression requiring relief when threat is high - should be impossible
@@ -171,6 +176,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Expression requiring relief when threat is low
@@ -206,6 +212,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Expression requiring a large fear drop (delta <= -0.2)
@@ -254,6 +261,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Relief gate: threat <= 0.20
@@ -299,6 +307,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Confidence has gates: threat <= 0.20 AND agency_control >= 0.10
@@ -337,6 +346,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Confidence has gates: threat <= 0.20 AND agency_control >= 0.10
@@ -377,6 +387,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Aroused state has gate: sexual_arousal >= 0.35
@@ -410,6 +421,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Aroused state has gate: sexual_arousal >= 0.35
@@ -444,6 +456,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Simplified test: Demonstrate that gate enforcement creates different
@@ -498,6 +511,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Test that fear IS calculated when threat is high enough
@@ -533,6 +547,7 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         dataRegistry: mockDataRegistry,
         logger: mockLogger,
         emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
       });
 
       // Curiosity has no gates - should always be calculated

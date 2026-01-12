@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import HierarchicalClauseNode from '../../../../src/expressionDiagnostics/models/HierarchicalClauseNode.js';
+import { advancedMetricsConfig } from '../../../../src/expressionDiagnostics/config/advancedMetricsConfig.js';
 
 describe('HierarchicalClauseNode', () => {
   describe('constructor', () => {
@@ -309,12 +310,15 @@ describe('HierarchicalClauseNode', () => {
         comparisonOperator: null,
         variablePath: null,
         violationSampleCount: 1,
+        violationTotalCount: 1,
         maxObservedValue: null,
         minObservedValue: null,
         observedP99: null,
         observedP95: null,
         observedMin: null,
         observedMean: null,
+        observedSampleCount: 0,
+        observedTotalCount: 0,
         ceilingGap: null,
         nearMissCount: 0,
         nearMissRate: 0,
@@ -328,8 +332,20 @@ describe('HierarchicalClauseNode', () => {
         orContributionCount: 0,
         orSuccessCount: 0,
         orContributionRate: null,
+        orPassCount: 0,
+        orExclusivePassCount: 0,
+        orPassRate: null,
+        orExclusivePassRate: null,
         isSingleClause: false,
         parentNodeType: null,
+        inRegimeEvaluationCount: 0,
+        inRegimeFailureCount: 0,
+        inRegimeFailureRate: null,
+        inRegimePassRate: null,
+        inRegimeMinObservedValue: null,
+        inRegimeMaxObservedValue: null,
+        redundantInRegime: null,
+        tuningDirection: null,
         children: [],
       });
     });
@@ -359,6 +375,38 @@ describe('HierarchicalClauseNode', () => {
     });
   });
 
+  describe('or pass metrics', () => {
+    it('should return null OR pass rates when OR never succeeded', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'or child',
+      });
+
+      expect(node.orPassRate).toBeNull();
+      expect(node.orExclusivePassRate).toBeNull();
+    });
+
+    it('should calculate OR pass rates when OR succeeded', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'or child',
+      });
+
+      node.recordOrSuccess();
+      node.recordOrSuccess();
+      node.recordOrPass();
+      node.recordOrExclusivePass();
+
+      expect(node.orSuccessCount).toBe(2);
+      expect(node.orPassCount).toBe(1);
+      expect(node.orExclusivePassCount).toBe(1);
+      expect(node.orPassRate).toBeCloseTo(0.5, 10);
+      expect(node.orExclusivePassRate).toBeCloseTo(0.5, 10);
+    });
+  });
+
   describe('fromJSON', () => {
     it('should recreate a node from JSON', () => {
       const original = new HierarchicalClauseNode({
@@ -380,6 +428,30 @@ describe('HierarchicalClauseNode', () => {
       expect(restored.evaluationCount).toBe(original.evaluationCount);
       expect(restored.failureCount).toBe(original.failureCount);
       expect(restored.failureRate).toBeCloseTo(original.failureRate, 5);
+    });
+
+    it('should restore OR counters from JSON when present', () => {
+      const original = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'or child',
+      });
+
+      original.recordOrSuccess();
+      original.recordOrSuccess();
+      original.recordOrPass();
+      original.recordOrExclusivePass();
+      original.recordOrContribution();
+
+      const json = original.toJSON();
+      const restored = HierarchicalClauseNode.fromJSON(json);
+
+      expect(restored.orSuccessCount).toBe(2);
+      expect(restored.orPassCount).toBe(1);
+      expect(restored.orExclusivePassCount).toBe(1);
+      expect(restored.orContributionCount).toBe(1);
+      expect(restored.orPassRate).toBeCloseTo(0.5, 10);
+      expect(restored.orExclusivePassRate).toBeCloseTo(0.5, 10);
     });
 
     it('should recreate a tree with children from JSON', () => {
@@ -524,6 +596,49 @@ describe('HierarchicalClauseNode', () => {
       const json = node.toJSON();
 
       expect(json.violationSampleCount).toBe(2);
+    });
+  });
+
+  describe('bounded sampling', () => {
+    let node;
+    let originalMaxViolationsSampled;
+    let originalMaxObservedSampled;
+
+    beforeEach(() => {
+      originalMaxViolationsSampled = advancedMetricsConfig.maxViolationsSampled;
+      originalMaxObservedSampled = advancedMetricsConfig.maxObservedSampled;
+      advancedMetricsConfig.maxViolationsSampled = 3;
+      advancedMetricsConfig.maxObservedSampled = 4;
+      node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test condition',
+      });
+    });
+
+    afterEach(() => {
+      advancedMetricsConfig.maxViolationsSampled = originalMaxViolationsSampled;
+      advancedMetricsConfig.maxObservedSampled = originalMaxObservedSampled;
+    });
+
+    it('should cap stored violation samples and track total count', () => {
+      for (let i = 0; i < 10; i++) {
+        node.recordEvaluation(false, 0.1 + i / 100);
+      }
+
+      expect(node.violationSampleCount).toBe(3);
+      expect(node.violationTotalCount).toBe(10);
+    });
+
+    it('should cap stored observed samples and preserve min/max', () => {
+      for (let i = 1; i <= 10; i++) {
+        node.recordObservedValue(i);
+      }
+
+      expect(node.observedSampleCount).toBe(4);
+      expect(node.observedTotalCount).toBe(10);
+      expect(node.minObservedValue).toBe(1);
+      expect(node.maxObservedValue).toBe(10);
     });
   });
 

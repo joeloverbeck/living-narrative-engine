@@ -18,6 +18,7 @@ export const diagnosticsTokens = freeze({
   IMonteCarloSimulator: 'IMonteCarloSimulator',
   IFailureExplainer: 'IFailureExplainer',
   IEmotionCalculatorAdapter: 'IEmotionCalculatorAdapter',
+  IRandomStateGenerator: 'IRandomStateGenerator',
 
   // Status Persistence
   IExpressionStatusService: 'IExpressionStatusService',
@@ -30,6 +31,9 @@ export const diagnosticsTokens = freeze({
 
   // Prototype Fit Ranking (Monte Carlo prototype fit analysis)
   IPrototypeFitRankingService: 'IPrototypeFitRankingService',
+
+  // Sensitivity Analysis (EXPDIAMONCARREFREP-008)
+  ISensitivityAnalyzer: 'ISensitivityAnalyzer',
 
   // Phase 4 - SMT Solver (to be added in EXPDIA-013)
   // ISmtSolver: 'ISmtSolver',
