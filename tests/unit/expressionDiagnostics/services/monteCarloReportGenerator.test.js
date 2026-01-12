@@ -1966,6 +1966,47 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain('| Threshold | Pass Rate | Change | Samples |');
     });
 
+    it('adds effective threshold column for integer-domain sensitivity tables', () => {
+      const sensitivityData = [
+        {
+          conditionPath: 'moodAxes.valence',
+          operator: '>=',
+          originalThreshold: 10,
+          isIntegerDomain: true,
+          grid: [
+            {
+              threshold: 9.2,
+              effectiveThreshold: 10,
+              passRate: 0.1,
+              passCount: 1,
+              sampleCount: 10,
+            },
+            {
+              threshold: 10,
+              effectiveThreshold: 10,
+              passRate: 0.2,
+              passCount: 2,
+              sampleCount: 10,
+            },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        sensitivityData,
+      });
+
+      expect(report).toContain('| Threshold | Effective Threshold | Pass Rate | Change | Samples |');
+      expect(report).toContain('**10**');
+      expect(report).toContain(
+        'Thresholds are integer-effective; decimals collapse to integer boundaries.'
+      );
+    });
+
     it('should format sensitivity table with baseline indicator', () => {
       const sensitivityData = [
         {
@@ -2180,6 +2221,49 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain('| Threshold | Trigger Rate | Change | Samples |');
       expect(report).not.toContain('Insufficient data');
     });
+
+    it('adds effective threshold column for integer-domain global sensitivity tables', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'moodAxes.valence',
+          operator: '>=',
+          originalThreshold: 10,
+          isExpressionLevel: true,
+          isIntegerDomain: true,
+          grid: [
+            {
+              threshold: 9,
+              effectiveThreshold: 9,
+              triggerRate: 0.01,
+              triggerCount: 10,
+              sampleCount: 1000,
+            },
+            {
+              threshold: 10,
+              effectiveThreshold: 10,
+              triggerRate: 0.01,
+              triggerCount: 10,
+              sampleCount: 1000,
+            },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      expect(report).toContain(
+        '| Threshold | Effective Threshold | Trigger Rate | Change | Samples |'
+      );
+      expect(report).toContain(
+        'Thresholds are integer-effective; decimals collapse to integer boundaries.'
+      );
+    });
   });
 
   describe('Static Analysis Cross-Reference', () => {
@@ -2322,7 +2406,7 @@ describe('MonteCarloReportGenerator', () => {
         staticAnalysis,
       });
 
-      expect(report).toContain('✅ Fails 95.00%');
+      expect(report).toContain('✅ Fail% global: 95.00%');
     });
 
     it('should check MC confirmation for unreachable thresholds', () => {
@@ -2350,7 +2434,7 @@ describe('MonteCarloReportGenerator', () => {
         staticAnalysis,
       });
 
-      expect(report).toContain('✅ Fails 85.00%');
+      expect(report).toContain('✅ Fail% global: 85.00%');
     });
 
     it('should show "Not observed" when MC has no matching blocker', () => {
@@ -2494,7 +2578,7 @@ describe('MonteCarloReportGenerator', () => {
           staticAnalysis,
         });
 
-        expect(report).toContain('✅ Fails 90.00%');
+        expect(report).toContain('✅ Fail% global: 90.00%');
       });
     });
 

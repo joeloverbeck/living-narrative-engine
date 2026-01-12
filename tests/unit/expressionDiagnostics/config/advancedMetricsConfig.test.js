@@ -8,7 +8,9 @@ import {
   advancedMetricsConfig,
   detectDomain,
   getEpsilonForVariable,
+  getSensitivityStepSize,
   getTunableVariableInfo,
+  isIntegerDomain,
   isAdvancedMetricsEnabled,
   isMetricEnabled,
   isTunableVariable,
@@ -122,6 +124,26 @@ describe('advancedMetricsConfig', () => {
         isScalar: true,
         name: 'previousSexualArousal',
       });
+    });
+  });
+
+  describe('granularity helpers', () => {
+    it('should detect integer domains', () => {
+      expect(isIntegerDomain('moodAxes.valence')).toBe(true);
+      expect(isIntegerDomain('mood.energy')).toBe(true);
+      expect(isIntegerDomain('traits.openness')).toBe(true);
+      expect(isIntegerDomain('emotions.joy')).toBe(false);
+    });
+
+    it('should return integer step sizes for integer domains', () => {
+      expect(getSensitivityStepSize('moodAxes.valence')).toBe(1);
+      expect(getSensitivityStepSize('traits.openness')).toBe(1);
+    });
+
+    it('should return default step size for floating domains', () => {
+      expect(getSensitivityStepSize('emotions.joy')).toBe(0.05);
+      expect(getSensitivityStepSize('sexualStates.arousal')).toBe(0.05);
+      expect(getSensitivityStepSize('sexualArousal')).toBe(0.05);
     });
   });
 

@@ -95,7 +95,7 @@ describe('Prototype Reachability - Integration', () => {
     });
   });
 
-  it('marks dissociation <= 0.65 as REACHABLE and explains always satisfied', () => {
+  it('marks dissociation <= 0.65 as ALWAYS and explains always satisfied', () => {
     const expression = loadJson(HURT_ANGER_EXPRESSION_PATH);
 
     const report = reportGenerator.generate({
@@ -106,7 +106,7 @@ describe('Prototype Reachability - Integration', () => {
       prerequisites: expression.prerequisites,
     });
 
-    expect(report).toContain('dissociation <= 0.65 ✅ REACHABLE');
+    expect(report).toContain('dissociation <= 0.65 ✅ ALWAYS');
     expect(report).toContain('always satisfied');
   });
 });

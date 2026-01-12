@@ -1,0 +1,132 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-grief:hollow_shock_onset",
+    "description": "Hollow shock—the first unreal beat of grief where the mind stalls and the body keeps going. Everything feels slightly delayed, like perception is arriving through cotton; the feeling is present, but it won’t fully resolve yet.",
+    "category": "loss",
+    "actor_description": "It hits and my thoughts simply… fail to line up. I can feel the weight of it somewhere behind my ribs, but my mind keeps sliding off the meaning like it can’t get purchase. The world goes a little unreal—sounds distant, edges too sharp—while I keep moving on autopilot. I’m here, I’m looking, but it hasn’t finished becoming true inside me.",
+    "description_text": "{actor} goes suddenly still in a strangely intact way—eyes fixed, face drained, as if they’re waiting for the feeling to render. Their movements turn mechanical and delayed, like they’re following instructions rather than inhabiting them.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.numbness"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.sadness"
+                                            },
+                                            {
+                                                "var": "previousEmotions.sadness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.grief"
+                                            },
+                                            {
+                                                "var": "previousEmotions.grief"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.valence"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.valence"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires moderate grief with a stunned/blanking signature (numbness present or sadness rising), grounded in negative valence and low-to-mid arousal (not shutdown-flat). Blocks dissociation so the actor remains present, and caps despair so it stays early-onset shock rather than hopeless collapse. Triggers only on a grief spike or a sharp valence drop to prevent spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice comes out thin or delayed, with small pauses mid-sentence as if the words have to travel farther than usual.",
+        "tactile": "The air feels oddly heavy around them; there’s a faint tremor in their hands, but their posture holds like a brace they haven’t noticed adopting.",
+        "limited": "{actor} looks dazed and distant for a beat, as if processing something too big to take in all at once."
+    }
+}

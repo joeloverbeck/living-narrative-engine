@@ -2135,7 +2135,8 @@
 
 /* Monte Carlo Report - Large Modal Variant */
 .modal-content--large {
-  max-width: 900px;
+  width: min(1200px, 92vw);
+  max-width: 1200px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
@@ -2278,6 +2279,7 @@
 /* Responsive Adjustments for Monte Carlo Report Modal */
 @media (max-width: 960px) {
   .modal-content--large {
+    width: 95vw;
     max-width: 95vw;
     margin: 1rem;
   }

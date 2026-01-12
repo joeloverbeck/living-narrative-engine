@@ -2092,6 +2092,186 @@ describe('ExpressionDiagnosticsController', () => {
       expect(tables.textContent).not.toContain('Insufficient data');
     });
 
+    it('renders effective threshold column for integer-domain sensitivity tables', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 5,
+        sampleCount: 100,
+        confidenceInterval: { low: 0.04, high: 0.06 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: Array.from({ length: 100 }, () => ({})),
+      });
+      mockSensitivityAnalyzer.computeGlobalSensitivityData.mockReturnValueOnce([
+        {
+          varPath: 'moodAxes.valence',
+          operator: '>=',
+          originalThreshold: 10,
+          isIntegerDomain: true,
+          grid: [
+            {
+              threshold: 9.2,
+              effectiveThreshold: 10,
+              triggerRate: 0.01,
+              triggerCount: 10,
+              sampleCount: 1000,
+            },
+            {
+              threshold: 10,
+              effectiveThreshold: 10,
+              triggerRate: 0.01,
+              triggerCount: 10,
+              sampleCount: 1000,
+            },
+          ],
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+      document.getElementById('run-mc-btn').click();
+
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const tables = document.getElementById('global-sensitivity-tables');
+      expect(tables.textContent).toContain('Effective');
+      expect(tables.textContent).toContain(
+        'Thresholds are integer-effective; decimals collapse to integer boundaries.'
+      );
+    });
+
+    it('omits effective threshold column for float-domain sensitivity tables', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 5,
+        sampleCount: 100,
+        confidenceInterval: { low: 0.04, high: 0.06 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: Array.from({ length: 100 }, () => ({})),
+      });
+      mockSensitivityAnalyzer.computeGlobalSensitivityData.mockReturnValueOnce([
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          grid: [
+            {
+              threshold: 0.35,
+              triggerRate: 0.01,
+              triggerCount: 10,
+              sampleCount: 1000,
+            },
+          ],
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+      document.getElementById('run-mc-btn').click();
+
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const table = document.querySelector('.sensitivity-table');
+      const headers = Array.from(table.querySelectorAll('th')).map((th) =>
+        th.textContent.trim()
+      );
+      expect(headers).toEqual(['Threshold', 'Trigger Rate', 'Change', 'Samples']);
+    });
+
+    it('formats integer-domain thresholds without trailing decimals', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 5,
+        sampleCount: 100,
+        confidenceInterval: { low: 0.04, high: 0.06 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: Array.from({ length: 100 }, () => ({})),
+      });
+      mockSensitivityAnalyzer.computeGlobalSensitivityData.mockReturnValueOnce([
+        {
+          varPath: 'moodAxes.valence',
+          operator: '>=',
+          originalThreshold: 10,
+          isIntegerDomain: true,
+          grid: [
+            {
+              threshold: 10,
+              effectiveThreshold: 10,
+              triggerRate: 0.01,
+              triggerCount: 10,
+              sampleCount: 1000,
+            },
+            {
+              threshold: 11,
+              effectiveThreshold: 11,
+              triggerRate: 0.02,
+              triggerCount: 20,
+              sampleCount: 1000,
+            },
+          ],
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+      document.getElementById('run-mc-btn').click();
+
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const rows = Array.from(
+        document.querySelectorAll('.sensitivity-table tbody tr')
+      );
+      const thresholds = rows.map((row) => row.querySelector('td').textContent.trim());
+      expect(thresholds).toEqual(['10', '11']);
+    });
+
     it('displays trigger rate correctly', async () => {
       const controller = new ExpressionDiagnosticsController({
         logger: mockLogger,

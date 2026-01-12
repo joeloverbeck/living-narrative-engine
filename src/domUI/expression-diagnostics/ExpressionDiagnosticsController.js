@@ -1584,6 +1584,28 @@ class ExpressionDiagnosticsController {
     return value.toFixed(2);
   }
 
+  #formatThresholdValue(value, isIntegerDomain) {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+      return 'N/A';
+    }
+
+    if (isIntegerDomain) {
+      const rounded = Math.round(value);
+      if (Math.abs(value - rounded) < 0.000001) {
+        return String(rounded);
+      }
+    }
+
+    return value.toFixed(2);
+  }
+
+  #formatEffectiveThreshold(value) {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+      return '—';
+    }
+    return String(Math.round(value));
+  }
+
   /**
    * Format percentiles display for tree nodes.
    * Shows P50, P90, P95, P99 with outlier skew detection.
@@ -2717,6 +2739,7 @@ class ExpressionDiagnosticsController {
    */
   #createSensitivityTable(result) {
     const { varPath, operator, originalThreshold, grid } = result;
+    const isIntegerDomain = result?.isIntegerDomain === true;
 
     if (!grid || grid.length === 0) {
       const empty = document.createElement('div');
@@ -2748,6 +2771,7 @@ class ExpressionDiagnosticsController {
     thead.innerHTML = `
       <tr>
         <th>Threshold</th>
+        ${isIntegerDomain ? '<th>Effective</th>' : ''}
         <th>Trigger Rate</th>
         <th>Change</th>
         <th>Samples</th>
@@ -2790,8 +2814,20 @@ class ExpressionDiagnosticsController {
 
       const row = document.createElement('tr');
       row.className = isOriginal ? 'sensitivity-row-baseline' : '';
+      const thresholdDisplay = this.#formatThresholdValue(
+        point.threshold,
+        isIntegerDomain
+      );
+      const effectiveDisplay = this.#formatEffectiveThreshold(
+        point.effectiveThreshold
+      );
       row.innerHTML = `
-        <td>${isOriginal ? '<strong>' : ''}${point.threshold.toFixed(2)}${isOriginal ? '</strong>' : ''}</td>
+        <td>${isOriginal ? '<strong>' : ''}${thresholdDisplay}${isOriginal ? '</strong>' : ''}</td>
+        ${
+          isIntegerDomain
+            ? `<td>${isOriginal ? '<strong>' : ''}${effectiveDisplay}${isOriginal ? '</strong>' : ''}</td>`
+            : ''
+        }
         <td>${isOriginal ? '<strong>' : ''}${this.#formatPercentage(point.triggerRate)}${isOriginal ? '</strong>' : ''}</td>
         <td class="${changeClass}">${isOriginal ? '<strong>baseline</strong>' : changeStr}</td>
         <td>${point.sampleCount.toLocaleString()}</td>
@@ -2801,8 +2837,20 @@ class ExpressionDiagnosticsController {
     table.appendChild(tbody);
     container.appendChild(table);
 
+    if (isIntegerDomain) {
+      const note = document.createElement('div');
+      note.className = 'sensitivity-note';
+      note.textContent =
+        'Thresholds are integer-effective; decimals collapse to integer boundaries.';
+      container.appendChild(note);
+    }
+
     // Add actionable insight if applicable
-    const insight = this.#generateSensitivityInsight(grid, originalIndex);
+    const insight = this.#generateSensitivityInsight(
+      grid,
+      originalIndex,
+      isIntegerDomain
+    );
     if (insight) {
       const insightDiv = document.createElement('div');
       insightDiv.className = 'sensitivity-insight';
@@ -2821,7 +2869,7 @@ class ExpressionDiagnosticsController {
    * @param {number} originalIndex - Index of original threshold in grid
    * @returns {string|null} Insight message or null
    */
-  #generateSensitivityInsight(grid, originalIndex) {
+  #generateSensitivityInsight(grid, originalIndex, isIntegerDomain) {
     if (originalIndex < 0 || !grid[originalIndex]) return null;
 
     const originalRate = grid[originalIndex].triggerRate;
@@ -2831,7 +2879,12 @@ class ExpressionDiagnosticsController {
     if (originalRate === 0) {
       const betterOption = grid.find((pt) => pt.triggerRate > 0);
       if (betterOption && betterOption.threshold !== originalThreshold) {
-        return `Adjusting threshold to <strong>${betterOption.threshold.toFixed(2)}</strong> would achieve ~${this.#formatPercentage(betterOption.triggerRate)} expression trigger rate.`;
+        return `Adjusting threshold to <strong>${this.#formatThresholdValue(
+          betterOption.threshold,
+          isIntegerDomain
+        )}</strong> would achieve ~${this.#formatPercentage(
+          betterOption.triggerRate
+        )} expression trigger rate.`;
       }
     }
 
@@ -2839,7 +2892,12 @@ class ExpressionDiagnosticsController {
     if (originalRate > 0 && originalRate < 0.01) {
       const betterOption = grid.find((pt) => pt.triggerRate >= originalRate * 5);
       if (betterOption && betterOption.threshold !== originalThreshold) {
-        return `Adjusting threshold to <strong>${betterOption.threshold.toFixed(2)}</strong> would increase trigger rate to ~${this.#formatPercentage(betterOption.triggerRate)}.`;
+        return `Adjusting threshold to <strong>${this.#formatThresholdValue(
+          betterOption.threshold,
+          isIntegerDomain
+        )}</strong> would increase trigger rate to ~${this.#formatPercentage(
+          betterOption.triggerRate
+        )}.`;
       }
     }
 
