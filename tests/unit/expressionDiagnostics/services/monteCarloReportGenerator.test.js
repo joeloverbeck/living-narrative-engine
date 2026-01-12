@@ -1752,6 +1752,82 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain('| Support |');
     });
 
+    it('should include gate clamp and pass|gate columns for emotion leaves', () => {
+      const childNode = {
+        id: '0.0',
+        nodeType: 'leaf',
+        description: 'emotions.joy >= 0.5',
+        variablePath: 'emotions.joy',
+        comparisonOperator: '>=',
+        thresholdValue: 0.5,
+        failureRate: 0.8,
+        evaluationCount: 7500,
+        inRegimeEvaluationCount: 10,
+        inRegimeFailureCount: 4,
+        gateClampRateInRegime: 0.3,
+        gateFailInRegimeCount: 3,
+        gatePassInRegimeCount: 7,
+        passRateGivenGateInRegime: 3 / 7,
+        gatePassAndClausePassInRegimeCount: 3,
+      };
+
+      const blocker = createMockBlocker({
+        hierarchicalBreakdown: {
+          id: '0',
+          nodeType: 'and',
+          isCompound: true,
+          children: [childNode],
+        },
+      });
+
+      const report = generator.generate({
+        expressionName: 'test',
+        simulationResult: createMockSimulationResult(),
+        blockers: [blocker],
+        summary: '',
+      });
+
+      expect(report).toContain('| Gate clamp (mood) | Pass \\| gate (mood) |');
+      expect(report).toContain('30.00% (3 / 10)');
+      expect(report).toContain('42.86% (3 / 7)');
+    });
+
+    it('should omit gate columns when no emotion leaves are present', () => {
+      const childNode = {
+        id: '0.0',
+        nodeType: 'leaf',
+        description: 'moodAxes.valence >= 0.5',
+        variablePath: 'moodAxes.valence',
+        comparisonOperator: '>=',
+        thresholdValue: 0.5,
+        failureRate: 0.8,
+        evaluationCount: 7500,
+      };
+
+      const blocker = createMockBlocker({
+        hierarchicalBreakdown: {
+          id: '0',
+          nodeType: 'and',
+          isCompound: true,
+          children: [childNode],
+        },
+      });
+
+      const report = generator.generate({
+        expressionName: 'test',
+        simulationResult: createMockSimulationResult(),
+        blockers: [blocker],
+        summary: '',
+      });
+
+      const headerLine = report
+        .split('\n')
+        .find((line) => line.startsWith('| # | Condition'));
+      expect(headerLine).toBeDefined();
+      expect(headerLine).not.toContain('Gate clamp (mood)');
+      expect(headerLine).not.toContain('Pass | gate (mood)');
+    });
+
     it('should display evaluation count in Support column', () => {
       const childNode = {
         id: '0.0',
@@ -1841,6 +1917,8 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain('### Per-Clause Metrics');
       expect(report).toContain('**Fail% global**');
       expect(report).toContain('**Fail% | mood-pass**');
+      expect(report).toContain('**Gate clamp (mood)**');
+      expect(report).toContain('**Pass | gate (mood)**');
       expect(report).toContain('**Violation Magnitude**');
       expect(report).toContain('**P50 (Median)**');
       expect(report).toContain('**P90 (90th Percentile)**');
@@ -1922,7 +2000,7 @@ describe('MonteCarloReportGenerator', () => {
         summary: 'Test summary',
       });
 
-      expect(report).not.toContain('## Sensitivity Analysis');
+      expect(report).not.toContain('## Marginal Clause Pass-Rate Sweep');
     });
 
     it('should not include sensitivity section when sensitivityData is empty array', () => {
@@ -1934,12 +2012,13 @@ describe('MonteCarloReportGenerator', () => {
         sensitivityData: [],
       });
 
-      expect(report).not.toContain('## Sensitivity Analysis');
+      expect(report).not.toContain('## Marginal Clause Pass-Rate Sweep');
     });
 
     it('should include sensitivity section when sensitivity data is provided', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.anger',
           operator: '>=',
           originalThreshold: 0.4,
@@ -1961,14 +2040,16 @@ describe('MonteCarloReportGenerator', () => {
         sensitivityData,
       });
 
-      expect(report).toContain('## Sensitivity Analysis');
-      expect(report).toContain('emotions.anger >= [threshold]');
+      expect(report).toContain('## Marginal Clause Pass-Rate Sweep');
+      expect(report).toContain('Marginal Clause Pass-Rate Sweep: emotions.anger >= [threshold]');
       expect(report).toContain('| Threshold | Pass Rate | Change | Samples |');
+      expect(report).toContain('does **not** estimate overall expression trigger rate');
     });
 
     it('adds effective threshold column for integer-domain sensitivity tables', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'moodAxes.valence',
           operator: '>=',
           originalThreshold: 10,
@@ -2010,6 +2091,7 @@ describe('MonteCarloReportGenerator', () => {
     it('should format sensitivity table with baseline indicator', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.anger',
           operator: '>=',
           originalThreshold: 0.4,
@@ -2029,15 +2111,16 @@ describe('MonteCarloReportGenerator', () => {
         sensitivityData,
       });
 
-      // The original threshold row should be bold and show 'baseline'
+      // The original threshold row should be bold and show stored-context baseline
       // formatNumber(0.4) outputs '0.40' with 2 decimals
       expect(report).toContain('**0.40**');
-      expect(report).toContain('**baseline**');
+      expect(report).toContain('**baseline (stored contexts)**');
     });
 
     it('should calculate change percentages from baseline', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.anger',
           operator: '>=',
           originalThreshold: 0.4,
@@ -2063,6 +2146,7 @@ describe('MonteCarloReportGenerator', () => {
     it('should handle zero baseline gracefully', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.anger',
           operator: '>=',
           originalThreshold: 0.4,
@@ -2088,6 +2172,7 @@ describe('MonteCarloReportGenerator', () => {
     it('should handle multiple sensitivity results', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.anger',
           operator: '>=',
           originalThreshold: 0.4,
@@ -2096,6 +2181,7 @@ describe('MonteCarloReportGenerator', () => {
           ],
         },
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.joy',
           operator: '>=',
           originalThreshold: 0.5,
@@ -2120,6 +2206,7 @@ describe('MonteCarloReportGenerator', () => {
     it('should include recommendation for low pass rate conditions', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.anger',
           operator: '>=',
           originalThreshold: 0.4,
@@ -2146,6 +2233,7 @@ describe('MonteCarloReportGenerator', () => {
     it('should skip sensitivity result with empty grid', () => {
       const sensitivityData = [
         {
+          kind: 'marginalClausePassRateSweep',
           conditionPath: 'emotions.anger',
           operator: '>=',
           originalThreshold: 0.4,
@@ -2162,13 +2250,13 @@ describe('MonteCarloReportGenerator', () => {
       });
 
       // Section header should be present but no table
-      expect(report).toContain('## Sensitivity Analysis');
+      expect(report).toContain('## Marginal Clause Pass-Rate Sweep');
       expect(report).not.toContain('emotions.anger >= [threshold]');
     });
   });
 
   describe('Global Sensitivity Analysis', () => {
-    it('suppresses global sensitivity tables when baseline hits are low', () => {
+    it('shows global sensitivity tables with a low-confidence warning when baseline hits are low', () => {
       const globalSensitivityData = [
         {
           varPath: 'emotions.joy',
@@ -2191,8 +2279,8 @@ describe('MonteCarloReportGenerator', () => {
       });
 
       expect(report).toContain('## Global Expression Sensitivity Analysis');
-      expect(report).toContain('Insufficient data');
-      expect(report).not.toContain('| Threshold | Trigger Rate | Change | Samples |');
+      expect(report).toContain('Low confidence');
+      expect(report).toContain('| Threshold | Trigger Rate | Change | Samples |');
     });
 
     it('renders global sensitivity tables when baseline hits are sufficient', () => {
@@ -2219,7 +2307,7 @@ describe('MonteCarloReportGenerator', () => {
 
       expect(report).toContain('## Global Expression Sensitivity Analysis');
       expect(report).toContain('| Threshold | Trigger Rate | Change | Samples |');
-      expect(report).not.toContain('Insufficient data');
+      expect(report).not.toContain('Low confidence');
     });
 
     it('adds effective threshold column for integer-domain global sensitivity tables', () => {

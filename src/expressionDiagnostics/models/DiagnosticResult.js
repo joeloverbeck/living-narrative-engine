@@ -35,6 +35,13 @@ import { STATUS_THEME } from '../statusTheme.js';
  * @property {number} failureRate - Failure rate from 0 to 1.
  * @property {number} averageViolation - Average magnitude of constraint violation.
  * @property {number} clauseIndex - Index of the clause in the prerequisites array.
+ * @property {number|null} [gatePassRateInRegime] - P(gate pass | mood regime) for emotion-threshold leaves.
+ * @property {number|null} [gateClampRateInRegime] - P(gate fail | mood regime) for emotion-threshold leaves.
+ * @property {number|null} [passRateGivenGateInRegime] - P(clause pass | gate pass, mood regime).
+ * @property {number|null} [gatePassInRegimeCount] - Gate pass count within mood regime.
+ * @property {number|null} [gateFailInRegimeCount] - Gate fail count within mood regime.
+ * @property {number|null} [gatePassAndClausePassInRegimeCount] - Gate pass + clause pass count within mood regime.
+ * @property {number|null} [gatePassAndClauseFailInRegimeCount] - Gate pass + clause fail count within mood regime.
  */
 
 /**

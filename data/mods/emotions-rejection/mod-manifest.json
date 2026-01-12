@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-rejection",
+  "version": "1.0.0",
+  "name": "Emotions - Rejection",
+  "description": "Rejection expressions capturing abrupt social exclusion and self-worth sting.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "rejection_sting_pushed_out.expression.json"
+    ]
+  }
+}

@@ -115,6 +115,18 @@ class HierarchicalClauseNode {
 
   /** @type {number} Minimum observed value for this clause's variable in-regime */
   #inRegimeMinObservedValue = Infinity;
+
+  /** @type {number} Gate evaluations recorded for this node */
+  #gateEvaluationCount = 0;
+
+  /** @type {number} Gate pass count for this node */
+  #gatePassCount = 0;
+
+  /** @type {number} Gate pass count within mood regime */
+  #gatePassInRegimeCount = 0;
+
+  /** @type {number} Gate pass + clause pass count within mood regime */
+  #gatePassAndClausePassInRegimeCount = 0;
   /**
    * @param {object} params
    * @param {string} params.id - Path-based ID (e.g., "0.2.1")
@@ -327,6 +339,113 @@ class HierarchicalClauseNode {
   get inRegimePassRate() {
     if (this.#inRegimeEvaluationCount === 0) return null;
     return 1 - this.#inRegimeFailureCount / this.#inRegimeEvaluationCount;
+  }
+
+  /**
+   * Get total gate evaluation count.
+   *
+   * @returns {number}
+   */
+  get gateEvaluationCount() {
+    return this.#gateEvaluationCount;
+  }
+
+  /**
+   * Get gate pass count.
+   *
+   * @returns {number}
+   */
+  get gatePassCount() {
+    return this.#gatePassCount;
+  }
+
+  /**
+   * Get gate pass rate (all samples).
+   *
+   * @returns {number|null}
+   */
+  get gatePassRate() {
+    if (this.#gateEvaluationCount === 0) return null;
+    return this.#gatePassCount / this.#gateEvaluationCount;
+  }
+
+  /**
+   * Gate pass count within mood regime.
+   *
+   * @returns {number}
+   */
+  get gatePassInRegimeCount() {
+    if (this.#gateEvaluationCount === 0) return null;
+    return this.#gatePassInRegimeCount;
+  }
+
+  /**
+   * Gate fail count within mood regime.
+   *
+   * @returns {number|null}
+   */
+  get gateFailInRegimeCount() {
+    if (this.#gateEvaluationCount === 0) return null;
+    if (this.#inRegimeEvaluationCount === 0) return null;
+    return this.#inRegimeEvaluationCount - this.#gatePassInRegimeCount;
+  }
+
+  /**
+   * Gate pass rate within mood regime.
+   *
+   * @returns {number|null}
+   */
+  get gatePassRateInRegime() {
+    if (this.#gateEvaluationCount === 0) return null;
+    if (this.#inRegimeEvaluationCount === 0) return null;
+    return this.#gatePassInRegimeCount / this.#inRegimeEvaluationCount;
+  }
+
+  /**
+   * Gate clamp rate within mood regime.
+   *
+   * @returns {number|null}
+   */
+  get gateClampRateInRegime() {
+    const passRate = this.gatePassRateInRegime;
+    if (passRate === null) return null;
+    return 1 - passRate;
+  }
+
+  /**
+   * Gate pass + clause pass count within mood regime.
+   *
+   * @returns {number}
+   */
+  get gatePassAndClausePassInRegimeCount() {
+    if (this.#gateEvaluationCount === 0) return null;
+    return this.#gatePassAndClausePassInRegimeCount;
+  }
+
+  /**
+   * Gate pass + clause fail count within mood regime.
+   *
+   * @returns {number|null}
+   */
+  get gatePassAndClauseFailInRegimeCount() {
+    if (this.#gateEvaluationCount === 0) return null;
+    if (this.#gatePassInRegimeCount === 0) return null;
+    return (
+      this.#gatePassInRegimeCount - this.#gatePassAndClausePassInRegimeCount
+    );
+  }
+
+  /**
+   * P(clause pass | gate pass, mood regime).
+   *
+   * @returns {number|null}
+   */
+  get passRateGivenGateInRegime() {
+    if (this.#gateEvaluationCount === 0) return null;
+    if (this.#gatePassInRegimeCount === 0) return null;
+    return (
+      this.#gatePassAndClausePassInRegimeCount / this.#gatePassInRegimeCount
+    );
   }
 
   /**
@@ -882,6 +1001,33 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Record gate pass/fail outcomes for a leaf clause.
+   *
+   * @param {boolean} gatePass
+   * @param {boolean} clausePassed
+   * @param {boolean} inRegime
+   */
+  recordGateEvaluation(gatePass, clausePassed, inRegime) {
+    if (typeof gatePass !== 'boolean') {
+      return;
+    }
+
+    this.#gateEvaluationCount++;
+    if (gatePass) {
+      this.#gatePassCount++;
+    }
+
+    if (inRegime) {
+      if (gatePass) {
+        this.#gatePassInRegimeCount++;
+        if (clausePassed) {
+          this.#gatePassAndClausePassInRegimeCount++;
+        }
+      }
+    }
+  }
+
+  /**
    * Record whether this evaluation was a near-miss.
    * A near-miss is when |actual - threshold| < epsilon.
    *
@@ -1015,6 +1161,10 @@ class HierarchicalClauseNode {
     this.#inRegimeFailureCount = 0;
     this.#inRegimeMaxObservedValue = -Infinity;
     this.#inRegimeMinObservedValue = Infinity;
+    this.#gateEvaluationCount = 0;
+    this.#gatePassCount = 0;
+    this.#gatePassInRegimeCount = 0;
+    this.#gatePassAndClausePassInRegimeCount = 0;
     // Note: Do NOT reset #isSingleClause - it's metadata, not a stat
     for (const child of this.#children) {
       child.resetStats();
@@ -1091,6 +1241,18 @@ class HierarchicalClauseNode {
       inRegimePassRate: this.inRegimePassRate,
       inRegimeMinObservedValue: this.inRegimeMinObservedValue,
       inRegimeMaxObservedValue: this.inRegimeMaxObservedValue,
+      gateEvaluationCount: this.#gateEvaluationCount,
+      gatePassCount: this.#gatePassCount,
+      gatePassRate: this.gatePassRate,
+      gatePassInRegimeCount: this.gatePassInRegimeCount,
+      gateFailInRegimeCount: this.gateFailInRegimeCount,
+      gatePassRateInRegime: this.gatePassRateInRegime,
+      gateClampRateInRegime: this.gateClampRateInRegime,
+      gatePassAndClausePassInRegimeCount:
+        this.gatePassAndClausePassInRegimeCount,
+      gatePassAndClauseFailInRegimeCount:
+        this.gatePassAndClauseFailInRegimeCount,
+      passRateGivenGateInRegime: this.passRateGivenGateInRegime,
       redundantInRegime: this.redundantInRegime,
       tuningDirection: this.tuningDirection,
       children: this.#children.map((c) => c.toJSON()),
@@ -1158,6 +1320,20 @@ class HierarchicalClauseNode {
     if (Number.isFinite(obj.observedTotalCount)) {
       node.#observedValueCount = obj.observedTotalCount;
     }
+    node.#gateEvaluationCount = Number.isFinite(obj.gateEvaluationCount)
+      ? obj.gateEvaluationCount
+      : 0;
+    node.#gatePassCount = Number.isFinite(obj.gatePassCount)
+      ? obj.gatePassCount
+      : 0;
+    node.#gatePassInRegimeCount = Number.isFinite(obj.gatePassInRegimeCount)
+      ? obj.gatePassInRegimeCount
+      : 0;
+    node.#gatePassAndClausePassInRegimeCount = Number.isFinite(
+      obj.gatePassAndClausePassInRegimeCount
+    )
+      ? obj.gatePassAndClausePassInRegimeCount
+      : 0;
     return node;
   }
 }

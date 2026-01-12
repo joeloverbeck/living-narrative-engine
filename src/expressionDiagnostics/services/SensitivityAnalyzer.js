@@ -8,6 +8,7 @@ import {
   isIntegerDomain,
   isTunableVariable,
 } from '../config/advancedMetricsConfig.js';
+import { buildPopulationHash } from '../utils/populationHashUtils.js';
 
 class SensitivityAnalyzer {
   #logger;
@@ -38,6 +39,8 @@ class SensitivityAnalyzer {
       return [];
     }
 
+    const populationHash =
+      this.#buildStoredContextPopulationHash(storedContexts);
     const sensitivityResults = [];
     const processedConditions = new Set();
 
@@ -66,7 +69,12 @@ class SensitivityAnalyzer {
               { stepSize: getSensitivityStepSize(varPath) }
             );
             sensitivityResults.push(
-              this.#annotateSensitivityResult(result, varPath, operator)
+              this.#annotateSensitivityResult(
+                result,
+                varPath,
+                operator,
+                populationHash
+              )
             );
           } catch (err) {
             this.#logger.warn(
@@ -107,6 +115,8 @@ class SensitivityAnalyzer {
       return [];
     }
 
+    const populationHash =
+      this.#buildStoredContextPopulationHash(storedContexts);
     const globalSensitivityResults = [];
     const processedVars = new Set();
     const tunableCandidates = [];
@@ -167,7 +177,8 @@ class SensitivityAnalyzer {
           this.#annotateSensitivityResult(
             result,
             candidate.varPath,
-            candidate.operator
+            candidate.operator,
+            populationHash
           )
         );
       } catch (err) {
@@ -192,12 +203,17 @@ class SensitivityAnalyzer {
     return leaves;
   }
 
-  #annotateSensitivityResult(result, varPath, operator) {
+  #annotateSensitivityResult(result, varPath, operator, populationHash) {
     if (!result || typeof result !== 'object') {
       return result;
     }
 
     const integerDomain = isIntegerDomain(varPath);
+    const inferredKind =
+      result.kind ??
+      (result.isExpressionLevel
+        ? 'expressionTriggerRateSweep'
+        : 'marginalClausePassRateSweep');
     const grid = Array.isArray(result.grid)
       ? result.grid.map((point) =>
         integerDomain
@@ -211,11 +227,17 @@ class SensitivityAnalyzer {
           : point
       )
       : result.grid;
+    const resolvedPopulationHash =
+      populationHash ?? result.populationHash ?? null;
 
     return {
       ...result,
+      kind: inferredKind,
       isIntegerDomain: integerDomain,
       grid,
+      ...(resolvedPopulationHash
+        ? { populationHash: resolvedPopulationHash }
+        : {}),
     };
   }
 
@@ -234,6 +256,15 @@ class SensitivityAnalyzer {
       default:
         return null;
     }
+  }
+
+  #buildStoredContextPopulationHash(storedContexts) {
+    if (!Array.isArray(storedContexts) || storedContexts.length === 0) {
+      return null;
+    }
+
+    const sampleIds = storedContexts.map((_, index) => index);
+    return buildPopulationHash(sampleIds, 'all');
   }
 }
 

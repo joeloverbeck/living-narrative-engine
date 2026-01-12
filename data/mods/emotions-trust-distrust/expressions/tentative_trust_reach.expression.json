@@ -1,0 +1,157 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-trust-distrust:tentative_trust_reach",
+    "description": "A small, deliberate reach toward trust while the guard is still half up. Openness flickers in, but caution stays online—careful, measured, and ready to retreat if needed.",
+    "category": "affection",
+    "actor_description": "I don’t fully relax—I just loosen one fist. I let myself lean a fraction closer, testing the air, watching for the catch. There’s still a brace in my ribs, but I choose to offer something small anyway: a softer tone, a little more honesty, a step that could be taken back. It feels like deciding, not drifting.",
+    "description_text": "{actor} eases just enough to reach—shoulders not fully dropping, but no longer squared like a shield. Their gaze stays attentive as they offer a small opening: a pause that invites, a voice that softens, a hand that doesn’t quite retreat.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.8
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.suspicion"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.suspicion"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.trusting_surrender"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.trust"
+                                    },
+                                    {
+                                        "var": "previousEmotions.trust"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "previousEmotions.suspicion"
+                                    },
+                                    {
+                                        "var": "emotions.suspicion"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires trust in the mid band while suspicion is still present (guard half up). Grounded in moderate threat, positive affiliation, and engaged attention with agency not collapsed. Blocks overly-open surrender and cynical/jealous/contempt tones. Triggers only on a meaningful trust rise plus a suspicion drop so it reads as a deliberate micro-risk, not a background vibe."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "A beat of careful silence, then {actor}'s voice comes a shade warmer—still measured, but less guarded at the edges.",
+        "tactile": "The tension doesn't vanish; it shifts. Like a hand unclenching partway—ready to pull back, but choosing not to, for now.",
+        "limited": "{actor} offers a small, cautious opening—trust testing the line while caution stays close."
+    }
+}

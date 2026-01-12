@@ -284,7 +284,7 @@
         },
         "core:actor": {},
         "core:player_type": {
-            "type": "human"
+            "type": "llm"
         },
         "music:is_musician": {},
         "core:notes": {
@@ -511,12 +511,18 @@
             "threat": 44,
             "engagement": 58,
             "future_expectancy": -96,
-            "self_evaluation": -24
+            "self_evaluation": -24,
+            "affiliation": -80
         },
         "core:sexual_state": {
             "sex_excitation": 4,
             "sex_inhibition": 93,
             "baseline_libido": 10
+        },
+        "core:affect_traits": {
+            "affective_empathy": 60,
+            "cognitive_empathy": 88,
+            "harm_aversion": 85
         }
     }
 }

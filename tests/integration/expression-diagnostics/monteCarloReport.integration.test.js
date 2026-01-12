@@ -420,6 +420,48 @@ describe('Monte Carlo Report System - Integration', () => {
       expect(report).toContain('**Fail% | mood-pass**: 50.00% (5 / 10)');
       expect(report).toContain('**Redundant in regime**: no');
     });
+
+    it('should include gate clamp and pass|gate columns for emotion-threshold leaves', () => {
+      const generator = new MonteCarloReportGenerator({ logger: mockLogger });
+      const result = createTestSimulationResult();
+      const blockers = [
+        createTestBlocker({
+          hierarchicalBreakdown: {
+            id: '0',
+            nodeType: 'and',
+            isCompound: true,
+            children: [
+              {
+                id: '0.0',
+                nodeType: 'leaf',
+                description: 'emotions.joy >= 0.5',
+                variablePath: 'emotions.joy',
+                comparisonOperator: '>=',
+                thresholdValue: 0.5,
+                inRegimeEvaluationCount: 10,
+                inRegimeFailureCount: 4,
+                gateClampRateInRegime: 0.3,
+                gateFailInRegimeCount: 3,
+                gatePassInRegimeCount: 7,
+                passRateGivenGateInRegime: 3 / 7,
+                gatePassAndClausePassInRegimeCount: 3,
+              },
+            ],
+          },
+        }),
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test:expression',
+        simulationResult: result,
+        blockers,
+        summary: 'Test summary',
+      });
+
+      expect(report).toContain('| Gate clamp (mood) | Pass \\| gate (mood) |');
+      expect(report).toContain('30.00% (3 / 10)');
+      expect(report).toContain('42.86% (3 / 7)');
+    });
   });
 
   describe('Prototype Fit Analysis Integration', () => {
@@ -499,8 +541,10 @@ describe('Monte Carlo Report System - Integration', () => {
       });
 
       expect(report).toContain('**Feasibility (gated)**');
-      expect(report).toContain('**Achievable range**');
+      expect(report).toContain('**Theoretical range (mood constraints, AND-only)**');
       expect(report).toContain('**Regime Stats**');
+      expect(report).toContain('**Observed max (global, final)**');
+      expect(report).toContain('**Observed max (mood-regime, final)**');
       expect(report).toContain('In mood regime');
       expect(report).toContain('**Gate Compatibility (mood regime)**: N/A');
     });

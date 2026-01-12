@@ -1,0 +1,165 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-confusion:cognitive_overload_stall",
+    "description": "Cognitive overload stall: too many simultaneous threads—thinking stays online, but it starts to stutter. The mind keeps reaching for structure and coming up with noise, producing a visible pause-and-retry rhythm rather than detachment or panic.",
+    "category": "shutdown",
+    "actor_description": "My thoughts keep grabbing for the next step and slipping like wet fingers. I’m still here—still trying—but everything arrives at once, and my brain starts dropping pieces mid-sentence. I blink too much, reread the same idea in my head, and feel my ability to choose a direction sag as if someone turned the dial down. I can’t tell what matters first, so I just… stall, stuck buffering while I try to get traction again.",
+    "description_text": "{actor} goes briefly still in a way that reads like cognitive traffic, not absence—eyes tracking, jaw set, but responses arriving late or in restarted fragments. Their focus keeps re-aiming as if trying to prioritize, then catching and pausing again.",
+    "priority": 73,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.confusion"
+                            },
+                            0.62
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.stress"
+                                    },
+                                    0.50
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anxiety"
+                                    },
+                                    0.38
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            70
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.32
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.22
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.confusion"
+                                            },
+                                            {
+                                                "var": "previousEmotions.confusion"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires high confusion with stress (or light anxiety) while engagement stays positive—still trying to process. Grounds the stall in mid-high arousal and reduced agency. Excludes dissociation/numbness (not checked out), panic/freeze (not terror), and rage (not an anger beat). Triggers on a confusion spike or a noticeable agency-control drop (the moment cognition stutters)."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear the pause in my own voice—false starts, a clipped inhale, a sentence that restarts as if the words were queued wrong.",
+        "tactile": "There’s a tightness behind my eyes and a faint buzzing restlessness in my hands—energy present, but no clean channel for it.",
+        "limited": "My attention stays on it, but the next step won’t resolve; I keep pausing and trying again."
+    }
+}

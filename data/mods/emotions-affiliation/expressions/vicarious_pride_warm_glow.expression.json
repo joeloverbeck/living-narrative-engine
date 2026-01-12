@@ -1,0 +1,157 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-affiliation:vicarious_pride_warm_glow",
+    "description": "Vicarious pride—warm, relational uplift that reads as “I’m proud of you,” with a reflected glow: admiration and affection braid into a steady, protective brightness. Style note: consider adding category 'elevation' for prosocial uplift beats (not quite joy, not quite affection) to distinguish them from pure bonding warmth.",
+    "category": "affection",
+    "actor_description": "A warm pressure spreads behind my ribs, like someone turned a light on inside me. I catch myself smiling before I mean to, standing a little taller as if the win belongs to us. For a moment the world feels kinder and more possible, and I want to be close—to show it plainly, without making it heavy.",
+    "description_text": "{actor}'s face softens into a bright, unmistakably proud smile, eyes shining with an unguarded warmth. Their posture opens—chest lifted, shoulders back—as if they're quietly radiating approval and closeness.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.admiration"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.affection"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.envy"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.resentment"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.admiration"
+                                            },
+                                            {
+                                                "var": "previousEmotions.admiration"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.admiration"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.admiration"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a relational uplift signature (admiration + affection) grounded in high affiliation and positive valence with a small hope-tilt. Caps envy/resentment/cynicism so it doesn't read competitive or bitter. Fires only on a recognition moment (admiration spike, affiliation jump, or admiration crossing) to prevent warm-background spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a small, pleased laugh or a soft, breathy \"yes\" under it—approval leaking out before words form.",
+        "tactile": "The air around them feels inviting—like warmth off a sunlit wall; a subtle lean-in that says closeness is safe.",
+        "limited": "I feel a sudden, clean lift—bright affection threaded with respect, as if something good just clicked into place."
+    }
+}

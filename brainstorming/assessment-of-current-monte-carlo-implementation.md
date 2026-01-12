@@ -5,20 +5,7 @@ My goal with the reports generated in expression-diagnostics.html through the Mo
 # Monte Carlo Analysis Report
 
 **Expression**: hurt_anger
-**Generated**: 2026-01-12T00:27:17.370Z
-**Distribution**: uniform
-**Sample Size**: 10000
-**Sampling Mode**: static - Prototype-gated sampling (emotions derived from mood axes; not independent)
-**Regime Note**: Report includes global vs in-regime (mood-pass) statistics
-
-> **Note**: Emotions are computed via prototype gates, so emotion variables are not independent of mood axes.
-
----
-
-# Monte Carlo Analysis Report
-
-**Expression**: hurt_anger
-**Generated**: 2026-01-12T01:05:27.597Z
+**Generated**: 2026-01-12T12:24:57.554Z
 **Distribution**: uniform
 **Sample Size**: 100000
 **Sampling Mode**: static - Prototype-gated sampling (emotions derived from mood axes; not independent)
@@ -28,12 +15,22 @@ My goal with the reports generated in expression-diagnostics.html through the Mo
 
 ---
 
+## Population Summary
+
+- **Total samples**: 100.000 (in-regime 326; 0.33%)
+- **Stored contexts**: 10.000 of 100.000 (in-regime 23; 0.23%; limit 10.000)
+- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+> **Note**: Stored contexts are capped at 10.000, so sections labeled "Population: stored-*" may not match full-sample counts.
+
+
+---
+
 ## Executive Summary
 
-**Trigger Rate**: 0.0010% (95% CI: 1.77e-4% - 0.0057%)
-**Rarity**: rare
+**Trigger Rate**: 0.00% (95% CI: 0.00% - 0.0038%)
+**Rarity**: unobserved (not triggered in 100000 samples—trigger rate is below 0.0038% upper bound, not logically impossible)
 
-Expression triggers rarely (0.001%). 1 clause(s) frequently fail. Focus on "AND of 19 conditions" (100.0% last-mile failure).
+Expression never triggers. Primary blocker: AND of 19 conditions Focus on "AND of 19 conditions" (100.0% last-mile failure).
 
 ---
 
@@ -45,20 +42,20 @@ Expression triggers rarely (0.001%). 1 clause(s) frequently fail. Focus on "AND 
 
 | Domain | Variables | Range Coverage | Bin Coverage | Tail Low | Tail High | Rating |
 |--------|-----------|----------------|--------------|----------|-----------|--------|
-| emotions | 15 | 90.90% | 93.33% | 87.11% | 0.0099% | good |
-| moodAxes | 6 | 100.00% | 100.00% | 10.30% | 10.21% | good |
-| previousEmotions | 2 | 86.05% | 90.00% | 91.13% | 0.0010% | good |
-| previousMoodAxes | 2 | 100.00% | 100.00% | 10.37% | 10.25% | good |
+| emotions | 15 | 91.18% | 92.00% | 87.05% | 0.0080% | good |
+| moodAxes | 6 | 100.00% | 100.00% | 10.24% | 10.19% | good |
+| previousEmotions | 2 | 85.62% | 95.00% | 91.09% | 5.00e-4% | good |
+| previousMoodAxes | 2 | 100.00% | 100.00% | 10.24% | 10.22% | good |
 
 ### Lowest Coverage Variables
 
 | Variable | Range Coverage | Bin Coverage | Tail Low | Tail High | Rating |
 |----------|----------------|--------------|----------|-----------|--------|
-| previousEmotions.lonely_yearning | 78.37% | 80.00% | 98.74% | 0.00% | good |
-| emotions.panic | 84.43% | 70.00% | 99.52% | 0.00% | good |
-| emotions.dissociation | 86.97% | 90.00% | 98.07% | 0.00% | good |
-| emotions.lonely_yearning | 87.44% | 90.00% | 98.67% | 0.00% | good |
-| emotions.rage | 88.43% | 90.00% | 87.41% | 0.00% | good |
+| emotions.lonely_yearning | 77.04% | 80.00% | 98.71% | 0.00% | good |
+| previousEmotions.lonely_yearning | 81.10% | 90.00% | 98.66% | 0.00% | good |
+| emotions.panic | 84.99% | 70.00% | 99.47% | 0.00% | good |
+| emotions.terror | 89.39% | 90.00% | 91.17% | 0.00% | good |
+| emotions.disgust | 89.67% | 90.00% | 72.42% | 0.00% | good |
 
 Notes:
 - Range coverage is observed span divided by domain span.
@@ -68,103 +65,33 @@ Notes:
 
 ### Coverage Conclusions
 
-- emotions: upper tail is effectively untested (top 10% has 0.0099% of samples). High-threshold feasibility results are not trustworthy here.
-- previousEmotions: upper tail is effectively untested (top 10% has 0.0010% of samples). High-threshold feasibility results are not trustworthy here.
+- emotions: upper tail is effectively untested (top 10% has 0.0080% of samples). High-threshold feasibility results are not trustworthy here.
+- previousEmotions: upper tail is effectively untested (top 10% has 0.0005% of samples). High-threshold feasibility results are not trustworthy here.
 - moodAxes: coverage looks healthy (full range, bins filled, tails represented). Feasibility failures here likely reflect true constraint strictness.
 - previousMoodAxes: coverage looks healthy (full range, bins filled, tails represented). Feasibility failures here likely reflect true constraint strictness.
 - Across variables: 17 show near-zero upper-tail coverage; 1 show truncated range. Those regions are effectively unvalidated by current sampling.
 - Do not trust feasibility estimates for prerequisites that target the upper end of a domain; the sampler is not generating those states often enough to test them.
-- Worst range coverage: min=78%.
+- Worst range coverage: min=77%.
 - Worst upper-tail coverage: min tailHigh=0.0000%.
-- Worst lower-tail coverage: min tailLow=10.1670%.
+- Worst lower-tail coverage: min tailLow=10.0960%.
 
 ---
 
 ## Ground-Truth Witnesses
 
-These states were verified to trigger the expression during simulation.
-Each witness represents a valid combination of mood, sexual state, and affect traits.
+No triggering states found during simulation.
 
-### Witness #1
-
-**Computed Emotions (Current)**:
-- anger: 0.432
-- contempt: 0.203
-- disappointment: 0.000
-- disgust: 0.000
-- dissociation: 0.000
-- embarrassment: 0.488
-- freeze: 0.000
-- grief: 0.000
-- hatred: 0.000
-- lonely_yearning: 0.000
-- panic: 0.000
-- rage: 0.000
-- regret: 0.000
-- sadness: 0.000
-- terror: 0.293
-
-**Computed Emotions (Previous)**:
-- anger: 0.000
-- contempt: 0.000
-- disappointment: 0.000
-- disgust: 0.000
-- dissociation: 0.000
-- embarrassment: 0.000
-- freeze: 0.000
-- grief: 0.000
-- hatred: 0.000
-- lonely_yearning: 0.000
-- panic: 0.000
-- rage: 0.000
-- regret: 0.000
-- sadness: 0.000
-- terror: 0.000
-
-**Mood State (Current)**:
-- valence: -18
-- arousal: 41
-- agency_control: 99
-- threat: 54
-- engagement: 91
-- future_expectancy: 76
-- self_evaluation: -63
-- affiliation: 25
-
-**Mood State (Previous)**:
-- valence: 6
-- arousal: -88
-- agency_control: 58
-- threat: -41
-- engagement: -48
-- future_expectancy: 39
-- self_evaluation: -45
-- affiliation: 4
-
-**Sexual State (Current)**:
-- sex_excitation: 66
-- sex_inhibition: 92
-- baseline_libido: 5
-
-**Sexual State (Previous)**:
-- sex_excitation: 2
-- sex_inhibition: 7
-- baseline_libido: -4
-
-**Affect Traits**:
-- affective_empathy: 22
-- cognitive_empathy: 59
-- harm_aversion: 11
 
 ---
 
 ## Blocker Analysis
+Signal: final (gate-clamped intensity).
 
 ### Blocker #1: `AND of 19 conditions`
 
 **Condition**: Compound AND block
-**Fail% global**: 100.00% (99999 / 100000)
-**Fail% | mood-pass**: 99.69% (326 / 327)
+**Fail% global**: 100.00% (100000 / 100000)
+**Fail% | mood-pass**: 100.00% (326 / 326)
 **Severity**: critical
 **Redundant in regime**: N/A
 
@@ -177,93 +104,94 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 
 | # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Sole-Blocker Rate |
 |---|-----------|--------------|-------------------|---------|-------|-----------|-----|---------|-------------------|-------------------|
-| 1 | `emotions.anger >= 0.4` | 93.71% | 86.54% (283 / 327) | 100000 | 0.89 | 0.40 | -0.49 | moderate | no | 99.32% (N=146) |
-| 2 | `emotions.rage < 0.55` | 1.83% | 0.31% (1 / 327) | 100000 | 0.00 | 0.55 | -0.55 | low | no | 0.00% (N=1)⚠️ |
-| 3 | `moodAxes.affiliation >= 20` | 59.78% | 0.00% (0 / 327) | 100000 | 100.00 | 20.00 | -80.00 | moderate | yes | 90.00% (N=10) |
-| 4 | `moodAxes.valence <= -10` | 54.97% | 0.00% (0 / 327) | 100000 | -100.00 | -10.00 | -90.00 | moderate | yes | 0.00% (N=1)⚠️ |
-| 5 | `moodAxes.self_evaluation <= -5` | 52.22% | 0.00% (0 / 327) | 100000 | -100.00 | -5.00 | -95.00 | moderate | yes | 50.00% (N=2)⚠️ |
-| 6 | `moodAxes.engagement >= 15` | 57.33% | 0.00% (0 / 327) | 100000 | 100.00 | 15.00 | -85.00 | moderate | yes | 0.00% (N=1)⚠️ |
-| 7 | `moodAxes.threat >= 10` | 54.71% | 0.00% (0 / 327) | 100000 | 100.00 | 10.00 | -90.00 | moderate | yes | 0.00% (N=1)⚠️ |
-| 8 | `moodAxes.threat <= 70` | 14.75% | 0.00% (0 / 327) | 100000 | -100.00 | 70.00 | -170.00 | moderate | yes | 0.00% (N=1)⚠️ |
-| 9 | `moodAxes.arousal >= -5` | 47.53% | 0.00% (0 / 327) | 100000 | 100.00 | -5.00 | -105.00 | moderate | yes | 0.00% (N=1)⚠️ |
-| 10 | `moodAxes.arousal <= 55` | 22.29% | 0.00% (0 / 327) | 100000 | -100.00 | 55.00 | -155.00 | moderate | yes | 75.00% (N=4)⚠️ |
-| 11 | `emotions.contempt <= 0.4` | 7.25% | 0.31% (1 / 327) | 100000 | 0.00 | 0.40 | -0.40 | moderate | no | 0.00% (N=1)⚠️ |
-| 12 | `emotions.disgust <= 0.4` | 8.45% | 0.00% (0 / 327) | 100000 | 0.00 | 0.40 | -0.40 | moderate | yes | 0.00% (N=1)⚠️ |
-| 13 | `emotions.hatred <= 0.35` | 7.76% | 40.37% (132 / 327) | 100000 | 0.00 | 0.35 | -0.35 | moderate | no | 97.50% (N=40) |
-| 14 | `emotions.panic <= 0.4` | 0.47% | 0.61% (2 / 327) | 100000 | 0.00 | 0.40 | -0.40 | low | no | 0.00% (N=1)⚠️ |
-| 15 | `emotions.terror <= 0.5` | 3.02% | 4.89% (16 / 327) | 100000 | 0.00 | 0.50 | -0.50 | moderate | no | 0.00% (N=1)⚠️ |
-| 16 | `emotions.freeze <= 0.55` | 0.42% | 6.12% (20 / 327) | 100000 | 0.00 | 0.55 | -0.55 | low | no | 0.00% (N=1)⚠️ |
-| 17 | `emotions.dissociation <= 0.65` | 0.25% | 0.00% (0 / 327) | 100000 | 0.00 | 0.65 | -0.65 | low | yes | 0.00% (N=1)⚠️ |
+| 1 | `emotions.anger >= 0.4` | 93.58% | 86.81% (283 / 326) | 100000 | 0.90 | 0.40 | -0.50 | moderate | no | 100.00% (N=139) |
+| 2 | `emotions.rage < 0.55` | 1.89% | 0.00% (0 / 326) | 100000 | 0.00 | 0.55 | -0.55 | low | yes | N/A |
+| 3 | `moodAxes.affiliation >= 20` | 59.84% | 0.00% (0 / 326) | 100000 | 100.00 | 20.00 | -80.00 | moderate | yes | 100.00% (N=4)⚠️ |
+| 4 | `moodAxes.valence <= -10` | 54.78% | 0.00% (0 / 326) | 100000 | -100.00 | -10.00 | -90.00 | moderate | yes | N/A |
+| 5 | `moodAxes.self_evaluation <= -5` | 52.27% | 0.00% (0 / 326) | 100000 | -100.00 | -5.00 | -95.00 | moderate | yes | N/A |
+| 6 | `moodAxes.engagement >= 15` | 57.39% | 0.00% (0 / 326) | 100000 | 100.00 | 15.00 | -85.00 | moderate | yes | N/A |
+| 7 | `moodAxes.threat >= 10` | 54.93% | 0.00% (0 / 326) | 100000 | 100.00 | 10.00 | -90.00 | moderate | yes | N/A |
+| 8 | `moodAxes.threat <= 70` | 14.65% | 0.00% (0 / 326) | 100000 | -100.00 | 70.00 | -170.00 | moderate | yes | N/A |
+| 9 | `moodAxes.arousal >= -5` | 47.05% | 0.00% (0 / 326) | 100000 | 100.00 | -5.00 | -105.00 | moderate | yes | N/A |
+| 10 | `moodAxes.arousal <= 55` | 22.31% | 0.00% (0 / 326) | 100000 | -100.00 | 55.00 | -155.00 | moderate | yes | 100.00% (N=4)⚠️ |
+| 11 | `emotions.contempt <= 0.4` | 7.22% | 0.31% (1 / 326) | 100000 | 0.00 | 0.40 | -0.40 | moderate | no | N/A |
+| 12 | `emotions.disgust <= 0.4` | 8.63% | 0.00% (0 / 326) | 100000 | 0.00 | 0.40 | -0.40 | moderate | yes | N/A |
+| 13 | `emotions.hatred <= 0.35` | 7.93% | 38.96% (127 / 326) | 100000 | 0.00 | 0.35 | -0.35 | moderate | no | 100.00% (N=42) |
+| 14 | `emotions.panic <= 0.4` | 0.53% | 0.00% (0 / 326) | 100000 | 0.00 | 0.40 | -0.40 | low | yes | N/A |
+| 15 | `emotions.terror <= 0.5` | 3.04% | 3.99% (13 / 326) | 100000 | 0.00 | 0.50 | -0.50 | low | no | N/A |
+| 16 | `emotions.freeze <= 0.55` | 0.42% | 9.51% (31 / 326) | 100000 | 0.00 | 0.55 | -0.55 | low | no | N/A |
+| 17 | `emotions.dissociation <= 0.65` | 0.26% | 0.00% (0 / 326) | 100000 | 0.00 | 0.65 | -0.65 | low | yes | N/A |
 
 **OR Block #1 (ANY ONE must pass)**
 
 | # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Sole-Blocker Rate |
 |---|-----------|--------------|-------------------|---------|-------|-----------|-----|---------|-------------------|-------------------|
-| 18 | `emotions.sadness >= 0.22` | 78.62% | 73.39% (240 / 327) | 100000 | 0.97 | 0.22 | -0.75 | moderate | no | N/A (OR alt) |
-| 19 | `emotions.grief >= 0.18` | 84.41% | 23.55% (77 / 327) | 100000 | 0.95 | 0.18 | -0.77 | low | no | N/A (OR alt) |
-| 20 | `emotions.disappointment >= 0.25` | 82.40% | 63.91% (209 / 327) | 100000 | 0.96 | 0.25 | -0.71 | moderate | no | N/A (OR alt) |
-| 21 | `emotions.regret >= 0.18` | 84.57% | 27.83% (91 / 327) | 100000 | 0.92 | 0.18 | -0.74 | low | no | N/A (OR alt) |
-| 22 | `emotions.lonely_yearning >= 0.25` | 99.03% | 82.87% (271 / 327) | 100000 | 0.87 | 0.25 | -0.62 | low | no | N/A (OR alt) |
-| 23 | `emotions.embarrassment >= 0.2` | 85.89% | 21.10% (69 / 327) | 100000 | 0.93 | 0.20 | -0.73 | moderate | no | N/A (OR alt) |
+| 18 | `emotions.sadness >= 0.22` | 78.78% | 73.62% (240 / 326) | 100000 | 0.97 | 0.22 | -0.75 | moderate | no | N/A (OR alt) |
+| 19 | `emotions.grief >= 0.18` | 84.51% | 26.69% (87 / 326) | 100000 | 0.94 | 0.18 | -0.76 | low | no | N/A (OR alt) |
+| 20 | `emotions.disappointment >= 0.25` | 82.43% | 63.80% (208 / 326) | 100000 | 0.97 | 0.25 | -0.72 | moderate | no | N/A (OR alt) |
+| 21 | `emotions.regret >= 0.18` | 84.61% | 28.22% (92 / 326) | 100000 | 0.97 | 0.18 | -0.79 | low | no | N/A (OR alt) |
+| 22 | `emotions.lonely_yearning >= 0.25` | 99.06% | 84.66% (276 / 326) | 100000 | 0.77 | 0.25 | -0.52 | low | no | N/A (OR alt) |
+| 23 | `emotions.embarrassment >= 0.2` | 85.95% | 20.55% (67 / 326) | 100000 | 0.95 | 0.20 | -0.75 | moderate | no | N/A (OR alt) |
 
-**Combined OR Block**: 60.66% pass rate (Fail% global: 39.34% | Fail% \| mood-pass: 1.83%)
+**Combined OR Block**: 60.47% pass rate (Fail% global: 39.53% | Fail% \| mood-pass: 2.45%)
 
-**OR Block #1 OR Alternative Coverage** (44086 total successes):
+**OR Block #1 OR Alternative Coverage** (44043 total successes):
 
 | Alternative | P(alt passes \| OR pass) | P(alt exclusively passes \| OR pass) | First-pass share (order-dependent) |
 |------------|---------------------------|------------------------------------|------------------------------------|
-| `emotions.sadness >= 0.22` | 48.49% (21379/44086) | 9.54% (4205/44086) | 48.49% (21379/44086) |
-| `emotions.disappointment >= 0.25` | 39.92% (17601/44086) | 8.11% (3576/44086) | 12.69% (5596/44086) |
-| `emotions.grief >= 0.18` | 35.36% (15591/44086) | 4.47% (1970/44086) | 14.27% (6290/44086) |
-| `emotions.regret >= 0.18` | 35.00% (15432/44086) | 4.16% (1834/44086) | 7.07% (3117/44086) |
-| `emotions.embarrassment >= 0.2` | 32.00% (14109/44086) | 17.19% (7577/44086) | 17.19% (7577/44086) |
-| `emotions.lonely_yearning >= 0.25` | 2.19% (967/44086) | 0.27% (120/44086) | 0.29% (127/44086) |
+| `emotions.sadness >= 0.22` | 48.18% (21222/44043) | 9.78% (4309/44043) | 48.18% (21222/44043) |
+| `emotions.disappointment >= 0.25` | 39.89% (17568/44043) | 8.34% (3675/44043) | 13.23% (5825/44043) |
+| `emotions.grief >= 0.18` | 35.18% (15493/44043) | 4.40% (1938/44043) | 14.30% (6298/44043) |
+| `emotions.regret >= 0.18` | 34.95% (15394/44043) | 4.08% (1795/44043) | 7.02% (3093/44043) |
+| `emotions.embarrassment >= 0.2` | 31.91% (14053/44043) | 16.99% (7481/44043) | 16.99% (7481/44043) |
+| `emotions.lonely_yearning >= 0.25` | 2.15% (945/44043) | 0.26% (115/44043) | 0.28% (124/44043) |
 *First-pass share is order-dependent; use pass/exclusive rates for order-independent attribution.*
 
 **OR Block #2 (ANY ONE must pass)**
 
 | # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Sole-Blocker Rate |
 |---|-----------|--------------|-------------------|---------|-------|-----------|-----|---------|-------------------|-------------------|
-| 24 | `(emotions.anger - previousEmotions.anger) >= 0.08` | 85.18% | 48.93% (160 / 327) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
-| 25 | `(emotions.lonely_yearning - previousEmotions.lonely_yearning) >= 0.08` | 98.66% | 82.57% (270 / 327) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
-| 26 | `(moodAxes.self_evaluation - previousMoodAxes.self_evaluation) <= -10` | 54.58% | 26.61% (87 / 327) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
-| 27 | `(moodAxes.affiliation - previousMoodAxes.affiliation) <= -12` | 55.76% | 83.49% (273 / 327) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
+| 24 | `(emotions.anger - previousEmotions.anger) >= 0.08` | 84.81% | 51.53% (168 / 326) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
+| 25 | `(emotions.lonely_yearning - previousEmotions.lonely_yearning) >= 0.08` | 98.69% | 84.36% (275 / 326) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
+| 26 | `(moodAxes.self_evaluation - previousMoodAxes.self_evaluation) <= -10` | 54.67% | 28.53% (93 / 326) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
+| 27 | `(moodAxes.affiliation - previousMoodAxes.affiliation) <= -12` | 55.49% | 85.89% (280 / 326) | 100000 | - | - | - | low | N/A | N/A (OR alt) |
 | | **AND Group (2 conditions - all must pass together)** | | | | | | | | | |
-| 28 | `└─ previousEmotions.anger < 0.4` | 6.26% | 6.73% (22 / 327) | 100000 | 0.00 | 0.40 | -0.40 | moderate | no | N/A (OR alt) |
-| 29 | `└─ emotions.anger >= 0.4` | 93.71% | 86.54% (283 / 327) | 100000 | 0.89 | 0.40 | -0.49 | moderate | no | N/A (OR alt) |
+| 28 | `└─ previousEmotions.anger < 0.4` | 6.43% | 5.83% (19 / 326) | 100000 | 0.00 | 0.40 | -0.40 | moderate | no | N/A (OR alt) |
+| 29 | `└─ emotions.anger >= 0.4` | 93.58% | 86.81% (283 / 326) | 100000 | 0.90 | 0.40 | -0.50 | moderate | no | N/A (OR alt) |
 
-**Combined OR Block**: 75.93% pass rate (Fail% global: 24.07% | Fail% \| mood-pass: 9.17%)
+**Combined OR Block**: 76.14% pass rate (Fail% global: 23.86% | Fail% \| mood-pass: 10.43%)
 
-**OR Block #2 OR Alternative Coverage** (74136 total successes):
+**OR Block #2 OR Alternative Coverage** (74349 total successes):
 
 | Alternative | P(alt passes \| OR pass) | P(alt exclusively passes \| OR pass) | First-pass share (order-dependent) |
 |------------|---------------------------|------------------------------------|------------------------------------|
-| `(moodAxes.self_evaluation - previousMoodAxes.self_evaluation) <= -10` | 61.27% (45423/74136) | 29.03% (21525/74136) | 51.46% (38148/74136) |
-| `(moodAxes.affiliation - previousMoodAxes.affiliation) <= -12` | 59.67% (44239/74136) | 27.32% (20257/74136) | 27.34% (20267/74136) |
-| `(emotions.anger - previousEmotions.anger) >= 0.08` | 19.99% (14820/74136) | 3.59% (2662/74136) | 19.99% (14820/74136) |
-| `(AND: previousEmotions.anger < 0.4 & emotions.anger >= 0.4)` | 7.92% (5868/74136) | 0.01% (11/74136) | 0.01% (11/74136) |
-| `(emotions.lonely_yearning - previousEmotions.lonely_yearning) >= 0.08` | 1.81% (1343/74136) | 0.44% (327/74136) | 1.20% (890/74136) |
+| `(moodAxes.self_evaluation - previousMoodAxes.self_evaluation) <= -10` | 60.97% (45334/74349) | 28.71% (21343/74349) | 51.12% (38005/74349) |
+| `(moodAxes.affiliation - previousMoodAxes.affiliation) <= -12` | 59.87% (44513/74349) | 27.26% (20264/74349) | 27.28% (20282/74349) |
+| `(emotions.anger - previousEmotions.anger) >= 0.08` | 20.43% (15187/74349) | 3.66% (2719/74349) | 20.43% (15187/74349) |
+| `(AND: previousEmotions.anger < 0.4 & emotions.anger >= 0.4)` | 8.09% (6012/74349) | 0.02% (13/74349) | 0.02% (13/74349) |
+| `(emotions.lonely_yearning - previousEmotions.lonely_yearning) >= 0.08` | 1.77% (1315/74349) | 0.40% (299/74349) | 1.16% (862/74349) |
 *First-pass share is order-dependent; use pass/exclusive rates for order-independent attribution.*
 
 #### Worst Offender Analysis
 
-**#1: `emotions.anger >= 0.4`** (Fail% global: 93.71% | Fail% \| mood-pass: N/A)
+**#1: `emotions.anger >= 0.4`** (Fail% global: 93.58% | Fail% \| mood-pass: N/A)
 
-**#2: `emotions.lonely_yearning >= 0.25`** ⚠️ OR-alternative (Fail% global: 99.03% | Fail% \| mood-pass: N/A)
+**#2: `emotions.lonely_yearning >= 0.25`** ⚠️ OR-alternative (Fail% global: 99.06% | Fail% \| mood-pass: N/A)
 - ℹ️ This is an alternative within an OR block; other alternatives may cover this case
 
-**#3: `(emotions.lonely_yearning - previousEmotions.lonely_yearning) >= 0.08`** ⚠️ OR-alternative (Fail% global: 98.66% | Fail% \| mood-pass: N/A)
+**#3: `(emotions.lonely_yearning - previousEmotions.lonely_yearning) >= 0.08`** ⚠️ OR-alternative (Fail% global: 98.69% | Fail% \| mood-pass: N/A)
 - ℹ️ This is an alternative within an OR block; other alternatives may cover this case
 
-**#4: `emotions.embarrassment >= 0.2`** ⚠️ OR-alternative (Fail% global: 85.89% | Fail% \| mood-pass: N/A)
+**#4: `emotions.embarrassment >= 0.2`** ⚠️ OR-alternative (Fail% global: 85.95% | Fail% \| mood-pass: N/A)
 - ℹ️ This is an alternative within an OR block; other alternatives may cover this case
 
 #### Prototype Math Analysis
 
+**Population**: stored-global (predicate: all; count: 10.000; hash: 1a309bea).
 ##### 🧠 anger >= 0.40 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.72]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.72]
 - **Threshold**: 0.40
 - **Status**: sometimes
 - **Slack**: feasibility +0.321; always -0.400
@@ -271,10 +199,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.90 | **Required Raw Sum**: 1.16
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.31 | 0.44 | 0.00 | 0.87 | 50.25% |
-| In mood regime | 0.16 | 0.45 | 0.48 | 0.00 | 0.50 | 88.57% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.32 | 0.45 | 0.00 | 0.83 | 19.79% |
+| Global | raw | 0.00 | 0.38 | 0.47 | 0.00 | 0.83 | N/A |
+| In mood regime | final | 0.00 | 0.49 | 0.49 | 0.00 | 0.55 | 47.83% |
+| In mood regime | raw | 0.20 | 0.49 | 0.49 | 0.00 | 0.55 | N/A |
+- **Observed max (global, final)**: 0.83
+- **Observed max (mood-regime, final)**: 0.55
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -288,8 +220,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | affiliation | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
 
 **Gates** ✅:
-- ✅ `valence <= -0.15` - Satisfiable
-- ✅ `arousal >= 0.10` - Satisfiable | **Observed Fail Rate**: 49.75%
+- ✅ `valence <= -0.15` - Satisfiable | **Observed Fail Rate**: 56.35%
+- ✅ `arousal >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.26%
 
 **Binding Axes (Structural Conflicts)**:
 - ⚠️ **affiliation**: Has negative weight (-0.30) but constraint requires min 0.20
@@ -301,7 +233,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 rage < 0.55 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.70]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.70]
 - **Threshold**: 0.55
 - **Status**: sometimes
 - **Slack**: feasibility +0.550; always -0.150
@@ -309,10 +241,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 3.50 | **Required Raw Sum**: 1.93
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.24 | 0.41 | 0.00 | 0.86 | 50.25% |
-| In mood regime | 0.00 | 0.41 | 0.46 | 0.00 | 0.49 | 88.57% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.25 | 0.42 | 0.00 | 0.82 | 14.68% |
+| Global | raw | 0.00 | 0.37 | 0.47 | 0.00 | 0.82 | N/A |
+| In mood regime | final | 0.00 | 0.47 | 0.47 | 0.00 | 0.53 | 26.09% |
+| In mood regime | raw | 0.19 | 0.47 | 0.47 | 0.00 | 0.53 | N/A |
+- **Observed max (global, final)**: 0.82
+- **Observed max (mood-regime, final)**: 0.53
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -326,8 +262,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | affiliation | -0.40 | [0.20, 1.00] | 0.20 | -0.080 | ⚠️ negative_weight_high_min |
 
 **Gates** ✅:
-- ✅ `valence <= -0.25` - Satisfiable
-- ✅ `arousal >= 0.25` - Satisfiable | **Observed Fail Rate**: 49.75%
+- ✅ `valence <= -0.25` - Satisfiable | **Observed Fail Rate**: 61.43%
+- ✅ `arousal >= 0.25` - Satisfiable | **Observed Fail Rate**: 61.63%
 
 **Binding Axes (Structural Conflicts)**:
 - ⚠️ **affiliation**: Has negative weight (-0.40) but constraint requires min 0.20
@@ -339,7 +275,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 contempt <= 0.40 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.55]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.55]
 - **Threshold**: 0.40
 - **Status**: sometimes
 - **Slack**: feasibility +0.400; always -0.148
@@ -347,10 +283,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.30 | **Required Raw Sum**: 0.92
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.33 | 0.47 | 0.00 | 0.82 | 50.33% |
-| In mood regime | 0.00 | 0.23 | 0.26 | 0.00 | 0.28 | 60.00% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.35 | 0.47 | 0.00 | 0.88 | 18.87% |
+| Global | raw | 0.00 | 0.39 | 0.49 | 0.00 | 0.88 | N/A |
+| In mood regime | final | 0.00 | 0.25 | 0.25 | 0.00 | 0.33 | 47.83% |
+| In mood regime | raw | 0.00 | 0.25 | 0.25 | 0.00 | 0.33 | N/A |
+- **Observed max (global, final)**: 0.88
+- **Observed max (mood-regime, final)**: 0.33
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -364,8 +304,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | affiliation | -0.50 | [0.20, 1.00] | 0.20 | -0.100 | ⚠️ negative_weight_high_min |
 
 **Gates** ✅:
-- ✅ `valence <= -0.10` - Satisfiable
-- ✅ `agency_control >= 0.20` - Satisfiable | **Observed Fail Rate**: 49.67%
+- ✅ `valence <= -0.10` - Satisfiable | **Observed Fail Rate**: 53.84%
+- ✅ `agency_control >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.27%
 
 **Binding Axes (Structural Conflicts)**:
 - ⚠️ **engagement**: Has negative weight (-0.20) but constraint requires min 0.15
@@ -379,7 +319,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 disgust <= 0.40 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.46]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.46]
 - **Threshold**: 0.40
 - **Status**: sometimes
 - **Slack**: feasibility +0.400; always -0.056
@@ -387,10 +327,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.40 | **Required Raw Sum**: 0.96
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.37 | 0.47 | 0.00 | 0.86 | 100.00% |
-| In mood regime | 0.04 | 0.23 | 0.26 | 0.00 | 0.26 | 100.00% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.38 | 0.49 | 0.00 | 0.87 | 38.57% |
+| Global | raw | 0.00 | 0.39 | 0.49 | 0.00 | 0.87 | N/A |
+| In mood regime | final | 0.08 | 0.17 | 0.18 | 0.00 | 0.24 | 78.26% |
+| In mood regime | raw | 0.08 | 0.17 | 0.18 | 0.00 | 0.24 | N/A |
+- **Observed max (global, final)**: 0.87
+- **Observed max (mood-regime, final)**: 0.24
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -404,7 +348,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | affiliation | -0.60 | [0.20, 1.00] | 0.20 | -0.120 | ⚠️ negative_weight_high_min |
 
 **Gates** ✅:
-- ✅ `valence <= -0.25` - Satisfiable
+- ✅ `valence <= -0.25` - Satisfiable | **Observed Fail Rate**: 61.43%
 
 **Binding Axes (Structural Conflicts)**:
 - ⚠️ **engagement**: Has negative weight (-0.30) but constraint requires min 0.15
@@ -417,7 +361,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 hatred <= 0.35 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.87]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.87]
 - **Threshold**: 0.35
 - **Status**: sometimes
 - **Slack**: feasibility +0.350; always -0.517
@@ -425,10 +369,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.70 | **Required Raw Sum**: 0.94
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.29 | 0.44 | 0.00 | 0.88 | 50.25% |
-| In mood regime | 0.29 | 0.58 | 0.63 | 0.00 | 0.67 | 88.57% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.29 | 0.45 | 0.00 | 0.86 | 17.44% |
+| Global | raw | 0.00 | 0.38 | 0.48 | 0.00 | 0.86 | N/A |
+| In mood regime | final | 0.00 | 0.63 | 0.66 | 0.00 | 0.70 | 43.48% |
+| In mood regime | raw | 0.36 | 0.66 | 0.70 | 0.00 | 0.70 | N/A |
+- **Observed max (global, final)**: 0.86
+- **Observed max (mood-regime, final)**: 0.70
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -442,8 +390,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | threat | +0.30 | [0.10, 0.70] | 0.70 | 0.210 | ⚠️ yes |
 
 **Gates** ✅:
-- ✅ `valence <= -0.25` - Satisfiable
-- ✅ `arousal >= 0.10` - Satisfiable | **Observed Fail Rate**: 49.75%
+- ✅ `valence <= -0.25` - Satisfiable | **Observed Fail Rate**: 61.43%
+- ✅ `arousal >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.26%
 
 **Binding Axes**: arousal, threat (constraints limit optimal values)
 
@@ -454,7 +402,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 panic <= 0.40 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.84]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.84]
 - **Threshold**: 0.40
 - **Status**: sometimes
 - **Slack**: feasibility +0.400; always -0.437
@@ -462,10 +410,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 4.60 | **Required Raw Sum**: 1.84
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.00 | 0.00 | 0.00 | 0.80 | 12.67% |
-| In mood regime | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 88.57% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.81 | 0.55% |
+| Global | raw | 0.00 | 0.32 | 0.41 | 0.00 | 0.81 | N/A |
+| In mood regime | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00% |
+| In mood regime | raw | 0.21 | 0.46 | 0.49 | 0.06 | 0.52 | N/A |
+- **Observed max (global, final)**: 0.81
+- **Observed max (mood-regime, final)**: 0.00
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -480,11 +432,11 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | future_expectancy | -0.35 | [-1.00, 1.00] | -1.00 | 0.350 | — |
 
 **Gates** ✅:
-- ✅ `threat >= 0.50` - Satisfiable | **Observed Fail Rate**: 50.10%
-- ✅ `arousal >= 0.55` - Satisfiable | **Observed Fail Rate**: 49.75%
-- ✅ `agency_control <= -0.10` - Satisfiable
-- ✅ `valence <= -0.15` - Satisfiable
-- ✅ `engagement >= 0.10` - Satisfiable | **Observed Fail Rate**: 50.30%
+- ✅ `threat >= 0.50` - Satisfiable | **Observed Fail Rate**: 74.55%
+- ✅ `arousal >= 0.55` - Satisfiable | **Observed Fail Rate**: 76.67%
+- ✅ `agency_control <= -0.10` - Satisfiable | **Observed Fail Rate**: 53.91%
+- ✅ `valence <= -0.15` - Satisfiable | **Observed Fail Rate**: 56.35%
+- ✅ `engagement >= 0.10` - Satisfiable | **Observed Fail Rate**: 55.04%
 
 **Binding Axes**: threat, arousal (constraints limit optimal values)
 
@@ -495,7 +447,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 terror <= 0.50 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.77]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.77]
 - **Threshold**: 0.50
 - **Status**: sometimes
 - **Slack**: feasibility +0.500; always -0.266
@@ -503,10 +455,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 3.20 | **Required Raw Sum**: 1.60
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.00 | 0.42 | 0.00 | 0.88 | 25.28% |
-| In mood regime | 0.00 | 0.36 | 0.45 | 0.00 | 0.59 | 88.57% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.40 | 0.00 | 0.94 | 9.06% |
+| Global | raw | 0.00 | 0.38 | 0.48 | 0.00 | 0.94 | N/A |
+| In mood regime | final | 0.00 | 0.00 | 0.39 | 0.00 | 0.50 | 8.70% |
+| In mood regime | raw | 0.29 | 0.47 | 0.48 | 0.00 | 0.50 | N/A |
+- **Observed max (global, final)**: 0.94
+- **Observed max (mood-regime, final)**: 0.50
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -520,8 +476,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | engagement | +0.25 | [0.15, 1.00] | 1.00 | 0.250 | — |
 
 **Gates** ✅:
-- ✅ `threat >= 0.50` - Satisfiable | **Observed Fail Rate**: 50.10%
-- ✅ `arousal >= 0.30` - Satisfiable | **Observed Fail Rate**: 49.75%
+- ✅ `threat >= 0.50` - Satisfiable | **Observed Fail Rate**: 74.55%
+- ✅ `arousal >= 0.30` - Satisfiable | **Observed Fail Rate**: 64.32%
 
 **Binding Axes**: threat, arousal (constraints limit optimal values)
 
@@ -532,7 +488,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 freeze <= 0.55 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.84]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.84]
 - **Threshold**: 0.55
 - **Status**: sometimes
 - **Slack**: feasibility +0.550; always -0.289
@@ -540,10 +496,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.75 | **Required Raw Sum**: 1.51
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.00 | 0.00 | 0.00 | 0.78 | 12.11% |
-| In mood regime | 0.00 | 0.51 | 0.62 | 0.00 | 0.65 | 11.43% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.81 | 0.68% |
+| Global | raw | 0.00 | 0.42 | 0.52 | 0.00 | 0.86 | N/A |
+| In mood regime | final | 0.00 | 0.44 | 0.61 | 0.00 | 0.63 | 17.39% |
+| In mood regime | raw | 0.19 | 0.61 | 0.61 | 0.00 | 0.63 | N/A |
+- **Observed max (global, final)**: 0.81
+- **Observed max (mood-regime, final)**: 0.63
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -557,12 +517,12 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | engagement | +0.25 | [0.15, 1.00] | 1.00 | 0.250 | — |
 
 **Gates** ✅:
-- ✅ `threat >= 0.35` - Satisfiable | **Observed Fail Rate**: 50.10%
-- ✅ `agency_control <= -0.30` - Satisfiable
-- ✅ `valence <= -0.05` - Satisfiable
-- ✅ `arousal >= -0.10` - Satisfiable
-- ✅ `arousal <= 0.40` - Satisfiable | **Observed Fail Rate**: 50.25%
-- ✅ `engagement >= 0.05` - Satisfiable | **Observed Fail Rate**: 50.30%
+- ✅ `threat >= 0.35` - Satisfiable | **Observed Fail Rate**: 67.33%
+- ✅ `agency_control <= -0.30` - Satisfiable | **Observed Fail Rate**: 63.69%
+- ✅ `valence <= -0.05` - Satisfiable | **Observed Fail Rate**: 51.61%
+- ✅ `arousal >= -0.10` - Satisfiable | **Observed Fail Rate**: 45.02%
+- ✅ `arousal <= 0.40` - Satisfiable | **Observed Fail Rate**: 30.39%
+- ✅ `engagement >= 0.05` - Satisfiable | **Observed Fail Rate**: 52.40%
 
 **Binding Axes**: threat, arousal (constraints limit optimal values)
 
@@ -573,7 +533,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 dissociation <= 0.65 ✅ ALWAYS
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.51]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.51]
 - **Threshold**: 0.65
 - **Status**: always
 - **Slack**: feasibility +0.650; always +0.145
@@ -581,10 +541,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 3.45 | **Required Raw Sum**: 2.24
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.00 | 0.00 | 0.00 | 0.87 | 12.27% |
-| In mood regime | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 11.43% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.87 | 2.14% |
+| Global | raw | 0.00 | 0.36 | 0.45 | 0.00 | 0.87 | N/A |
+| In mood regime | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00% |
+| In mood regime | raw | 0.00 | 0.16 | 0.26 | 0.00 | 0.33 | N/A |
+- **Observed max (global, final)**: 0.87
+- **Observed max (mood-regime, final)**: 0.00
 
 **Gate Compatibility (mood regime)**: ❌ incompatible - gate "engagement <= -0.20" conflicts with mood regime engagement in [0.15, 1]
 
@@ -600,11 +564,11 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | self_evaluation | -0.10 | [-1.00, -0.05] | -1.00 | 0.100 | — |
 
 **Gates** ❌:
-- ✅ `threat >= 0.35` - Satisfiable | **Observed Fail Rate**: 50.10%
-- ✅ `agency_control <= -0.20` - Satisfiable
-- ❌ `engagement <= -0.20` - Constraint min (0.15) > gate requirement (-0.2)
-- ✅ `arousal <= 0.35` - Satisfiable | **Observed Fail Rate**: 50.25%
-- ✅ `valence <= 0.10` - Satisfiable | **Observed Fail Rate**: 49.68%
+- ✅ `threat >= 0.35` - Satisfiable | **Observed Fail Rate**: 67.33%
+- ✅ `agency_control <= -0.20` - Satisfiable | **Observed Fail Rate**: 58.70%
+- ❌ `engagement <= -0.20` - Constraint min (0.15) > gate requirement (-0.2) | **Observed Fail Rate**: 58.95%
+- ✅ `arousal <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.80%
+- ✅ `valence <= 0.10` - Satisfiable | **Observed Fail Rate**: 45.25%
 - ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
 
 **Binding Axes (Structural Conflicts)**:
@@ -617,7 +581,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 sadness >= 0.22 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.74]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.74]
 - **Threshold**: 0.22
 - **Status**: sometimes
 - **Slack**: feasibility +0.516; always -0.220
@@ -625,10 +589,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 1.80 | **Required Raw Sum**: 0.40
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.48 | 0.59 | 0.00 | 0.95 | 49.75% |
-| In mood regime | 0.00 | 0.35 | 0.37 | 0.00 | 0.57 | 11.43% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.50 | 0.61 | 0.00 | 0.96 | 24.63% |
+| Global | raw | 0.00 | 0.51 | 0.61 | 0.00 | 0.96 | N/A |
+| In mood regime | final | 0.00 | 0.46 | 0.51 | 0.00 | 0.59 | 47.83% |
+| In mood regime | raw | 0.27 | 0.51 | 0.53 | 0.07 | 0.59 | N/A |
+- **Observed max (global, final)**: 0.96
+- **Observed max (mood-regime, final)**: 0.59
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -640,8 +608,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | agency_control | -0.30 | [-1.00, 1.00] | -1.00 | 0.300 | — |
 
 **Gates** ✅:
-- ✅ `valence <= -0.20` - Satisfiable
-- ✅ `arousal <= 0.20` - Satisfiable | **Observed Fail Rate**: 50.25%
+- ✅ `valence <= -0.20` - Satisfiable | **Observed Fail Rate**: 58.91%
+- ✅ `arousal <= 0.20` - Satisfiable | **Observed Fail Rate**: 40.27%
 
 **Binding Axes**: arousal (constraints limit optimal values)
 
@@ -652,7 +620,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 grief >= 0.18 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.88]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.88]
 - **Threshold**: 0.18
 - **Status**: sometimes
 - **Slack**: feasibility +0.696; always -0.180
@@ -660,10 +628,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.30 | **Required Raw Sum**: 0.41
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.36 | 0.50 | 0.00 | 0.91 | 49.70% |
-| In mood regime | 0.34 | 0.52 | 0.68 | 0.00 | 0.75 | 100.00% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.39 | 0.52 | 0.00 | 0.86 | 17.33% |
+| Global | raw | 0.00 | 0.43 | 0.52 | 0.00 | 0.86 | N/A |
+| In mood regime | final | 0.39 | 0.50 | 0.58 | 0.00 | 0.61 | 78.26% |
+| In mood regime | raw | 0.40 | 0.51 | 0.58 | 0.15 | 0.61 | N/A |
+- **Observed max (global, final)**: 0.86
+- **Observed max (mood-regime, final)**: 0.61
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -676,8 +648,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | agency_control | -0.40 | [-1.00, 1.00] | -1.00 | 0.400 | — |
 
 **Gates** ✅:
-- ✅ `valence <= -0.25` - Satisfiable
-- ✅ `engagement >= 0.10` - Satisfiable | **Observed Fail Rate**: 50.30%
+- ✅ `valence <= -0.25` - Satisfiable | **Observed Fail Rate**: 61.43%
+- ✅ `engagement >= 0.10` - Satisfiable | **Observed Fail Rate**: 55.04%
 
 **Binding Axes**: arousal (constraints limit optimal values)
 
@@ -688,7 +660,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 disappointment >= 0.25 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.94]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.94]
 - **Threshold**: 0.25
 - **Status**: sometimes
 - **Slack**: feasibility +0.691; always -0.250
@@ -696,10 +668,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 1.60 | **Required Raw Sum**: 0.40
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.45 | 0.56 | 0.00 | 0.96 | 100.00% |
-| In mood regime | 0.24 | 0.57 | 0.64 | 0.00 | 0.67 | 100.00% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.46 | 0.58 | 0.00 | 0.94 | 20.97% |
+| Global | raw | 0.00 | 0.47 | 0.58 | 0.00 | 0.94 | N/A |
+| In mood regime | final | 0.00 | 0.58 | 0.62 | 0.00 | 0.71 | 39.13% |
+| In mood regime | raw | 0.23 | 0.58 | 0.62 | 0.00 | 0.71 | N/A |
+- **Observed max (global, final)**: 0.94
+- **Observed max (mood-regime, final)**: 0.71
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -712,8 +688,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | agency_control | -0.20 | [-1.00, 1.00] | -1.00 | 0.200 | — |
 
 **Gates** ✅:
-- ✅ `valence <= -0.10` - Satisfiable
-- ✅ `future_expectancy <= -0.10` - Satisfiable
+- ✅ `valence <= -0.10` - Satisfiable | **Observed Fail Rate**: 53.84%
+- ✅ `future_expectancy <= -0.10` - Satisfiable | **Observed Fail Rate**: 54.54%
 
 **Binding Axes**: arousal (constraints limit optimal values)
 
@@ -724,7 +700,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 regret >= 0.18 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.96]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.96]
 - **Threshold**: 0.18
 - **Status**: sometimes
 - **Slack**: feasibility +0.775; always -0.180
@@ -732,10 +708,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.00 | **Required Raw Sum**: 0.36
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.38 | 0.53 | 0.00 | 0.91 | 100.00% |
-| In mood regime | 0.36 | 0.59 | 0.84 | 0.00 | 0.87 | 100.00% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.40 | 0.53 | 0.00 | 0.91 | 16.71% |
+| Global | raw | 0.01 | 0.44 | 0.54 | 0.00 | 0.91 | N/A |
+| In mood regime | final | 0.27 | 0.67 | 0.70 | 0.00 | 0.75 | 56.52% |
+| In mood regime | raw | 0.40 | 0.67 | 0.70 | 0.00 | 0.75 | N/A |
+- **Observed max (global, final)**: 0.91
+- **Observed max (mood-regime, final)**: 0.75
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -748,8 +728,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | arousal | +0.20 | [-0.05, 0.55] | 0.55 | 0.110 | ⚠️ yes |
 
 **Gates** ✅:
-- ✅ `self_evaluation <= -0.2` - Satisfiable
-- ✅ `valence <= -0.2` - Satisfiable
+- ✅ `self_evaluation <= -0.2` - Satisfiable | **Observed Fail Rate**: 58.50%
+- ✅ `valence <= -0.2` - Satisfiable | **Observed Fail Rate**: 58.91%
 
 **Binding Axes**: arousal (constraints limit optimal values)
 
@@ -760,7 +740,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 lonely_yearning >= 0.25 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.91]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.91]
 - **Threshold**: 0.25
 - **Status**: sometimes
 - **Slack**: feasibility +0.659; always -0.250
@@ -768,10 +748,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 3.50 | **Required Raw Sum**: 0.88
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.00 | 0.00 | 0.00 | 0.74 | 12.71% |
-| In mood regime | 0.00 | 0.42 | 0.48 | 0.00 | 0.53 | 0.00% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.77 | 1.36% |
+| Global | raw | 0.00 | 0.33 | 0.42 | 0.00 | 0.77 | N/A |
+| In mood regime | final | 0.00 | 0.45 | 0.45 | 0.00 | 0.53 | 30.43% |
+| In mood regime | raw | 0.44 | 0.53 | 0.55 | 0.21 | 0.66 | N/A |
+- **Observed max (global, final)**: 0.77
+- **Observed max (mood-regime, final)**: 0.53
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -788,12 +772,12 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | affiliation | +0.90 | [0.20, 1.00] | 1.00 | 0.900 | — |
 
 **Gates** ✅:
-- ✅ `engagement >= 0.25` - Satisfiable | **Observed Fail Rate**: 50.30%
-- ✅ `valence <= -0.10` - Satisfiable
-- ✅ `threat <= 0.40` - Satisfiable | **Observed Fail Rate**: 49.90%
-- ✅ `arousal >= -0.10` - Satisfiable
-- ✅ `arousal <= 0.35` - Satisfiable | **Observed Fail Rate**: 50.25%
-- ✅ `future_expectancy >= -0.05` - Satisfiable
+- ✅ `engagement >= 0.25` - Satisfiable | **Observed Fail Rate**: 62.65%
+- ✅ `valence <= -0.10` - Satisfiable | **Observed Fail Rate**: 53.84%
+- ✅ `threat <= 0.40` - Satisfiable | **Observed Fail Rate**: 29.94%
+- ✅ `arousal >= -0.10` - Satisfiable | **Observed Fail Rate**: 45.02%
+- ✅ `arousal <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.80%
+- ✅ `future_expectancy >= -0.05` - Satisfiable | **Observed Fail Rate**: 47.50%
 
 **Binding Axes (Structural Conflicts)**:
 - ⚠️ **threat**: Has negative weight (-0.25) but constraint requires min 0.10
@@ -805,7 +789,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 embarrassment >= 0.20 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.81]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.81]
 - **Threshold**: 0.20
 - **Status**: sometimes
 - **Slack**: feasibility +0.607; always -0.200
@@ -813,10 +797,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.10 | **Required Raw Sum**: 0.42
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.33 | 0.47 | 0.00 | 0.92 | 49.90% |
-| In mood regime | 0.39 | 0.59 | 0.72 | 0.00 | 0.72 | 100.00% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.34 | 0.48 | 0.00 | 0.93 | 18.12% |
+| Global | raw | 0.00 | 0.40 | 0.50 | 0.00 | 0.93 | N/A |
+| In mood regime | final | 0.37 | 0.58 | 0.65 | 0.00 | 0.66 | 73.91% |
+| In mood regime | raw | 0.39 | 0.58 | 0.65 | 0.15 | 0.66 | N/A |
+- **Observed max (global, final)**: 0.93
+- **Observed max (mood-regime, final)**: 0.66
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -829,8 +817,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | valence | -0.30 | [-1.00, -0.10] | -1.00 | 0.300 | — |
 
 **Gates** ✅:
-- ✅ `self_evaluation <= -0.10` - Satisfiable
-- ✅ `threat >= 0.20` - Satisfiable | **Observed Fail Rate**: 50.10%
+- ✅ `self_evaluation <= -0.10` - Satisfiable | **Observed Fail Rate**: 53.70%
+- ✅ `threat >= 0.20` - Satisfiable | **Observed Fail Rate**: 60.24%
 
 **Binding Axes**: arousal, threat (constraints limit optimal values)
 
@@ -841,7 +829,7 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ##### 🧠 anger >= 0.40 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Achievable range**: [0.00, 0.72]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.72]
 - **Threshold**: 0.40
 - **Status**: sometimes
 - **Slack**: feasibility +0.321; always -0.400
@@ -849,10 +837,14 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 **Sum|Weights|**: 2.90 | **Required Raw Sum**: 1.16
 
 **Regime Stats**:
-| Regime | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|-----|-----|-----|-----|-----|----------|
-| Global | 0.00 | 0.31 | 0.44 | 0.00 | 0.87 | 50.25% |
-| In mood regime | 0.16 | 0.45 | 0.48 | 0.00 | 0.50 | 88.57% |
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.32 | 0.45 | 0.00 | 0.83 | 19.79% |
+| Global | raw | 0.00 | 0.38 | 0.47 | 0.00 | 0.83 | N/A |
+| In mood regime | final | 0.00 | 0.49 | 0.49 | 0.00 | 0.55 | 47.83% |
+| In mood regime | raw | 0.20 | 0.49 | 0.49 | 0.00 | 0.55 | N/A |
+- **Observed max (global, final)**: 0.83
+- **Observed max (mood-regime, final)**: 0.55
 
 **Gate Compatibility (mood regime)**: ✅ compatible
 
@@ -866,8 +858,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 | affiliation | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
 
 **Gates** ✅:
-- ✅ `valence <= -0.15` - Satisfiable
-- ✅ `arousal >= 0.10` - Satisfiable | **Observed Fail Rate**: 49.75%
+- ✅ `valence <= -0.15` - Satisfiable | **Observed Fail Rate**: 56.35%
+- ✅ `arousal >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.26%
 
 **Binding Axes (Structural Conflicts)**:
 - ⚠️ **affiliation**: Has negative weight (-0.30) but constraint requires min 0.20
@@ -878,10 +870,10 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 
 #### Distribution Analysis
 - **Compound Node**: Aggregated from 29 leaf conditions (19 top-level conditions; 29 when OR blocks expanded)
-- **Highest Avg Violation**: 71.26 (from `(moodAxes.affiliation - previousMoodAxes.affiliation) <= -12`)
-- **Highest P90 Violation**: 146.00
-- **Highest P95 Violation**: 166.00
-- **Highest P99 Violation**: 193.00
+- **Highest Avg Violation**: 71.17 (from `(moodAxes.affiliation - previousMoodAxes.affiliation) <= -12`)
+- **Highest P90 Violation**: 145.10
+- **Highest P95 Violation**: 163.05
+- **Highest P99 Violation**: 189.01
 - **Interpretation**: Worst violator: (moodAxes.affiliation - previousMoodAxes.affiliation) <= -12
 
 #### Ceiling Analysis
@@ -891,8 +883,8 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 
 #### Near-Miss Analysis
 - **Compound Node**: Contains 29 leaf conditions
-- **Most Tunable Condition**: `moodAxes.affiliation >= 20`
-- **Near-Miss Rate**: 4.41% (epsilon: 5.00)
+- **Most Tunable Condition**: `moodAxes.arousal <= 55`
+- **Near-Miss Rate**: 4.56% (epsilon: 5.00)
 - **Tunability**: moderate
 - **Insight**: Adjusting threshold for this condition offers the best chance of improving trigger rate
 
@@ -913,26 +905,27 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 
 ## Conditional Pass Rates (Given Mood Constraints Satisfied)
 
-**Mood regime filter**: 35 contexts where all mood constraints pass
+**Population**: stored-mood-regime (predicate: moodAxes.affiliation >= 20, moodAxes.arousal <= 55, moodAxes.arousal >= -5, moodAxes.engagement >= 15, moodAxes.self_evaluation <= -5, moodAxes.threat <= 70, moodAxes.threat >= 10, moodAxes.valence <= -10; count: 23; hash: c6119de6).
+**Mood regime filter**: 23 contexts where all mood constraints pass
 - Constraints: `moodAxes.affiliation >= 20`, `moodAxes.valence <= -10`, `moodAxes.self_evaluation <= -5`, `moodAxes.engagement >= 15`, `moodAxes.threat >= 10`, `moodAxes.threat <= 70`, `moodAxes.arousal >= -5`, `moodAxes.arousal <= 55`
 
 | Condition | P(pass \| mood) | Passes | CI (95%) |
 |-----------|-----------------|--------|----------|
-| `emotions.lonely_yearning >= 0.25` | 14.29% | 5/35 | [6.26%, 29.38%] |
-| `emotions.anger >= 0.4` | 17.14% | 6/35 | [8.10%, 32.68%] |
-| `emotions.sadness >= 0.22` | 25.71% | 9/35 | [14.16%, 42.07%] |
-| `emotions.disappointment >= 0.25` | 48.57% | 17/35 | [32.99%, 64.43%] |
-| `emotions.hatred <= 0.35` | 57.14% | 20/35 | [40.86%, 72.02%] |
-| `emotions.regret >= 0.18` | 57.14% | 20/35 | [40.86%, 72.02%] |
-| `emotions.grief >= 0.18` | 77.14% | 27/35 | [60.98%, 87.93%] |
-| `emotions.embarrassment >= 0.2` | 77.14% | 27/35 | [60.98%, 87.93%] |
-| `emotions.freeze <= 0.55` | 91.43% | 32/35 | [77.62%, 97.04%] |
-| `emotions.terror <= 0.5` | 97.14% | 34/35 | [85.47%, 99.49%] |
-| `emotions.rage < 0.55` | 100.00% | 35/35 | [90.11%, 100.00%] |
-| `emotions.contempt <= 0.4` | 100.00% | 35/35 | [90.11%, 100.00%] |
-| `emotions.disgust <= 0.4` | 100.00% | 35/35 | [90.11%, 100.00%] |
-| `emotions.panic <= 0.4` | 100.00% | 35/35 | [90.11%, 100.00%] |
-| `emotions.dissociation <= 0.65` | 100.00% | 35/35 | [90.11%, 100.00%] |
+| `emotions.anger >= 0.4` | 26.09% | 6/23 | [12.55%, 46.47%] |
+| `emotions.lonely_yearning >= 0.25` | 30.43% | 7/23 | [15.60%, 50.87%] |
+| `emotions.sadness >= 0.22` | 34.78% | 8/23 | [18.81%, 55.11%] |
+| `emotions.disappointment >= 0.25` | 39.13% | 9/23 | [22.16%, 59.21%] |
+| `emotions.regret >= 0.18` | 56.52% | 13/23 | [36.81%, 74.37%] |
+| `emotions.hatred <= 0.35` | 60.87% | 14/23 | [40.79%, 77.84%] |
+| `emotions.grief >= 0.18` | 73.91% | 17/23 | [53.53%, 87.45%] |
+| `emotions.embarrassment >= 0.2` | 73.91% | 17/23 | [53.53%, 87.45%] |
+| `emotions.freeze <= 0.55` | 86.96% | 20/23 | [67.87%, 95.46%] |
+| `emotions.rage < 0.55` | 100.00% | 23/23 | [85.69%, 100.00%] |
+| `emotions.contempt <= 0.4` | 100.00% | 23/23 | [85.69%, 100.00%] |
+| `emotions.disgust <= 0.4` | 100.00% | 23/23 | [85.69%, 100.00%] |
+| `emotions.panic <= 0.4` | 100.00% | 23/23 | [85.69%, 100.00%] |
+| `emotions.terror <= 0.5` | 100.00% | 23/23 | [85.69%, 100.00%] |
+| `emotions.dissociation <= 0.65` | 100.00% | 23/23 | [85.69%, 100.00%] |
 
 **Interpretation**: These rates show how often each emotion condition passes
 when the mood state is already suitable. Low rates indicate emotion-specific
@@ -943,383 +936,467 @@ blockers that persist even in favorable mood regimes.
 
 ## Global Expression Sensitivity Analysis
 
-**Insufficient data**: fewer than 5 baseline expression hits. Global sensitivity tables are suppressed for low-confidence runs.
+This section shows how adjusting thresholds affects the **entire expression trigger rate**, not just individual clause pass rates.
+This is the key metric for tuning—it answers "What actually happens to the expression if I change this?"
+> ⚠️ **Low confidence**: fewer than 5 baseline expression hits. Global sensitivity tables are shown for reference.
 
-## Sensitivity Analysis
+**Baseline (full sample)**: 0.00% | **Baseline (stored contexts)**: 0.00%
+**Population**: stored-global (predicate: all; count: 10.000; hash: 1a309bea).
+### 🎯 Global Expression Sensitivity: emotions.lonely_yearning >= [threshold]
 
-This section shows how adjusting emotion/sexual thresholds would affect the trigger rate.
-Use this to identify optimal threshold values for your desired trigger frequency.
 
-### emotions.anger >= [threshold]
+> **Note**: This shows how the threshold change affects the WHOLE EXPRESSION trigger rate, not just the clause.
 
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.20 | 13.96% | +114.44% | 10.000 |
-| 0.25 | 12.10% | +85.87% | 10.000 |
-| 0.30 | 10.43% | +60.22% | 10.000 |
-| 0.35 | 8.40% | +29.03% | 10.000 |
-| **0.40** | **6.51%** | **baseline** | 10.000 |
-| 0.45 | 4.78% | -26.57% | 10.000 |
-| 0.50 | 3.23% | -50.38% | 10.000 |
-| 0.55 | 2.10% | -67.74% | 10.000 |
-| 0.60 | 1.29% | -80.18% | 10.000 |
+| Threshold | Trigger Rate | Change | Samples |
+|-----------|--------------|--------|---------|
+| 0.05 | 0.00% | 0% | 10.000 |
+| 0.10 | 0.00% | 0% | 10.000 |
+| 0.15 | 0.00% | 0% | 10.000 |
+| 0.20 | 0.00% | 0% | 10.000 |
+| **0.25** | **0.00%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 0.00% | 0% | 10.000 |
+| 0.35 | 0.00% | 0% | 10.000 |
+| 0.40 | 0.00% | 0% | 10.000 |
+| 0.45 | 0.00% | 0% | 10.000 |
 
-### emotions.rage < [threshold]
+**⚠️ No Triggers Found**: None of the tested thresholds produced expression triggers. The expression may require more extreme threshold changes or other blocking conditions may dominate.
 
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.35 | 93.19% | -5.01% | 10.000 |
-| 0.40 | 94.72% | -3.45% | 10.000 |
-| 0.45 | 96.12% | -2.02% | 10.000 |
-| 0.50 | 97.22% | -0.90% | 10.000 |
-| **0.55** | **98.10%** | **baseline** | 10.000 |
-| 0.60 | 98.83% | +0.74% | 10.000 |
-| 0.65 | 99.31% | +1.23% | 10.000 |
-| 0.70 | 99.64% | +1.57% | 10.000 |
-| 0.75 | 99.85% | +1.78% | 10.000 |
+### 🎯 Global Expression Sensitivity: emotions.anger >= [threshold]
 
-### moodAxes.affiliation >= [threshold]
 
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| 16 | 16 | 41.95% | +5.32% | 10.000 |
-| 17 | 17 | 41.51% | +4.22% | 10.000 |
-| 18 | 18 | 40.95% | +2.81% | 10.000 |
-| 19 | 19 | 40.32% | +1.23% | 10.000 |
-| **20** | **20** | **39.83%** | **baseline** | 10.000 |
-| 21 | 21 | 39.30% | -1.33% | 10.000 |
-| 22 | 22 | 38.82% | -2.54% | 10.000 |
-| 23 | 23 | 38.32% | -3.79% | 10.000 |
-| 24 | 24 | 37.90% | -4.85% | 10.000 |
+> **Note**: This shows how the threshold change affects the WHOLE EXPRESSION trigger rate, not just the clause.
 
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
+| Threshold | Trigger Rate | Change | Samples |
+|-----------|--------------|--------|---------|
+| 0.20 | 0.00% | 0% | 10.000 |
+| 0.25 | 0.00% | 0% | 10.000 |
+| 0.30 | 0.00% | 0% | 10.000 |
+| 0.35 | 0.00% | 0% | 10.000 |
+| **0.40** | **0.00%** | **baseline (stored contexts)** | 10.000 |
+| 0.45 | 0.00% | 0% | 10.000 |
+| 0.50 | 0.00% | 0% | 10.000 |
+| 0.55 | 0.00% | 0% | 10.000 |
+| 0.60 | 0.00% | 0% | 10.000 |
 
-### moodAxes.valence <= [threshold]
+**⚠️ No Triggers Found**: None of the tested thresholds produced expression triggers. The expression may require more extreme threshold changes or other blocking conditions may dominate.
 
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| -14 | -14 | 42.67% | -5.22% | 10.000 |
-| -13 | -13 | 43.21% | -4.02% | 10.000 |
-| -12 | -12 | 43.94% | -2.40% | 10.000 |
-| -11 | -11 | 44.42% | -1.33% | 10.000 |
-| **-10** | **-10** | **45.02%** | **baseline** | 10.000 |
-| -9 | -9 | 45.57% | +1.22% | 10.000 |
-| -8 | -8 | 46.27% | +2.78% | 10.000 |
-| -7 | -7 | 46.94% | +4.26% | 10.000 |
-| -6 | -6 | 47.49% | +5.49% | 10.000 |
+### 🎯 Global Expression Sensitivity: emotions.embarrassment >= [threshold]
 
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
 
-### moodAxes.self_evaluation <= [threshold]
+> **Note**: This shows how the threshold change affects the WHOLE EXPRESSION trigger rate, not just the clause.
 
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| -9 | -9 | 45.68% | -3.73% | 10.000 |
-| -8 | -8 | 46.13% | -2.78% | 10.000 |
-| -7 | -7 | 46.55% | -1.90% | 10.000 |
-| -6 | -6 | 46.94% | -1.07% | 10.000 |
-| **-5** | **-5** | **47.45%** | **baseline** | 10.000 |
-| -4 | -4 | 48.01% | +1.18% | 10.000 |
-| -3 | -3 | 48.62% | +2.47% | 10.000 |
-| -2 | -2 | 49.09% | +3.46% | 10.000 |
-| -1 | -1 | 49.54% | +4.40% | 10.000 |
+| Threshold | Trigger Rate | Change | Samples |
+|-----------|--------------|--------|---------|
+| 0.00 | 0.00% | 0% | 10.000 |
+| 0.05 | 0.00% | 0% | 10.000 |
+| 0.10 | 0.00% | 0% | 10.000 |
+| 0.15 | 0.00% | 0% | 10.000 |
+| **0.20** | **0.00%** | **baseline (stored contexts)** | 10.000 |
+| 0.25 | 0.00% | 0% | 10.000 |
+| 0.30 | 0.00% | 0% | 10.000 |
+| 0.35 | 0.00% | 0% | 10.000 |
+| 0.40 | 0.00% | 0% | 10.000 |
 
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
+**⚠️ No Triggers Found**: None of the tested thresholds produced expression triggers. The expression may require more extreme threshold changes or other blocking conditions may dominate.
+## Marginal Clause Pass-Rate Sweep
 
-### moodAxes.engagement >= [threshold]
+This sweep shows how adjusting thresholds changes marginal clause pass rates across stored contexts.
+It does **not** estimate overall expression trigger rate.
+**Population**: stored-global (predicate: all; count: 10.000; hash: 1a309bea).
+### Marginal Clause Pass-Rate Sweep: emotions.anger >= [threshold]
 
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| 11 | 11 | 44.17% | +4.99% | 10.000 |
-| 12 | 12 | 43.61% | +3.66% | 10.000 |
-| 13 | 13 | 43.03% | +2.28% | 10.000 |
-| 14 | 14 | 42.59% | +1.24% | 10.000 |
-| **15** | **15** | **42.07%** | **baseline** | 10.000 |
-| 16 | 16 | 41.56% | -1.21% | 10.000 |
-| 17 | 17 | 40.97% | -2.61% | 10.000 |
-| 18 | 18 | 40.45% | -3.85% | 10.000 |
-| 19 | 19 | 40.08% | -4.73% | 10.000 |
-
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
-
-### moodAxes.threat >= [threshold]
-
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| 6 | 6 | 47.69% | +4.35% | 10.000 |
-| 7 | 7 | 47.16% | +3.19% | 10.000 |
-| 8 | 8 | 46.64% | +2.06% | 10.000 |
-| 9 | 9 | 46.11% | +0.90% | 10.000 |
-| **10** | **10** | **45.70%** | **baseline** | 10.000 |
-| 11 | 11 | 45.21% | -1.07% | 10.000 |
-| 12 | 12 | 44.75% | -2.08% | 10.000 |
-| 13 | 13 | 44.13% | -3.44% | 10.000 |
-| 14 | 14 | 43.60% | -4.60% | 10.000 |
-
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
-
-### moodAxes.threat <= [threshold]
-
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| 66 | 66 | 83.29% | -2.37% | 10.000 |
-| 67 | 67 | 83.80% | -1.77% | 10.000 |
-| 68 | 68 | 84.36% | -1.11% | 10.000 |
-| 69 | 69 | 84.83% | -0.56% | 10.000 |
-| **70** | **70** | **85.31%** | **baseline** | 10.000 |
-| 71 | 71 | 85.77% | +0.54% | 10.000 |
-| 72 | 72 | 86.11% | +0.94% | 10.000 |
-| 73 | 73 | 86.53% | +1.43% | 10.000 |
-| 74 | 74 | 87.00% | +1.98% | 10.000 |
-
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
-
-### moodAxes.arousal >= [threshold]
-
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| -9 | -9 | 55.02% | +3.11% | 10.000 |
-| -8 | -8 | 54.68% | +2.47% | 10.000 |
-| -7 | -7 | 54.26% | +1.69% | 10.000 |
-| -6 | -6 | 53.90% | +1.01% | 10.000 |
-| **-5** | **-5** | **53.36%** | **baseline** | 10.000 |
-| -4 | -4 | 52.88% | -0.90% | 10.000 |
-| -3 | -3 | 52.39% | -1.82% | 10.000 |
-| -2 | -2 | 51.93% | -2.68% | 10.000 |
-| -1 | -1 | 51.51% | -3.47% | 10.000 |
-
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
-
-### moodAxes.arousal <= [threshold]
-
-| Threshold | Effective Threshold | Pass Rate | Change | Samples |
-|-----------|---------------------|-----------|--------|---------|
-| 51 | 51 | 75.02% | -2.81% | 10.000 |
-| 52 | 52 | 75.46% | -2.24% | 10.000 |
-| 53 | 53 | 76.05% | -1.48% | 10.000 |
-| 54 | 54 | 76.62% | -0.74% | 10.000 |
-| **55** | **55** | **77.19%** | **baseline** | 10.000 |
-| 56 | 56 | 77.71% | +0.67% | 10.000 |
-| 57 | 57 | 78.26% | +1.39% | 10.000 |
-| 58 | 58 | 78.72% | +1.98% | 10.000 |
-| 59 | 59 | 79.14% | +2.53% | 10.000 |
-
-_Thresholds are integer-effective; decimals collapse to integer boundaries._
-
-### emotions.contempt <= [threshold]
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.20 | 85.16% | -7.96% | 10.000 |
-| 0.25 | 86.73% | -6.27% | 10.000 |
-| 0.30 | 88.74% | -4.10% | 10.000 |
-| 0.35 | 90.83% | -1.84% | 10.000 |
-| **0.40** | **92.53%** | **baseline** | 10.000 |
-| 0.45 | 94.22% | +1.83% | 10.000 |
-| 0.50 | 96.03% | +3.78% | 10.000 |
-| 0.55 | 97.39% | +5.25% | 10.000 |
-| 0.60 | 98.39% | +6.33% | 10.000 |
+| 0.20 | 13.70% | +106.64% | 10.000 |
+| 0.25 | 12.04% | +81.60% | 10.000 |
+| 0.30 | 10.25% | +54.60% | 10.000 |
+| 0.35 | 8.32% | +25.49% | 10.000 |
+| **0.40** | **6.63%** | **baseline (stored contexts)** | 10.000 |
+| 0.45 | 4.87% | -26.55% | 10.000 |
+| 0.50 | 3.36% | -49.32% | 10.000 |
+| 0.55 | 2.23% | -66.37% | 10.000 |
+| 0.60 | 1.23% | -81.45% | 10.000 |
 
-### emotions.disgust <= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.rage < [threshold]
 
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.20 | 79.07% | -13.78% | 10.000 |
-| 0.25 | 82.22% | -10.35% | 10.000 |
-| 0.30 | 85.27% | -7.02% | 10.000 |
-| 0.35 | 88.78% | -3.19% | 10.000 |
-| **0.40** | **91.71%** | **baseline** | 10.000 |
-| 0.45 | 94.14% | +2.65% | 10.000 |
-| 0.50 | 96.01% | +4.69% | 10.000 |
-| 0.55 | 97.34% | +6.14% | 10.000 |
-| 0.60 | 98.54% | +7.45% | 10.000 |
-
-### emotions.hatred <= [threshold]
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.15 | 85.55% | -6.86% | 10.000 |
-| 0.20 | 87.02% | -5.26% | 10.000 |
-| 0.25 | 88.52% | -3.63% | 10.000 |
-| 0.30 | 90.28% | -1.71% | 10.000 |
-| **0.35** | **91.85%** | **baseline** | 10.000 |
-| 0.40 | 93.79% | +2.11% | 10.000 |
-| 0.45 | 95.40% | +3.86% | 10.000 |
-| 0.50 | 96.74% | +5.32% | 10.000 |
-| 0.55 | 97.94% | +6.63% | 10.000 |
+| 0.35 | 93.21% | -5.03% | 10.000 |
+| 0.40 | 94.58% | -3.64% | 10.000 |
+| 0.45 | 96.04% | -2.15% | 10.000 |
+| 0.50 | 97.23% | -0.94% | 10.000 |
+| **0.55** | **98.15%** | **baseline (stored contexts)** | 10.000 |
+| 0.60 | 98.97% | +0.84% | 10.000 |
+| 0.65 | 99.48% | +1.36% | 10.000 |
+| 0.70 | 99.80% | +1.68% | 10.000 |
+| 0.75 | 99.89% | +1.77% | 10.000 |
 
-### emotions.panic <= [threshold]
+### Marginal Clause Pass-Rate Sweep: moodAxes.affiliation >= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| 16 | 16 | 42.33% | +4.26% | 10.000 |
+| 17 | 17 | 41.89% | +3.18% | 10.000 |
+| 18 | 18 | 41.40% | +1.97% | 10.000 |
+| 19 | 19 | 41.02% | +1.03% | 10.000 |
+| **20** | **20** | **40.60%** | **baseline (stored contexts)** | 10.000 |
+| 21 | 21 | 39.98% | -1.53% | 10.000 |
+| 22 | 22 | 39.45% | -2.83% | 10.000 |
+| 23 | 23 | 39.00% | -3.94% | 10.000 |
+| 24 | 24 | 38.43% | -5.34% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: moodAxes.valence <= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| -14 | -14 | 43.80% | -4.24% | 10.000 |
+| -13 | -13 | 44.31% | -3.13% | 10.000 |
+| -12 | -12 | 44.77% | -2.12% | 10.000 |
+| -11 | -11 | 45.22% | -1.14% | 10.000 |
+| **-10** | **-10** | **45.74%** | **baseline (stored contexts)** | 10.000 |
+| -9 | -9 | 46.20% | +1.01% | 10.000 |
+| -8 | -8 | 46.55% | +1.77% | 10.000 |
+| -7 | -7 | 47.08% | +2.93% | 10.000 |
+| -6 | -6 | 47.47% | +3.78% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: moodAxes.self_evaluation <= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| -9 | -9 | 46.31% | -4.02% | 10.000 |
+| -8 | -8 | 46.94% | -2.72% | 10.000 |
+| -7 | -7 | 47.28% | -2.01% | 10.000 |
+| -6 | -6 | 47.78% | -0.97% | 10.000 |
+| **-5** | **-5** | **48.25%** | **baseline (stored contexts)** | 10.000 |
+| -4 | -4 | 48.79% | +1.12% | 10.000 |
+| -3 | -3 | 49.37% | +2.32% | 10.000 |
+| -2 | -2 | 49.83% | +3.27% | 10.000 |
+| -1 | -1 | 50.29% | +4.23% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: moodAxes.engagement >= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| 11 | 11 | 43.98% | +5.52% | 10.000 |
+| 12 | 12 | 43.40% | +4.13% | 10.000 |
+| 13 | 13 | 42.87% | +2.86% | 10.000 |
+| 14 | 14 | 42.27% | +1.42% | 10.000 |
+| **15** | **15** | **41.68%** | **baseline (stored contexts)** | 10.000 |
+| 16 | 16 | 41.07% | -1.46% | 10.000 |
+| 17 | 17 | 40.64% | -2.50% | 10.000 |
+| 18 | 18 | 40.12% | -3.74% | 10.000 |
+| 19 | 19 | 39.68% | -4.80% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: moodAxes.threat >= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| 6 | 6 | 46.24% | +4.73% | 10.000 |
+| 7 | 7 | 45.65% | +3.40% | 10.000 |
+| 8 | 8 | 45.20% | +2.38% | 10.000 |
+| 9 | 9 | 44.56% | +0.93% | 10.000 |
+| **10** | **10** | **44.15%** | **baseline (stored contexts)** | 10.000 |
+| 11 | 11 | 43.66% | -1.11% | 10.000 |
+| 12 | 12 | 43.10% | -2.38% | 10.000 |
+| 13 | 13 | 42.61% | -3.49% | 10.000 |
+| 14 | 14 | 42.04% | -4.78% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: moodAxes.threat <= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| 66 | 66 | 83.63% | -2.34% | 10.000 |
+| 67 | 67 | 84.04% | -1.86% | 10.000 |
+| 68 | 68 | 84.51% | -1.31% | 10.000 |
+| 69 | 69 | 85.05% | -0.68% | 10.000 |
+| **70** | **70** | **85.63%** | **baseline (stored contexts)** | 10.000 |
+| 71 | 71 | 86.07% | +0.51% | 10.000 |
+| 72 | 72 | 86.50% | +1.02% | 10.000 |
+| 73 | 73 | 86.95% | +1.54% | 10.000 |
+| 74 | 74 | 87.49% | +2.17% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: moodAxes.arousal >= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| -9 | -9 | 54.89% | +3.98% | 10.000 |
+| -8 | -8 | 54.36% | +2.97% | 10.000 |
+| -7 | -7 | 53.75% | +1.82% | 10.000 |
+| -6 | -6 | 53.20% | +0.78% | 10.000 |
+| **-5** | **-5** | **52.79%** | **baseline (stored contexts)** | 10.000 |
+| -4 | -4 | 52.25% | -1.02% | 10.000 |
+| -3 | -3 | 51.83% | -1.82% | 10.000 |
+| -2 | -2 | 51.23% | -2.96% | 10.000 |
+| -1 | -1 | 50.79% | -3.79% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: moodAxes.arousal <= [threshold]
+
+
+| Threshold | Effective Threshold | Pass Rate | Change | Samples |
+|-----------|---------------------|-----------|--------|---------|
+| 51 | 51 | 75.78% | -2.60% | 10.000 |
+| 52 | 52 | 76.22% | -2.03% | 10.000 |
+| 53 | 53 | 76.76% | -1.34% | 10.000 |
+| 54 | 54 | 77.24% | -0.72% | 10.000 |
+| **55** | **55** | **77.80%** | **baseline (stored contexts)** | 10.000 |
+| 56 | 56 | 78.41% | +0.78% | 10.000 |
+| 57 | 57 | 78.90% | +1.41% | 10.000 |
+| 58 | 58 | 79.41% | +2.07% | 10.000 |
+| 59 | 59 | 79.94% | +2.75% | 10.000 |
+
+_Thresholds are integer-effective; decimals collapse to integer boundaries._
+
+### Marginal Clause Pass-Rate Sweep: emotions.contempt <= [threshold]
+
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.20 | 99.62% | -0.01% | 10.000 |
-| 0.25 | 99.62% | -0.01% | 10.000 |
-| 0.30 | 99.62% | -0.01% | 10.000 |
-| 0.35 | 99.63% | — | 10.000 |
-| **0.40** | **99.63%** | **baseline** | 10.000 |
-| 0.45 | 99.66% | +0.03% | 10.000 |
-| 0.50 | 99.72% | +0.09% | 10.000 |
-| 0.55 | 99.81% | +0.18% | 10.000 |
-| 0.60 | 99.91% | +0.28% | 10.000 |
+| 0.20 | 85.16% | -7.86% | 10.000 |
+| 0.25 | 86.67% | -6.22% | 10.000 |
+| 0.30 | 88.43% | -4.32% | 10.000 |
+| 0.35 | 90.34% | -2.25% | 10.000 |
+| **0.40** | **92.42%** | **baseline (stored contexts)** | 10.000 |
+| 0.45 | 94.34% | +2.08% | 10.000 |
+| 0.50 | 96.04% | +3.92% | 10.000 |
+| 0.55 | 97.28% | +5.26% | 10.000 |
+| 0.60 | 98.41% | +6.48% | 10.000 |
 
-### emotions.terror <= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.disgust <= [threshold]
 
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.30 | 92.66% | -4.40% | 10.000 |
-| 0.35 | 93.58% | -3.45% | 10.000 |
-| 0.40 | 94.69% | -2.30% | 10.000 |
-| 0.45 | 95.81% | -1.15% | 10.000 |
-| **0.50** | **96.92%** | **baseline** | 10.000 |
-| 0.55 | 97.76% | +0.87% | 10.000 |
-| 0.60 | 98.66% | +1.80% | 10.000 |
-| 0.65 | 99.25% | +2.40% | 10.000 |
-| 0.70 | 99.73% | +2.90% | 10.000 |
-
-### emotions.freeze <= [threshold]
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.35 | 99.54% | -0.16% | 10.000 |
-| 0.40 | 99.54% | -0.16% | 10.000 |
-| 0.45 | 99.56% | -0.14% | 10.000 |
-| 0.50 | 99.62% | -0.08% | 10.000 |
-| **0.55** | **99.70%** | **baseline** | 10.000 |
-| 0.60 | 99.81% | +0.11% | 10.000 |
-| 0.65 | 99.87% | +0.17% | 10.000 |
-| 0.70 | 99.93% | +0.23% | 10.000 |
+| 0.20 | 78.75% | -13.73% | 10.000 |
+| 0.25 | 82.18% | -9.97% | 10.000 |
+| 0.30 | 85.45% | -6.39% | 10.000 |
+| 0.35 | 88.54% | -3.00% | 10.000 |
+| **0.40** | **91.28%** | **baseline (stored contexts)** | 10.000 |
+| 0.45 | 93.75% | +2.71% | 10.000 |
+| 0.50 | 95.75% | +4.90% | 10.000 |
+| 0.55 | 97.17% | +6.45% | 10.000 |
+| 0.60 | 98.37% | +7.77% | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.hatred <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.15 | 85.89% | -6.85% | 10.000 |
+| 0.20 | 87.18% | -5.45% | 10.000 |
+| 0.25 | 89.00% | -3.48% | 10.000 |
+| 0.30 | 90.60% | -1.75% | 10.000 |
+| **0.35** | **92.21%** | **baseline (stored contexts)** | 10.000 |
+| 0.40 | 93.75% | +1.67% | 10.000 |
+| 0.45 | 95.39% | +3.45% | 10.000 |
+| 0.50 | 96.83% | +5.01% | 10.000 |
+| 0.55 | 97.97% | +6.25% | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.panic <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.20 | 99.51% | -0.01% | 10.000 |
+| 0.25 | 99.51% | -0.01% | 10.000 |
+| 0.30 | 99.51% | -0.01% | 10.000 |
+| 0.35 | 99.51% | -0.01% | 10.000 |
+| **0.40** | **99.52%** | **baseline (stored contexts)** | 10.000 |
+| 0.45 | 99.53% | +0.01% | 10.000 |
+| 0.50 | 99.59% | +0.07% | 10.000 |
+| 0.55 | 99.65% | +0.13% | 10.000 |
+| 0.60 | 99.75% | +0.23% | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.terror <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.30 | 93.10% | -4.26% | 10.000 |
+| 0.35 | 94.13% | -3.20% | 10.000 |
+| 0.40 | 95.26% | -2.04% | 10.000 |
+| 0.45 | 96.29% | -0.98% | 10.000 |
+| **0.50** | **97.24%** | **baseline (stored contexts)** | 10.000 |
+| 0.55 | 97.93% | +0.71% | 10.000 |
+| 0.60 | 98.71% | +1.51% | 10.000 |
+| 0.65 | 99.30% | +2.12% | 10.000 |
+| 0.70 | 99.60% | +2.43% | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.freeze <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.35 | 99.31% | -0.24% | 10.000 |
+| 0.40 | 99.34% | -0.21% | 10.000 |
+| 0.45 | 99.36% | -0.19% | 10.000 |
+| 0.50 | 99.46% | -0.09% | 10.000 |
+| **0.55** | **99.55%** | **baseline (stored contexts)** | 10.000 |
+| 0.60 | 99.64% | +0.09% | 10.000 |
+| 0.65 | 99.79% | +0.24% | 10.000 |
+| 0.70 | 99.88% | +0.33% | 10.000 |
+| 0.75 | 99.95% | +0.40% | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.dissociation <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.45 | 98.39% | -1.31% | 10.000 |
+| 0.50 | 98.73% | -0.97% | 10.000 |
+| 0.55 | 99.24% | -0.46% | 10.000 |
+| 0.60 | 99.55% | -0.15% | 10.000 |
+| **0.65** | **99.70%** | **baseline (stored contexts)** | 10.000 |
+| 0.70 | 99.84% | +0.14% | 10.000 |
 | 0.75 | 99.96% | +0.26% | 10.000 |
+| 0.80 | 99.99% | +0.29% | 10.000 |
+| 0.85 | 100.00% | +0.30% | 10.000 |
 
-### emotions.dissociation <= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.sadness >= [threshold]
 
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.45 | 98.67% | -1.04% | 10.000 |
-| 0.50 | 98.90% | -0.81% | 10.000 |
-| 0.55 | 99.18% | -0.53% | 10.000 |
-| 0.60 | 99.51% | -0.20% | 10.000 |
-| **0.65** | **99.71%** | **baseline** | 10.000 |
-| 0.70 | 99.83% | +0.12% | 10.000 |
-| 0.75 | 99.96% | +0.25% | 10.000 |
-| 0.80 | 99.98% | +0.27% | 10.000 |
-| 0.85 | 99.99% | +0.28% | 10.000 |
-
-### emotions.sadness >= [threshold]
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.02 | 23.59% | +13.69% | 10.000 |
-| 0.07 | 23.18% | +11.71% | 10.000 |
-| 0.12 | 22.72% | +9.49% | 10.000 |
-| 0.17 | 21.93% | +5.69% | 10.000 |
-| **0.22** | **20.75%** | **baseline** | 10.000 |
-| 0.27 | 19.05% | -8.19% | 10.000 |
-| 0.32 | 17.09% | -17.64% | 10.000 |
-| 0.37 | 14.77% | -28.82% | 10.000 |
-| 0.42 | 12.61% | -39.23% | 10.000 |
+| 0.02 | 24.42% | +13.00% | 10.000 |
+| 0.07 | 24.14% | +11.71% | 10.000 |
+| 0.12 | 23.69% | +9.63% | 10.000 |
+| 0.17 | 22.83% | +5.65% | 10.000 |
+| **0.22** | **21.61%** | **baseline (stored contexts)** | 10.000 |
+| 0.27 | 20.02% | -7.36% | 10.000 |
+| 0.32 | 18.07% | -16.38% | 10.000 |
+| 0.37 | 15.93% | -26.28% | 10.000 |
+| 0.42 | 13.60% | -37.07% | 10.000 |
 
-### emotions.grief >= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.grief >= [threshold]
 
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| -0.02 | 100.00% | +547.67% | 10.000 |
-| 0.03 | 16.61% | +7.58% | 10.000 |
-| 0.08 | 16.47% | +6.67% | 10.000 |
-| 0.13 | 16.11% | +4.34% | 10.000 |
-| **0.18** | **15.44%** | **baseline** | 10.000 |
-| 0.23 | 14.33% | -7.19% | 10.000 |
-| 0.28 | 12.85% | -16.77% | 10.000 |
-| 0.33 | 11.15% | -27.78% | 10.000 |
-| 0.38 | 9.25% | -40.09% | 10.000 |
-
-### emotions.disappointment >= [threshold]
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 20.55% | +16.36% | 10.000 |
-| 0.10 | 20.26% | +14.72% | 10.000 |
-| 0.15 | 19.69% | +11.49% | 10.000 |
-| 0.20 | 19.00% | +7.59% | 10.000 |
-| **0.25** | **17.66%** | **baseline** | 10.000 |
-| 0.30 | 16.18% | -8.38% | 10.000 |
-| 0.35 | 14.17% | -19.76% | 10.000 |
-| 0.40 | 11.88% | -32.73% | 10.000 |
-| 0.45 | 9.81% | -44.45% | 10.000 |
+| -0.02 | 100.00% | +552.32% | 10.000 |
+| 0.03 | 16.84% | +9.85% | 10.000 |
+| 0.08 | 16.53% | +7.83% | 10.000 |
+| 0.13 | 16.07% | +4.83% | 10.000 |
+| **0.18** | **15.33%** | **baseline (stored contexts)** | 10.000 |
+| 0.23 | 14.47% | -5.61% | 10.000 |
+| 0.28 | 13.01% | -15.13% | 10.000 |
+| 0.33 | 11.48% | -25.11% | 10.000 |
+| 0.38 | 9.87% | -35.62% | 10.000 |
 
-### emotions.regret >= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.disappointment >= [threshold]
 
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| -0.02 | 100.00% | +568.00% | 10.000 |
-| 0.03 | 15.71% | +4.94% | 10.000 |
-| 0.08 | 15.62% | +4.34% | 10.000 |
-| 0.13 | 15.44% | +3.14% | 10.000 |
-| **0.18** | **14.97%** | **baseline** | 10.000 |
-| 0.23 | 14.23% | -4.94% | 10.000 |
-| 0.28 | 13.27% | -11.36% | 10.000 |
-| 0.33 | 11.79% | -21.24% | 10.000 |
-| 0.38 | 10.16% | -32.13% | 10.000 |
-
-### emotions.lonely_yearning >= [threshold]
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 1.39% | +49.46% | 10.000 |
-| 0.10 | 1.32% | +41.94% | 10.000 |
-| 0.15 | 1.21% | +30.11% | 10.000 |
-| 0.20 | 1.09% | +17.20% | 10.000 |
-| **0.25** | **0.93%** | **baseline** | 10.000 |
-| 0.30 | 0.83% | -10.75% | 10.000 |
-| 0.35 | 0.72% | -22.58% | 10.000 |
-| 0.40 | 0.59% | -36.56% | 10.000 |
-| 0.45 | 0.41% | -55.91% | 10.000 |
+| 0.05 | 20.47% | +13.47% | 10.000 |
+| 0.10 | 20.24% | +12.20% | 10.000 |
+| 0.15 | 19.70% | +9.20% | 10.000 |
+| 0.20 | 19.04% | +5.54% | 10.000 |
+| **0.25** | **18.04%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 16.52% | -8.43% | 10.000 |
+| 0.35 | 14.66% | -18.74% | 10.000 |
+| 0.40 | 12.68% | -29.71% | 10.000 |
+| 0.45 | 10.18% | -43.57% | 10.000 |
 
-### emotions.embarrassment >= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.regret >= [threshold]
+
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.00 | 100.00% | +614.29% | 10.000 |
-| 0.05 | 17.08% | +22.00% | 10.000 |
-| 0.10 | 16.34% | +16.71% | 10.000 |
-| 0.15 | 15.26% | +9.00% | 10.000 |
-| **0.20** | **14.00%** | **baseline** | 10.000 |
-| 0.25 | 12.65% | -9.64% | 10.000 |
-| 0.30 | 11.07% | -20.93% | 10.000 |
-| 0.35 | 9.16% | -34.57% | 10.000 |
-| 0.40 | 7.49% | -46.50% | 10.000 |
+| -0.02 | 100.00% | +543.09% | 10.000 |
+| 0.03 | 16.35% | +5.14% | 10.000 |
+| 0.08 | 16.24% | +4.44% | 10.000 |
+| 0.13 | 15.99% | +2.83% | 10.000 |
+| **0.18** | **15.55%** | **baseline (stored contexts)** | 10.000 |
+| 0.23 | 14.77% | -5.02% | 10.000 |
+| 0.28 | 13.75% | -11.58% | 10.000 |
+| 0.33 | 12.38% | -20.39% | 10.000 |
+| 0.38 | 10.52% | -32.35% | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.lonely_yearning >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.05 | 1.41% | +42.42% | 10.000 |
+| 0.10 | 1.36% | +37.37% | 10.000 |
+| 0.15 | 1.24% | +25.25% | 10.000 |
+| 0.20 | 1.12% | +13.13% | 10.000 |
+| **0.25** | **0.99%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 0.86% | -13.13% | 10.000 |
+| 0.35 | 0.73% | -26.26% | 10.000 |
+| 0.40 | 0.62% | -37.37% | 10.000 |
+| 0.45 | 0.41% | -58.59% | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.embarrassment >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.00 | 100.00% | +619.42% | 10.000 |
+| 0.05 | 16.85% | +21.22% | 10.000 |
+| 0.10 | 16.20% | +16.55% | 10.000 |
+| 0.15 | 15.11% | +8.71% | 10.000 |
+| **0.20** | **13.90%** | **baseline (stored contexts)** | 10.000 |
+| 0.25 | 12.53% | -9.86% | 10.000 |
+| 0.30 | 10.73% | -22.81% | 10.000 |
+| 0.35 | 9.20% | -33.81% | 10.000 |
+| 0.40 | 7.53% | -45.83% | 10.000 |
 
 ## 🎯 Prototype Fit Analysis
 
 Ranking of emotion prototypes by how well they fit this expression's mood regime.
 
+**Population**: stored-mood-regime (predicate: moodAxes.affiliation >= 20, moodAxes.arousal <= 55, moodAxes.arousal >= -5, moodAxes.engagement >= 15, moodAxes.self_evaluation <= -5, moodAxes.threat <= 70, moodAxes.threat >= 10, moodAxes.valence <= -10; count: 23; hash: c6119de6).
 | Rank | Prototype | Gate Pass | P(I≥t) | Conflict | Composite |
 |------|-----------|-----------|--------|----------|-----------|
-| 1 | **protest_anger** | 89.19% | 93.94% | 0.00% | 0.95 |
-| 2 | **embarrassment** | 75.68% | 92.86% | 0.00% | 0.90 |
-| 3 | **irritation** | 100.00% | 67.57% | 0.00% | 0.89 |
-| 4 | **interest** | 91.89% | 79.41% | 16.67% | 0.87 |
-| 5 | **unease** | 100.00% | 62.16% | 0.00% | 0.87 |
-| 6 | **regret** | 59.46% | 95.45% | 0.00% | 0.86 |
-| 7 | **surprise_startle** | 86.49% | 65.63% | 0.00% | 0.84 |
-| 8 | **frustration** | 59.46% | 86.36% | 0.00% | 0.83 |
-| 9 | **hatred** | 70.27% | 76.92% | 0.00% | 0.83 |
-| 10 | **shame** | 72.97% | 74.07% | 0.00% | 0.83 |
+| 1 | **irritation** | 100.00% | 66.67% | 0.00% | 0.88 |
+| 2 | **protest_anger** | 66.67% | 93.75% | 0.00% | 0.88 |
+| 3 | **guilt** | 58.33% | 100.00% | 0.00% | 0.88 |
+| 4 | **embarrassment** | 75.00% | 83.33% | 0.00% | 0.87 |
+| 5 | **grief** | 83.33% | 75.00% | 16.67% | 0.83 |
+| 6 | **hatred** | 50.00% | 91.67% | 0.00% | 0.82 |
+| 7 | **regret** | 62.50% | 80.00% | 0.00% | 0.82 |
+| 8 | **humiliation** | 54.17% | 84.62% | 0.00% | 0.81 |
+| 9 | **shame** | 75.00% | 66.67% | 0.00% | 0.81 |
+| 10 | **interest** | 100.00% | 54.17% | 16.67% | 0.81 |
 
 ### Top 3 Prototype Details
 
-#### 1. protest_anger
+#### 1. irritation
 
-- **Intensity Distribution**: P50=0.46, P90=0.62, P95=0.64
+- **Intensity Distribution**: P50=0.35, P90=0.60, P95=0.62
 - **Conflicting Axes**: None
 
-#### 2. embarrassment
+#### 2. protest_anger
 
-- **Intensity Distribution**: P50=0.43, P90=0.59, P95=0.60
+- **Intensity Distribution**: P50=0.53, P90=0.63, P95=0.64
 - **Conflicting Axes**: None
 
-#### 3. irritation
+#### 3. guilt
 
-- **Intensity Distribution**: P50=0.36, P90=0.58, P95=0.60
+- **Intensity Distribution**: P50=0.50, P90=0.67, P95=0.70
 - **Conflicting Axes**: None
 
 ---
@@ -1328,6 +1405,7 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
 
 Analysis of which prototypes best match the expression's constraint pattern.
 
+**Population**: stored-mood-regime (predicate: moodAxes.affiliation >= 20, moodAxes.arousal <= 55, moodAxes.arousal >= -5, moodAxes.engagement >= 15, moodAxes.self_evaluation <= -5, moodAxes.threat <= 70, moodAxes.threat >= 10, moodAxes.valence <= -10; count: 23; hash: c6119de6).
 
 ### Target Signature
 
@@ -1344,37 +1422,39 @@ Analysis of which prototypes best match the expression's constraint pattern.
 
 | Rank | Prototype | Similarity | Gate Pass | Combined |
 |------|-----------|------------|-----------|----------|
-| 1 | **protest_anger** | 0.93 | 89.19% | 0.92 |
-| 2 | **hypervigilance** | 0.79 | 40.54% | 0.64 |
-| 3 | **embarrassment** | 0.79 | 75.68% | 0.78 |
-| 4 | **humiliation** | 0.76 | 51.35% | 0.66 |
-| 5 | **terror** | 0.76 | 16.22% | 0.52 |
+| 1 | **protest_anger** | 0.93 | 66.67% | 0.83 |
+| 2 | **hypervigilance** | 0.79 | 29.17% | 0.59 |
+| 3 | **embarrassment** | 0.79 | 75.00% | 0.78 |
+| 4 | **humiliation** | 0.76 | 54.17% | 0.67 |
+| 5 | **terror** | 0.76 | 8.33% | 0.49 |
 
 ### Top 5 by Gate Pass Rate
 
 | Rank | Prototype | Gate Pass | Similarity | Combined |
 |------|-----------|-----------|------------|----------|
-| 1 | **unease** | 100.00% | 0.66 | 0.79 |
-| 2 | **irritation** | 100.00% | 0.64 | 0.78 |
-| 3 | **envy** | 100.00% | 0.65 | 0.79 |
-| 4 | **interest** | 91.89% | 0.45 | 0.64 |
-| 5 | **anticipation** | 89.19% | 0.33 | 0.56 |
+| 1 | **interest** | 100.00% | 0.45 | 0.67 |
+| 2 | **unease** | 100.00% | 0.66 | 0.79 |
+| 3 | **irritation** | 100.00% | 0.64 | 0.78 |
+| 4 | **envy** | 100.00% | 0.65 | 0.79 |
+| 5 | **grief** | 83.33% | 0.39 | 0.57 |
 
 ### Top 5 by Combined Score
 
 | Rank | Prototype | Combined | Similarity | Gate Pass |
 |------|-----------|----------|------------|----------|
-| 1 | **protest_anger** | 0.92 | 0.93 | 89.19% |
+| 1 | **protest_anger** | 0.83 | 0.93 | 66.67% |
 | 2 | **unease** | 0.79 | 0.66 | 100.00% |
 | 3 | **envy** | 0.79 | 0.65 | 100.00% |
 | 4 | **irritation** | 0.78 | 0.64 | 100.00% |
-| 5 | **embarrassment** | 0.78 | 0.79 | 75.68% |
+| 5 | **jealousy** | 0.78 | 0.75 | 83.33% |
 
 ---
 
 ## 🔍 Prototype Gap Detection
 
 Analysis of prototype coverage in "prototype space".
+
+**Population**: stored-mood-regime (predicate: moodAxes.affiliation >= 20, moodAxes.arousal <= 55, moodAxes.arousal >= -5, moodAxes.engagement >= 15, moodAxes.self_evaluation <= -5, moodAxes.threat <= 70, moodAxes.threat >= 10, moodAxes.valence <= -10; count: 23; hash: c6119de6).
 
 ### ✅ Good Coverage
 
@@ -1394,6 +1474,13 @@ Analysis of prototype coverage in "prototype space".
 
 ---
 
+
+## Report Integrity Warnings
+- I1_GATE_FAILED_NONZERO_FINAL: Gate failed but final intensity is non-zero in stored contexts. [population=1a309bea; prototype=freeze; signal=final]
+- I1_GATE_FAILED_NONZERO_FINAL: Gate failed but final intensity is non-zero in stored contexts. [population=c6119de6; prototype=freeze; signal=final]
+- I1_GATE_FAILED_NONZERO_FINAL: Gate failed but final intensity is non-zero in stored contexts. [population=1a309bea; prototype=dissociation; signal=final]
+- I1_GATE_FAILED_NONZERO_FINAL: Gate failed but final intensity is non-zero in stored contexts. [population=1a309bea; prototype=sadness; signal=final]
+- I1_GATE_FAILED_NONZERO_FINAL: Gate failed but final intensity is non-zero in stored contexts. [population=1a309bea; prototype=lonely_yearning; signal=final]
 
 ## Legend
 
@@ -1447,7 +1534,6 @@ Analysis of prototype coverage in "prototype space".
 - **[SEVERE-TAIL]**: Some samples fail badly while most are moderate
 
 
-
 ---
 
 I asked ChatGPT if the report indicated issues with our Monte Carlo implementation, if we should add more data, etc.
@@ -1455,278 +1541,326 @@ I asked ChatGPT if the report indicated issues with our Monte Carlo implementati
 
 ## ChatGPT's response
 
-### “Mood-pass” sample count is inconsistent (and doesn’t match the math)
+### Add this per-clause row:
 
-You have three different “how many samples are in the mood regime?” numbers:
+Gate clamp rate in mood-regime (how often the prototype gates force the emotion to 0)
 
-Blocker section uses 327 (“Fail% | mood-pass … /327”).
+P(threshold | gates pass, mood-regime) (so you can tell whether the issue is “gate mismatch” vs “threshold too high”)
 
-Later you say 35 contexts where “all mood constraints pass”.
+For this expression, that would instantly reveal:
 
-Back-of-the-envelope from your own global fail rates suggests it should be around ~1,000-ish out of 100,000 if mood axes are uniform and independent:
+“anger is failing mostly because the gate isn’t satisfied + affiliation weight conflicts”
+…which is the real reason you’re stuck.
 
-Using your global pass rates (which look exactly like uniform [-100,100] sampling):
+If you apply the 4 fixes above, you should start seeing witnesses quickly (and they’ll actually look like hurt anger, not random “generic anger but somehow affiliative” contradictions).
 
-affiliation ≥ 20 → ~40%
+### Where in the code to look (based on what your report already shows)
 
-valence ≤ -10 → ~45%
+Your report already has a pipeline that can produce:
 
-self_eval ≤ -5 → ~47.5%
+“Mood-only constraints pass count” (you showed 326)
 
-engagement ≥ 15 → ~42.5%
+Per-clause failure rates + avg violation + severity
 
-threat ∈ [10,70] → ~30%
+“P(pass | mood)” for a clause (you showed it for anger >= 0.4)
 
-arousal ∈ [-5,55] → ~30%
+So you already have these conceptual stages:
 
-Multiply: 0.40×0.45×0.475×0.425×0.30×0.30 ≈ 1.1% → ~1,100 samples expected.
+#### A. Emotion evaluation (the only place gates exist)
 
-So 35 and 327 are both suspicious. This is the biggest “something is wrong” signal in the report.
+Search for the function that computes an emotion intensity from mood axes + prototype weights:
 
-Actionable reporting fix: define one regime name (“mood-regime”) and print its exact filter expression and exact count once, then reuse that count everywhere.
+likely something like: computeEmotionIntensity, evaluateEmotion, calcEmotion, applyPrototype, prototypeMatch
 
-### How to investigate this
+it will:
 
-First: the “~1,000-ish” expectation has a math slip.
-With your own pass-rates you get:
+evaluate prototype gates
 
-0.40 × 0.45 = 0.18
+if gates pass, compute weighted sum / normalize / clamp
 
-0.18 × 0.475 = 0.0855
+return a number in [0..1]
 
-0.0855 × 0.425 ≈ 0.03634
+This is where you must instrument gate outcomes, because “gate clamp rate” is literally: how often this function forced the output to 0 because gates failed.
 
-0.03634 × 0.30 ≈ 0.01090
+Desired output from that function (internally):
 
-0.01090 × 0.30 ≈ 0.00327 = 0.327%
+{
+  value: number,              // current behavior
+  gatesPassed: boolean,        // new
+  failedGates: string[],       // new (ids or readable strings)
+}
 
-So for 100,000 samples, the expected “mood-regime” count is ~327, not ~1,100. That makes the 327 denominator plausible. The real red flag is the “35 contexts” number: it’s almost certainly a different unit or a different filter.
 
-Below is what I’d inspect, the invariants that must always hold, and the tests that prove it.
+If you don’t want to touch runtime code, do it inside the Monte Carlo “shadow evaluator” that already computes emotions — but it must use the exact same gate logic as runtime or you’ll get misleading diagnostics.
 
-### What to look into (highest probability culprits)
-1) “Samples” vs “contexts” confusion (unit mismatch)
+#### B. “Mood-regime” filter construction (you already have it)
 
-If “35 contexts” means unique contexts, deduped buckets, witness contexts, world-states, etc., it’s not comparable to a raw sample denominator like 327.
+You already compute something like:
 
-Fix: every report number must declare its unit:
+moodRegimeSamples = samples.filter(passMoodOnlyConstraints(expression))
 
-sample_count (raw Monte Carlo draws)
+This is where your report’s “Mood-only constraints: 326” comes from.
 
-context_count (whatever your grouping is)
+You need this exact subset as the denominator for both new metrics.
 
-unique_mood_vectors (if you dedupe by mood tuple)
+If your code currently builds that regime by:
 
-etc.
+taking only clauses that reference moodAxes.* (and maybe sexualArousal, sexualStates.*)
+then keep it consistent and document it in UI as:
 
-2) Same name, different predicate (filter mismatch)
+“Mood-regime = all samples where the non-emotion constraints for this expression are satisfied.”
 
-You likely have multiple predicates that are all being described as “mood pass”:
+(That’s what your report implicitly means.)
 
-“mood constraints pass” (current mood only)
+#### C. Clause analyzer / stats aggregator
 
-“mood constraints + previousMood constraints”
+Some module is walking your prerequisite JSON and producing rows like:
 
-“mood constraints + prototype gates”
+clause text
 
-“mood constraints + derived emotion ceilings”
+failure rate
 
-“mood constraints + expression prerequisites”
+avg violation
 
-Fix: define one canonical regime object and reuse it everywhere:
+severity
 
-exact predicate (stringified / serialized)
+P(pass | mood) (for primary signals)
 
-exact indices (sample ids)
+That’s where you add two new per-clause fields for emotion-threshold clauses:
 
-exact count
+gateClampRateInMoodRegime
 
-3) Report sections computed off different pipelines (dataflow mismatch)
+pThresholdGivenGatesPassInMoodRegime
 
-Common bug: one section uses allSamples, another uses filteredSamples, a third uses failedSamples, etc., but all print as if they were the same population.
+Mechanically it needs access to:
 
-Fix: every section should print:
+the mood-regime sample set
 
-population_name
+the emotion gate results per sample (from A)
 
-population_count
+the threshold for that clause (from the parsed clause)
 
-and ideally a population_hash (hash of indices) so you can assert equality across sections.
+So this is usually the “ClauseStatsBuilder” or “PrereqAnalyzer” stage.
 
-4) Boundary semantics / off-by-one in ranges
+#### D. Report/UI rendering components
 
-threat ∈ [10,70] can mean any of:
+Wherever you render “Top Blockers” and the clause table, add:
 
-inclusive both ends
+two columns + tooltips + an optional “expand gates” row.
 
-inclusive/exclusive
+This is straightforward once the report JSON includes the two new numbers + optional gate breakdown.
 
-normalized float space vs integer space
+### 2) Invariants that must hold (or your new numbers are lying)
 
-clamped values before checking vs after checking
+These invariants are the sanity rails. If any fail, the analyzer is not faithful to runtime.
 
-These tiny differences can absolutely explain “327 vs 35” if one section uses different boundary semantics.
+Emotion calculation invariants
 
-5) Cache / reuse bugs
+Gate clamp correctness
 
-If you compute mood-regime once, then later recompute with a different seed or overwrite a variable, sections will diverge.
+If gatesPassed === false then value MUST be 0.
 
-Fix: make the regime immutable and passed by reference.
+If you ever see gatesPassed=false and value>0, your gating instrumentation is wrong.
 
-### Invariants that must hold (assert these in code)
-A) Regime identity invariants
+Range
 
-If two sections claim they’re using “mood-regime”, then:
+0 <= value <= 1 always.
 
-Same count
+Determinism with seed
 
-countA == countB
+With fixed PRNG seed and same sample count, all reported rates should be stable (within floating noise if you parallelize).
 
-Same members
+Gate evaluation matches runtime
 
-set(indicesA) == set(indicesB) (or same hash)
+For the same input state, “gatesPassed” in Monte Carlo must match what the runtime emotion system would do.
 
-Same predicate
+Probability identity invariant (the key one)
 
-printed predicate strings match exactly (or canonical JSON of the predicate AST matches)
+For any emotion threshold clause E >= t:
 
-If any of these fails, your report is lying.
+Let:
 
-B) Basic probability sanity invariants (for uniform independent sampling)
+N_mood = number of samples in mood-regime
 
-For a simple constraint like axis >= t or axis in [a,b], the measured pass-rate should match the theoretical rate within normal sampling error.
+N_gatePass = number of mood-regime samples where E’s gates pass
 
-For N = 100,000 and p ≈ 0.00327, the standard deviation of the count is about sqrt(N p (1-p)) ≈ sqrt(327) ≈ 18.
-So counts in roughly [290, 365] are “totally normal.” Counts like 35 are not.
+N_threshPass = number of mood-regime samples where E >= t
 
-C) Logical consistency invariants (AND/OR)
+Then:
 
-For an AND of clauses C1..Ck in the same population:
+gatePassRate = N_gatePass / N_mood
 
-pass(AND) <= pass(Ci) for every i
+condPassRate = N_threshPass / N_gatePass (defined as 0 if N_gatePass=0)
 
-fail(AND) >= fail(Ci) for every i
+effectivePassRate = N_threshPass / N_mood
 
-pass(AND) = count(samples where all clauses pass) / denom
+Invariant:
+effectivePassRate == gatePassRate * condPassRate (up to floating rounding)
 
-For an OR of alternatives A1..Am:
+This is exactly how you separate:
 
-pass(OR) >= pass(Aj) for every j
+“gate mismatch” (low gatePassRate)
 
-pass(OR) = pass(union of Aj pass-sets)
+“threshold too high” (low condPassRate despite high gatePassRate)
 
-D) Clause accounting invariants (blocker reports)
+Denominator invariants (common bug source)
 
-If you compute per-clause fail rates within a population:
+N_gatePass <= N_mood
 
-For every clause i: pass_i + fail_i == denom
+N_threshPass <= N_gatePass (because if gates fail the value is 0; it can’t pass a positive threshold)
 
-If you compute “primary blocker” as “fails clause X most often”, then:
+### 3) Tests that prove it (not “seems right”, but actually right)
 
-failRate(X) must be computed over the same denom as the AND-fail rate you’re comparing it to.
+You want tests at 3 levels: unit, analyzer-level, UI-level.
 
-If you compute “sole blocker counts” (cases where exactly one clause fails):
+#### A. Unit tests (fast, surgical)
 
-sum(sole_blocker_counts) <= failCount(AND)
+Test 1: gate clamp enforcement
+Create a tiny prototype with a single gate, e.g. arousal >= 0.10.
 
-and: sole_blocker_count_i == count(failing AND samples where clause i fails and all others pass)
+input: arousal=0.05 → expect {gatesPassed:false, value:0}
 
-E) Gate/intensity invariants (prototype gating)
+input: arousal=0.10 → expect {gatesPassed:true, value>=0}
 
-If you have prototype gates that zero an emotion intensity:
+Test 2: failed gate reasons are stable
+For a multi-gate prototype, ensure failedGates returns the exact gate ids/strings you expect, and is sorted (stable ordering helps UI diffs).
 
-gate == false => intensity == 0 (or intensity undefined but then prerequisites must never treat it as nonzero)
+Test 3: probability identity on a hand-constructed set
+Manually feed a small list of states (no randomness) into the analyzer:
 
-Any report that claims “emotion ceiling within mood-regime” must use the same gate rules as runtime evaluation.
+10 mood-regime states, 4 gate-pass, 2 threshold-pass
+Expect:
 
-A frequent bug: reporting uses “raw prototype score”, runtime uses “gated score”.
+gatePassRate=0.4
 
-### Tests to prove it (minimal but decisive)
-1) “Regime contract” unit test (smokes out 80% of reporting bugs)
+condPassRate=0.5
 
-Create a function that returns:
+effective=0.2
+And verify the identity exactly.
 
-moodRegime = { predicate, indices, count, hash }
+#### B. Analyzer tests (Monte Carlo logic correctness)
 
-Then every report section must accept a population object (not recompute).
+Test 4: “gate mismatch” scenario produces the right diagnosis
+Build an expression whose mood-regime allows arousal low, but the emotion gate requires arousal high.
 
-Test:
+Example:
 
-Generate report.
+mood-regime: arousal >= -5 (i.e. many samples below 0.10 normalized)
 
-Assert every section labeled “mood-regime” prints the same count and same hash.
+emotion gate: arousal >= 0.10
 
-2) Population equivalence tests (set-based)
+threshold: E >= 0.4
 
-For each named population your report uses (all, mood-regime, failed, passed, etc.):
+With a symmetric sampling distribution for arousal around 0, you should see:
 
-Test:
+high gateClampRate
 
-passedSet ∪ failedSet == populationSet
+condPassRate maybe decent (because among gate-pass cases, the threshold might not be crazy)
 
-passedSet ∩ failedSet == ∅
+This is the “anger in hurt_anger” pattern you described.
 
-3) AND/OR set algebra property tests
+Test 5: “threshold too high” scenario
+Make gates always pass (or trivially pass) but set threshold too high relative to weights.
+Expect:
 
-Pick random samples (or use your Monte Carlo batch) and compute sets explicitly:
+gateClampRate ~ 0
 
-andSet == ⋂ clausePassSets
+condPassRate low
 
-orSet == ⋃ altPassSets
+Test 6: regression test for “gates ignored” bug
+If you previously had a bug where gates weren’t respected, this test catches it:
 
-This catches subtle evaluator-vs-reporter differences immediately.
+Pick a prototype with gates that fail frequently.
 
-4) Boundary semantics tests (range inclusivity)
+If your analyzer ever reports gateClampRate ≈ 0 while the gate clearly fails on many samples, it’s broken.
 
-Hardcode small, surgical cases:
+### C. UI tests (prevent future confusion)
 
-threat = 10, 70, 9.999, 70.0001 (or integer neighbors)
+Test 7: column rendering & tooltips
+Snapshot test the clause table row for an emotion threshold clause ensuring:
 
-arousal = -5, 55, etc.
+“Gate clamp (mood-regime)” is present
 
-Test:
+“Pass given gate” is present
 
-predicate evaluation matches your declared semantics (inclusive/exclusive).
+Tooltip text includes denominators (e.g. 127/326)
 
-reporter uses the same predicate evaluator as runtime.
+Test 8: sorting
+If you allow sorting by these new fields, test the sort order.
 
-5) Monotonicity property tests (great for threshold bugs)
+### 4) UI changes that communicate this without confusion
 
-For any constraint x >= t:
+The biggest risk: users misread conditional probability as unconditional. Solve it with funnel framing and explicit denominators.
 
-lowering t must not decrease pass-rate
-For any range [a,b]:
+#### A. For every emotion-threshold clause row, show a 3-stage funnel
 
-widening the range must not decrease pass-rate
+In the clause table row for emotions.anger >= 0.4, show:
 
-You can run this on a fixed sample batch to avoid randomness.
+Mood-regime N
 
-6) Gate consistency tests
+N_mood (e.g. 326)
 
-Construct samples where the gate is false but raw score would be high.
+Gate clamp (forced zero)
 
-Test:
+Gate clamp: 38.9% (127/326)
+Tooltip: “% of mood-regime samples where prototype gates failed → intensity forced to 0.”
 
-runtime emotion intensity is 0
+Pass given gate
 
-report’s intensity/ceiling stats also treat it as 0 (or exclude identically)
+Pass | gate: 26.1% (6/23)
+Tooltip: “Among samples where gates passed, fraction meeting threshold.”
 
-7) Golden snapshot test for one expression (end-to-end regression)
+Also optionally show:
 
-With a fixed seed and N (even 10k is fine):
+Effective pass
 
-generate report JSON
+Effective: 1.84% (6/326)
+This ties it back to the original “why doesn’t it trigger” question.
 
-snapshot it
+This is way clearer than two raw columns, because it encodes the causal story.
 
-assert key denominators and hashes never drift unexpectedly
+#### B. Expandable “Gates breakdown” panel (per emotion clause)
 
-This prevents “someone refactors reporting and silently breaks invariants.”
+Clicking the clause expands:
 
-### The blunt diagnosis from your numbers
+Prototype name + quick link: anger (or whatever key)
 
-327 “mood-pass /327” is probably fine once the arithmetic is corrected.
+Gate list with per-gate failure rates within mood-regime:
 
-The suspicious number is “35 contexts”: it’s either (a) a different filter, or (b) a different unit, or (c) a broken aggregation path. Your first job is to force the report to prove what population that 35 is drawn from (predicate + indices hash).
+Example layout:
 
-If you paste the relevant chunks of the report output (the lines around the 327 denominator and the “35 contexts” sentence), I can tell you which mismatch pattern it most likely is and what assertion will fail first.
+arousal >= 0.10 — fails 35.6% (116/326)
+
+engagement >= 0.00 — fails 2.1% (7/326)
+
+This immediately tells you which gate is killing you.
+
+Also include a one-liner:
+
+“If any gate fails, intensity is clamped to 0.”
+
+#### C. Classification badge to reduce cognitive load
+
+Add a small badge next to the clause (computed from the two rates):
+
+Gate mismatch if gateClampRate is high and pass|gate is not terrible
+
+Threshold too high if gateClampRate is low but pass|gate is low
+
+Both if both are bad
+
+This makes the “what do I change?” decision immediate.
+
+#### D. Avoid UI traps
+
+These are the common confusion points and fixes:
+
+Trap: Showing Pass | gate without the denominator.
+Fix: Always display as x/y (counts) and percent.
+
+Trap: Calling it “clamp rate” with no explanation.
+Fix: Label it “Gate clamp (forced 0)”.
+
+Trap: Mixing this into “Top Blockers” in a way that looks like a prerequisite clause.
+Fix: Keep “Top Blockers” as it is, but allow a hover/click on an emotion clause to show the funnel + gates panel.
+

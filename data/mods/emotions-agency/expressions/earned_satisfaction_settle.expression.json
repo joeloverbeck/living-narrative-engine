@@ -1,0 +1,148 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-agency:earned_satisfaction_settle",
+    "description": "Completion satisfaction—the quiet, earned “done” that settles in after effort. It’s competence with a downshift: the body unclenches, attention unhooks, and a small steadiness takes the place of drive. Style note: consider adding category 'completion' for competence-based closure (distinct from calm/relief/triumph).",
+    "category": "calm",
+    "actor_description": "It lands softly: done. The push in my chest eases and my focus stops gripping so hard, like I can finally put the weight down. I feel a small, private solidness—nothing flashy, just the sense that I handled it. The energy drains out in a good way, leaving me steadier than before.",
+    "description_text": "{actor} exhales and visibly downshifts—shoulders loosening, gaze no longer hunting for the next step. Their posture reads quietly satisfied, as if effort has been set aside and something has clicked into place.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.contentment"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.contentment"
+                                    },
+                                    {
+                                        "var": "previousEmotions.contentment"
+                                    }
+                                ]
+                            },
+                            0.10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.pride"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.confidence"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.triumph"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.euphoria"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.45
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a noticeable rise into contentment plus a competence signature (agency_control and mild pride/confidence) while threat stays low. Triggers only when arousal or engagement drops sharply (the ‘task finished’ downshift). Blocks big-win states (triumph/euphoria) and keeps relief/stress from dominating so it reads like earned closure, not danger passing or white-knuckle effort."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a long, unforced exhale—maybe a soft, satisfied hum or a quiet \"mm\" that sounds like putting a final period on a sentence.",
+        "tactile": "The tension in the room changes: hands unclench, shoulders drop, and movement gets looser—as if the body just set something heavy down.",
+        "limited": "My pace slows. I look steadier, less driven, like whatever I was holding in my head has finally been put away."
+    }
+}

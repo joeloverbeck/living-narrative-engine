@@ -134,6 +134,7 @@ describe('ExpressionDiagnosticsController', () => {
   let mockReportGenerator;
   let mockReportModal;
   let mockSensitivityAnalyzer;
+  let mockDataRegistry;
 
   beforeEach(() => {
     // Set up the DOM structure directly in Jest's jsdom environment
@@ -198,6 +199,11 @@ describe('ExpressionDiagnosticsController', () => {
           <span id="mc-trigger-rate">--</span>
           <span id="mc-confidence-interval">(-- - --)</span>
           <p id="mc-summary"></p>
+          <div id="mc-integrity-warnings" hidden>
+            <p id="mc-integrity-warnings-summary"></p>
+            <ul id="mc-integrity-warnings-list"></ul>
+            <p id="mc-integrity-warnings-impact"></p>
+          </div>
           <table id="blockers-table">
             <tbody id="blockers-tbody"></tbody>
           </table>
@@ -344,6 +350,7 @@ describe('ExpressionDiagnosticsController', () => {
 
     mockReportGenerator = {
       generate: jest.fn().mockReturnValue('# Mock Report\n\nGenerated report content'),
+      collectReportIntegrityWarnings: jest.fn().mockReturnValue([]),
     };
 
     mockReportModal = {
@@ -353,6 +360,10 @@ describe('ExpressionDiagnosticsController', () => {
     mockSensitivityAnalyzer = {
       computeSensitivityData: jest.fn().mockReturnValue([]),
       computeGlobalSensitivityData: jest.fn().mockReturnValue([]),
+    };
+
+    mockDataRegistry = {
+      getLookupData: jest.fn().mockReturnValue(null),
     };
   });
 
@@ -376,6 +387,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -394,6 +406,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -412,6 +425,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -430,6 +444,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -448,6 +463,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -466,6 +482,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -484,6 +501,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -502,6 +520,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -520,6 +539,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -538,6 +558,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -555,6 +576,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -573,6 +595,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -591,6 +614,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -609,6 +633,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).not.toThrow();
     });
@@ -627,6 +652,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: null,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -645,6 +671,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: { someMethod: jest.fn() },
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -663,6 +690,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: null,
           sensitivityAnalyzer: mockSensitivityAnalyzer,
+          dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -681,6 +709,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: { someMethod: jest.fn() },
           sensitivityAnalyzer: mockSensitivityAnalyzer,
+          dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -699,6 +728,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
           sensitivityAnalyzer: null,
+          dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -717,6 +747,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
           sensitivityAnalyzer: { computeSensitivityData: jest.fn() },
+          dataRegistry: mockDataRegistry,
         });
       }).toThrow();
     });
@@ -736,6 +767,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -767,6 +799,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -792,6 +825,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -816,6 +850,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -839,6 +874,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -865,6 +901,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -905,6 +942,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -935,6 +973,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -963,6 +1002,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -993,6 +1033,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1032,6 +1073,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1074,6 +1116,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1128,6 +1171,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1159,6 +1203,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1190,6 +1235,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1213,6 +1259,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1242,6 +1289,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1279,6 +1327,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1309,6 +1358,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1338,6 +1388,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1376,6 +1427,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1412,6 +1464,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1449,6 +1502,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1486,6 +1540,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1524,6 +1579,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1552,6 +1608,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1598,6 +1655,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1637,6 +1695,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1668,6 +1727,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1689,6 +1749,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1713,6 +1774,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1740,6 +1802,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1775,6 +1838,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1842,6 +1906,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1905,6 +1970,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1951,6 +2017,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1978,6 +2045,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -1996,7 +2064,97 @@ describe('ExpressionDiagnosticsController', () => {
       expect(mcResults.hidden).toBe(false);
     });
 
-    it('suppresses global sensitivity tables when baseline hits are low', async () => {
+    it('keeps integrity warnings hidden when no warnings are returned', async () => {
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      document.getElementById('run-mc-btn').click();
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const warningsContainer = document.getElementById('mc-integrity-warnings');
+      const impactNote = document.getElementById('mc-integrity-warnings-impact');
+      expect(warningsContainer.hidden).toBe(true);
+      expect(impactNote.textContent).toBe('');
+    });
+
+    it('renders integrity warnings when report generator returns warnings', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 500,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.045, high: 0.055 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: [{ moodAxes: { valence: 0 } }],
+      });
+      mockReportGenerator.collectReportIntegrityWarnings.mockReturnValueOnce([
+        {
+          code: 'I1_GATE_FAILED_NONZERO_FINAL',
+          message: 'Gate failed but final intensity is non-zero in stored contexts.',
+          populationHash: 'pop-123',
+          prototypeId: 'joy',
+        },
+        {
+          code: 'I3_GATEPASS_ZERO_NONZERO_FINAL',
+          message: 'Gate pass rate is zero but final distribution has non-zero percentiles.',
+          populationHash: 'pop-456',
+          prototypeId: 'fear',
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      document.getElementById('run-mc-btn').click();
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const warningsContainer = document.getElementById('mc-integrity-warnings');
+      const summary = document.getElementById('mc-integrity-warnings-summary');
+      const list = document.getElementById('mc-integrity-warnings-list');
+      const impactNote = document.getElementById('mc-integrity-warnings-impact');
+
+      expect(warningsContainer.hidden).toBe(false);
+      expect(summary.textContent).toContain('2');
+      expect(list.querySelectorAll('li').length).toBe(2);
+      expect(list.textContent).toContain('I1_GATE_FAILED_NONZERO_FINAL');
+      expect(list.textContent).toContain('population=pop-123');
+      expect(list.textContent).toContain('prototype=joy');
+      expect(impactNote.textContent).toContain('Gate/final mismatches');
+    });
+
+    it('shows global sensitivity tables with a low-confidence warning when baseline hits are low', async () => {
       mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
         triggerRate: 0.05,
         triggerCount: 5,
@@ -2030,6 +2188,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2040,8 +2199,8 @@ describe('ExpressionDiagnosticsController', () => {
       await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
 
       const tables = document.getElementById('global-sensitivity-tables');
-      expect(tables.textContent).toContain('Insufficient data');
-      expect(tables.querySelector('.sensitivity-table-container')).toBeNull();
+      expect(tables.textContent).toContain('Low confidence');
+      expect(tables.querySelector('.sensitivity-table-container')).not.toBeNull();
     });
 
     it('renders global sensitivity tables when baseline hits are sufficient', async () => {
@@ -2078,6 +2237,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2089,7 +2249,59 @@ describe('ExpressionDiagnosticsController', () => {
 
       const tables = document.getElementById('global-sensitivity-tables');
       expect(tables.querySelector('.sensitivity-table-container')).not.toBeNull();
-      expect(tables.textContent).not.toContain('Insufficient data');
+      expect(tables.textContent).not.toContain('Low confidence');
+    });
+
+    it('shows a non-monotonic sweep warning badge for global sensitivity tables', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 5,
+        sampleCount: 100,
+        confidenceInterval: { low: 0.04, high: 0.06 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: Array.from({ length: 100 }, () => ({})),
+      });
+      mockSensitivityAnalyzer.computeGlobalSensitivityData.mockReturnValueOnce([
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          grid: [
+            { threshold: 0.35, triggerRate: 0.04, triggerCount: 4, sampleCount: 100 },
+            { threshold: 0.40, triggerRate: 0.05, triggerCount: 5, sampleCount: 100 },
+            { threshold: 0.45, triggerRate: 0.06, triggerCount: 6, sampleCount: 100 },
+          ],
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+      document.getElementById('run-mc-btn').click();
+
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const warning = document.querySelector(
+        '#global-sensitivity-tables .sensitivity-warning'
+      );
+      expect(warning).not.toBeNull();
+      expect(warning.textContent).toContain('Sweep is not non-increasing');
     });
 
     it('renders effective threshold column for integer-domain sensitivity tables', async () => {
@@ -2139,6 +2351,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2193,6 +2406,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2256,6 +2470,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2285,6 +2500,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2314,6 +2530,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2344,6 +2561,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2385,6 +2603,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2423,6 +2642,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2461,6 +2681,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2478,17 +2699,40 @@ describe('ExpressionDiagnosticsController', () => {
     });
 
     it('populates blockers table when blockers exist', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.05,
+        triggerCount: 500,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.045, high: 0.055 },
+        clauseFailures: [
+          {
+            clauseDescription: 'emotions.joy >= 0.4',
+            gateClampRateInRegime: 0.3,
+            passRateGivenGateInRegime: 4 / 7,
+            gateFailInRegimeCount: 3,
+            gatePassInRegimeCount: 7,
+            gatePassAndClausePassInRegimeCount: 4,
+          },
+          {
+            clauseDescription: 'moodAxes.valence <= 0.3',
+            gateClampRateInRegime: null,
+            passRateGivenGateInRegime: null,
+          },
+        ],
+        distribution: 'uniform',
+      });
+
       mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
         {
           rank: 1,
-          clauseDescription: 'arousal >= 0.8',
+          clauseDescription: 'emotions.joy >= 0.4',
           failureRate: 0.6,
           averageViolation: 0.25,
           explanation: { severity: 'high' },
         },
         {
           rank: 2,
-          clauseDescription: 'valence <= 0.3',
+          clauseDescription: 'moodAxes.valence <= 0.3',
           failureRate: 0.3,
           averageViolation: 0.15,
           explanation: { severity: 'medium' },
@@ -2507,6 +2751,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2521,9 +2766,167 @@ describe('ExpressionDiagnosticsController', () => {
 
       const tbody = document.getElementById('blockers-tbody');
       expect(tbody.querySelectorAll('tr').length).toBe(2);
-      expect(tbody.innerHTML).toContain('arousal &gt;= 0.8');
+      expect(tbody.innerHTML).toContain('emotions.joy &gt;= 0.4');
       expect(tbody.innerHTML).toContain('severity-high');
       expect(tbody.innerHTML).toContain('severity-medium');
+      expect(tbody.innerHTML).toContain('30.00% (3 / 10)');
+      expect(tbody.innerHTML).toContain('57.14% (4 / 7)');
+    });
+
+    it('renders gate classification badge for emotion-threshold clauses', async () => {
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.05,
+        triggerCount: 500,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.045, high: 0.055 },
+        clauseFailures: [
+          {
+            clauseDescription: 'emotions.joy >= 0.4',
+            gateClampRateInRegime: 0.6,
+            passRateGivenGateInRegime: 0.1,
+            gateFailInRegimeCount: 6,
+            gatePassInRegimeCount: 4,
+            gatePassAndClausePassInRegimeCount: 1,
+          },
+        ],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.4',
+          failureRate: 0.6,
+          averageViolation: 0.25,
+          explanation: { severity: 'high' },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const runMcBtn = document.getElementById('run-mc-btn');
+      runMcBtn.click();
+
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const tbody = document.getElementById('blockers-tbody');
+      expect(tbody.innerHTML).toContain('Both');
+      expect(tbody.innerHTML).toContain('classification-both');
+    });
+
+    it('renders gate breakdown panel when gate data is available', async () => {
+      mockExpressionRegistry.getExpression.mockImplementation((id) => {
+        if (id === 'expr:test1') {
+          return {
+            id: 'expr:test1',
+            description: 'Test expression 1',
+            prerequisites: [],
+          };
+        }
+        return null;
+      });
+
+      mockDataRegistry.getLookupData.mockImplementation((key) => {
+        if (key === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              joy: {
+                gates: ['valence >= 0.4', 'threat <= -0.2'],
+              },
+            },
+          };
+        }
+        return null;
+      });
+
+      mockMonteCarloSimulator.simulate.mockResolvedValue({
+        triggerRate: 0.05,
+        triggerCount: 500,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.045, high: 0.055 },
+        clauseFailures: [
+          {
+            clauseDescription: 'emotions.joy >= 0.4',
+            gateClampRateInRegime: 0.3,
+            passRateGivenGateInRegime: 0.5,
+            gateFailInRegimeCount: 3,
+            gatePassInRegimeCount: 7,
+            gatePassAndClausePassInRegimeCount: 4,
+            hierarchicalBreakdown: {
+              nodeType: 'leaf',
+              variablePath: 'emotions.joy',
+            },
+          },
+        ],
+        storedContexts: [
+          { moodAxes: { valence: 0.2, threat: -0.1 } },
+          { moodAxes: { valence: 0.6, threat: -0.3 } },
+          { moodAxes: { valence: 0.5, threat: -0.1 } },
+        ],
+        distribution: 'uniform',
+      });
+
+      mockFailureExplainer.analyzeHierarchicalBlockers.mockReturnValue([
+        {
+          rank: 1,
+          clauseDescription: 'emotions.joy >= 0.4',
+          failureRate: 0.6,
+          averageViolation: 0.25,
+          explanation: { severity: 'high' },
+          hasHierarchy: true,
+          hierarchicalBreakdown: {
+            nodeType: 'leaf',
+            failureRate: 0.6,
+            description: 'emotions.joy >= 0.4',
+          },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      const runMcBtn = document.getElementById('run-mc-btn');
+      runMcBtn.click();
+
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const tbody = document.getElementById('blockers-tbody');
+      expect(tbody.innerHTML).toContain('gate-breakdown');
+      expect(tbody.innerHTML).toContain('33.33% (1 / 3)');
+      expect(tbody.innerHTML).toContain('66.67% (2 / 3)');
     });
 
     it('shows no blockers message when blockers array is empty', async () => {
@@ -2539,6 +2942,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2572,6 +2976,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2612,6 +3017,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2635,6 +3041,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2665,6 +3072,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2700,6 +3108,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2735,6 +3144,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2779,6 +3189,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2817,6 +3228,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2855,6 +3267,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2906,6 +3319,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -2954,6 +3368,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3001,6 +3416,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3054,6 +3470,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3089,6 +3506,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -3130,6 +3548,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -3145,6 +3564,9 @@ describe('ExpressionDiagnosticsController', () => {
         // Click generate report button
         const generateReportBtn = document.getElementById('generate-report-btn');
         generateReportBtn.click();
+
+        await Promise.resolve();
+        await Promise.resolve();
 
         expect(mockReportModal.showReport).toHaveBeenCalledWith(
           '# Mock Report\n\nGenerated report content'
@@ -3164,6 +3586,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -3192,6 +3615,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -3226,6 +3650,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -3266,6 +3691,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -3281,6 +3707,9 @@ describe('ExpressionDiagnosticsController', () => {
         // Click generate report button - should not throw
         const generateReportBtn = document.getElementById('generate-report-btn');
         expect(() => generateReportBtn.click()).not.toThrow();
+
+        await Promise.resolve();
+        await Promise.resolve();
 
         expect(mockLogger.error).toHaveBeenCalledWith(
           'Failed to generate report:',
@@ -3312,6 +3741,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3341,6 +3771,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3370,6 +3801,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3399,6 +3831,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3426,6 +3859,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3452,6 +3886,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3476,6 +3911,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3501,6 +3937,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3541,6 +3978,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3581,6 +4019,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3610,6 +4049,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3639,6 +4079,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3680,6 +4121,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3706,6 +4148,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3738,6 +4181,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3763,6 +4207,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3788,6 +4233,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3814,6 +4260,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3861,6 +4308,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3912,6 +4360,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -3960,6 +4409,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4015,6 +4465,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4068,6 +4519,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4110,6 +4562,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4150,6 +4603,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4190,6 +4644,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4230,6 +4685,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4279,6 +4735,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4320,6 +4777,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4377,6 +4835,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4437,6 +4896,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4490,6 +4950,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4557,6 +5018,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4622,6 +5084,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4667,6 +5130,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4716,6 +5180,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -4784,6 +5249,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -4846,6 +5312,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -4897,6 +5364,7 @@ describe('ExpressionDiagnosticsController', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -4961,6 +5429,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5005,6 +5474,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5059,6 +5529,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5087,6 +5558,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5132,6 +5604,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5187,6 +5660,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5232,6 +5706,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5288,6 +5763,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5334,6 +5810,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5388,6 +5865,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5440,6 +5918,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5486,6 +5965,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5542,6 +6022,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5595,6 +6076,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5640,6 +6122,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5710,6 +6193,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5759,6 +6243,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5825,6 +6310,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5890,6 +6376,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -5927,6 +6414,7 @@ describe('ExpressionDiagnosticsController', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6009,6 +6497,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6096,6 +6585,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6170,6 +6660,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6264,6 +6755,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6359,6 +6851,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6464,6 +6957,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6546,7 +7040,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
       ]);
 
       const mockPrototypeFitRankingService = {
-        analyzeAllPrototypeFit: jest.fn().mockReturnValue({
+        analyzeAllPrototypeFitAsync: jest.fn().mockResolvedValue({
           leaderboard: [
             {
               rank: 1,
@@ -6565,7 +7059,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
             },
           ],
         }),
-        computeImpliedPrototype: jest.fn().mockReturnValue({
+        computeImpliedPrototypeAsync: jest.fn().mockResolvedValue({
           targetSignature: new Map([
             ['moodAxes.valence', { direction: 1, importance: 0.5 }],
           ]),
@@ -6594,7 +7088,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
             },
           ],
         }),
-        detectPrototypeGaps: jest.fn().mockReturnValue(null),
+        detectPrototypeGapsAsync: jest.fn().mockResolvedValue(null),
       };
 
       const controller = new ExpressionDiagnosticsController({
@@ -6609,6 +7103,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         prototypeFitRankingService: mockPrototypeFitRankingService,
       });
 
@@ -6679,7 +7174,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
       ]);
 
       const mockPrototypeFitRankingService = {
-        analyzeAllPrototypeFit: jest.fn().mockReturnValue({
+        analyzeAllPrototypeFitAsync: jest.fn().mockResolvedValue({
           leaderboard: [
             {
               rank: 1,
@@ -6698,7 +7193,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
             },
           ],
         }),
-        computeImpliedPrototype: jest.fn().mockReturnValue({
+        computeImpliedPrototypeAsync: jest.fn().mockResolvedValue({
           targetSignature: new Map([
             ['moodAxes.valence', { direction: 1, importance: 0.5 }],
           ]),
@@ -6727,7 +7222,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
             },
           ],
         }),
-        detectPrototypeGaps: jest.fn().mockReturnValue(null),
+        detectPrototypeGapsAsync: jest.fn().mockResolvedValue(null),
       };
 
       const controller = new ExpressionDiagnosticsController({
@@ -6742,6 +7237,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         prototypeFitRankingService: mockPrototypeFitRankingService,
       });
 
@@ -6832,6 +7328,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6918,6 +7415,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -6974,6 +7472,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7023,6 +7522,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7077,6 +7577,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7131,6 +7632,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7184,6 +7686,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7238,6 +7741,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7292,6 +7796,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7348,6 +7853,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7407,6 +7913,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7466,6 +7973,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7525,6 +8033,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7583,6 +8092,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7641,6 +8151,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7699,6 +8210,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7784,6 +8296,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7854,6 +8367,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7920,6 +8434,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -7980,6 +8495,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8037,6 +8553,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8092,6 +8609,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8143,6 +8661,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8212,6 +8731,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8269,6 +8789,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8331,6 +8852,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8388,6 +8910,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8445,6 +8968,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8506,6 +9030,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8565,6 +9090,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8623,6 +9149,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8690,6 +9217,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8755,6 +9283,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8813,6 +9342,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8871,6 +9401,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8924,6 +9455,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
         reportGenerator: mockReportGenerator,
         reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
       });
 
       await controller.initialize();
@@ -8956,6 +9488,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -8981,6 +9514,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -9002,6 +9536,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         // Remove expression select container before init to prevent dropdown creation
@@ -9036,6 +9571,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -9075,6 +9611,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -9116,6 +9653,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();
@@ -9146,6 +9684,7 @@ describe('Compound Node Stats and OR Pass Rate', () => {
           reportGenerator: mockReportGenerator,
           reportModal: mockReportModal,
         sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
         });
 
         await controller.initialize();

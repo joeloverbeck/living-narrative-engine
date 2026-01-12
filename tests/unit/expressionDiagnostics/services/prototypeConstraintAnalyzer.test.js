@@ -408,9 +408,23 @@ describe('PrototypeConstraintAnalyzer', () => {
 
       const constraints = analyzer.extractAxisConstraints(prerequisites);
 
-      // Both constraints are extracted (conservative approach)
-      expect(constraints.has('threat')).toBe(true);
-      expect(constraints.has('arousal')).toBe(true);
+      // OR-only constraints are ignored (AND-only mood regime)
+      expect(constraints.size).toBe(0);
+    });
+
+    it('should extract constraints from mood alias paths', () => {
+      const prerequisites = [
+        {
+          logic: {
+            '>=': [{ var: 'mood.valence' }, 30],
+          },
+        },
+      ];
+
+      const constraints = analyzer.extractAxisConstraints(prerequisites);
+
+      expect(constraints.has('valence')).toBe(true);
+      expect(constraints.get('valence').min).toBeCloseTo(0.3, 5);
     });
 
     it('should return empty map for empty prerequisites', () => {

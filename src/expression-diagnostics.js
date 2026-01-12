@@ -11,6 +11,10 @@ import MonteCarloReportGenerator from './expressionDiagnostics/services/MonteCar
 import MonteCarloReportModal from './domUI/expression-diagnostics/MonteCarloReportModal.js';
 import DocumentContext from './domUI/documentContext.js';
 
+if (typeof globalThis !== 'undefined') {
+  globalThis.__LNE_REPORT_WORKER_MODULE_URL__ = import.meta.url;
+}
+
 let controller = null;
 
 /**
@@ -34,6 +38,7 @@ async function initialize() {
         // Resolve dependencies
         const logger = container.resolve(tokens.ILogger);
         const expressionRegistry = container.resolve(tokens.IExpressionRegistry);
+        const dataRegistry = container.resolve(tokens.IDataRegistry);
         const gateAnalyzer = container.resolve(
           diagnosticsTokens.IGateConstraintAnalyzer
         );
@@ -88,6 +93,7 @@ async function initialize() {
         controller = new ExpressionDiagnosticsController({
           logger,
           expressionRegistry,
+          dataRegistry,
           gateAnalyzer,
           boundsCalculator,
           monteCarloSimulator,

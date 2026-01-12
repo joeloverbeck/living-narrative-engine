@@ -89,7 +89,7 @@
                             {
                                 "var": "emotions.despair"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -156,5 +156,6 @@
     "alternate_descriptions": {
         "auditory": "A quiet inhale like someone gathering nerve, followed by a small, tentative sound—throat cleared, a half-start of words, a voice softened before it fully arrives.",
         "tactile": "There’s a faint tremor in the stillness—hands hovering, shoulders held as if bracing for rejection while still edging closer."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

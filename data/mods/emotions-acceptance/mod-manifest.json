@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-acceptance",
+  "version": "1.0.0",
+  "name": "Emotions - Acceptance",
+  "description": "Acceptance expressions for post-loss settling and quiet relief.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "quiet_acceptance_after_loss.expression.json"
+    ]
+  }
+}

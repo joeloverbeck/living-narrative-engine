@@ -9,7 +9,8 @@
   "content": {
     "expressions": [
       "enthusiastic_energy.expression.json",
-      "euphoric_excitement.expression.json"
+      "euphoric_excitement.expression.json",
+      "risk_thrill_grin.expression.json"
     ]
   }
 }

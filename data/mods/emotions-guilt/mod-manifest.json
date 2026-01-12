@@ -10,7 +10,8 @@
     "expressions": [
       "guilt_driven_repair_impulse.expression.json",
       "halting_apology_blurt.expression.json",
-      "lingering_guilt.expression.json"
+      "lingering_guilt.expression.json",
+      "self_forgiveness_release.expression.json"
     ]
   }
 }

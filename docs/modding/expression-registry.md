@@ -17,9 +17,9 @@ Expressions use a numeric priority system where **higher numbers = higher priori
 | 30-39 | 3 | Baseline states (serene, mild) |
 | 40-49 | 2 | Low-intensity awareness |
 | 50-59 | 5 | Moderate engagement |
-| 60-69 | 19 | Active emotional states |
-| 70-79 | 63 | Elevated emotional responses |
-| 80-89 | 19 | Intense emotional states |
+| 60-69 | 27 | Active emotional states |
+| 70-79 | 76 | Elevated emotional responses |
+| 80-89 | 20 | Intense emotional states |
 | 90-95 | 6 | Peak intensity expressions |
 
 ## Expressions by Mod
@@ -43,15 +43,16 @@ Expressions related to deep absorption and flow states.
 | 74 | `emotions-absorption:entranced_stillness` | attention | Deep absorption where external awareness fades |
 | 76 | `emotions-absorption:flow_absorption` | attention | Complete immersion in activity where self-awareness dissolves |
 
-### emotions-disengagement (1 expression)
+### emotions-disengagement (2 expressions)
 
 Expressions related to disengagement and boredom.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 46 | `emotions-disengagement:bored_disinterest` | attention | Disengaged attention with restless energy |
+| 62 | `emotions-disengagement:mind_wander_drift` | attention | Benign mind-wander with attention gently drifting from the present task |
 
-### emotions-confusion (2 expressions)
+### emotions-confusion (3 expressions)
 
 Expressions related to cognitive confusion and processing difficulty.
 
@@ -59,6 +60,7 @@ Expressions related to cognitive confusion and processing difficulty.
 |----------|----|----|-------------|
 | 46 | `emotions-confusion:confused_frown` | attention | Puzzled concentration trying to process something unclear |
 | 72 | `emotions-confusion:insight_click` | attention | A sudden internal re-ordering: confusion loosens while attention stays locked in, replaced by a clean sense of grasp |
+| 73 | `emotions-confusion:cognitive_overload_stall` | shutdown | Cognitive overload stall: too many simultaneous threads—thinking stays online, but it starts to stutter |
 
 ### emotions-hope (2 expressions)
 
@@ -103,7 +105,7 @@ Expressions of elevation - awe, inspiration, and aesthetic appreciation.
 | 70 | `emotions-elevation:inspired_uplift` | joy | Creative or motivational surge of energy |
 | 78 | `emotions-elevation:awed_transfixion` | joy | Overwhelmed wonder at something magnificent |
 
-### emotions-excitement (2 expressions)
+### emotions-excitement (3 expressions)
 
 Expressions of excitement, enthusiasm, and euphoric energy.
 
@@ -111,6 +113,7 @@ Expressions of excitement, enthusiasm, and euphoric energy.
 |----------|----|----|-------------|
 | 71 | `emotions-excitement:enthusiastic_energy` | joy | Eager excitement and engagement |
 | 73 | `emotions-excitement:euphoric_excitement` | joy | Intense happiness bordering on giddiness |
+| 76 | `emotions-excitement:risk_thrill_grin` | joy | Risk-thrill: danger registers as fuel—bright focus, charged breath, hungry confidence |
 
 ### emotions-joy-play (3 expressions)
 
@@ -132,7 +135,23 @@ Expressions of calm, tranquil, and peaceful emotional states.
 | 38 | `emotions-calm:quiet_contentment` | calm | Gentle satisfaction without need for more |
 | 76 | `emotions-calm:sigh_of_relief` | calm | Release of tension as worry dissolves |
 
-### emotions-affiliation (9 expressions)
+### emotions-acceptance (1 expression)
+
+Expressions of acceptance and post-loss settling.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 67 | `emotions-acceptance:quiet_acceptance_after_loss` | calm | Acceptance after loss: pain remains but stops escalating as relief/calm rises |
+
+### emotions-regulation (1 expression)
+
+Expressions of self-regulation and grounding that restore composure.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 68 | `emotions-regulation:purposeful_grounding` | calm | Deliberate grounding that eases anxiety into steadier composure |
+
+### emotions-affiliation (13 expressions)
 
 Expressions of social connection, bonding, and interpersonal feelings.
 
@@ -143,8 +162,12 @@ Expressions of social connection, bonding, and interpersonal feelings.
 | 62 | `emotions-affiliation:lonely_isolation` | affection | Painful sense of disconnection and solitude |
 | 66 | `emotions-affiliation:quiet_gratitude` | affection | Quiet gratitude—an everyday, softened thank you feeling that settles in without turning tearful or dramatic |
 | 68 | `emotions-affiliation:camaraderie_click` | affection | Belonging glow—an easy, mutual-fit warmth where closeness feels obvious and uncomplicated |
+| 68 | `emotions-affiliation:shared_laughter_bond` | affection | Playful social bonding—shared laughter that lands as synchrony. The moment feels easy and mutual, like a quiet agreement to be on the same side of the world for a beat. |
 | 68 | `emotions-affiliation:steady_sympathy` | affection | Sympathetic steadiness—care that stays regulated. Compassion is present, but empathic distress is kept low so it reads as supportive presence rather than emotional flooding. |
+| 72 | `emotions-affiliation:awkward_indebted_gratitude` | shame | Gratitude that lands with a hitch—warmth tangled with social awkwardness and a sudden sense of obligation. The thank-you arrives, but it comes out careful, as if it costs something to accept help cleanly. |
+| 72 | `emotions-affiliation:lonely_yearning_reach` | affection | Lonely yearning reach—an aching pull toward connection that stays outward-facing rather than withdrawing |
 | 72 | `emotions-affiliation:tearful_gratitude` | affection | Overwhelming thankfulness bringing tears |
+| 72 | `emotions-affiliation:vicarious_pride_warm_glow` | affection | Vicarious pride—warm, relational uplift that reads as “I’m proud of you,” with a reflected glow of admiration and affection |
 | 74 | `emotions-affiliation:lonely_reach_out` | affection | Connection-seeking loneliness—an aching pull toward contact rather than retreat. The feeling is tender and exposed, but oriented outward: a small decision to bridge the distance. |
 | 74 | `emotions-affiliation:attachment_swell` | affection | Surge of bonding feelings intensifying connection |
 
@@ -156,13 +179,14 @@ Expressions of love, attachment, and tender bonding.
 |----------|----|----|-------------|
 | 72 | `emotions-love-attachment:adoring_tenderness` | affection | A soft, reverent warmth—attention settles into quiet appreciation, protective fondness, and the feeling that simply being near is enough. |
 
-### emotions-agency (5 expressions)
+### emotions-agency (6 expressions)
 
 Expressions related to personal power, competence, and self-determination.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 61 | `emotions-agency:quiet_pride` | affection | Humble satisfaction in one's own accomplishment |
+| 66 | `emotions-agency:earned_satisfaction_settle` | calm | Completion satisfaction—the quiet, earned “done” that settles in after effort |
 | 70 | `emotions-agency:confident_composure` | agency | Assured self-possession and poise |
 | 74 | `emotions-agency:assertive_boundary_no` | agency | A clean, self-protective boundary—an unmistakable “No” delivered with steadiness rather than heat. The body stays upright and deliberate; the mind feels organized, not escalated. This is refusal without contempt: firm limits, minimal drama. |
 | 76 | `emotions-agency:determined_focus` | agency | Resolute commitment to achieving a goal |
@@ -185,12 +209,13 @@ Expressions of frustration, irritation, and rage across intensity levels.
 | 85 | `emotions-anger:explosive_anger` | anger | Sudden violent outburst of rage |
 | 90 | `emotions-anger:rage_surge` | anger | Overwhelming fury consuming rational thought |
 
-### emotions-hatred (1 expression)
+### emotions-hatred (2 expressions)
 
 Expressions of cold, enduring hatred.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
+| 76 | `emotions-hatred:vengeful_focus` | anger | Cold, organized intent to punish with controlled focus |
 | 79 | `emotions-hatred:cold_loathing` | anger | Enduring loathing with deliberate, cold hostility |
 
 ### emotions-anxiety (4 expressions)
@@ -221,13 +246,14 @@ Expressions related to adrenaline comedown and aftershock release.
 |----------|----|----|-------------|
 | 79 | `emotions-aftershock:adrenaline_aftershock` | threat | Adrenaline aftershock as threat drops while arousal lingers |
 
-### emotions-trust-distrust (5 expressions)
+### emotions-trust-distrust (6 expressions)
 
 Expressions related to trust, distrust, suspicion, and interpersonal vigilance states.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 66 | `emotions-trust-distrust:forgiving_softening` | affection | Deliberate softening toward reconciliation as trust returns |
+| 66 | `emotions-trust-distrust:tentative_trust_reach` | affection | A small, deliberate reach toward trust while the guard is still half up |
 | 72 | `emotions-trust-distrust:guard_lowering` | affection | Guard lowering—trust takes the wheel and the body stops bracing, softening into openness |
 | 73 | `emotions-trust-distrust:wary_suspicion` | threat | Wary suspicion with interpretive vigilance—reading tone, timing, and inconsistencies |
 | 77 | `emotions-trust-distrust:trust_fracture` | threat | A sharp trust fracture—suspicion rises into a chilling appraisal that someone or something is not safe to rely on |
@@ -265,12 +291,13 @@ Expressions of alarm-driven mobilization and readiness.
 |----------|----|----|-------------|
 | 84 | `emotions-alarm:alarm_surge` | threat | Sharp mobilization into fight/flight readiness without tipping into panic or freeze |
 
-### emotions-fear-acute (3 expressions)
+### emotions-fear-acute (4 expressions)
 
 Expressions of terror, panic, and freeze cluster.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
+| 82 | `emotions-fear-acute:flight_impulse_get_out_now` | threat | Escape-mobilization beat: fear/terror peaks into movement-readiness—an urgent, single-track impulse to create distance. Distinct from freeze (immobility) and panic (loss-of-control). |
 | 88 | `emotions-fear-acute:freeze_response` | threat | Paralyzed stillness in face of overwhelming threat |
 | 89 | `emotions-fear-acute:terror_spike` | threat | Sudden, sustained surge of terror—intense fear that clamps the body and narrows cognition without fully tipping into panic or freeze |
 | 92 | `emotions-fear-acute:panic_onset` | threat | Escalating terror overwhelming coping ability |
@@ -283,13 +310,14 @@ Expressions of fear regulation and override.
 |----------|----|----|-------------|
 | 88 | `emotions-courage:steeled_courage` | threat | Summoned bravery overriding fear response |
 
-### emotions-surprise (3 expressions)
+### emotions-surprise (4 expressions)
 
 Expressions of startle and surprise response.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 72 | `emotions-surprise:astonished_disbelief` | attention | Astonished disbelief—surprise that doesn’t resolve into glee or fear |
+| 72 | `emotions-surprise:stunned_processing_pause` | attention | Cognitive shock without panic—attention locks while the mind re-parses what it just took in |
 | 76 | `emotions-surprise:delighted_surprise` | joy | Pleasant surprise—an upbeat jolt that turns into a bright, spontaneous lift |
 | 78 | `emotions-surprise:startle_flinch` | threat | Sudden reactive jolt from unexpected stimulus |
 
@@ -341,6 +369,14 @@ Low engagement and muted affect where the emotional system goes offline.
 | 72 | `emotions-shutdown:apathy_blank` | shutdown | Low-energy motivational shutdown where caring goes offline |
 | 73 | `emotions-shutdown:numb_flatness` | shutdown | Blunted affect and emotional muting without full dissociation |
 
+### emotions-burnout (1 expression)
+
+Expressions related to burnout walls where stress and fatigue calcify into bitter detachment.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 74 | `emotions-burnout:burnout_wall_bitter_detach` | shutdown | A burnout wall: stress has stayed high long enough that exhaustion and bitterness take the wheel, and caring starts to feel expensive |
+
 ### emotions-fatigue (1 expression)
 
 Physiological and effort-cost expressions.
@@ -349,13 +385,14 @@ Physiological and effort-cost expressions.
 |----------|----|----|-------------|
 | 69 | `emotions-fatigue:fatigue_drag` | shutdown | Heavy, low-energy slump where effort feels costly |
 
-### emotions-nostalgia (2 expressions)
+### emotions-nostalgia (3 expressions)
 
 Memory-recall and reminiscence with past-oriented emotional tone.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 68 | `emotions-nostalgia:nostalgic_distance` | loss | Bittersweet reminiscence where the past feels closer than the present |
+| 71 | `emotions-nostalgia:bittersweet_smile` | loss | Mixed-valence nostalgia—warmth threaded with ache. The memory-feel lands tender rather than crushing: a small smile that doesn’t quite outrun the sting. |
 | 71 | `emotions-nostalgia:flat_reminiscence` | loss | Flat reminiscence—memories surface without bite or warmth; a dull, listless recall |
 
 ### emotions-dissociation (1 expression)
@@ -382,15 +419,24 @@ Everyday sadness expressions - low, heavy moods that weigh down without reaching
 |----------|----|----|-------------|
 | 66 | `emotions-sadness:heavy_sadness_slump` | loss | Heavy everyday sadness pulling the body down and slowing thought, without tipping into grief-break, despair, or shutdown |
 
-### emotions-guilt (3 expressions)
+### emotions-guilt (4 expressions)
 
 Expressions of guilt - "I did bad" repair-oriented responses.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 55 | `emotions-guilt:lingering_guilt` | shame | Persistent low-level remorse over past action |
+| 72 | `emotions-guilt:self_forgiveness_release` | calm | Self-forgiveness release as guilt loosens and relief moves in |
 | 74 | `emotions-guilt:guilt_driven_repair_impulse` | shame | Urgent need to make amends for wrongdoing |
 | 76 | `emotions-guilt:halting_apology_blurt` | shame | A halting apology / confession blurt—guilt pushes outward into speech before it can be fully rehearsed |
+
+### emotions-integrity (1 expression)
+
+Expressions of integrity - quiet, steady self-respect with low guilt and shame.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 66 | `emotions-integrity:quiet_integrity` | calm | Quiet integrity: a clean, steady self-respect - pride without swagger, guilt and shame unclenching without any rush of triumph |
 
 ### emotions-humiliation (1 expression)
 
@@ -410,13 +456,22 @@ Expressions of shame - "I am bad" self-condemnation responses.
 | 73 | `emotions-shame:imposter_doubt` | shame | Competence-threat wobble with rumination and over-monitoring |
 | 82 | `emotions-shame:shame_spike` | shame | Acute self-condemnation flooding awareness |
 
-### emotions-deference-submission (1 expression)
+### emotions-rejection (1 expression)
+
+Expressions of rejection - abrupt social exclusion and self-worth sting.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 74 | `emotions-rejection:rejection_sting_pushed_out` | shame | Social rejection sting with lonely pull, self-worth pain, and a hurt-anger edge |
+
+### emotions-deference-submission (2 expressions)
 
 Expressions of deferential submission: compliance under pressure without warmth or safety.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 72 | `emotions-deference-submission:deferential_yielding` | agency | Deferential yielding—compliance without warmth. The stance is: reduce friction by giving ground, even if it tastes a little sour, with attention tuned to risk and social pressure rather than connection. |
+| 74 | `emotions-deference-submission:appeasing_fawn_smile` | agency | Safety-seeking friendliness—an automatic, polished warmth used as cover. The body offers cooperation and soft edges first, hoping to reduce risk before it has to fight or flee. |
 
 ### emotions-social-selfconsciousness (2 expressions)
 
@@ -427,7 +482,7 @@ Social self-consciousness expressions capturing embarrassment, awkwardness, and 
 | 66 | `emotions-social-selfconsciousness:embarrassed_blush` | shame | A quick, recoverable self-conscious flare—heat to the face, awkward recalibration, and a brief urge to hide without collapsing into shame |
 | 73 | `emotions-social-selfconsciousness:awkward_stumble` | shame | A brief social fumble: awkwardness spikes, attention narrows, and the body tries to recover smoothness without fully shutting down |
 
-### emotions-social-aversions (3 expressions)
+### emotions-social-aversions (4 expressions)
 
 Status-based social aversions like envy, resentment, and contempt—comparison-driven self-worth stings, simmering unfairness, and cool dismissal without possessive or romantic elements.
 
@@ -436,6 +491,7 @@ Status-based social aversions like envy, resentment, and contempt—comparison-d
 | 72 | `emotions-social-aversions:contemptuous_dismissal` | anger | A cool, superior dismissal—social dominance expressed through minimization and disregard rather than active hostility |
 | 72 | `emotions-social-aversions:envious_pang` | anger | A quick, status-based envy pang: attention narrows into comparison and a self-worth sting, without tipping into possessive jealousy or sexual/romantic pull |
 | 72 | `emotions-social-aversions:resentful_simmer` | anger | Long-simmering unfairness: a cold, sticky sense of being wronged that stays narrative-active without tipping into explosive anger |
+| 73 | `emotions-social-aversions:schadenfreude_smirk` | anger | A quick, rewarding jolt of satisfaction at another’s setback—less “joy” than superiority-flavored amusement |
 
 ### emotions-sexual-desire (4 expressions)
 
@@ -457,12 +513,13 @@ Expressions of presentation, stance, and seductive style.
 | 64 | `emotions-sexual-approach:flirtatious_playfulness` | desire | Teasing romantic interest with light energy |
 | 72 | `emotions-sexual-approach:seductive_confidence` | desire | Assured allure in pursuit of attraction |
 
-### emotions-sexual-intimacy-style (2 expressions)
+### emotions-sexual-intimacy-style (3 expressions)
 
 Expressions of bonding, yielding, and intimacy-oriented states.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
+| 73 | `emotions-sexual-intimacy-style:afterglow_soft_closeness` | affection | Sexual afterglow: desire softens into warmth and ease—attention turns toward closeness, comfort, and quiet bonding |
 | 82 | `emotions-sexual-intimacy-style:passionate_longing` | desire | Deep yearning for romantic/sexual connection |
 | 82 | `emotions-sexual-intimacy-style:submissive_pleasure` | desire | Enjoyment in yielding control |
 
@@ -510,10 +567,10 @@ Create a new mod when:
 
 ## Statistics
 
-- **Total expressions**: 114
-- **Number of mods**: 48
+- **Total expressions**: 139
+- **Number of mods**: 54
 - **Priority range**: 32-95
-- **Average expressions per mod**: 2.38
+- **Average expressions per mod**: 2.60
 
 ---
 

@@ -27,6 +27,7 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
   let mockReportGenerator;
   let mockReportModal;
   let mockSensitivityAnalyzer;
+  let mockDataRegistry;
   let controller;
 
   beforeEach(() => {
@@ -200,6 +201,7 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
 
     mockReportGenerator = {
       generate: jest.fn().mockReturnValue('# Mock Report'),
+      collectReportIntegrityWarnings: jest.fn().mockReturnValue([]),
     };
 
     mockReportModal = {
@@ -209,6 +211,10 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
     mockSensitivityAnalyzer = {
       computeSensitivityData: jest.fn().mockReturnValue([]),
       computeGlobalSensitivityData: jest.fn().mockReturnValue([]),
+    };
+
+    mockDataRegistry = {
+      getLookupData: jest.fn().mockReturnValue(null),
     };
 
     controller = new ExpressionDiagnosticsController({
@@ -223,6 +229,7 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
       reportGenerator: mockReportGenerator,
       reportModal: mockReportModal,
       sensitivityAnalyzer: mockSensitivityAnalyzer,
+      dataRegistry: mockDataRegistry,
     });
   });
 

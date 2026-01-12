@@ -258,6 +258,7 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
       const expressionStatusService = sharedContainer.resolve(
         diagnosticsTokens.IExpressionStatusService
       );
+      const dataRegistry = sharedContainer.resolve(tokens.IDataRegistry);
       // PathSensitiveAnalyzer requires a complete DataRegistry with getLookupData,
       // which minimal container doesn't provide. Use a mock for controller instantiation test.
       const pathSensitiveAnalyzer = {
@@ -310,6 +311,7 @@ describe('Expression Diagnostics - Bootstrap Integration', () => {
         reportModal,
         prototypeFitRankingService,
         sensitivityAnalyzer,
+        dataRegistry,
       });
 
       expect(controller).toBeDefined();

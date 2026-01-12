@@ -8,7 +8,8 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "cold_loathing.expression.json"
+      "cold_loathing.expression.json",
+      "vengeful_focus.expression.json"
     ]
   }
 }

@@ -1,0 +1,173 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-rejection:rejection_sting_pushed_out",
+    "description": "Social rejection sting—an abrupt felt exclusion that hits as lonely pull plus self-worth sting, with a flash of hurt-anger. Style note: consider adding category 'rejection' for moments defined by affiliation rupture + self-worth pain (distinct from pure shame or pure loneliness).",
+    "category": "shame",
+    "actor_description": "It lands like a door closing in my face. My stomach drops and my chest goes tight-hot, like I want to protest and vanish at the same time. I can’t stop replaying the social shape of it; my attention keeps snapping back there, searching for what I did wrong. I feel smaller, edged out, and it stings in a way that makes my jaw set.",
+    "description_text": "{actor} goes visibly tight and guarded—eyes flicking back as if checking a boundary, mouth pressing thin. Their posture pulls in, but there’s a brittle edge to it, like they’re fighting the urge to snap back or shut down.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.lonely_yearning"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.shame"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.sadness"
+                                            },
+                                            0.40
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.protest_anger"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anger"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.self_evaluation"
+                                            },
+                                            {
+                                                "var": "moodAxes.self_evaluation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a rejection-flavored blend (lonely_yearning or sadness+shame) plus a hurt-anger edge, grounded in negative valence with low affiliation and low self-worth while attention stays engaged. Blocks grief/despair/numbness arcs. Triggers only on a sharp affiliation or self-evaluation drop to capture the sudden sting."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "My voice gets clipped or too careful, like every word is being measured for whether it will be allowed to land.",
+        "tactile": "It feels like heat in my face and a tight band around my ribs—arms close in, shoulders rising as if to make less of myself.",
+        "limited": "I go quiet and tense, attention stuck on the social boundary I just hit."
+    }
+}

@@ -17,6 +17,12 @@
  */
 
 /**
+ * @typedef {object} GateClassificationThresholds
+ * @property {number} gateClampRateHigh - Gate clamp rate (mood-regime) threshold for mismatch
+ * @property {number} passGivenGateLow - Pass | gate (mood-regime) threshold for high threshold
+ */
+
+/**
  * @typedef {object} AdvancedMetricsConfig
  * @property {boolean} enabled - Enable/disable advanced metrics
  * @property {NearMissEpsilonConfig} nearMissEpsilon - Epsilon values by domain
@@ -26,6 +32,7 @@
  * @property {boolean} includeNearMiss - Include near-miss metrics
  * @property {boolean} includeLastMile - Include last-mile metrics
  * @property {boolean} includeMaxObserved - Include max observed metrics
+ * @property {GateClassificationThresholds} gateClassificationThresholds - Heuristic thresholds for gate vs threshold badges
  */
 
 /**
@@ -66,6 +73,14 @@ export const advancedMetricsConfig = {
   includeNearMiss: true,
   includeLastMile: true,
   includeMaxObserved: true,
+
+  /**
+   * Heuristic thresholds for UI gate/threshold classification badges.
+   */
+  gateClassificationThresholds: {
+    gateClampRateHigh: 0.5,
+    passGivenGateLow: 0.2,
+  },
 };
 
 /**
