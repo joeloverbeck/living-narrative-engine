@@ -27,6 +27,22 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.flow"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.arousal"
@@ -95,6 +111,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.executive_focus"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -125,12 +149,47 @@
                                     },
                                     0.12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.60
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.40
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.18
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a modest agency drop with active engagement and mid arousal (not numb), plus moderate confusion or mild/moderate anxiety. Blocks panic/dissociation/numbness so it stays everyday hesitation, not overload or collapse. Triggers on an agency drop spike or a confusion spike to prevent spam. Caps small_victory so an earned-win moment doesn’t read as indecision."
+            "failure_message": "Choice paralysis is engaged indecision with slipping agency. Explicitly excludes strong executive_focus unless executive_focus just collapsed (organized grip broke into hesitation)."
         }
     ],
     "alternate_descriptions": {

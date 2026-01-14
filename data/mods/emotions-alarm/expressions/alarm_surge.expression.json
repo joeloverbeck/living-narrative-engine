@@ -88,6 +88,53 @@
                     {
                         "or": [
                             {
+                                "<=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.60
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.42
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.18
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -136,12 +183,42 @@
                                         ]
                                     }
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.fear"
+                                            },
+                                            {
+                                                "var": "previousEmotions.fear"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.hypervigilance"
+                                            },
+                                            {
+                                                "var": "previousEmotions.hypervigilance"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires strong alarm plus fear/hypervigilance with high threat and arousal while agency remains at least partially intact (not helpless). Blocks panic/freeze/dissociation so it stays 'mobilized readiness' rather than collapse or immobility. Triggers only on an alarm spike or threat jump/crossing to prevent spam."
+            "failure_message": "Alarm is acute mobilization: it won’t fire during strong executive_focus unless executive_focus just collapsed. Also requires an alarm/threat jump (or fear/vigilance spike), keeping it distinct from steady pressured competence."
         }
     ],
     "alternate_descriptions": {

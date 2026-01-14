@@ -35,6 +35,22 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.flow"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -137,6 +153,53 @@
                     {
                         "or": [
                             {
+                                "<=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.35
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.20
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -220,7 +283,7 @@
                     }
                 ]
             },
-            "failure_message": "Needs a surprise/confusion driver plus transfixed attention-lock (buffering), grounded in high engagement with a brief agency dip and mid arousal. Caps entranced/quiet_absorption so it doesn't read like savoring or trance-capture. Blocks panic/terror/freeze and caps joy/euphoria so it stays 're-parse lag,' not fear spike or delighted surprise. Requires a spike/crossing to avoid repeating every tick."
+            "failure_message": "Stunned processing is ‘buffering’—organized grip is absent. Strong executive_focus suppresses it unless executive_focus just dropped sharply (grip breaks and attention locks)."
         }
     ],
     "alternate_descriptions": {

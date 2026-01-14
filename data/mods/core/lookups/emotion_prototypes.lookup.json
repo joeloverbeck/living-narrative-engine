@@ -318,8 +318,8 @@
     "quiet_absorption": {
       "weights": {
         "engagement": 1.0,
-        "arousal": -0.45,
-        "agency_control": -0.60,
+        "arousal": -0.50,
+        "agency_control": -0.40,
         "threat": -0.45,
         "valence": 0.20,
         "future_expectancy": 0.05
@@ -329,8 +329,46 @@
         "arousal <= 0.35",
         "arousal >= -0.40",
         "threat <= 0.35",
-        "agency_control <= 0.10",
+        "agency_control <= 0.25",
         "valence >= -0.10"
+      ]
+    },
+    "focused_absorption": {
+      "weights": {
+        "engagement": 1.0,
+        "agency_control": 0.85,
+        "arousal": -0.45,
+        "threat": -0.65,
+        "valence": 0.15,
+        "future_expectancy": 0.05
+      },
+      "gates": [
+        "engagement >= 0.45",
+        "agency_control >= 0.30",
+        "threat <= 0.35",
+        "arousal <= 0.35",
+        "arousal >= -0.35",
+        "valence >= -0.20"
+      ]
+    },
+    "executive_focus": {
+      "weights": {
+        "engagement": 1.0,
+        "agency_control": 0.95,
+        "arousal": 0.35,
+        "threat": 0.20,
+        "future_expectancy": 0.20,
+        "self_evaluation": 0.15,
+        "valence": -0.05
+      },
+      "gates": [
+        "engagement >= 0.45",
+        "agency_control >= 0.35",
+        "arousal >= 0.05",
+        "arousal <= 0.75",
+        "threat >= 0.10",
+        "threat <= 0.60",
+        "valence >= -0.60"
       ]
     },
     "hope": {

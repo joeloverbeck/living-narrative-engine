@@ -32,6 +32,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.engagement"
@@ -44,7 +52,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            15
+                            10
                         ]
                     },
                     {
@@ -72,11 +80,26 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            {
+                                "+": [
+                                    {
+                                        "var": "moodAxes.engagement"
+                                    },
+                                    -25
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.valence"
                             },
-                            -10
+                            0
                         ]
                     },
                     {
@@ -109,6 +132,53 @@
                                 "var": "emotions.fear"
                             },
                             0.3
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.60
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.42
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.18
+                                ]
+                            }
                         ]
                     },
                     {
@@ -196,5 +266,5 @@
         "olfactory": "A muted warmth hangs in the air-calm attention with the edges smoothed down, none of the sharp bite of stress or panic."
     },
     "category": "attention",
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "normal"
 }

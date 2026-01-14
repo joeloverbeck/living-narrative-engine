@@ -24,11 +24,35 @@
                         ]
                     },
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "var": "moodAxes.agency_control"
+                                ">=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.45
+                                ]
                             },
-                            20
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            25
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            },
+                                            20
+                                        ]
+                                    }
+                                ]
+                            }
                         ]
                     },
                     {
@@ -185,6 +209,41 @@
                                         ]
                                     },
                                     8
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.08
                                 ]
                             },
                             {

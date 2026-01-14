@@ -12,7 +12,23 @@
                             {
                                 "var": "emotions.interest"
                             },
-                            0.55
+                            0.5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.38
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.62
                         ]
                     },
                     {
@@ -21,6 +37,14 @@
                                 "var": "moodAxes.engagement"
                             },
                             20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
                         ]
                     },
                     {
@@ -36,7 +60,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            -20
+                            -25
                         ]
                     },
                     {
@@ -52,7 +76,7 @@
                             {
                                 "var": "emotions.transfixed"
                             },
-                            0.38
+                            0.35
                         ]
                     },
                     {
@@ -60,7 +84,7 @@
                             {
                                 "var": "emotions.entranced"
                             },
-                            0.45
+                            0.4
                         ]
                     },
                     {
@@ -68,7 +92,15 @@
                             {
                                 "var": "emotions.quiet_absorption"
                             },
-                            0.5
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.flow"
+                            },
+                            0.6
                         ]
                     },
                     {
@@ -206,9 +238,56 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.interest"
+                                "-": [
+                                    {
+                                        "var": "emotions.focused_absorption"
+                                    },
+                                    {
+                                        "var": "previousEmotions.focused_absorption"
+                                    }
+                                ]
                             },
-                            0.78
+                            0.08
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.focused_absorption"
+                                    },
+                                    0.38
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.focused_absorption"
+                                    },
+                                    0.38
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.interest"
+                                    },
+                                    0.78
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.interest"
+                                    },
+                                    0.78
+                                ]
+                            }
                         ]
                     }
                 ]
@@ -222,5 +301,5 @@
         "olfactory": "The air carries warm skin and a faint, clean sweat note-focused presence rather than stress-like someone has leaned in and stayed there."
     },
     "category": "attention",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }
