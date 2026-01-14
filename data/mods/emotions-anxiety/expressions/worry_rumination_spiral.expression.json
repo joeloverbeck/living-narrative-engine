@@ -122,7 +122,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -151,5 +151,6 @@
         "auditory": "I hear {actor} talking faster in short bursts, then stopping to restart—same worry, new wording. There’s a thin edge to their breath, like they keep forgetting to fully exhale.",
         "tactile": "The air around {actor} feels restless—small shifts, foot tapping, fingers worrying at a seam, tension that never quite discharges.",
         "limited": "{actor} looks preoccupied and tense, attention snagging on something they can’t seem to put down."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

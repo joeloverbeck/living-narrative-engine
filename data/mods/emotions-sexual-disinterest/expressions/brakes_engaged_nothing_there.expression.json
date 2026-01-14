@@ -1,0 +1,111 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-sexual-disinterest:brakes_engaged_nothing_there",
+    "description": "Sexual indifference: the system is present but offline\u2014brakes engaged, attention slides away, and the body refuses to offer traction. Style note: consider adding category 'sexual_disinterest' to distinguish low-libido shutdown from general fatigue/numbness.",
+    "category": "shutdown",
+    "actor_description": "It\u2019s like reaching for a signal and finding static. My body stays neutral\u2014no pull, no sexual urge, no forward lean\u2014just a quiet blank where interest should be. The more I check for a response, the more it doesn\u2019t show up, and my attention drifts off on its own. I feel the brakes set without drama, a flat certainty: not now, not this.",
+    "description_text": "{actor} seems politely absent from the moment\u2014gaze sliding away, posture uninviting without being tense. Their responses flatten, like a switch has been turned to \u201cneutral,\u201d and they disengage rather than lean in.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_indifference"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.14
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            8
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_lust"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.passion"
+                            },
+                            0.22
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_confidence"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_with_shame"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "sexualStates.sexual_indifference"
+                                    },
+                                    {
+                                        "var": "previousSexualStates.sexual_indifference"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires high sexual_indifference with very low sexualArousal, low/flat engagement and arousal, and low-to-neutral threat. Caps active desire (lust/passion/sexual_confidence) and caps aroused_with_shame so this reads as neutral shutdown, not avoidance or repulsion. Triggers on a meaningful rise in indifference to avoid spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice goes a touch more matter-of-fact\u2014shorter answers, fewer warm inflections\u2014like they\u2019re switching to a purely practical register.",
+        "tactile": "There\u2019s a sense of distance in their body: minimal lean-in, no searching contact, movements that stay contained and non-inviting.",
+        "limited": "{actor} disengages, affect flattening into a neutral, uninterested calm."
+    },
+    "diagnosticStatus": "unknown"
+}

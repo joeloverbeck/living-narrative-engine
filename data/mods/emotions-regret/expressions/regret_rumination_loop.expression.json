@@ -58,6 +58,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.remorse"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.despair"
                             },
                             0.55
@@ -122,7 +130,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires elevated regret with attention stuck on it (engagement up), alongside a mild hit to self-evaluation and a dip in future expectancy. Caps shame/guilt so it stays 'I chose wrong' rather than 'I am bad' or moral wrongdoing. Triggers on a regret spike or a noticeable drop in self-evaluation/future-expectancy to prevent repetitive firing."
+            "failure_message": "Requires elevated regret with attention stuck on it (engagement up), alongside a mild hit to self-evaluation and a dip in future expectancy. Caps shame/guilt/remorse so it stays 'I chose wrong' rather than moral wrongdoing or repair-driven self-reproach. Triggers on a regret spike or a noticeable drop in self-evaluation/future-expectancy to prevent repetitive firing."
         }
     ],
     "actor_description": "My mind keeps running the same fork in the road, replaying it with tiny edits like I can still reach back and fix it. It isn't rage or moral panic—just this tight, sinking clarity that I picked the worse door. The thought won't resolve; it loops, sharpening the feeling that I've reduced my own future with one avoidable choice.",

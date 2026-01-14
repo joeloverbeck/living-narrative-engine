@@ -28,6 +28,30 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.affiliation"
                             },
                             25
@@ -117,12 +141,47 @@
                                     },
                                     0.1
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.quiet_absorption"
+                                            },
+                                            {
+                                                "var": "previousEmotions.quiet_absorption"
+                                            }
+                                        ]
+                                    },
+                                    0.06
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.quiet_absorption"
+                                            },
+                                            0.4
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.quiet_absorption"
+                                            },
+                                            0.4
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires adoration with a supporting affection layer, grounded in high affiliation and low threat. Caps lust/craving (and sexualArousal) so it reads as non-sexual tenderness; caps jealousy/contempt to prevent possessive or judgmental drift. Fires only on an adoration crossing or a noticeable adoration spike to avoid spam."
+            "failure_message": "Requires adoration with a supporting affection layer, plus quiet_absorption to capture the lingering 'settled attention' quality. Grounded in high affiliation and low threat. Caps lust/craving (and sexualArousal) so it reads as non-sexual tenderness; caps jealousy/contempt to prevent possessive or judgmental drift. Caps transfixed/entranced so it stays gentle rather than stunned or trance-captured. Fires only on an adoration or quiet_absorption crossing/spike to avoid spam."
         }
     ],
     "alternate_descriptions": {

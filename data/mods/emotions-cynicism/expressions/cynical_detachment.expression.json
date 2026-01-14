@@ -74,6 +74,22 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.remorse"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -109,7 +125,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires a strong cynical lens plus negative valence and lowered future expectancy, while remaining engaged enough to judge (not blank). Caps despair so it stays 'armored disbelief' rather than collapse, and caps apathy/numbness so it stays sharp rather than checked out. Triggers on a cynicism spike or a notable drop in future expectancy."
+            "failure_message": "Requires a strong cynical lens plus negative valence and lowered future expectancy, while remaining engaged enough to judge (not blank). Caps despair so it stays ‘armored disbelief’ rather than collapse, and caps apathy/numbness so it stays sharp rather than checked out. Also caps guilt/remorse so the beat doesn’t mislabel an active moral reckoning as bitterness-detachment. Triggers on a cynicism spike or a notable drop in future expectancy."
         }
     ],
     "alternate_descriptions": {
@@ -118,5 +134,6 @@
         "olfactory": "I catch a faint trace of stale coffee or cold metal—an impression of something gone flat and unsentimental.",
         "limited": "{actor}'s expression hardens into skepticism—present, reactive, but unwilling to believe in the best version of anything."
     },
-    "category": "anger"
+    "category": "anger",
+    "diagnosticStatus": "normal"
 }

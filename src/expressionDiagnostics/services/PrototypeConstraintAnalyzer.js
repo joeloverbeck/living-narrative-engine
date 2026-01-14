@@ -37,16 +37,22 @@ import { extractMoodConstraints } from '../utils/moodRegimeUtils.js';
  * @property {number} weight - Prototype weight for this axis
  * @property {number} constraintMin - Min value from expression constraint
  * @property {number} constraintMax - Max value from expression constraint
+ * @property {number} defaultMin - Default axis minimum
+ * @property {number} defaultMax - Default axis maximum
  * @property {number} optimalValue - Value that maximizes contribution
  * @property {number} contribution - Contribution to raw sum
  * @property {boolean} isBinding - Whether constraint limits optimal value
  * @property {string} conflictType - 'positive_weight_low_max' | 'negative_weight_high_min' | null
+ * @property {number} lostRawSum - Raw lost magnitude from default bounds
+ * @property {number|null} lostIntensity - Lost magnitude normalized by sumAbsWeights
+ * @property {Array<{ varPath: string, operator: string, threshold: number }>} sources
  */
 
 /**
  * @typedef {object} AxisConstraint
  * @property {number} min - Minimum allowed value
  * @property {number} max - Maximum allowed value
+ * @property {Array<{ varPath: string, operator: string, threshold: number }>} sources
  */
 
 /**
@@ -132,7 +138,8 @@ class PrototypeConstraintAnalyzer {
     // Analyze each axis contribution
     const axisAnalysis = this.#analyzeAxisContributions(
       weights,
-      axisConstraints
+      axisConstraints,
+      sumAbsWeights
     );
 
     // Calculate max raw sum and max intensity
@@ -218,7 +225,8 @@ class PrototypeConstraintAnalyzer {
         constraints,
         axis,
         constraint.operator,
-        constraint.threshold
+        constraint.threshold,
+        constraint
       );
     }
 
@@ -233,7 +241,7 @@ class PrototypeConstraintAnalyzer {
    * @param {Map<string, AxisConstraint>} axisConstraints - Axis constraints
    * @returns {BindingAxisInfo[]}
    */
-  #analyzeAxisContributions(weights, axisConstraints) {
+  #analyzeAxisContributions(weights, axisConstraints, sumAbsWeights) {
     const analysis = [];
 
     for (const [axis, weight] of Object.entries(weights)) {
@@ -243,6 +251,9 @@ class PrototypeConstraintAnalyzer {
       // Determine constraint bounds (use defaults if no constraint)
       const constraintMin = constraint?.min ?? defaultBounds.min;
       const constraintMax = constraint?.max ?? defaultBounds.max;
+      const defaultMin = defaultBounds.min;
+      const defaultMax = defaultBounds.max;
+      const sources = Array.isArray(constraint?.sources) ? constraint.sources : [];
 
       let optimalValue;
       let contribution;
@@ -252,20 +263,18 @@ class PrototypeConstraintAnalyzer {
       if (weight > 0) {
         // Positive weight: want max axis value
         // Optimal is unbounded max (1.0 for mood axes)
-        const unbound = defaultBounds.max;
+        const unbound = defaultMax;
         optimalValue = constraintMax;
         contribution = weight * optimalValue;
 
         if (constraintMax < unbound) {
           isBinding = true;
-          if (constraintMax < 0) {
-            conflictType = 'positive_weight_low_max';
-          }
+          conflictType = 'positive_weight_low_max';
         }
       } else {
         // Negative weight: want min axis value
         // Optimal is unbounded min (-1.0 for mood axes)
-        const unbound = defaultBounds.min;
+        const unbound = defaultMin;
         optimalValue = constraintMin;
         // For negative weight, contribution = weight * optimalValue
         // To maximize, we want the most negative axis value
@@ -274,21 +283,37 @@ class PrototypeConstraintAnalyzer {
 
         if (constraintMin > unbound) {
           isBinding = true;
-          if (constraintMin > 0) {
-            conflictType = 'negative_weight_high_min';
-          }
+          conflictType = 'negative_weight_high_min';
         }
       }
+
+      const absWeight = Math.abs(weight);
+      let lostRawSum = 0;
+      if (weight > 0) {
+        lostRawSum = absWeight * (defaultMax - constraintMax);
+      } else if (weight < 0) {
+        lostRawSum = absWeight * (constraintMin - defaultMin);
+      }
+      if (!Number.isFinite(lostRawSum) || lostRawSum < 0) {
+        lostRawSum = 0;
+      }
+      const lostIntensity =
+        sumAbsWeights > 0 ? lostRawSum / sumAbsWeights : null;
 
       analysis.push({
         axis,
         weight,
         constraintMin,
         constraintMax,
+        defaultMin,
+        defaultMax,
         optimalValue,
         contribution,
         isBinding,
         conflictType,
+        lostRawSum,
+        lostIntensity,
+        sources,
       });
     }
 
@@ -550,11 +575,12 @@ class PrototypeConstraintAnalyzer {
    * @param value
    * @private
    */
-  #applyConstraint(constraints, axis, op, value) {
+  #applyConstraint(constraints, axis, op, value, source) {
     if (!constraints.has(axis)) {
       constraints.set(axis, {
         min: this.#getDefaultBounds(axis).min,
         max: this.#getDefaultBounds(axis).max,
+        sources: [],
       });
     }
 
@@ -568,6 +594,19 @@ class PrototypeConstraintAnalyzer {
       current.min = Math.max(current.min, normalizedValue);
     } else if (op === '<=' || op === '<') {
       current.max = Math.min(current.max, normalizedValue);
+    }
+
+    if (
+      source &&
+      typeof source.varPath === 'string' &&
+      typeof source.operator === 'string' &&
+      typeof source.threshold === 'number'
+    ) {
+      current.sources.push({
+        varPath: source.varPath,
+        operator: source.operator,
+        threshold: source.threshold,
+      });
     }
   }
 

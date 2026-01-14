@@ -6,6 +6,7 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import jsonLogic from 'json-logic-js';
 import HierarchicalClauseNode from '../models/HierarchicalClauseNode.js';
+import ClauseNormalizer from './ClauseNormalizer.js';
 import { collectVarPaths } from '../../utils/jsonLogicVarExtractor.js';
 import { getEpsilonForVariable } from '../config/advancedMetricsConfig.js';
 import GateConstraint from '../models/GateConstraint.js';
@@ -27,6 +28,11 @@ import {
 import {
   createSamplingCoverageCalculator,
 } from './monteCarloSamplingCoverage.js';
+import AblationImpactCalculator from './AblationImpactCalculator.js';
+import {
+  MOOD_AXES,
+  AFFECT_TRAITS,
+} from './RandomStateGenerator.js';
 
 const DEFAULT_SAMPLING_COVERAGE_CONFIG = {
   enabled: true,
@@ -51,6 +57,20 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
   { pattern: /^sexual\./, domain: 'sexualStates', min: 0, max: 1 },
 ];
 
+const SEXUAL_AXIS_NAMES = new Set([
+  'sex_excitation',
+  'sex_inhibition',
+  'sexual_inhibition',
+  'baseline_libido',
+]);
+
+const MOOD_AXIS_NAMES = new Set(MOOD_AXES);
+const AFFECT_TRAIT_NAMES = new Set(AFFECT_TRAITS);
+
+const DERIVED_AXIS_RAW_SCALES = new Map([
+  ['sexual_arousal', 1],
+]);
+
 /**
  * @typedef {'uniform' | 'gaussian'} DistributionType
  */
@@ -66,6 +86,7 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
  * @property {boolean} [failOnUnseededVars=false] - Throw error if unseeded vars found
  * @property {boolean} [storeSamplesForSensitivity=false] - Store contexts for sensitivity analysis
  * @property {number} [sensitivitySampleLimit=10000] - Max samples to store for sensitivity (memory optimization)
+ * @property {number} [moodRegimeSampleReservoirLimit=0] - Max samples to store for mood-regime replay (0 disables storage)
  * @property {number} [maxWitnesses=5] - Maximum number of ground-truth witnesses to capture
  * @property {SamplingCoverageConfig} [samplingCoverageConfig] - Coverage tracking config
  */
@@ -137,6 +158,50 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
  * @property {number|null} [gateFailInRegimeCount] - Gate fail count within mood regime
  * @property {number|null} [gatePassAndClausePassInRegimeCount] - Gate pass + clause pass within mood regime
  * @property {number|null} [gatePassAndClauseFailInRegimeCount] - Gate pass + clause fail within mood regime
+ * @property {number|null} [rawPassInRegimeCount] - Raw pass count (>= threshold before gating) within mood regime
+ * @property {number|null} [lostPassInRegimeCount] - Raw pass that are lost after gating within mood regime
+ * @property {number|null} [lostPassRateInRegime] - Lost pass rate within mood regime
+ * @property {number|null} [gatedPassInRegimeCount] - Gated pass count within mood regime
+ */
+
+/**
+ * @typedef {object} GatePredicateInfo
+ * @property {string} axis
+ * @property {string} operator
+ * @property {number} thresholdNormalized
+ * @property {number|null} thresholdRaw
+ */
+
+/**
+ * @typedef {object} GateClampClauseInfo
+ * @property {string} prototypeId
+ * @property {'emotion' | 'sexual'} type
+ * @property {boolean} usePrevious
+ * @property {GatePredicateInfo[]} gatePredicates
+ */
+
+/**
+ * @typedef {object} GateClampRegimePlan
+ * @property {string[]} trackedGateAxes
+ * @property {Record<string, GateClampClauseInfo>} clauseGateMap
+ */
+
+/**
+ * @typedef {object} MoodRegimeAxisHistogram
+ * @property {string} axis
+ * @property {number} min
+ * @property {number} max
+ * @property {number} binCount
+ * @property {number[]} bins
+ * @property {number} sampleCount
+ */
+
+/**
+ * @typedef {object} MoodRegimeSampleReservoir
+ * @property {number} sampleCount
+ * @property {number} storedCount
+ * @property {number} limit
+ * @property {Array<Record<string, number>>} samples
  */
 
 /**
@@ -146,10 +211,39 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
  * @property {number} sampleCount - Total samples evaluated
  * @property {{ low: number, high: number }} confidenceInterval
  * @property {ClauseResult[]} clauseFailures - Per-clause failure data
+ * @property {AblationImpactResult|null} [ablationImpact] - Optional ablation impact payload
  * @property {DistributionType} distribution
  * @property {UnseededVarWarning[]} unseededVarWarnings - Warnings for unseeded variable paths
  * @property {object} [populationSummary] - Population counts for full samples vs stored contexts
  * @property {object} [samplingCoverage] - Coverage payload (when enabled and applicable)
+ * @property {PrototypeEvaluationSummary|null} [prototypeEvaluationSummary] - Aggregated per-prototype gate stats
+ * @property {GateClampRegimePlan} [gateClampRegimePlan] - Gate predicate plan for regime analysis
+ * @property {Record<string, MoodRegimeAxisHistogram>} [moodRegimeAxisHistograms]
+ * @property {MoodRegimeSampleReservoir|null} [moodRegimeSampleReservoir]
+ */
+
+/**
+ * @typedef {object} AblationImpactResult
+ * @property {number} originalPassRate
+ * @property {Array<{clauseId: string, passWithoutRate: number, passWithoutCount: number, sampleCount: number, impact: number, chokeRank: number}>} clauseImpacts
+ * @property {Array<{clauseIndex: number, passWithoutRate: number, passWithoutCount: number, sampleCount: number, impact: number}>} topLevelImpacts
+ */
+
+/**
+ * @typedef {object} PrototypeEvaluationStats
+ * @property {number} moodSampleCount
+ * @property {number} gatePassCount
+ * @property {number} gateFailCount
+ * @property {Record<string, number>} failedGateCounts
+ * @property {number} rawScoreSum
+ * @property {number} valueSum
+ * @property {number} valueSumGivenGate
+ */
+
+/**
+ * @typedef {object} PrototypeEvaluationSummary
+ * @property {Record<string, PrototypeEvaluationStats>} emotions
+ * @property {Record<string, PrototypeEvaluationStats>} sexualStates
  */
 
 /**
@@ -197,6 +291,9 @@ class MonteCarloSimulator {
         requiredMethods: [
           'calculateEmotions',
           'calculateEmotionsFiltered',
+          'calculateEmotionTraces',
+          'calculateEmotionTracesFiltered',
+          'calculateSexualStateTraces',
           'calculateSexualArousal',
           'calculateSexualStates',
         ],
@@ -246,6 +343,7 @@ class MonteCarloSimulator {
       // Sensitivity analysis options
       storeSamplesForSensitivity = false,
       sensitivitySampleLimit = 10000,
+      moodRegimeSampleReservoirLimit = 0,
       // Maximum number of ground-truth witnesses to capture (states that triggered the expression)
       maxWitnesses = 5,
       samplingCoverageConfig = {},
@@ -280,6 +378,13 @@ class MonteCarloSimulator {
     const clauseTracking = trackClauses
       ? this.#initClauseTracking(expression)
       : null;
+    const ablationCalculator = clauseTracking
+      ? new AblationImpactCalculator(clauseTracking)
+      : null;
+    const gateClampRegimePlan = this.#buildGateClampRegimePlan(
+      expression,
+      clauseTracking
+    );
 
     const moodConstraints = extractMoodConstraints(expression?.prerequisites, {
       includeMoodAlias: true,
@@ -291,6 +396,13 @@ class MonteCarloSimulator {
       moodConstraints
     );
     let inRegimeSampleCount = 0;
+    const trackedGateAxes = gateClampRegimePlan.trackedGateAxes ?? [];
+    const moodRegimeAxisHistograms =
+      this.#initializeMoodRegimeAxisHistograms(trackedGateAxes);
+    const moodRegimeHistogramAxes = Object.keys(moodRegimeAxisHistograms);
+    const moodRegimeSampleReservoir = this.#initializeMoodRegimeSampleReservoir(
+      moodRegimeSampleReservoirLimit
+    );
 
     // Track ground-truth witnesses (first N triggered samples) and nearest miss
     const witnesses = [];
@@ -299,6 +411,10 @@ class MonteCarloSimulator {
 
     // Extract referenced emotions once before simulation loop for witness capture
     const referencedEmotions = this.#extractReferencedEmotions(expression);
+    const prototypeEvaluationTargets =
+      this.#preparePrototypeEvaluationTargets(expression?.prerequisites);
+    const prototypeEvaluationSummary =
+      this.#initializePrototypeEvaluationSummary(prototypeEvaluationTargets);
 
     // Sensitivity analysis: store built contexts for post-hoc threshold evaluation
     const storedContexts = storeSamplesForSensitivity ? [] : null;
@@ -323,6 +439,10 @@ class MonteCarloSimulator {
           })
         : null;
 
+    if (sampleCount > 0) {
+      await this.#yieldToEventLoop();
+    }
+
     // Process samples in chunks to avoid blocking the main thread
     for (let processed = 0; processed < sampleCount; ) {
       const chunkEnd = Math.min(processed + CHUNK_SIZE, sampleCount);
@@ -332,19 +452,21 @@ class MonteCarloSimulator {
         const { current, previous, affectTraits } =
           this.#randomStateGenerator.generate(distribution, samplingMode);
 
+        const shouldStoreContext =
+          storedContexts !== null &&
+          storedContexts.length < sensitivitySampleLimit;
+
         // Build context once for potential storage and evaluation
         const context = this.#buildContext(
           current,
           previous,
           affectTraits,
-          referencedEmotions
+          referencedEmotions,
+          shouldStoreContext
         );
 
         // Store context for sensitivity analysis if enabled and within limit
-        if (
-          storedContexts !== null &&
-          storedContexts.length < sensitivitySampleLimit
-        ) {
+        if (shouldStoreContext) {
           storedContexts.push(context);
         }
 
@@ -363,12 +485,31 @@ class MonteCarloSimulator {
           : true;
         if (inRegime) {
           inRegimeSampleCount++;
+          if (moodRegimeHistogramAxes.length > 0) {
+            this.#recordMoodRegimeAxisHistograms(
+              moodRegimeAxisHistograms,
+              context
+            );
+            this.#recordMoodRegimeSampleReservoir(
+              moodRegimeSampleReservoir,
+              moodRegimeHistogramAxes,
+              context
+            );
+          }
         }
 
         const gateContextCache =
-          referencedEmotions.size > 0
+          referencedEmotions.size > 0 || prototypeEvaluationSummary
             ? { context, current: null, previous: null }
             : null;
+        if (prototypeEvaluationSummary && inRegime) {
+          this.#updatePrototypeEvaluationSummary(
+            prototypeEvaluationSummary,
+            prototypeEvaluationTargets,
+            context,
+            gateContextCache
+          );
+        }
         const result = this.#evaluateWithTracking(
           expression,
           context,
@@ -376,6 +517,12 @@ class MonteCarloSimulator {
           inRegime,
           gateContextCache
         );
+        if (ablationCalculator && result.clauseResults && result.atomTruthMap) {
+          ablationCalculator.recordSample({
+            clauseResults: result.clauseResults,
+            atomTruthMap: result.atomTruthMap,
+          });
+        }
 
         if (result.triggered) {
           triggerCount++;
@@ -422,13 +569,7 @@ class MonteCarloSimulator {
 
       // Yield to browser and report progress between chunks
       if (processed < sampleCount) {
-        await new Promise((resolve) => {
-          if (typeof globalThis.requestIdleCallback === 'function') {
-            globalThis.requestIdleCallback(resolve, { timeout: 0 });
-          } else {
-            setTimeout(resolve, 0);
-          }
-        });
+        await this.#yieldToEventLoop();
         onProgress?.(processed, sampleCount);
       }
     }
@@ -538,8 +679,12 @@ class MonteCarloSimulator {
       samplingMode,
       samplingMetadata,
       gateCompatibility,
+      gateClampRegimePlan,
+      moodRegimeAxisHistograms,
+      moodRegimeSampleReservoir,
       witnessAnalysis,
       unseededVarWarnings,
+      prototypeEvaluationSummary,
       // Stored contexts for sensitivity analysis (null if not enabled)
       storedContexts,
       populationSummary: {
@@ -558,11 +703,178 @@ class MonteCarloSimulator {
       populationMeta,
     };
 
+    if (ablationCalculator) {
+      resultPayload.ablationImpact = ablationCalculator.buildResult({
+        triggerCount,
+        sampleCount,
+      });
+    }
+
     if (samplingCoverageCalculator) {
       resultPayload.samplingCoverage = samplingCoverageCalculator.finalize();
     }
 
     return resultPayload;
+  }
+
+  async #yieldToEventLoop() {
+    await new Promise((resolve) => {
+      if (typeof globalThis.requestIdleCallback === 'function') {
+        globalThis.requestIdleCallback(resolve, { timeout: 0 });
+      } else {
+        setTimeout(resolve, 0);
+      }
+    });
+  }
+
+  #initializeMoodRegimeAxisHistograms(trackedGateAxes) {
+    if (!Array.isArray(trackedGateAxes) || trackedGateAxes.length === 0) {
+      return {};
+    }
+
+    const histograms = {};
+    for (const axis of trackedGateAxes) {
+      const spec = this.#getAxisHistogramSpec(axis);
+      if (!spec) {
+        continue;
+      }
+      histograms[axis] = {
+        axis,
+        min: spec.min,
+        max: spec.max,
+        binCount: spec.binCount,
+        bins: Array.from({ length: spec.binCount }, () => 0),
+        sampleCount: 0,
+      };
+    }
+
+    return histograms;
+  }
+
+  #initializeMoodRegimeSampleReservoir(limit) {
+    const resolvedLimit =
+      typeof limit === 'number' && Number.isFinite(limit)
+        ? Math.max(0, Math.floor(limit))
+        : 0;
+
+    return {
+      sampleCount: 0,
+      storedCount: 0,
+      limit: resolvedLimit,
+      samples: [],
+    };
+  }
+
+  #recordMoodRegimeAxisHistograms(histograms, context) {
+    for (const [axis, histogram] of Object.entries(histograms)) {
+      const value = this.#resolveGateAxisRawValue(axis, context);
+      if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
+        continue;
+      }
+
+      const binIndex = this.#getHistogramBinIndex(histogram, value);
+      if (binIndex === null) {
+        continue;
+      }
+
+      histogram.bins[binIndex] += 1;
+      histogram.sampleCount += 1;
+    }
+  }
+
+  #recordMoodRegimeSampleReservoir(reservoir, histogramAxes, context) {
+    if (!reservoir) {
+      return;
+    }
+
+    reservoir.sampleCount += 1;
+    if (reservoir.limit <= 0 || reservoir.samples.length >= reservoir.limit) {
+      reservoir.storedCount = reservoir.samples.length;
+      return;
+    }
+
+    const sample = {};
+    for (const axis of histogramAxes) {
+      const value = this.#resolveGateAxisRawValue(axis, context);
+      if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
+        continue;
+      }
+      sample[axis] = value;
+    }
+
+    reservoir.samples.push(sample);
+    reservoir.storedCount = reservoir.samples.length;
+  }
+
+  #getAxisHistogramSpec(axis) {
+    if (MOOD_AXIS_NAMES.has(axis)) {
+      return { min: -100, max: 100, binCount: 201 };
+    }
+    if (AFFECT_TRAIT_NAMES.has(axis)) {
+      return { min: 0, max: 100, binCount: 101 };
+    }
+    if (axis === 'sexual_arousal') {
+      return { min: 0, max: 1, binCount: 101 };
+    }
+    if (axis === 'baseline_libido') {
+      return { min: -50, max: 50, binCount: 101 };
+    }
+    if (axis === 'sex_excitation' || axis === 'sex_inhibition' || axis === 'sexual_inhibition') {
+      return { min: 0, max: 100, binCount: 101 };
+    }
+    return null;
+  }
+
+  #getHistogramBinIndex(histogram, value) {
+    const { min, max, binCount } = histogram;
+    if (typeof min !== 'number' || typeof max !== 'number' || typeof binCount !== 'number') {
+      return null;
+    }
+    if (binCount <= 0 || max === min) {
+      return null;
+    }
+
+    if (binCount === max - min + 1) {
+      const rounded = Math.round(value);
+      const clamped = Math.max(min, Math.min(max, rounded));
+      return clamped - min;
+    }
+
+    const clampedValue = Math.max(min, Math.min(max, value));
+    const ratio = (clampedValue - min) / (max - min);
+    const index = Math.round(ratio * (binCount - 1));
+    return Math.max(0, Math.min(binCount - 1, index));
+  }
+
+  #resolveGateAxisRawValue(axis, context) {
+    if (!context || typeof axis !== 'string') {
+      return null;
+    }
+
+    if (MOOD_AXIS_NAMES.has(axis)) {
+      return context?.moodAxes?.[axis] ?? context?.mood?.[axis] ?? null;
+    }
+
+    if (AFFECT_TRAIT_NAMES.has(axis)) {
+      return context?.affectTraits?.[axis] ?? null;
+    }
+
+    if (axis === 'sexual_arousal') {
+      return context?.sexualArousal ?? null;
+    }
+
+    if (SEXUAL_AXIS_NAMES.has(axis)) {
+      const sexualAxes = context?.sexualAxes ?? context?.sexual ?? {};
+      if (axis === 'sexual_inhibition') {
+        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
+      }
+      if (axis === 'sex_inhibition') {
+        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
+      }
+      return sexualAxes[axis] ?? null;
+    }
+
+    return null;
   }
 
   /**
@@ -599,6 +911,116 @@ class MonteCarloSimulator {
     }
 
     return clauses;
+  }
+
+  /**
+   * Build a gate clamp analysis plan for emotion/sexual threshold clauses.
+   *
+   * @private
+   * @param {object} expression
+   * @param {Array|null} clauseTracking
+   * @returns {GateClampRegimePlan}
+   */
+  #buildGateClampRegimePlan(expression, clauseTracking) {
+    const clauseGateMap = {};
+    const trackedGateAxes = new Set();
+
+    if (!expression?.prerequisites || expression.prerequisites.length === 0) {
+      return { trackedGateAxes: [], clauseGateMap };
+    }
+
+    const trees = clauseTracking
+      ? clauseTracking
+        .map((clause) => clause.hierarchicalTree)
+        .filter(Boolean)
+      : expression.prerequisites.map((prereq, index) =>
+        this.#buildHierarchicalTree(prereq.logic, `${index}`)
+      );
+
+    for (const tree of trees) {
+      this.#collectGatePlanLeaves(tree, clauseGateMap, trackedGateAxes);
+    }
+
+    return {
+      trackedGateAxes: [...trackedGateAxes].sort((a, b) =>
+        a.localeCompare(b)
+      ),
+      clauseGateMap,
+    };
+  }
+
+  /**
+   * Collect gate metadata from leaf threshold clauses.
+   *
+   * @private
+   * @param {HierarchicalClauseNode} node
+   * @param {Record<string, GateClampClauseInfo>} clauseGateMap
+   * @param {Set<string>} trackedGateAxes
+   */
+  #collectGatePlanLeaves(node, clauseGateMap, trackedGateAxes) {
+    if (!node) {
+      return;
+    }
+
+    if (node.nodeType !== 'leaf') {
+      for (const child of node.children || []) {
+        this.#collectGatePlanLeaves(child, clauseGateMap, trackedGateAxes);
+      }
+      return;
+    }
+
+    const clauseId = node.clauseId;
+    if (!clauseId) {
+      return;
+    }
+
+    const gateTarget = this.#resolveGateTarget(node.variablePath);
+    if (!gateTarget) {
+      return;
+    }
+
+    const prototype = this.#getPrototype(gateTarget.prototypeId, gateTarget.type);
+    if (!prototype) {
+      return;
+    }
+
+    const gates = Array.isArray(prototype.gates) ? prototype.gates : [];
+    if (gates.length === 0) {
+      return;
+    }
+
+    const gatePredicates = [];
+    for (const gateStr of gates) {
+      let constraint;
+      try {
+        constraint = GateConstraint.parse(gateStr);
+      } catch {
+        continue;
+      }
+
+      const thresholdRaw = this.#denormalizeGateThreshold(
+        constraint.axis,
+        constraint.value
+      );
+      gatePredicates.push({
+        axis: constraint.axis,
+        operator: constraint.operator,
+        thresholdNormalized: constraint.value,
+        thresholdRaw,
+      });
+      trackedGateAxes.add(constraint.axis);
+    }
+
+    if (gatePredicates.length === 0) {
+      return;
+    }
+
+    clauseGateMap[clauseId] = {
+      prototypeId: gateTarget.prototypeId,
+      type: gateTarget.type,
+      usePrevious: gateTarget.usePrevious,
+      gatePredicates,
+    };
   }
 
   /**
@@ -644,7 +1066,7 @@ class MonteCarloSimulator {
    * @param {object} context - Prebuilt evaluation context
    * @param {Array|null} clauseTracking - Tracking array for clause failures
    * @param {boolean} inRegime - Whether mood constraints passed for this sample
-   * @returns {{triggered: boolean}}
+   * @returns {{triggered: boolean, clauseResults: Array<{passed: boolean}>|null, atomTruthMap: Map<string, boolean>|null}}
    */
   #evaluateWithTracking(
     expression,
@@ -654,9 +1076,13 @@ class MonteCarloSimulator {
     gateContextCache
   ) {
     // Two-phase evaluation for last-mile tracking
+    let clauseResults = null;
+    let atomTruthMap = null;
+
     if (clauseTracking && expression?.prerequisites) {
       // Phase 1: Evaluate all clauses and collect results
-      const clauseResults = [];
+      clauseResults = [];
+      atomTruthMap = new Map();
       for (let i = 0; i < expression.prerequisites.length; i++) {
         const prereq = expression.prerequisites[i];
         const clause = clauseTracking[i];
@@ -668,7 +1094,8 @@ class MonteCarloSimulator {
             clause.hierarchicalTree,
             context,
             inRegime,
-            gateContextCache
+            gateContextCache,
+            atomTruthMap
           );
           if (!passed) {
             clause.failureCount++;
@@ -715,7 +1142,7 @@ class MonteCarloSimulator {
 
     // Full evaluation
     const triggered = this.#evaluateAllPrerequisites(expression, context);
-    return { triggered };
+    return { triggered, clauseResults, atomTruthMap };
   }
 
   /**
@@ -730,13 +1157,15 @@ class MonteCarloSimulator {
    * @param {{mood: object, sexual: object}} previousState - Previous mood and sexual state
    * @param {{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}|null} [affectTraits] - Affect traits for gate checking
    * @param {Set<string>|null|undefined} [emotionFilter] - Emotion names to calculate
-   * @returns {object} Context object with moodAxes, emotions, sexualStates, affectTraits, and their previous counterparts
+   * @param {boolean} [includeGateTrace=false] - Whether to compute gate traces
+   * @returns {object} Context object with moodAxes, emotions, sexualStates, gateTrace, affectTraits, and their previous counterparts
    */
   #buildContext(
     currentState,
     previousState,
     affectTraits = null,
-    emotionFilter
+    emotionFilter,
+    includeGateTrace = false
   ) {
     // Calculate current emotions from current mood using prototypes
     // Adapter mirrors runtime calculations (mood, sexual state, optional traits)
@@ -782,6 +1211,24 @@ class MonteCarloSimulator {
         previousSexualArousal
       );
 
+    const gateTrace = includeGateTrace
+      ? {
+          emotions:
+            this.#emotionCalculatorAdapter.calculateEmotionTracesFiltered(
+              currentState.mood,
+              currentState.sexual,
+              affectTraits,
+              emotionFilter
+            ),
+          sexualStates:
+            this.#emotionCalculatorAdapter.calculateSexualStateTraces(
+              currentState.mood,
+              currentState.sexual,
+              sexualArousal
+            ),
+        }
+      : null;
+
     // Previous mood axes directly from previous state
     const previousMoodAxes = previousState.mood;
 
@@ -805,6 +1252,7 @@ class MonteCarloSimulator {
       previousSexualAxes: previousState.sexual,
       previousSexualArousal, // Derived value for previous state arousal comparisons
       affectTraits: affectTraits ?? defaultTraits, // Include affect traits in context
+      gateTrace,
     };
   }
 
@@ -1002,6 +1450,20 @@ class MonteCarloSimulator {
         const gatePassAndClauseFailInRegimeCount = leafOnly
           ? c.hierarchicalTree?.gatePassAndClauseFailInRegimeCount ?? null
           : null;
+        const rawPassInRegimeCount = leafOnly
+          ? c.hierarchicalTree?.rawPassInRegimeCount ?? null
+          : null;
+        const lostPassInRegimeCount = leafOnly
+          ? c.hierarchicalTree?.lostPassInRegimeCount ?? null
+          : null;
+        const lostPassRateInRegime = leafOnly
+          ? c.hierarchicalTree?.lostPassRateInRegime ?? null
+          : null;
+        const gatedPassInRegimeCount =
+          typeof rawPassInRegimeCount === 'number' &&
+          typeof lostPassInRegimeCount === 'number'
+            ? rawPassInRegimeCount - lostPassInRegimeCount
+            : null;
 
         return {
           clauseDescription: c.description,
@@ -1042,6 +1504,10 @@ class MonteCarloSimulator {
           gateFailInRegimeCount,
           gatePassAndClausePassInRegimeCount,
           gatePassAndClauseFailInRegimeCount,
+          rawPassInRegimeCount,
+          lostPassInRegimeCount,
+          lostPassRateInRegime,
+          gatedPassInRegimeCount,
           // Include hierarchical breakdown if available
           hierarchicalBreakdown: c.hierarchicalTree?.toJSON() ?? null,
         };
@@ -1102,11 +1568,14 @@ class MonteCarloSimulator {
    */
   #buildHierarchicalTree(logic, pathPrefix = '0', parentNodeType = 'root') {
     if (!logic || typeof logic !== 'object') {
+      const clauseMeta = ClauseNormalizer.normalizeLeaf(logic, pathPrefix);
       const node = new HierarchicalClauseNode({
         id: pathPrefix,
         nodeType: 'leaf',
         description: this.#describeLeafCondition(logic),
         logic,
+        clauseId: clauseMeta.clauseId,
+        clauseType: clauseMeta.clauseType,
       });
       node.parentNodeType = parentNodeType;
       const thresholdInfo = this.#extractThresholdFromLogic(logic);
@@ -1152,12 +1621,31 @@ class MonteCarloSimulator {
       return node;
     }
 
+    const maxDecomposition = ClauseNormalizer.decomposeMaxClause(logic);
+    if (maxDecomposition) {
+      const children = maxDecomposition.map((child, i) =>
+        this.#buildHierarchicalTree(child, `${pathPrefix}.${i}`, 'and')
+      );
+      const node = new HierarchicalClauseNode({
+        id: pathPrefix,
+        nodeType: 'and',
+        description: `AND of ${children.length} conditions`,
+        logic,
+        children,
+      });
+      node.parentNodeType = parentNodeType;
+      return node;
+    }
+
     // Leaf node (comparison operator)
+    const clauseMeta = ClauseNormalizer.normalizeLeaf(logic, pathPrefix);
     const node = new HierarchicalClauseNode({
       id: pathPrefix,
       nodeType: 'leaf',
       description: this.#describeLeafCondition(logic),
       logic,
+      clauseId: clauseMeta.clauseId,
+      clauseType: clauseMeta.clauseType,
     });
     node.parentNodeType = parentNodeType;
     const thresholdInfo = this.#extractThresholdFromLogic(logic);
@@ -1416,7 +1904,7 @@ class MonteCarloSimulator {
    * @returns {number}
    */
   #normalizeMoodAxisValue(value) {
-    return Math.abs(value) <= 1 ? value : value / 100;
+    return value / 100;
   }
 
   /**
@@ -1437,6 +1925,45 @@ class MonteCarloSimulator {
       return AxisInterval.forSexualAxis();
     }
     return AxisInterval.forMoodAxis();
+  }
+
+  /**
+   * Convert a normalized gate threshold into the raw prerequisite scale when possible.
+   *
+   * @private
+   * @param {string} axis
+   * @param {number} value
+   * @returns {number|null}
+   */
+  #denormalizeGateThreshold(axis, value) {
+    const scale = this.#getGateAxisRawScale(axis);
+    if (typeof scale !== 'number') {
+      return null;
+    }
+    return value * scale;
+  }
+
+  /**
+   * Resolve raw scale multiplier for gate axes.
+   *
+   * @private
+   * @param {string} axis
+   * @returns {number|null}
+   */
+  #getGateAxisRawScale(axis) {
+    if (DERIVED_AXIS_RAW_SCALES.has(axis)) {
+      return DERIVED_AXIS_RAW_SCALES.get(axis);
+    }
+    if (MOOD_AXIS_NAMES.has(axis)) {
+      return 100;
+    }
+    if (AFFECT_TRAIT_NAMES.has(axis)) {
+      return 100;
+    }
+    if (SEXUAL_AXIS_NAMES.has(axis)) {
+      return 100;
+    }
+    return null;
   }
 
   /**
@@ -1466,6 +1993,259 @@ class MonteCarloSimulator {
       emotions: [...emotions],
       sexualStates: [...sexualStates],
     };
+  }
+
+  /**
+   * Prepare prototype evaluation targets with resolved weights/gates.
+   *
+   * @private
+   * @param {Array} prerequisites
+   * @returns {{emotions: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>, sexualStates: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>}}
+   */
+  #preparePrototypeEvaluationTargets(prerequisites) {
+    const references = this.#extractPrototypeReferences(prerequisites);
+    const emotions = [];
+    const sexualStates = [];
+
+    for (const prototypeId of references.emotions) {
+      const prototype = this.#getPrototype(prototypeId, 'emotion');
+      if (!prototype) {
+        this.#logger.warn(
+          `MonteCarloSimulator: Prototype not found for evaluation: emotions.${prototypeId}`
+        );
+        continue;
+      }
+      emotions.push({
+        prototypeId,
+        weights: prototype.weights ?? null,
+        gates: Array.isArray(prototype.gates) ? prototype.gates : null,
+      });
+    }
+
+    for (const prototypeId of references.sexualStates) {
+      const prototype = this.#getPrototype(prototypeId, 'sexual');
+      if (!prototype) {
+        this.#logger.warn(
+          `MonteCarloSimulator: Prototype not found for evaluation: sexualStates.${prototypeId}`
+        );
+        continue;
+      }
+      sexualStates.push({
+        prototypeId,
+        weights: prototype.weights ?? null,
+        gates: Array.isArray(prototype.gates) ? prototype.gates : null,
+      });
+    }
+
+    return { emotions, sexualStates };
+  }
+
+  /**
+   * Initialize prototype evaluation summary for streaming aggregation.
+   *
+   * @private
+   * @param {{emotions: Array<{prototypeId: string}>, sexualStates: Array<{prototypeId: string}>}} targets
+   * @returns {PrototypeEvaluationSummary|null}
+   */
+  #initializePrototypeEvaluationSummary(targets) {
+    if (!targets) {
+      return null;
+    }
+    if (targets.emotions.length === 0 && targets.sexualStates.length === 0) {
+      return null;
+    }
+
+    const summary = {
+      emotions: {},
+      sexualStates: {},
+    };
+
+    for (const target of targets.emotions) {
+      summary.emotions[target.prototypeId] =
+        this.#createPrototypeEvaluationStats();
+    }
+
+    for (const target of targets.sexualStates) {
+      summary.sexualStates[target.prototypeId] =
+        this.#createPrototypeEvaluationStats();
+    }
+
+    return summary;
+  }
+
+  /**
+   * Create an empty prototype evaluation stats object.
+   *
+   * @private
+   * @returns {PrototypeEvaluationStats}
+   */
+  #createPrototypeEvaluationStats() {
+    return {
+      moodSampleCount: 0,
+      gatePassCount: 0,
+      gateFailCount: 0,
+      failedGateCounts: {},
+      rawScoreSum: 0,
+      valueSum: 0,
+      valueSumGivenGate: 0,
+    };
+  }
+
+  /**
+   * Update prototype evaluation summary for a single sample.
+   *
+   * @private
+   * @param {PrototypeEvaluationSummary} summary
+   * @param {{emotions: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>, sexualStates: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>}} targets
+   * @param {object} context
+   * @param {object|null} gateContextCache
+   */
+  #updatePrototypeEvaluationSummary(
+    summary,
+    targets,
+    context,
+    gateContextCache
+  ) {
+    if (!summary || !targets || !context) {
+      return;
+    }
+
+    const normalizedContext = this.#resolveGateContext(
+      gateContextCache,
+      context,
+      false
+    );
+    if (!normalizedContext) {
+      return;
+    }
+
+    const normalizedMood = normalizedContext.moodAxes ?? {};
+    const normalizedSexual = normalizedContext.sexualAxes ?? {};
+    const normalizedTraits = normalizedContext.traitAxes ?? {};
+
+    for (const target of targets.emotions) {
+      const stats = summary.emotions[target.prototypeId];
+      if (!stats) {
+        continue;
+      }
+      const evaluation = this.#evaluatePrototypeSample(
+        target,
+        normalizedMood,
+        normalizedSexual,
+        normalizedTraits
+      );
+      this.#recordPrototypeEvaluation(stats, evaluation);
+    }
+
+    for (const target of targets.sexualStates) {
+      const stats = summary.sexualStates[target.prototypeId];
+      if (!stats) {
+        continue;
+      }
+      const evaluation = this.#evaluatePrototypeSample(
+        target,
+        normalizedMood,
+        normalizedSexual,
+        {}
+      );
+      this.#recordPrototypeEvaluation(stats, evaluation);
+    }
+  }
+
+  /**
+   * Evaluate a prototype for a single normalized context.
+   *
+   * @private
+   * @param {{weights: object|null, gates: string[]|null}} target
+   * @param {Record<string, number>} normalizedMood
+   * @param {Record<string, number>} normalizedSexual
+   * @param {Record<string, number>} normalizedTraits
+   * @returns {{gatePass: boolean, failedGates: string[], rawScore: number, rawValue: number, value: number}}
+   */
+  #evaluatePrototypeSample(
+    target,
+    normalizedMood,
+    normalizedSexual,
+    normalizedTraits
+  ) {
+    const clamp01 = (value) => Math.max(0, Math.min(1, value));
+
+    let rawSum = 0;
+    let sumAbsWeights = 0;
+    if (target.weights && typeof target.weights === 'object') {
+      for (const [axis, weight] of Object.entries(target.weights)) {
+        if (typeof weight !== 'number') {
+          continue;
+        }
+        const axisValue = resolveAxisValue(
+          axis,
+          normalizedMood,
+          normalizedSexual,
+          normalizedTraits
+        );
+        rawSum += weight * axisValue;
+        sumAbsWeights += Math.abs(weight);
+      }
+    }
+
+    const rawScore = sumAbsWeights === 0 ? 0 : rawSum / sumAbsWeights;
+    const clampedRaw = clamp01(rawScore);
+
+    const failedGates = [];
+    const gates = Array.isArray(target.gates) ? target.gates : [];
+    for (const gateStr of gates) {
+      let constraint;
+      try {
+        constraint = GateConstraint.parse(gateStr);
+      } catch {
+        continue;
+      }
+      const axisValue = resolveAxisValue(
+        constraint.axis,
+        normalizedMood,
+        normalizedSexual,
+        normalizedTraits
+      );
+      if (!constraint.isSatisfiedBy(axisValue)) {
+        failedGates.push(gateStr);
+      }
+    }
+
+    const gatePass = failedGates.length === 0;
+    const value = gatePass ? clampedRaw : 0;
+
+    return { gatePass, failedGates, rawScore, rawValue: clampedRaw, value };
+  }
+
+  /**
+   * Record a single prototype evaluation into aggregate stats.
+   *
+   * @private
+   * @param {PrototypeEvaluationStats} stats
+   * @param {{gatePass: boolean, failedGates: string[], rawScore: number, value: number}} evaluation
+   */
+  #recordPrototypeEvaluation(stats, evaluation) {
+    if (!stats || !evaluation) {
+      return;
+    }
+
+    stats.moodSampleCount++;
+    if (evaluation.gatePass) {
+      stats.gatePassCount++;
+    } else {
+      stats.gateFailCount++;
+    }
+
+    for (const gateId of evaluation.failedGates) {
+      stats.failedGateCounts[gateId] =
+        (stats.failedGateCounts[gateId] ?? 0) + 1;
+    }
+
+    stats.rawScoreSum += evaluation.rawScore;
+    stats.valueSum += evaluation.value;
+    if (evaluation.gatePass) {
+      stats.valueSumGivenGate += evaluation.value;
+    }
   }
 
   /**
@@ -1530,11 +2310,32 @@ class MonteCarloSimulator {
    * @private
    * @param {HierarchicalClauseNode} node
    * @param {object} context
+   * @param {boolean} inRegime
+   * @param {object|null} gateContextCache
+   * @param {Map<string, boolean>|null} atomTruthMap
    * @returns {boolean} - Whether the node evaluated to true
    */
-  #evaluateHierarchicalNode(node, context, inRegime, gateContextCache) {
+  #evaluateHierarchicalNode(
+    node,
+    context,
+    inRegime,
+    gateContextCache,
+    atomTruthMap
+  ) {
     if (node.nodeType === 'leaf') {
-      const passed = this.#evaluateLeafCondition(node.logic, context);
+      const clauseId = node.clauseId;
+      let passed;
+      if (atomTruthMap) {
+        const cacheKey = clauseId ?? `node:${node.id}`;
+        if (atomTruthMap.has(cacheKey)) {
+          passed = atomTruthMap.get(cacheKey);
+        } else {
+          passed = this.#evaluateLeafCondition(node.logic, context);
+          atomTruthMap.set(cacheKey, passed);
+        }
+      } else {
+        passed = this.#evaluateLeafCondition(node.logic, context);
+      }
       const violation = passed
         ? 0
         : this.#estimateLeafViolation(node.logic, context);
@@ -1577,7 +2378,8 @@ class MonteCarloSimulator {
           child,
           context,
           inRegime,
-          gateContextCache
+          gateContextCache,
+          atomTruthMap
         );
         childResults.push({ child, passed: childPassed });
       }
@@ -1601,7 +2403,8 @@ class MonteCarloSimulator {
           child,
           context,
           inRegime,
-          gateContextCache
+          gateContextCache,
+          atomTruthMap
         );
         childResults.push({ child, passed: childPassed });
       }
@@ -1610,9 +2413,26 @@ class MonteCarloSimulator {
       this.#recordSiblingConditionedStats(childResults);
 
       const anyPassed = childResults.some((r) => r.passed);
+      const passingChildren = anyPassed
+        ? childResults.filter((result) => result.passed).map((result) => result.child)
+        : [];
 
       // Track OR contribution: which alternative fired first when OR succeeded
       if (anyPassed) {
+        if (passingChildren.length === 1) {
+          node.recordOrBlockExclusivePass(inRegime);
+        }
+        if (passingChildren.length > 1) {
+          for (let i = 0; i < passingChildren.length; i++) {
+            for (let j = i + 1; j < passingChildren.length; j++) {
+              node.recordOrPairPass(
+                passingChildren[i].id,
+                passingChildren[j].id,
+                inRegime
+              );
+            }
+          }
+        }
         let firstContributorFound = false;
         for (let i = 0; i < childResults.length; i++) {
           const { child, passed } = childResults[i];
@@ -1687,7 +2507,7 @@ class MonteCarloSimulator {
       return;
     }
 
-    const prototype = this.#getPrototype(gateTarget.prototypeId, 'emotion');
+    const prototype = this.#getPrototype(gateTarget.prototypeId, gateTarget.type);
     if (!prototype) {
       return;
     }
@@ -1701,11 +2521,25 @@ class MonteCarloSimulator {
       return;
     }
 
-    const gatePass = this.#evaluateGatePass(
-      prototype.gates,
-      normalizedContext
+    const evaluation = this.#evaluatePrototypeSample(
+      {
+        weights: prototype.weights ?? null,
+        gates: Array.isArray(prototype.gates) ? prototype.gates : null,
+      },
+      normalizedContext.moodAxes ?? {},
+      normalizedContext.sexualAxes ?? {},
+      normalizedContext.traitAxes ?? {}
     );
-    node.recordGateEvaluation(gatePass, clausePassed, inRegime);
+
+    node.recordGateEvaluation(evaluation.gatePass, clausePassed, inRegime);
+
+    if (
+      node.comparisonOperator === '>=' &&
+      typeof node.thresholdValue === 'number'
+    ) {
+      const rawPass = evaluation.rawValue >= node.thresholdValue;
+      node.recordLostPassInRegime(rawPass, clausePassed, inRegime);
+    }
   }
 
   /**
@@ -1713,7 +2547,7 @@ class MonteCarloSimulator {
    *
    * @private
    * @param {string|null} variablePath
-   * @returns {{ prototypeId: string, usePrevious: boolean }|null}
+   * @returns {{ prototypeId: string, usePrevious: boolean, type: 'emotion' | 'sexual' }|null}
    */
   #resolveGateTarget(variablePath) {
     if (!variablePath || typeof variablePath !== 'string') {
@@ -1724,6 +2558,7 @@ class MonteCarloSimulator {
       return {
         prototypeId: variablePath.slice('emotions.'.length),
         usePrevious: false,
+        type: 'emotion',
       };
     }
 
@@ -1731,6 +2566,23 @@ class MonteCarloSimulator {
       return {
         prototypeId: variablePath.slice('previousEmotions.'.length),
         usePrevious: true,
+        type: 'emotion',
+      };
+    }
+
+    if (variablePath.startsWith('sexualStates.')) {
+      return {
+        prototypeId: variablePath.slice('sexualStates.'.length),
+        usePrevious: false,
+        type: 'sexual',
+      };
+    }
+
+    if (variablePath.startsWith('previousSexualStates.')) {
+      return {
+        prototypeId: variablePath.slice('previousSexualStates.'.length),
+        usePrevious: true,
+        type: 'sexual',
       };
     }
 

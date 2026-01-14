@@ -30,6 +30,10 @@ import {
 } from '../../expressionDiagnostics/utils/axisNormalizationUtils.js';
 import { evaluateSweepMonotonicity } from '../../expressionDiagnostics/utils/sweepIntegrityUtils.js';
 import { resolveReportWorkerUrl } from './reportWorkerUrl.js';
+import RecommendationFactsBuilder from '../../expressionDiagnostics/services/RecommendationFactsBuilder.js';
+import RecommendationEngine from '../../expressionDiagnostics/services/RecommendationEngine.js';
+
+const LOW_CONFIDENCE_SAMPLE_THRESHOLD = 200;
 
 class ExpressionDiagnosticsController {
   #logger;
@@ -44,6 +48,7 @@ class ExpressionDiagnosticsController {
   #reportModal;
   #reportOrchestrator;
   #prototypeFitRankingService;
+  #prototypeConstraintAnalyzer;
   #sensitivityAnalyzer;
   #dataRegistry;
   #reportWorker = null;
@@ -93,6 +98,18 @@ class ExpressionDiagnosticsController {
   #mcIntegrityWarningsSummary;
   #mcIntegrityWarningsList;
   #mcIntegrityWarningsImpact;
+  #mcIntegrityDrilldownContainer;
+  #mcIntegrityDrilldownSummary;
+  #mcIntegrityDrilldownContent;
+  #mcGateMetricsFlag;
+  #mcRecommendationsContainer;
+  #mcRecommendationsWarning;
+  #mcRecommendationsWarningText;
+  #mcRecommendationsList;
+  #globalSensitivityMetricsFlag;
+  #samplingCoverageMetricsFlag;
+  #staticCrossReferenceMetricsFlag;
+  #prototypeFitMetricsFlag;
   #blockersTbody;
   #generateReportBtn;
   // Problematic Expressions DOM elements
@@ -116,10 +133,13 @@ class ExpressionDiagnosticsController {
   #conditionalPassRatesContent;
   #conditionalPassRatesWarning;
   #conditionalGateWarning;
+  #conditionalPassMetricsFlag;
   #storedContextPopulationLabels = [];
+  #latestIntegrityWarnings = [];
   // Last-Mile Decomposition DOM elements
   #lastMileDecompositionContainer;
   #lastMileDecompositionContent;
+  #lastMileMetricsFlag;
   // Prototype Fit Analysis DOM elements
   #prototypeFitAnalysisContainer;
   #prototypeFitTbody;
@@ -133,12 +153,14 @@ class ExpressionDiagnosticsController {
   #gatePassRankingTbody;
   #combinedRankingTbody;
   #impliedPrototypeWarning;
+  #impliedPrototypeMetricsFlag;
   // Gap Detection DOM elements
   #gapDetectionContainer;
   #gapStatus;
   #nearestPrototypesTbody;
   #suggestedPrototypeSection;
   #suggestedPrototypeContent;
+  #gapDetectionMetricsFlag;
   // Path-Sensitive Analysis DOM elements
   #pathSensitiveSection;
   #pathSensitiveSummary;
@@ -166,6 +188,7 @@ class ExpressionDiagnosticsController {
     reportGenerator,
     reportModal,
     prototypeFitRankingService = null,
+    prototypeConstraintAnalyzer = null,
     sensitivityAnalyzer,
     dataRegistry,
   }) {
@@ -205,6 +228,16 @@ class ExpressionDiagnosticsController {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['getLookupData'],
     });
+    if (prototypeConstraintAnalyzer) {
+      validateDependency(
+        prototypeConstraintAnalyzer,
+        'IPrototypeConstraintAnalyzer',
+        logger,
+        {
+          requiredMethods: ['analyzeEmotionThreshold', 'extractAxisConstraints'],
+        }
+      );
+    }
 
     this.#logger = logger;
     this.#expressionRegistry = expressionRegistry;
@@ -217,6 +250,7 @@ class ExpressionDiagnosticsController {
     this.#reportGenerator = reportGenerator;
     this.#reportModal = reportModal;
     this.#prototypeFitRankingService = prototypeFitRankingService;
+    this.#prototypeConstraintAnalyzer = prototypeConstraintAnalyzer;
     this.#sensitivityAnalyzer = sensitivityAnalyzer;
     this.#dataRegistry = dataRegistry;
     this.#reportOrchestrator = new ReportOrchestrator({
@@ -310,6 +344,39 @@ class ExpressionDiagnosticsController {
     this.#mcIntegrityWarningsImpact = document.getElementById(
       'mc-integrity-warnings-impact'
     );
+    this.#mcIntegrityDrilldownContainer = document.getElementById(
+      'mc-integrity-drilldown'
+    );
+    this.#mcIntegrityDrilldownSummary = document.getElementById(
+      'mc-integrity-drilldown-summary'
+    );
+    this.#mcIntegrityDrilldownContent = document.getElementById(
+      'mc-integrity-drilldown-content'
+    );
+    this.#mcGateMetricsFlag = document.getElementById('mc-gate-metrics-flag');
+    this.#mcRecommendationsContainer = document.getElementById(
+      'mc-recommendations'
+    );
+    this.#mcRecommendationsWarning = document.getElementById(
+      'mc-recommendations-warning'
+    );
+    this.#mcRecommendationsWarningText =
+      this.#mcRecommendationsWarning?.querySelector('.warning-text') ?? null;
+    this.#mcRecommendationsList = document.getElementById(
+      'mc-recommendations-list'
+    );
+    this.#globalSensitivityMetricsFlag = document.getElementById(
+      'global-sensitivity-metrics-flag'
+    );
+    this.#samplingCoverageMetricsFlag = document.getElementById(
+      'sampling-coverage-metrics-flag'
+    );
+    this.#staticCrossReferenceMetricsFlag = document.getElementById(
+      'static-cross-reference-metrics-flag'
+    );
+    this.#prototypeFitMetricsFlag = document.getElementById(
+      'prototype-fit-metrics-flag'
+    );
     this.#blockersTbody = document.getElementById('blockers-tbody');
     this.#generateReportBtn = document.getElementById('generate-report-btn');
     // Problematic Expressions elements
@@ -331,18 +398,25 @@ class ExpressionDiagnosticsController {
     this.#conditionalPassRatesContent = document.getElementById('conditional-pass-rates-content');
     this.#conditionalPassRatesWarning = document.getElementById('conditional-pass-warning');
     this.#conditionalGateWarning = document.getElementById('conditional-gate-warning');
+    this.#conditionalPassMetricsFlag = document.getElementById(
+      'conditional-pass-metrics-flag'
+    );
     this.#storedContextPopulationLabels = Array.from(
       document.querySelectorAll('[data-population-role="stored-contexts"]')
     );
     // Last-Mile Decomposition elements
     this.#lastMileDecompositionContainer = document.getElementById('last-mile-decomposition');
     this.#lastMileDecompositionContent = document.getElementById('last-mile-decomposition-content');
+    this.#lastMileMetricsFlag = document.getElementById('last-mile-metrics-flag');
     // Prototype Fit Analysis elements
     this.#prototypeFitAnalysisContainer = document.getElementById('prototype-fit-analysis');
     this.#prototypeFitTbody = document.getElementById('prototype-fit-tbody');
     this.#prototypeFitDetails = document.getElementById('prototype-fit-details');
     this.#prototypeFitSuggestion = document.getElementById('prototype-fit-suggestion');
     this.#prototypeFitWarning = document.getElementById('prototype-fit-warning');
+    this.#prototypeFitMetricsFlag = document.getElementById(
+      'prototype-fit-metrics-flag'
+    );
     // Implied Prototype elements
     this.#impliedPrototypeContainer = document.getElementById('implied-prototype');
     this.#targetSignatureTbody = document.getElementById('target-signature-tbody');
@@ -350,12 +424,18 @@ class ExpressionDiagnosticsController {
     this.#gatePassRankingTbody = document.getElementById('gate-pass-ranking-tbody');
     this.#combinedRankingTbody = document.getElementById('combined-ranking-tbody');
     this.#impliedPrototypeWarning = document.getElementById('implied-prototype-warning');
+    this.#impliedPrototypeMetricsFlag = document.getElementById(
+      'implied-prototype-metrics-flag'
+    );
     // Gap Detection elements
     this.#gapDetectionContainer = document.getElementById('gap-detection');
     this.#gapStatus = document.getElementById('gap-status');
     this.#nearestPrototypesTbody = document.getElementById('nearest-prototypes-tbody');
     this.#suggestedPrototypeSection = document.getElementById('suggested-prototype');
     this.#suggestedPrototypeContent = document.getElementById('suggested-prototype-content');
+    this.#gapDetectionMetricsFlag = document.getElementById(
+      'gap-detection-metrics-flag'
+    );
     // Path-Sensitive Analysis elements
     this.#pathSensitiveSection = document.getElementById('path-sensitive-results');
     this.#pathSensitiveSummary = document.getElementById('path-sensitive-summary');
@@ -391,6 +471,23 @@ class ExpressionDiagnosticsController {
 
     this.#generateReportBtn?.addEventListener('click', () => {
       this.#handleGenerateReport();
+    });
+
+    this.#mcIntegrityWarningsList?.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      const button = target.closest('.integrity-sample-button');
+      if (!button || !this.#mcIntegrityWarningsList?.contains(button)) {
+        return;
+      }
+      const warningIndex = Number(button.dataset.warningIndex);
+      const sampleIndex = Number(button.dataset.sampleIndex);
+      if (!Number.isFinite(warningIndex) || !Number.isFinite(sampleIndex)) {
+        return;
+      }
+      this.#renderIntegrityDrilldown(warningIndex, sampleIndex);
     });
   }
 
@@ -553,6 +650,18 @@ class ExpressionDiagnosticsController {
     if (this.#mcSamplingCoverageSummary) {
       this.#mcSamplingCoverageSummary.textContent = '';
     }
+    if (this.#mcRecommendationsContainer) {
+      this.#mcRecommendationsContainer.hidden = true;
+    }
+    if (this.#mcRecommendationsWarning) {
+      this.#mcRecommendationsWarning.hidden = true;
+    }
+    if (this.#mcRecommendationsWarningText) {
+      this.#mcRecommendationsWarningText.textContent = '';
+    }
+    if (this.#mcRecommendationsList) {
+      this.#mcRecommendationsList.innerHTML = '';
+    }
     if (this.#mcSamplingCoverageTables) {
       this.#mcSamplingCoverageTables.innerHTML = '';
     }
@@ -574,6 +683,9 @@ class ExpressionDiagnosticsController {
     if (this.#mcIntegrityWarningsImpact) {
       this.#mcIntegrityWarningsImpact.textContent = '';
     }
+    this.#latestIntegrityWarnings = [];
+    this.#resetIntegrityDrilldown();
+    this.#toggleGateDependentMetrics(false);
     if (this.#blockersTbody) this.#blockersTbody.innerHTML = '';
     // Clear stored blockers for report generation
     this.#currentBlockers = [];
@@ -871,6 +983,9 @@ class ExpressionDiagnosticsController {
     // Update blockers table
     this.#populateBlockersTable(enrichedBlockers);
 
+    // Display recommendations based on deterministic facts
+    this.#displayRecommendations(result);
+
     // Display ground-truth witnesses from MC simulation
     this.#displayMcWitnesses(result.witnessAnalysis);
 
@@ -889,6 +1004,171 @@ class ExpressionDiagnosticsController {
     // Display prototype fit analysis sections (prototype fit, implied prototype, gap detection)
     // Deferred to idle time to avoid long animation frame handlers.
     this.#schedulePrototypeFitAnalysis();
+  }
+
+  #displayRecommendations(result) {
+    if (!this.#mcRecommendationsContainer || !this.#mcRecommendationsList) {
+      return;
+    }
+
+    if (!result || !this.#selectedExpression) {
+      this.#mcRecommendationsContainer.hidden = true;
+      return;
+    }
+
+    const factsBuilder = new RecommendationFactsBuilder({
+      prototypeConstraintAnalyzer: this.#prototypeConstraintAnalyzer,
+      logger: this.#logger,
+    });
+    const diagnosticFacts = factsBuilder.build({
+      expression: this.#selectedExpression,
+      simulationResult: result,
+    });
+
+    if (!diagnosticFacts) {
+      this.#mcRecommendationsContainer.hidden = true;
+      return;
+    }
+
+    const invariantFailures = (diagnosticFacts.invariants ?? []).filter(
+      (inv) => inv.ok === false
+    );
+    const moodSampleCount = diagnosticFacts.moodRegime?.sampleCount ?? 0;
+    const lowConfidence =
+      Number.isFinite(moodSampleCount) &&
+      moodSampleCount < LOW_CONFIDENCE_SAMPLE_THRESHOLD;
+
+    const engine = new RecommendationEngine();
+    const recommendations = engine.generate(diagnosticFacts);
+
+    this.#mcRecommendationsList.innerHTML = '';
+    if (this.#mcRecommendationsWarningText) {
+      this.#mcRecommendationsWarningText.textContent = '';
+    }
+    if (this.#mcRecommendationsWarning) {
+      this.#mcRecommendationsWarning.hidden = true;
+    }
+
+    if (invariantFailures.length > 0) {
+      this.#mcRecommendationsContainer.hidden = false;
+      if (this.#mcRecommendationsWarningText) {
+        this.#mcRecommendationsWarningText.textContent =
+          'Recommendations suppressed: invariant violations detected in diagnostic facts.';
+      }
+      if (this.#mcRecommendationsWarning) {
+        this.#mcRecommendationsWarning.hidden = false;
+      }
+      return;
+    }
+
+    if (!Array.isArray(recommendations) || recommendations.length === 0) {
+      this.#mcRecommendationsContainer.hidden = true;
+      return;
+    }
+
+    if (lowConfidence && this.#mcRecommendationsWarningText) {
+      this.#mcRecommendationsWarningText.textContent =
+        `Low confidence: only ${moodSampleCount} mood-regime samples (min ${LOW_CONFIDENCE_SAMPLE_THRESHOLD}).`;
+      if (this.#mcRecommendationsWarning) {
+        this.#mcRecommendationsWarning.hidden = false;
+      }
+    }
+
+    const clauseFactsLookup = new Map(
+      (diagnosticFacts.clauses ?? []).map((clause) => [
+        clause.clauseId,
+        clause,
+      ])
+    );
+    const prototypeFactsLookup = new Map(
+      (diagnosticFacts.prototypes ?? []).map((prototype) => [
+        prototype.prototypeId,
+        prototype,
+      ])
+    );
+
+    for (const recommendation of recommendations) {
+      const { prototypeId, clauseId } =
+        this.#parseRecommendationId(recommendation.id) ?? {};
+      const clauseFacts = clauseId ? clauseFactsLookup.get(clauseId) : null;
+      const prototypeFacts = prototypeId
+        ? prototypeFactsLookup.get(prototypeId)
+        : null;
+      const impact =
+        typeof clauseFacts?.impact === 'number' ? clauseFacts.impact : null;
+      const confidence = lowConfidence
+        ? 'low'
+        : recommendation.confidence ?? 'low';
+
+      const card = document.createElement('div');
+      card.className = 'recommendation-card';
+
+      const title = document.createElement('h4');
+      title.textContent = recommendation.title ?? 'Recommendation';
+      card.appendChild(title);
+
+      const meta = document.createElement('div');
+      meta.className = 'recommendation-meta';
+      meta.appendChild(
+        this.#createRecommendationBadge(
+          `Type: ${recommendation.type ?? 'unknown'}`
+        )
+      );
+      meta.appendChild(
+        this.#createRecommendationBadge(
+          `Severity: ${recommendation.severity ?? 'low'}`
+        )
+      );
+      meta.appendChild(
+        this.#createRecommendationBadge(`Confidence: ${confidence}`)
+      );
+      meta.appendChild(
+        this.#createRecommendationBadge(
+          `Impact (full sample): ${this.#formatImpact(impact)}`
+        )
+      );
+      card.appendChild(meta);
+
+      if (recommendation.why) {
+        const why = document.createElement('p');
+        why.className = 'recommendation-why';
+        why.textContent = recommendation.why;
+        card.appendChild(why);
+      }
+
+      const funnel = this.#buildRecommendationFunnel(
+        prototypeFacts,
+        impact
+      );
+      if (funnel) {
+        card.appendChild(funnel);
+      }
+
+      const evidenceList = this.#buildRecommendationEvidenceList(
+        recommendation.evidence ?? []
+      );
+      if (evidenceList) {
+        card.appendChild(evidenceList);
+      }
+
+      const actionsList = this.#buildRecommendationActionsList(
+        recommendation.actions ?? []
+      );
+      if (actionsList) {
+        card.appendChild(actionsList);
+      }
+
+      const links = this.#buildRecommendationLinks(
+        recommendation.relatedClauseIds ?? []
+      );
+      if (links) {
+        card.appendChild(links);
+      }
+
+      this.#mcRecommendationsList.appendChild(card);
+    }
+
+    this.#mcRecommendationsContainer.hidden = false;
   }
 
   #attachGateMetricsToBlockers(blockers, clauseFailures) {
@@ -936,6 +1216,7 @@ class ExpressionDiagnosticsController {
       globalSensitivityData
     );
     if (!Array.isArray(warnings) || warnings.length === 0) {
+      this.#latestIntegrityWarnings = [];
       this.#mcIntegrityWarningsContainer.hidden = true;
       if (this.#mcIntegrityWarningsSummary) {
         this.#mcIntegrityWarningsSummary.textContent = '';
@@ -946,9 +1227,13 @@ class ExpressionDiagnosticsController {
       if (this.#mcIntegrityWarningsImpact) {
         this.#mcIntegrityWarningsImpact.textContent = '';
       }
+      this.#resetIntegrityDrilldown();
+      this.#toggleGateDependentMetrics(false);
       return;
     }
 
+    this.#latestIntegrityWarnings = warnings;
+    this.#resetIntegrityDrilldown();
     this.#mcIntegrityWarningsContainer.hidden = false;
     if (this.#mcIntegrityWarningsSummary) {
       const countLabel = warnings.length === 1 ? 'warning' : 'warnings';
@@ -957,20 +1242,72 @@ class ExpressionDiagnosticsController {
     }
     if (this.#mcIntegrityWarningsList) {
       this.#mcIntegrityWarningsList.innerHTML = '';
-      for (const warning of warnings) {
+      warnings.forEach((warning, index) => {
         const item = document.createElement('li');
-        item.textContent = this.#formatIntegrityWarning(warning);
+        const label = document.createElement('span');
+        label.textContent = this.#formatIntegrityWarning(warning);
+        item.appendChild(label);
+
+        const sampleIndices = warning?.details?.sampleIndices;
+        if (Array.isArray(sampleIndices) && sampleIndices.length > 0) {
+          const samples = document.createElement('div');
+          samples.className = 'integrity-warning-samples';
+          const prefix = document.createElement('span');
+          prefix.textContent = 'Samples:';
+          samples.appendChild(prefix);
+          for (const sampleIndex of sampleIndices) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'integrity-sample-button';
+            button.textContent = String(sampleIndex);
+            button.dataset.warningIndex = String(index);
+            button.dataset.sampleIndex = String(sampleIndex);
+            samples.appendChild(button);
+          }
+          item.appendChild(samples);
+        }
         this.#mcIntegrityWarningsList.appendChild(item);
-      }
+      });
     }
+    const hasGateMismatchWarning = warnings.some(
+      (warning) =>
+        typeof warning?.code === 'string' && warning.code.startsWith('I')
+    );
     if (this.#mcIntegrityWarningsImpact) {
-      const hasGateMismatchWarning = warnings.some(
-        (warning) =>
-          typeof warning?.code === 'string' && warning.code.startsWith('I')
-      );
       this.#mcIntegrityWarningsImpact.textContent = hasGateMismatchWarning
         ? 'Gate/final mismatches can invalidate pass-rate and blocker metrics; treat threshold feasibility as provisional until resolved.'
         : '';
+    }
+    this.#toggleGateDependentMetrics(hasGateMismatchWarning);
+  }
+
+  #toggleGateDependentMetrics(hasIntegrityWarnings) {
+    if (this.#mcGateMetricsFlag) {
+      this.#mcGateMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#conditionalPassMetricsFlag) {
+      this.#conditionalPassMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#globalSensitivityMetricsFlag) {
+      this.#globalSensitivityMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#lastMileMetricsFlag) {
+      this.#lastMileMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#samplingCoverageMetricsFlag) {
+      this.#samplingCoverageMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#staticCrossReferenceMetricsFlag) {
+      this.#staticCrossReferenceMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#prototypeFitMetricsFlag) {
+      this.#prototypeFitMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#impliedPrototypeMetricsFlag) {
+      this.#impliedPrototypeMetricsFlag.hidden = !hasIntegrityWarnings;
+    }
+    if (this.#gapDetectionMetricsFlag) {
+      this.#gapDetectionMetricsFlag.hidden = !hasIntegrityWarnings;
     }
   }
 
@@ -984,7 +1321,10 @@ class ExpressionDiagnosticsController {
       return [];
     }
 
-    if (Array.isArray(result.reportIntegrityWarnings)) {
+    if (
+      Array.isArray(result.reportIntegrityWarnings) &&
+      result.reportIntegrityWarnings.length > 0
+    ) {
       return result.reportIntegrityWarnings;
     }
 
@@ -1011,6 +1351,157 @@ class ExpressionDiagnosticsController {
     }
     const meta = parts.length > 0 ? ` (${parts.join(', ')})` : '';
     return `${warning?.code ?? 'WARN'}: ${warning?.message ?? ''}${meta}`;
+  }
+
+  #resetIntegrityDrilldown() {
+    if (this.#mcIntegrityDrilldownContainer) {
+      this.#mcIntegrityDrilldownContainer.hidden = true;
+    }
+    if (this.#mcIntegrityDrilldownSummary) {
+      this.#mcIntegrityDrilldownSummary.textContent = '';
+    }
+    if (this.#mcIntegrityDrilldownContent) {
+      this.#mcIntegrityDrilldownContent.innerHTML = '';
+    }
+  }
+
+  #renderIntegrityDrilldown(warningIndex, sampleIndex) {
+    if (
+      !this.#mcIntegrityDrilldownContainer ||
+      !this.#mcIntegrityDrilldownSummary ||
+      !this.#mcIntegrityDrilldownContent
+    ) {
+      return;
+    }
+
+    const warning = this.#latestIntegrityWarnings?.[warningIndex];
+    if (!warning) {
+      this.#resetIntegrityDrilldown();
+      return;
+    }
+
+    const storedContexts = this.#rawSimulationResult?.storedContexts;
+    if (
+      !Array.isArray(storedContexts) ||
+      !Number.isInteger(sampleIndex) ||
+      sampleIndex < 0 ||
+      sampleIndex >= storedContexts.length
+    ) {
+      this.#mcIntegrityDrilldownSummary.textContent =
+        'Drill-down unavailable for the selected sample index.';
+      this.#mcIntegrityDrilldownContent.textContent = '';
+      this.#mcIntegrityDrilldownContainer.hidden = false;
+      return;
+    }
+
+    const context = storedContexts[sampleIndex];
+    const prototypeId = warning?.prototypeId ?? null;
+    const { type, trace, finalValue } =
+      this.#resolveIntegrityTrace(context, prototypeId);
+
+    const metaParts = [`Sample ${sampleIndex}`];
+    if (prototypeId) {
+      metaParts.push(`Prototype ${prototypeId}`);
+    }
+    if (warning?.populationHash) {
+      metaParts.push(`Population ${warning.populationHash}`);
+    }
+    if (type) {
+      metaParts.push(type === 'emotion' ? 'Emotion' : 'Sexual state');
+    }
+    this.#mcIntegrityDrilldownSummary.textContent = metaParts.join(' • ');
+
+    this.#mcIntegrityDrilldownContent.innerHTML = '';
+
+    const scaleNote = document.createElement('p');
+    scaleNote.className = 'mc-integrity-drilldown-scale';
+    scaleNote.textContent =
+      'Axes: mood raw [-100, 100] -> normalized [-1, 1]; sexual raw [0, 100] -> normalized [0, 1]; traits raw [0, 100] -> normalized [0, 1].';
+    this.#mcIntegrityDrilldownContent.appendChild(scaleNote);
+
+    if (!trace) {
+      const missing = document.createElement('p');
+      missing.className = 'mc-integrity-drilldown-missing';
+      missing.textContent = 'Gate trace unavailable for this sample.';
+      this.#mcIntegrityDrilldownContent.appendChild(missing);
+      if (typeof finalValue !== 'number') {
+        this.#mcIntegrityDrilldownContainer.hidden = false;
+        return;
+      }
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'mc-integrity-drilldown-grid';
+
+    const addRow = (label, value) => {
+      const item = document.createElement('div');
+      item.className = 'mc-integrity-drilldown-item';
+      const title = document.createElement('div');
+      title.className = 'mc-integrity-drilldown-label';
+      title.textContent = label;
+      const body = document.createElement('div');
+      body.className = 'mc-integrity-drilldown-value';
+      body.textContent =
+        typeof value === 'number' ? value.toFixed(4) : value ?? '—';
+      item.appendChild(title);
+      item.appendChild(body);
+      grid.appendChild(item);
+    };
+
+    if (trace) {
+      addRow('Raw (0..1)', trace.raw);
+      addRow('Gated (0..1)', trace.gated);
+      addRow('Final (0..1)', trace.final);
+      addRow('Gate pass', trace.gatePass ? 'true' : 'false');
+    }
+    if (typeof finalValue === 'number') {
+      addRow('Stored final (0..1)', finalValue);
+    }
+
+    this.#mcIntegrityDrilldownContent.appendChild(grid);
+    this.#mcIntegrityDrilldownContainer.hidden = false;
+  }
+
+  #resolveIntegrityTrace(context, prototypeId) {
+    if (!context || !prototypeId) {
+      return { type: null, trace: null, finalValue: null };
+    }
+    const gateTrace = context?.gateTrace ?? null;
+    if (gateTrace?.emotions?.[prototypeId]) {
+      return {
+        type: 'emotion',
+        trace: gateTrace.emotions[prototypeId],
+        finalValue: context?.emotions?.[prototypeId] ?? null,
+      };
+    }
+    if (gateTrace?.sexualStates?.[prototypeId]) {
+      return {
+        type: 'sexual',
+        trace: gateTrace.sexualStates[prototypeId],
+        finalValue: context?.sexualStates?.[prototypeId] ?? null,
+      };
+    }
+    if (
+      context?.emotions &&
+      Object.prototype.hasOwnProperty.call(context.emotions, prototypeId)
+    ) {
+      return {
+        type: 'emotion',
+        trace: null,
+        finalValue: context.emotions[prototypeId],
+      };
+    }
+    if (
+      context?.sexualStates &&
+      Object.prototype.hasOwnProperty.call(context.sexualStates, prototypeId)
+    ) {
+      return {
+        type: 'sexual',
+        trace: null,
+        finalValue: context.sexualStates[prototypeId],
+      };
+    }
+    return { type: null, trace: null, finalValue: null };
   }
 
   #updatePopulationSummary(result) {
@@ -1222,6 +1713,9 @@ class ExpressionDiagnosticsController {
 
     this.#blockersTbody.innerHTML = '';
     const clauseFailures = this.#rawSimulationResult?.clauseFailures ?? [];
+    const chokeRankLookup = this.#buildChokeRankLookup(
+      this.#rawSimulationResult?.ablationImpact ?? null
+    );
     const clauseLookup = this.#buildClauseFailureLookup(clauseFailures);
     const storedContexts = this.#rawSimulationResult?.storedContexts ?? null;
     const prerequisites = this.#selectedExpression?.prerequisites ?? [];
@@ -1236,6 +1730,11 @@ class ExpressionDiagnosticsController {
       const passGivenGateMetrics = this.#formatPassGivenGateMetrics(blocker);
       const classificationBadge = this.#buildGateClassificationBadge(blocker);
       const clauseFailure = clauseLookup.get(blocker.clauseDescription) ?? null;
+      const chokeRank = this.#resolveChokeRankForBlocker(
+        clauseFailure,
+        chokeRankLookup
+      );
+      const clauseAnchorId = this.#resolveClauseAnchorId(clauseFailure);
       const gateBreakdownPanel = this.#buildGateBreakdownPanel(
         clauseFailure,
         regimeContexts
@@ -1253,7 +1752,8 @@ class ExpressionDiagnosticsController {
       row.innerHTML = `
         <td class="toggle-cell">${expandToggle}</td>
         <td>${blocker.rank}</td>
-        <td><code>${this.#escapeHtml(blocker.clauseDescription)}</code></td>
+        <td class="choke-rank">${chokeRank}</td>
+        <td><code ${clauseAnchorId ? `id="${clauseAnchorId}"` : ''}>${this.#escapeHtml(blocker.clauseDescription)}</code></td>
         <td>${this.#formatPercentage(blocker.failureRate)}</td>
         <td class="last-mile">${this.#formatLastMile(blocker)}</td>
         <td class="gate-clamp">${gateClampMetrics}</td>
@@ -1282,7 +1782,7 @@ class ExpressionDiagnosticsController {
         breakdownRow.classList.add('breakdown-row', 'collapsed');
         breakdownRow.dataset.parentId = `blocker-${blocker.rank}`;
         breakdownRow.innerHTML = `
-          <td colspan="10" class="breakdown-cell">
+          <td colspan="11" class="breakdown-cell">
             ${regimeDetails}
             ${gateBreakdownPanel}
             <div class="blocker-violation-summary">
@@ -1301,7 +1801,7 @@ class ExpressionDiagnosticsController {
     if (blockers.length === 0) {
       const row = document.createElement('tr');
       row.innerHTML =
-        '<td colspan="10" class="no-data">No blockers identified</td>';
+        '<td colspan="11" class="no-data">No blockers identified</td>';
       this.#blockersTbody.appendChild(row);
     }
   }
@@ -1609,6 +2109,10 @@ class ExpressionDiagnosticsController {
     // Determine node state for data attributes
     const isDecisive = node.advancedAnalysis?.lastMileAnalysis?.isDecisive ?? false;
     const hasCeiling = node.ceilingGap !== null && node.ceilingGap > 0;
+    const clauseAnchorId =
+      !node.isCompound && node.clauseId
+        ? this.#formatClauseAnchorId(node.clauseId)
+        : '';
 
     // For OR blocks, show pass rate with label; for others, show failure rate
     const rateDisplay = isOrBlock
@@ -1616,7 +2120,7 @@ class ExpressionDiagnosticsController {
       : `<span class="failure-rate ${rateClass}">${this.#formatPercentage(displayRate)}</span>`;
 
     let html = `
-      <div class="tree-node" style="padding-left: ${indent}rem" data-decisive="${isDecisive}" data-ceiling="${hasCeiling}">
+      <div class="tree-node" ${clauseAnchorId ? `id="${clauseAnchorId}"` : ''} style="padding-left: ${indent}rem" data-decisive="${isDecisive}" data-ceiling="${hasCeiling}">
         <span class="tree-prefix">${treePrefix}</span>
         <span class="node-icon ${node.nodeType}">${nodeIcon}</span>
         <span class="node-description">${this.#escapeHtml(node.description)}</span>
@@ -1946,6 +2450,195 @@ class ExpressionDiagnosticsController {
     return this.#formatRateWithCounts(rate, passCount, total);
   }
 
+  #createRecommendationBadge(label) {
+    const badge = document.createElement('span');
+    badge.className = 'recommendation-badge';
+    badge.textContent = label;
+    return badge;
+  }
+
+  #formatImpact(impact) {
+    if (typeof impact !== 'number') {
+      return 'N/A';
+    }
+    return this.#formatSignedPercentagePoints(impact);
+  }
+
+  #formatSignedPercentagePoints(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return 'N/A';
+    }
+    const points = value * 100;
+    const sign = points > 0 ? '+' : points < 0 ? '-' : '';
+    return `${sign}${Math.abs(points).toFixed(2)} pp`;
+  }
+
+  #buildRecommendationFunnel(prototypeFacts, impact) {
+    if (!prototypeFacts) {
+      return null;
+    }
+    const funnel = document.createElement('div');
+    funnel.className = 'recommendation-funnel';
+
+    const moodSampleCount =
+      typeof prototypeFacts.moodSampleCount === 'number'
+        ? prototypeFacts.moodSampleCount
+        : null;
+    const gateClampRate =
+      typeof prototypeFacts.gateFailRate === 'number'
+        ? prototypeFacts.gateFailRate
+        : null;
+    const passGivenGate =
+      typeof prototypeFacts.pThreshGivenGate === 'number'
+        ? prototypeFacts.pThreshGivenGate
+        : null;
+    const effectivePass =
+      typeof prototypeFacts.pThreshEffective === 'number'
+        ? prototypeFacts.pThreshEffective
+        : null;
+
+    const funnelItems = [
+      `Mood N: ${
+        moodSampleCount !== null ? this.#formatNumber(moodSampleCount) : 'N/A'
+      }`,
+      `Gate clamp: ${
+        gateClampRate !== null ? this.#formatPercentage(gateClampRate) : 'N/A'
+      }`,
+      `Pass | gate: ${
+        passGivenGate !== null ? this.#formatPercentage(passGivenGate) : 'N/A'
+      }`,
+      `Effective pass: ${
+        effectivePass !== null ? this.#formatPercentage(effectivePass) : 'N/A'
+      }`,
+      `Impact (full sample): ${this.#formatImpact(impact)}`,
+    ];
+
+    for (const item of funnelItems) {
+      const span = document.createElement('span');
+      span.textContent = item;
+      funnel.appendChild(span);
+    }
+
+    return funnel;
+  }
+
+  #buildRecommendationEvidenceList(evidenceItems) {
+    if (!Array.isArray(evidenceItems) || evidenceItems.length === 0) {
+      return null;
+    }
+    const list = document.createElement('ul');
+    list.className = 'recommendation-evidence';
+    for (const evidence of evidenceItems) {
+      const item = document.createElement('li');
+      item.textContent = this.#formatRecommendationEvidence(evidence);
+      list.appendChild(item);
+    }
+    return list;
+  }
+
+  #formatRecommendationEvidence(evidence) {
+    const label = evidence?.label ?? 'Evidence';
+    const numerator =
+      typeof evidence?.numerator === 'number' ? evidence.numerator : null;
+    const denominator =
+      typeof evidence?.denominator === 'number' ? evidence.denominator : null;
+    const value =
+      typeof evidence?.value === 'number' ? evidence.value : null;
+
+    const valueLabel =
+      typeof value === 'number' ? this.#formatEvidenceValue(value) : 'N/A';
+    const populationLabel = this.#formatPopulationLabel(evidence?.population);
+
+    if (
+      numerator !== null &&
+      denominator !== null &&
+      Number.isFinite(denominator) &&
+      denominator !== 0 &&
+      denominator !== 1 &&
+      Number.isFinite(numerator)
+    ) {
+      const base = `${label}: ${numerator} / ${denominator} (${valueLabel})`;
+      return populationLabel ? `${base} | ${populationLabel}` : base;
+    }
+
+    if (numerator !== null && denominator === 1) {
+      const base = `${label}: ${this.#formatNumber(numerator)}`;
+      return populationLabel ? `${base} | ${populationLabel}` : base;
+    }
+
+    const base = `${label}: ${valueLabel}`;
+    return populationLabel ? `${base} | ${populationLabel}` : base;
+  }
+
+  #formatEvidenceValue(value) {
+    if (value >= 0 && value <= 1) {
+      return this.#formatPercentage(value);
+    }
+    return this.#formatNumber(value);
+  }
+
+  #formatPopulationLabel(population) {
+    if (!population || typeof population.name !== 'string') {
+      return null;
+    }
+    if (!Number.isFinite(population.count)) {
+      return null;
+    }
+    return `Population: ${population.name} (N=${this.#formatNumber(
+      population.count
+    )})`;
+  }
+
+  #buildRecommendationActionsList(actions) {
+    if (!Array.isArray(actions) || actions.length === 0) {
+      return null;
+    }
+    const list = document.createElement('ul');
+    list.className = 'recommendation-actions';
+    for (const action of actions) {
+      if (!action) {
+        continue;
+      }
+      const item = document.createElement('li');
+      item.textContent = action;
+      list.appendChild(item);
+    }
+    return list;
+  }
+
+  #buildRecommendationLinks(relatedClauseIds) {
+    if (!Array.isArray(relatedClauseIds) || relatedClauseIds.length === 0) {
+      return null;
+    }
+    const container = document.createElement('div');
+    container.className = 'recommendation-links';
+    for (const clauseId of relatedClauseIds) {
+      if (!clauseId) {
+        continue;
+      }
+      const link = document.createElement('a');
+      link.href = `#${this.#formatClauseAnchorId(clauseId)}`;
+      link.textContent = `Jump to ${clauseId}`;
+      container.appendChild(link);
+    }
+    return container;
+  }
+
+  #formatClauseAnchorId(clauseId) {
+    return `clause-${String(clauseId).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+  }
+
+  #parseRecommendationId(recommendationId) {
+    const parts = String(recommendationId ?? '').split(':');
+    if (parts.length < 3) {
+      return null;
+    }
+    return {
+      prototypeId: parts[1],
+      clauseId: parts.slice(2).join(':'),
+    };
+  }
+
   #buildClauseFailureLookup(clauseFailures) {
     const lookup = new Map();
     if (!Array.isArray(clauseFailures)) {
@@ -1959,6 +2652,63 @@ class ExpressionDiagnosticsController {
     }
 
     return lookup;
+  }
+
+  #buildChokeRankLookup(ablationImpact) {
+    const lookup = new Map();
+    const impacts = ablationImpact?.clauseImpacts ?? [];
+    if (!Array.isArray(impacts)) {
+      return lookup;
+    }
+    for (const impact of impacts) {
+      if (impact?.clauseId && Number.isFinite(impact.chokeRank)) {
+        lookup.set(impact.clauseId, impact.chokeRank);
+      }
+    }
+    return lookup;
+  }
+
+  #resolveChokeRankForBlocker(clauseFailure, chokeRankLookup) {
+    if (!clauseFailure?.hierarchicalBreakdown || chokeRankLookup.size === 0) {
+      return '—';
+    }
+    const clauseIds = [];
+    this.#collectClauseIdsFromBreakdown(
+      clauseFailure.hierarchicalBreakdown,
+      clauseIds
+    );
+    const ranks = clauseIds
+      .map((clauseId) => chokeRankLookup.get(clauseId))
+      .filter((rank) => Number.isFinite(rank))
+      .sort((a, b) => a - b);
+    return ranks.length > 0 ? String(ranks[0]) : '—';
+  }
+
+  #resolveClauseAnchorId(clauseFailure) {
+    if (!clauseFailure?.hierarchicalBreakdown) {
+      return '';
+    }
+    const clauseIds = [];
+    this.#collectClauseIdsFromBreakdown(
+      clauseFailure.hierarchicalBreakdown,
+      clauseIds
+    );
+    if (clauseIds.length === 0) {
+      return '';
+    }
+    return this.#formatClauseAnchorId(clauseIds[0]);
+  }
+
+  #collectClauseIdsFromBreakdown(node, clauseIds) {
+    if (!node) {
+      return;
+    }
+    if (node.nodeType === 'leaf' && node.clauseId) {
+      clauseIds.push(node.clauseId);
+    }
+    for (const child of node.children ?? []) {
+      this.#collectClauseIdsFromBreakdown(child, clauseIds);
+    }
   }
 
   #getMoodRegimeContextsForGateBreakdown(storedContexts, moodConstraints) {
@@ -2289,6 +3039,7 @@ class ExpressionDiagnosticsController {
           <th>Bin Coverage</th>
           <th>Tail Low</th>
           <th>Tail High</th>
+          <th>Zero Rate Avg</th>
           <th>Rating</th>
         </tr>
       </thead>
@@ -2305,6 +3056,7 @@ class ExpressionDiagnosticsController {
         <td>${this.#formatCoverageValue(summary.binCoverageAvg)}</td>
         <td>${this.#formatCoverageValue(summary.tailCoverageAvg?.low)}</td>
         <td>${this.#formatCoverageValue(summary.tailCoverageAvg?.high)}</td>
+        <td>${this.#formatCoverageValue(summary.zeroRateAvg)}</td>
         <td>${this.#escapeHtml(summary.rating ?? '')}</td>
       `;
       tbody.appendChild(row);
@@ -3888,8 +4640,12 @@ class ExpressionDiagnosticsController {
   #toggleGateCompatibilityWarning() {
     if (!this.#conditionalGateWarning) return;
 
+    const operatorLookup = this.#buildPrototypeOperatorLookup(
+      this.#selectedExpression?.prerequisites
+    );
     const incompatibilities = this.#collectGateCompatibilityIssues(
-      this.#rawSimulationResult?.gateCompatibility
+      this.#rawSimulationResult?.gateCompatibility,
+      operatorLookup
     );
 
     if (incompatibilities.length === 0) {
@@ -3897,24 +4653,43 @@ class ExpressionDiagnosticsController {
       return;
     }
 
-    const names = incompatibilities.slice(0, 3).map((item) => item.prototypeId);
+    const blockingIssues = incompatibilities.filter((issue) => !issue.benign);
+    const benignIssues = incompatibilities.filter((issue) => issue.benign);
+    const displayedIssues =
+      blockingIssues.length > 0 ? blockingIssues : benignIssues;
+    const names = displayedIssues.slice(0, 3).map((item) => item.prototypeId);
     const extraCount = incompatibilities.length - names.length;
     const suffix = extraCount > 0 ? ` (+${extraCount} more)` : '';
     const label = names.length > 0 ? names.join(', ') : 'See report';
-    const reason = incompatibilities[0]?.reason
-      ? ` Example: ${this.#escapeHtml(incompatibilities[0].reason)}.`
+    const reason = displayedIssues[0]?.reason
+      ? ` Example: ${this.#escapeHtml(displayedIssues[0].reason)}.`
       : '';
+    const benignNote =
+      blockingIssues.length > 0 && benignIssues.length > 0
+        ? ` ${benignIssues.length} incompatibilit${
+            benignIssues.length === 1 ? 'y' : 'ies'
+          } benign for <=/< clauses.`
+        : '';
+    const benignOnly = blockingIssues.length === 0 && benignIssues.length > 0;
 
     this.#conditionalGateWarning.innerHTML = `
-      <span class="warning-icon">⚠️</span>
+      <span class="warning-icon">${benignOnly ? 'ℹ️' : '⚠️'}</span>
       <span class="warning-text">
-        Gate incompatibility detected for ${this.#escapeHtml(label)}${suffix}.${reason} See report for details.
+        ${
+          benignOnly
+            ? `Gate incompatibility is benign for <=/< clauses for ${this.#escapeHtml(
+                label
+              )}${suffix}.`
+            : `Gate incompatibility detected for ${this.#escapeHtml(
+                label
+              )}${suffix}.`
+        }${reason}${benignNote} See report for details.
       </span>
     `;
     this.#conditionalGateWarning.hidden = false;
   }
 
-  #collectGateCompatibilityIssues(gateCompatibility) {
+  #collectGateCompatibilityIssues(gateCompatibility, operatorLookup) {
     if (!gateCompatibility) return [];
 
     const issues = [];
@@ -3927,10 +4702,19 @@ class ExpressionDiagnosticsController {
     for (const { source, type } of sources) {
       for (const [prototypeId, status] of Object.entries(source)) {
         if (status?.compatible === false) {
+          const lookupKey = `${type}:${prototypeId}`;
+          const operators = operatorLookup?.get(lookupKey);
+          const isBenignCeiling =
+            operators &&
+            operators.size > 0 &&
+            Array.from(operators).every(
+              (operator) => operator === '<=' || operator === '<'
+            );
           issues.push({
             prototypeId,
             type,
             reason: status.reason ?? null,
+            benign: isBenignCeiling,
           });
         }
       }
@@ -4007,6 +4791,63 @@ class ExpressionDiagnosticsController {
     }
 
     return conditions;
+  }
+
+  #buildPrototypeOperatorLookup(prerequisites) {
+    const lookup = new Map();
+    const operators = ['>=', '>', '<=', '<', '=='];
+
+    const addOperator = (varPath, operator) => {
+      if (typeof varPath !== 'string') return;
+      let type = null;
+      let prototypeId = null;
+      if (varPath.startsWith('emotions.')) {
+        type = 'emotion';
+        prototypeId = varPath.replace('emotions.', '');
+      } else if (varPath.startsWith('sexualStates.')) {
+        type = 'sexual';
+        prototypeId = varPath.replace('sexualStates.', '');
+      }
+      if (!type || !prototypeId) return;
+
+      const key = `${type}:${prototypeId}`;
+      if (!lookup.has(key)) {
+        lookup.set(key, new Set());
+      }
+      lookup.get(key).add(operator);
+    };
+
+    const extractFromLogic = (logic) => {
+      if (!logic || typeof logic !== 'object') return;
+
+      for (const operator of operators) {
+        const clause = logic[operator];
+        if (!clause) continue;
+        const [left, right] = clause;
+        if (left && typeof left === 'object' && left.var && typeof right === 'number') {
+          addOperator(left.var, operator);
+        }
+      }
+
+      if (Array.isArray(logic.and)) {
+        for (const child of logic.and) {
+          extractFromLogic(child);
+        }
+      }
+      if (Array.isArray(logic.or)) {
+        for (const child of logic.or) {
+          extractFromLogic(child);
+        }
+      }
+    };
+
+    if (Array.isArray(prerequisites)) {
+      for (const prereq of prerequisites) {
+        extractFromLogic(prereq?.logic);
+      }
+    }
+
+    return lookup;
   }
 
   /**

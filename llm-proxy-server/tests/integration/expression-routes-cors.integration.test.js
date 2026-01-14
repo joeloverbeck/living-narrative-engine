@@ -64,9 +64,15 @@ describe('Expression routes CORS integration tests', () => {
       handleUpdateStatus: jest.fn((_req, res) =>
         res.status(200).json({ success: true, message: 'ok' })
       ),
+      handleLogEntry: jest.fn((_req, res) =>
+        res.status(200).json({ success: true })
+      ),
     };
 
-    app.use('/api/expressions', createExpressionRoutes(mockController));
+    app.use(
+      '/api/expressions',
+      createExpressionRoutes(mockController, mockController)
+    );
 
     server = await new Promise((resolve) => {
       const createdServer = app.listen(0, '127.0.0.1', () =>
@@ -103,6 +109,22 @@ describe('Expression routes CORS integration tests', () => {
   test('OPTIONS preflight for update-status includes expected CORS headers', async () => {
     const response = await requestAgent
       .options('/api/expressions/update-status')
+      .set('Origin', 'http://localhost:8080')
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', HTTP_HEADER_CONTENT_TYPE);
+
+    expect(response.status).toBe(204);
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://localhost:8080'
+    );
+    expect(response.headers['access-control-allow-methods']).toContain('GET');
+    expect(response.headers['access-control-allow-methods']).toContain('POST');
+    expect(response.headers['access-control-allow-methods']).toContain('OPTIONS');
+  });
+
+  test('OPTIONS preflight for log includes expected CORS headers', async () => {
+    const response = await requestAgent
+      .options('/api/expressions/log')
       .set('Origin', 'http://localhost:8080')
       .set('Access-Control-Request-Method', 'POST')
       .set('Access-Control-Request-Headers', HTTP_HEADER_CONTENT_TYPE);

@@ -101,22 +101,36 @@ function appendOrConstraintWarningSections() {
     'beforeend',
     `
       <section id="conditional-pass-rates" hidden>
+        <span id="conditional-pass-metrics-flag" hidden></span>
         <div id="conditional-pass-warning" hidden></div>
         <div id="conditional-gate-warning" hidden></div>
         <div id="conditional-pass-rates-content"></div>
       </section>
+      <section id="last-mile-decomposition" hidden>
+        <span id="last-mile-metrics-flag" hidden></span>
+        <div id="last-mile-decomposition-content"></div>
+      </section>
       <section id="prototype-fit-analysis" hidden>
+        <span id="prototype-fit-metrics-flag" hidden></span>
         <table><tbody id="prototype-fit-tbody"></tbody></table>
         <div id="prototype-fit-details"></div>
         <div id="prototype-fit-suggestion"></div>
         <div id="prototype-fit-warning" hidden></div>
       </section>
       <section id="implied-prototype" hidden>
+        <span id="implied-prototype-metrics-flag" hidden></span>
         <table><tbody id="target-signature-tbody"></tbody></table>
         <table><tbody id="similarity-ranking-tbody"></tbody></table>
         <table><tbody id="gate-pass-ranking-tbody"></tbody></table>
         <table><tbody id="combined-ranking-tbody"></tbody></table>
         <div id="implied-prototype-warning" hidden></div>
+      </section>
+      <section id="gap-detection" hidden>
+        <span id="gap-detection-metrics-flag" hidden></span>
+        <div id="gap-status"></div>
+        <table><tbody id="nearest-prototypes-tbody"></tbody></table>
+        <div id="suggested-prototype"></div>
+        <div id="suggested-prototype-content"></div>
       </section>
     `
   );
@@ -203,7 +217,12 @@ describe('ExpressionDiagnosticsController', () => {
             <p id="mc-integrity-warnings-summary"></p>
             <ul id="mc-integrity-warnings-list"></ul>
             <p id="mc-integrity-warnings-impact"></p>
+            <div id="mc-integrity-drilldown" hidden>
+              <p id="mc-integrity-drilldown-summary"></p>
+              <div id="mc-integrity-drilldown-content"></div>
+            </div>
           </div>
+          <span id="mc-gate-metrics-flag" hidden></span>
           <table id="blockers-table">
             <tbody id="blockers-tbody"></tbody>
           </table>
@@ -212,10 +231,11 @@ describe('ExpressionDiagnosticsController', () => {
               Generate Report
             </button>
           </div>
-          <div id="mc-sampling-coverage" class="mc-sampling-coverage-container" hidden>
-            <h3>Sampling Coverage</h3>
-            <p class="sampling-coverage-summary"></p>
-            <div class="sampling-coverage-tables"></div>
+        <div id="mc-sampling-coverage" class="mc-sampling-coverage-container" hidden>
+          <h3>Sampling Coverage</h3>
+          <span id="sampling-coverage-metrics-flag" hidden></span>
+          <p class="sampling-coverage-summary"></p>
+          <div class="sampling-coverage-tables"></div>
             <div class="sampling-coverage-conclusions" hidden>
               <h4>Coverage Conclusions</h4>
               <ul class="sampling-coverage-conclusions-list"></ul>
@@ -228,7 +248,13 @@ describe('ExpressionDiagnosticsController', () => {
         <div id="mc-witnesses-list" class="mc-witnesses-list"></div>
       </div>
       <section id="global-sensitivity" hidden>
+        <span id="global-sensitivity-metrics-flag" hidden></span>
         <div id="global-sensitivity-tables"></div>
+      </section>
+      <section id="static-cross-reference" hidden>
+        <span id="static-cross-reference-metrics-flag" hidden></span>
+        <div id="static-cross-reference-content"></div>
+        <div id="cross-reference-summary"></div>
       </section>
       </section>
       <!-- Path-Sensitive Analysis Section -->
@@ -2065,6 +2091,7 @@ describe('ExpressionDiagnosticsController', () => {
     });
 
     it('keeps integrity warnings hidden when no warnings are returned', async () => {
+      appendOrConstraintWarningSections();
       const controller = new ExpressionDiagnosticsController({
         logger: mockLogger,
         expressionRegistry: mockExpressionRegistry,
@@ -2089,11 +2116,30 @@ describe('ExpressionDiagnosticsController', () => {
 
       const warningsContainer = document.getElementById('mc-integrity-warnings');
       const impactNote = document.getElementById('mc-integrity-warnings-impact');
+      const gateMetricsFlag = document.getElementById('mc-gate-metrics-flag');
+      const conditionalFlag = document.getElementById('conditional-pass-metrics-flag');
+      const globalSensitivityFlag = document.getElementById('global-sensitivity-metrics-flag');
+      const lastMileFlag = document.getElementById('last-mile-metrics-flag');
+      const samplingCoverageFlag = document.getElementById('sampling-coverage-metrics-flag');
+      const staticCrossReferenceFlag = document.getElementById('static-cross-reference-metrics-flag');
+      const prototypeFitFlag = document.getElementById('prototype-fit-metrics-flag');
+      const impliedPrototypeFlag = document.getElementById('implied-prototype-metrics-flag');
+      const gapDetectionFlag = document.getElementById('gap-detection-metrics-flag');
       expect(warningsContainer.hidden).toBe(true);
       expect(impactNote.textContent).toBe('');
+      expect(gateMetricsFlag.hidden).toBe(true);
+      expect(conditionalFlag.hidden).toBe(true);
+      expect(globalSensitivityFlag.hidden).toBe(true);
+      expect(lastMileFlag.hidden).toBe(true);
+      expect(samplingCoverageFlag.hidden).toBe(true);
+      expect(staticCrossReferenceFlag.hidden).toBe(true);
+      expect(prototypeFitFlag.hidden).toBe(true);
+      expect(impliedPrototypeFlag.hidden).toBe(true);
+      expect(gapDetectionFlag.hidden).toBe(true);
     });
 
     it('renders integrity warnings when report generator returns warnings', async () => {
+      appendOrConstraintWarningSections();
       mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
         triggerRate: 0.05,
         triggerCount: 500,
@@ -2144,6 +2190,15 @@ describe('ExpressionDiagnosticsController', () => {
       const summary = document.getElementById('mc-integrity-warnings-summary');
       const list = document.getElementById('mc-integrity-warnings-list');
       const impactNote = document.getElementById('mc-integrity-warnings-impact');
+      const gateMetricsFlag = document.getElementById('mc-gate-metrics-flag');
+      const conditionalFlag = document.getElementById('conditional-pass-metrics-flag');
+      const globalSensitivityFlag = document.getElementById('global-sensitivity-metrics-flag');
+      const lastMileFlag = document.getElementById('last-mile-metrics-flag');
+      const samplingCoverageFlag = document.getElementById('sampling-coverage-metrics-flag');
+      const staticCrossReferenceFlag = document.getElementById('static-cross-reference-metrics-flag');
+      const prototypeFitFlag = document.getElementById('prototype-fit-metrics-flag');
+      const impliedPrototypeFlag = document.getElementById('implied-prototype-metrics-flag');
+      const gapDetectionFlag = document.getElementById('gap-detection-metrics-flag');
 
       expect(warningsContainer.hidden).toBe(false);
       expect(summary.textContent).toContain('2');
@@ -2152,6 +2207,192 @@ describe('ExpressionDiagnosticsController', () => {
       expect(list.textContent).toContain('population=pop-123');
       expect(list.textContent).toContain('prototype=joy');
       expect(impactNote.textContent).toContain('Gate/final mismatches');
+      expect(gateMetricsFlag.hidden).toBe(false);
+      expect(conditionalFlag.hidden).toBe(false);
+      expect(globalSensitivityFlag.hidden).toBe(false);
+      expect(lastMileFlag.hidden).toBe(false);
+      expect(samplingCoverageFlag.hidden).toBe(false);
+      expect(staticCrossReferenceFlag.hidden).toBe(false);
+      expect(prototypeFitFlag.hidden).toBe(false);
+      expect(impliedPrototypeFlag.hidden).toBe(false);
+      expect(gapDetectionFlag.hidden).toBe(false);
+    });
+
+    it('recomputes integrity warnings when result contains an empty cache', async () => {
+      appendOrConstraintWarningSections();
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 500,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.045, high: 0.055 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: [{ moodAxes: { valence: 0 } }],
+        reportIntegrityWarnings: [],
+      });
+      mockReportGenerator.collectReportIntegrityWarnings.mockReturnValueOnce([
+        {
+          code: 'I1_GATE_FAILED_NONZERO_FINAL',
+          message: 'Gate failed but final intensity is non-zero in stored contexts.',
+          populationHash: 'pop-123',
+          prototypeId: 'joy',
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      document.getElementById('run-mc-btn').click();
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const warningsContainer = document.getElementById('mc-integrity-warnings');
+      const list = document.getElementById('mc-integrity-warnings-list');
+      expect(warningsContainer.hidden).toBe(false);
+      expect(list.textContent).toContain('I1_GATE_FAILED_NONZERO_FINAL');
+    });
+
+    it('renders drilldown data when integrity warning sample indices are selected', async () => {
+      appendOrConstraintWarningSections();
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 500,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.045, high: 0.055 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: [
+          {
+            moodAxes: { valence: 0 },
+            emotions: { joy: 0.2 },
+            gateTrace: {
+              emotions: {
+                joy: { raw: 0.2, gated: 0.2, final: 0.2, gatePass: true },
+              },
+            },
+          },
+          {
+            moodAxes: { valence: 0 },
+            emotions: { joy: 0.4 },
+            gateTrace: {
+              emotions: {
+                joy: { raw: 0.4, gated: 0.4, final: 0.4, gatePass: true },
+              },
+            },
+          },
+        ],
+      });
+      mockReportGenerator.collectReportIntegrityWarnings.mockReturnValueOnce([
+        {
+          code: 'I1_GATE_FAILED_NONZERO_FINAL',
+          message: 'Gate failed but final intensity is non-zero in stored contexts.',
+          populationHash: 'pop-123',
+          prototypeId: 'joy',
+          details: { sampleIndices: [1] },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      document.getElementById('run-mc-btn').click();
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      const sampleButton = document.querySelector('.integrity-sample-button');
+      sampleButton.click();
+
+      const drilldown = document.getElementById('mc-integrity-drilldown');
+      const summary = document.getElementById('mc-integrity-drilldown-summary');
+      const content = document.getElementById('mc-integrity-drilldown-content');
+      expect(drilldown.hidden).toBe(false);
+      expect(summary.textContent).toContain('Sample 1');
+      expect(content.textContent).toContain('Raw (0..1)');
+      expect(content.textContent).toContain('0.4000');
+    });
+
+    it('shows a fallback message when gate traces are missing', async () => {
+      appendOrConstraintWarningSections();
+      mockMonteCarloSimulator.simulate.mockResolvedValueOnce({
+        triggerRate: 0.05,
+        triggerCount: 500,
+        sampleCount: 10000,
+        confidenceInterval: { low: 0.045, high: 0.055 },
+        clauseFailures: [],
+        distribution: 'uniform',
+        storedContexts: [
+          {
+            moodAxes: { valence: 0 },
+            emotions: { joy: 0.4 },
+          },
+        ],
+      });
+      mockReportGenerator.collectReportIntegrityWarnings.mockReturnValueOnce([
+        {
+          code: 'I1_GATE_FAILED_NONZERO_FINAL',
+          message: 'Gate failed but final intensity is non-zero in stored contexts.',
+          populationHash: 'pop-123',
+          prototypeId: 'joy',
+          details: { sampleIndices: [0] },
+        },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      selectDropdownValue('expr:test1');
+
+      document.getElementById('run-mc-btn').click();
+      await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
+
+      document.querySelector('.integrity-sample-button').click();
+
+      const content = document.getElementById('mc-integrity-drilldown-content');
+      expect(content.textContent).toContain('Gate trace unavailable');
     });
 
     it('shows global sensitivity tables with a low-confidence warning when baseline hits are low', async () => {
@@ -2876,9 +3117,9 @@ describe('ExpressionDiagnosticsController', () => {
           },
         ],
         storedContexts: [
-          { moodAxes: { valence: 0.2, threat: -0.1 } },
-          { moodAxes: { valence: 0.6, threat: -0.3 } },
-          { moodAxes: { valence: 0.5, threat: -0.1 } },
+          { moodAxes: { valence: 20, threat: -10 } },
+          { moodAxes: { valence: 60, threat: -30 } },
+          { moodAxes: { valence: 50, threat: -10 } },
         ],
         distribution: 'uniform',
       });

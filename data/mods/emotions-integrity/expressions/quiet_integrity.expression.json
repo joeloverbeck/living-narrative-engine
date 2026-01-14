@@ -109,5 +109,6 @@
         "auditory": "Their voice lowers into something even and unforced; words come without rushing. A small, quiet exhale slips out, not dramatic - just settled.",
         "tactile": "Fidgeting stops. Hands become still or purposeful, shoulders easing into a straighter line as if the body finally found a comfortable, honest stance.",
         "limited": "{actor} gives a small, contained nod and moves on with calm certainty."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

@@ -1,0 +1,195 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-acceptance:post_loss_settling",
+    "description": "Acceptance / letting go: the loss is still present, but the mind stops wrestling it for a moment. The feeling lands as a quiet, lived-in steadiness—sadness with a small loosening of pressure—where breathing becomes possible again without erasing what mattered.",
+    "category": "calm",
+    "priority": 68,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.grief"
+                                    },
+                                    0.4
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.sadness"
+                                    },
+                                    0.5
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.78
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.grief"
+                                            },
+                                            {
+                                                "var": "emotions.grief"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.sadness"
+                                            },
+                                            {
+                                                "var": "emotions.sadness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.relief"
+                                            },
+                                            {
+                                                "var": "previousEmotions.relief"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.future_expectancy"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.future_expectancy"
+                                            }
+                                        ]
+                                    },
+                                    10
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires active sadness/grief (but not peaking) with at least mild relief, low threat, and low-to-mid arousal while still engaged. Blocks shutdown (numbness/apathy) and hijacks (panic/freeze). Triggers only on a noticeable shift: grief/sadness easing, relief rising, or future expectancy lifting."
+        }
+    ],
+    "actor_description": "It’s still there—heavy—but I stop pushing against it for a breath. The tightness in my chest gives a little, like a knot finally deciding to loosen. I feel sad, unmistakably, but the sadness isn’t a fight right now; it’s just real. A small exhale slips out of me and, for once, it doesn’t feel like surrender—it feels like settling.",
+    "description_text": "{actor} goes quiet in a different way—shoulders easing, breath lengthening, eyes softening as if the struggle inside has paused. The sadness remains visible, but there’s a faint release in their posture, a steadiness that reads like letting the loss be true without wrestling it.",
+    "alternate_descriptions": {
+        "auditory": "A slow, controlled exhale leaves {actor}, followed by a brief silence where their voice, if it comes, sounds lower and steadier—less strained, more settled.",
+        "tactile": "{actor}'s tension shifts: not gone, but redistributed—hands unclench slightly, shoulders drop a fraction, and the air around them feels less braced."
+    },
+    "diagnosticStatus": "rare"
+}

@@ -440,6 +440,8 @@ describe('Monte Carlo Report System - Integration', () => {
                 thresholdValue: 0.5,
                 inRegimeEvaluationCount: 10,
                 inRegimeFailureCount: 4,
+                inRegimePassRate: 0.6,
+                gatePassRateInRegime: 0.7,
                 gateClampRateInRegime: 0.3,
                 gateFailInRegimeCount: 3,
                 gatePassInRegimeCount: 7,
@@ -458,9 +460,13 @@ describe('Monte Carlo Report System - Integration', () => {
         summary: 'Test summary',
       });
 
-      expect(report).toContain('| Gate clamp (mood) | Pass \\| gate (mood) |');
+      expect(report).toContain(
+        '| Gate pass (mood) | Gate clamp (mood) | Pass \\| gate (mood) | Pass \\| mood (mood) |'
+      );
+      expect(report).toContain('70.00% (7 / 10)');
       expect(report).toContain('30.00% (3 / 10)');
       expect(report).toContain('42.86% (3 / 7)');
+      expect(report).toContain('60.00% (6 / 10)');
     });
   });
 

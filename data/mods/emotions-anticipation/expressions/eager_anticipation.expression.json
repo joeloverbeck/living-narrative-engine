@@ -1,9 +1,9 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-anticipation:eager_anticipation",
-    "description": "Bright, forward-leaning anticipation—attention keeps returning to what's coming, energy rising into a restless readiness rather than calm satisfaction.",
-    "actor_description": "I can feel myself leaning into the next moment like it's tugging on a string in my chest. My thoughts keep skipping ahead—quick, bright, rehearsing possibilities with a little fizz under my skin. It's not peace; it's a clean, impatient readiness that makes stillness feel like wasted time.",
-    "description_text": "{actor} looks charged and forward-leaning—attention snapping back to the near future, movements a touch quicker than necessary. They seem unable to fully settle, like they're already half a step ahead of themselves.",
+    "description": "Forward-pulling anticipation with restless momentum—the kind where attention can't stay put, keeps jutting toward what's next, and stillness itself feels like friction.",
+    "actor_description": "There's a pull in my chest—forward, insistent, like I'm already halfway into the next moment. My thoughts won't stay here; they keep darting ahead, testing shapes, rehearsing. There's a live-wire hum under my skin, and sitting still feels like holding my breath for no reason. Not nerves—just this bright, restless wanting to be there already.",
+    "description_text": "{actor} looks charged and forward-leaning—gaze drifting then sharpening, movements a touch quicker than necessary. They seem unable to fully settle, resetting posture as if waiting itself is uncomfortable, like they're already half a step ahead of themselves.",
     "priority": 72,
     "prerequisites": [
         {
@@ -141,10 +141,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "Their voice comes a little quicker and brighter than usual, with clipped little breaths between thoughts—like they're trying not to rush the words.",
-        "tactile": "There's a faint kinetic buzz in their stillness: fingers tapping, weight shifting, posture angled forward as if the body is already moving.",
-        "limited": "A quickening energy shows in small movements and a forward-focused attention, as if waiting is suddenly hard to do."
+        "auditory": "Someone's voice picks up pace, brightening at the edges, with quick shallow breaths between thoughts—like they're barely holding back from rushing ahead.",
+        "tactile": "There's a faint kinetic buzz in someone's stillness: fingers tapping, weight shifting, posture angled forward as if the body is already moving.",
+        "limited": "I sense a quickening energy showing in small movements and a forward-focused attention, as if waiting is suddenly hard to do."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal"
 }

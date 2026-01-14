@@ -23,7 +23,7 @@
                             {
                                 "var": "emotions.contempt"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -55,7 +55,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -63,7 +63,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -88,7 +88,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -103,7 +103,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             }
                         ]
@@ -116,5 +116,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a sharp, disgusted exhale—like a hiss swallowed at the last second—followed by a clipped, hard-edged tone as if every word has to pass a moral filter.",
         "tactile": "The air feels suddenly wrong—skin prickling, jaw tight, shoulders drawing back as though proximity itself is contaminating."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

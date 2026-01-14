@@ -10,25 +10,33 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.entrancement"
+                                "var": "emotions.entranced"
                             },
-                            0.65
+                            0.62
                         ]
                     },
                     {
-                        "<": [
+                        ">=": [
                             {
-                                "var": "emotions.freeze"
+                                "var": "emotions.quiet_absorption"
                             },
-                            0.15
+                            0.5
                         ]
                     },
                     {
-                        "<": [
+                        "<=": [
                             {
-                                "var": "emotions.dissociation"
+                                "var": "emotions.transfixed"
                             },
-                            0.25
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            40
                         ]
                     },
                     {
@@ -36,7 +44,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            35
+                            15
                         ]
                     },
                     {
@@ -44,7 +52,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            10
+                            -20
                         ]
                     },
                     {
@@ -52,7 +60,15 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            60
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            8
                         ]
                     },
                     {
@@ -66,49 +82,9 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.panic"
+                                "var": "emotions.boredom"
                             },
-                            0.1
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.alarm"
-                            },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.hypervigilance"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.fear"
-                            },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.anxiety"
-                            },
-                            0.5
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.stress"
-                            },
-                            0.45
+                            0.25
                         ]
                     },
                     {
@@ -122,104 +98,89 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.rage"
+                                "var": "emotions.panic"
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
                             },
                             0.3
                         ]
                     },
                     {
-                        "<=": [
+                        "or": [
                             {
-                                "var": "emotions.anger"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.boredom"
-                            },
-                            0.25
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.apathy"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.numbness"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.flow"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            10
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            15
-                        ]
-                    }
-                ]
-            }
-        },
-        {
-            "logic": {
-                "or": [
-                    {
-                        ">=": [
-                            {
-                                "-": [
+                                "and": [
                                     {
-                                        "var": "emotions.entrancement"
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.entranced"
+                                            },
+                                            0.62
+                                        ]
                                     },
                                     {
-                                        "var": "previousEmotions.entrancement"
+                                        ">=": [
+                                            {
+                                                "var": "emotions.entranced"
+                                            },
+                                            0.62
+                                        ]
                                     }
-                                ]
-                            },
-                            0.08
-                        ]
-                    },
-                    {
-                        "and": [
-                            {
-                                "<": [
-                                    {
-                                        "var": "previousEmotions.entrancement"
-                                    },
-                                    0.82
                                 ]
                             },
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.entrancement"
+                                        "-": [
+                                            {
+                                                "var": "emotions.entranced"
+                                            },
+                                            {
+                                                "var": "previousEmotions.entranced"
+                                            }
+                                        ]
                                     },
-                                    0.82
+                                    0.08
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.quiet_absorption"
+                                            },
+                                            0.5
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.quiet_absorption"
+                                            },
+                                            0.5
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.quiet_absorption"
+                                            },
+                                            {
+                                                "var": "previousEmotions.quiet_absorption"
+                                            }
+                                        ]
+                                    },
+                                    0.06
                                 ]
                             }
                         ]
@@ -235,5 +196,5 @@
         "olfactory": "A muted warmth hangs in the air-calm attention with the edges smoothed down, none of the sharp bite of stress or panic."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare"
 }

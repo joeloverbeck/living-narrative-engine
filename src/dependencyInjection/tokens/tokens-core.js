@@ -435,6 +435,7 @@ export const coreTokens = freeze({
   IExpressionContextBuilder: 'IExpressionContextBuilder',
   IExpressionEvaluatorService: 'IExpressionEvaluatorService',
   IExpressionDispatcher: 'IExpressionDispatcher',
+  IExpressionEvaluationLogger: 'IExpressionEvaluationLogger',
   IExpressionPersistenceListener: 'IExpressionPersistenceListener',
   IExpressionOrchestrator: 'IExpressionOrchestrator',
 });

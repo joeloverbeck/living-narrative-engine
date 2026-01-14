@@ -21,6 +21,38 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.transfixed"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.75
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.engagement"
                             },
                             25
@@ -44,6 +76,14 @@
                                     0.35
                                 ]
                             }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.small_victory"
+                            },
+                            0.4
                         ]
                     },
                     {
@@ -103,67 +143,127 @@
                         ]
                     },
                     {
-                        "or": [
+                        "and": [
                             {
-                                "and": [
+                                "or": [
                                     {
-                                        ">=": [
+                                        "and": [
                                             {
-                                                "var": "previousEmotions.confusion"
+                                                ">=": [
+                                                    {
+                                                        "var": "previousEmotions.confusion"
+                                                    },
+                                                    0.55
+                                                ]
                                             },
-                                            0.55
+                                            {
+                                                "<=": [
+                                                    {
+                                                        "var": "emotions.confusion"
+                                                    },
+                                                    0.45
+                                                ]
+                                            }
                                         ]
                                     },
                                     {
-                                        "<=": [
+                                        ">=": [
                                             {
-                                                "var": "emotions.confusion"
+                                                "-": [
+                                                    {
+                                                        "var": "previousEmotions.confusion"
+                                                    },
+                                                    {
+                                                        "var": "emotions.confusion"
+                                                    }
+                                                ]
                                             },
-                                            0.45
+                                            0.12
                                         ]
                                     }
                                 ]
                             },
                             {
-                                ">=": [
+                                "or": [
                                     {
-                                        "-": [
+                                        "and": [
                                             {
-                                                "var": "previousEmotions.confusion"
+                                                "<": [
+                                                    {
+                                                        "var": "previousEmotions.small_victory"
+                                                    },
+                                                    0.3
+                                                ]
                                             },
                                             {
-                                                "var": "emotions.confusion"
+                                                ">=": [
+                                                    {
+                                                        "var": "emotions.small_victory"
+                                                    },
+                                                    0.4
+                                                ]
                                             }
                                         ]
                                     },
-                                    0.12
-                                ]
-                            },
-                            {
-                                ">=": [
                                     {
-                                        "-": [
+                                        ">=": [
                                             {
-                                                "var": "moodAxes.agency_control"
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.small_victory"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.small_victory"
+                                                    }
+                                                ]
                                             },
-                                            {
-                                                "var": "previousMoodAxes.agency_control"
-                                            }
+                                            0.08
                                         ]
                                     },
-                                    12
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.agency_control"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.agency_control"
+                                                    }
+                                                ]
+                                            },
+                                            12
+                                        ]
+                                    }
                                 ]
                             }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.triumph"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.euphoria"
+                            },
+                            0.35
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires engaged attention with confusion present, plus an 'unlock' moment: confusion drops noticeably (crossing or drop magnitude) or agency/control jumps upward. Excludes boredom/apathy (not checked-out) and caps panic (not a threat spiral)."
+            "failure_message": "Requires engaged attention with confusion present, plus an unlock moment: confusion drops noticeably (crossing or magnitude). The click is anchored by a small_victory signal (micro-competence win) that is present and rising (or agency/control jumps). Caps transfixed to avoid a 'stunned' beat and caps entranced/quiet_absorption to avoid reading as trance or savoring/flow. Excludes boredom/apathy (not checked-out), caps panic (not a threat spiral), and caps triumph/euphoria so it stays an insight, not a celebration."
         }
     ],
     "alternate_descriptions": {
         "auditory": "I hear the searching stop—speech smooths out, fewer false starts, and a small, satisfied exhale slips through like the tension finally released.",
         "tactile": "The tightness in the face and shoulders lets go. Hands get steadier, movements more deliberate, like the body found the right grip.",
         "limited": "Something shifts in {actor}'s focus—less scattered, more certain—like a solution just snapped into place."
-    }
+    },
+    "diagnosticStatus": "impossible"
 }

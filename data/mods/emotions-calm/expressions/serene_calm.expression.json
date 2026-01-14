@@ -94,10 +94,37 @@
                             },
                             -10
                         ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.small_victory"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.small_victory"
+                                            },
+                                            {
+                                                "var": "previousEmotions.small_victory"
+                                            }
+                                        ]
+                                    },
+                                    0.05
+                                ]
+                            }
+                        ]
                     }
                 ]
             },
-            "failure_message": "Requires steady calm with low arousal and low perceived threat, without significant stress/anxiety/anger dragging the state away from serenity."
+            "failure_message": "Requires steady calm with low arousal and low perceived threat, without significant stress/anxiety/anger dragging the state away from serenity. Blocks 'just-earned win' moments by requiring small_victory to be low, or not rising meaningfully."
         }
     ],
     "actor_description": "Nothing is pulling at me. My breath goes all the way down without catching, and my thoughts don't keep grabbing for the next thing. The quiet isn't empty-it's spacious. Shoulders loose. Jaw unclenched. Even my hands feel unhurried, like they've forgotten what it was to brace. I'm just here. Present. Not trying to outrun anything, not trying to force anything. A calm that doesn't need explanation.",
@@ -107,5 +134,5 @@
         "limited": "Someone feels steady-no jitter in their movements, no tension radiating off them, just a quiet physical ease you can sense in proximity."
     },
     "category": "calm",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "frequent"
 }

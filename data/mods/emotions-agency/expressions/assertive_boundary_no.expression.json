@@ -15,37 +15,17 @@
                             {
                                 ">=": [
                                     {
+                                        "var": "emotions.confidence"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
                                         "var": "emotions.determination"
                                     },
                                     0.55
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.confidence"
-                                    },
-                                    0.60
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.unease"
-                                    },
-                                    0.28
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.suspicion"
-                                    },
-                                    0.30
                                 ]
                             }
                         ]
@@ -69,6 +49,30 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.threat"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.anger"
                             },
                             0.35
@@ -79,15 +83,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.20
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.threat"
-                            },
-                            45
+                            0.2
                         ]
                     },
                     {
@@ -104,7 +100,27 @@
                                             }
                                         ]
                                     },
-                                    12
+                                    10
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.confidence"
+                                            },
+                                            0.6
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.confidence"
+                                            },
+                                            0.6
+                                        ]
+                                    }
                                 ]
                             },
                             {
@@ -131,12 +147,13 @@
                     }
                 ]
             },
-            "failure_message": "Requires a firm agency signal (determination or confidence) with mild guardedness (unease/suspicion). Grounded in high agency_control and non-cold affiliation. Caps anger/rage and caps threat so it reads as boundary-setting, not aggression or panic. Fires only on an agency jump or determination crossing to prevent spam."
+            "failure_message": "Requires a clean agency signal (confidence or determination) grounded in high agency_control and non-cold affiliation. Threat stays low and arousal stays moderate so it reads as steady boundary-setting, not escalation. Anger/rage are capped to avoid contempt/heat. Fires only on an agency rise or a confidence/determination crossing to prevent spam."
         }
     ],
     "alternate_descriptions": {
         "auditory": "I hear a calm, clipped “No,” followed by a steady pause—no escalation, no pleading, just finality.",
         "tactile": "The air tightens like a line drawn. Their stillness has weight—grounded feet, squared shoulders, a boundary you can almost bump into.",
         "limited": "{actor} refuses firmly—controlled, unwavering, and not heated."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

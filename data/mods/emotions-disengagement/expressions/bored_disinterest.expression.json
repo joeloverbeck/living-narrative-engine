@@ -8,6 +8,30 @@
             "logic": {
                 "and": [
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -182,7 +206,7 @@
                     }
                 ]
             },
-            "failure_message": "Disinterest requires boredom/apathy with collapsed engagement and low interest/curiosity. Blocks lonely_yearning and strong social shutdown (very low affiliation / withdrawn_isolation) so 'cold withdrawal' doesn't read as 'meh'."
+            "failure_message": "Disinterest requires boredom/apathy with collapsed engagement and low interest/curiosity. Caps transfixed/entranced and quiet_absorption so it doesn't fire during lock-on, trance-capture, or immersion. Blocks lonely_yearning and strong social shutdown (very low affiliation / withdrawn_isolation) so 'cold withdrawal' doesn't read as 'meh'."
         }
     ],
     "actor_description": "My attention won't latch. It touches things and slips off, like there's no friction in my mind. The room feels too slow-every second padded out. I try to care and nothing catches. My eyelids feel heavy, my thoughts feel blunt, and the part of me that should lean forward just… doesn't. I'm left with this dry restlessness: the urge to leave, to switch tasks, to do anything that makes time move again.",
@@ -192,5 +216,5 @@
         "tactile": "Someone's presence feels heavy and withdrawn, like someone has stepped back from the moment without moving their feet."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "frequent"
 }

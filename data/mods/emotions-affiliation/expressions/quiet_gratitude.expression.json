@@ -87,7 +87,7 @@
                             {
                                 "var": "emotions.withdrawn_isolation"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -128,7 +128,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -143,7 +143,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -204,5 +204,6 @@
         "auditory": "I hear the softness in it—voice quieter, steadier, words landing with careful emphasis instead of speed or bravado.",
         "tactile": "The air around them feels less sharp; there’s a subtle ease, like tension leaving the shoulders and hands at the same time.",
         "limited": "{actor} pauses, then gives a small, genuine sign of appreciation—calmer eyes, softened posture, and a restrained warmth."
-    }
+    },
+    "diagnosticStatus": "frequent"
 }

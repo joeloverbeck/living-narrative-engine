@@ -71,7 +71,7 @@ describe('PrototypeFitRankingService normalization parity', () => {
     expect(entry.intensityDistribution.pAboveThreshold).toBe(1);
   });
 
-  it('treats pre-normalized axes as already normalized', () => {
+  it('treats pre-normalized axes as raw values', () => {
     const contexts = [
       {
         moodAxes: { valence: 0.5 },
@@ -88,9 +88,7 @@ describe('PrototypeFitRankingService normalization parity', () => {
     );
 
     const entry = result.leaderboard[0];
-    const expectedIntensity = (0.5 + 0.8 + 0.7) / 3;
-
-    expect(entry.gatePassRate).toBeCloseTo(1, 6);
-    expect(entry.intensityDistribution.p50).toBeCloseTo(expectedIntensity, 6);
+    expect(entry.gatePassRate).toBeCloseTo(0, 6);
+    expect(entry.intensityDistribution.p50).toBeCloseTo(0, 6);
   });
 });

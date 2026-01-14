@@ -370,6 +370,47 @@ class EmotionCalculatorService {
   }
 
   /**
+   * Compute raw/gated/final signals for a prototype.
+   *
+   * @param {EmotionPrototype} prototype - Emotion/sexual prototype
+   * @param {{[key: string]: number}} normalizedAxes - Normalized mood axes
+   * @param {{[key: string]: number}} sexualAxes - Normalized sexual axes
+   * @param {{[key: string]: number}} [traitAxes={}] - Normalized affect trait axes
+   * @returns {{ raw: number, gated: number, final: number, gatePass: boolean }}
+   */
+  #computePrototypeSignals(prototype, normalizedAxes, sexualAxes, traitAxes = {}) {
+    let rawSum = 0;
+    let maxPossible = 0;
+
+    const weights = prototype?.weights;
+    if (weights && typeof weights === 'object') {
+      for (const [axis, weight] of Object.entries(weights)) {
+        const axisValue = this.#resolveAxisValue(
+          axis,
+          normalizedAxes,
+          sexualAxes,
+          traitAxes
+        );
+        rawSum += axisValue * weight;
+        maxPossible += Math.abs(weight);
+      }
+    }
+
+    const raw =
+      maxPossible === 0 ? 0 : clamp01(rawSum / maxPossible);
+    const gatePass = this.#checkGates(
+      prototype?.gates,
+      normalizedAxes,
+      sexualAxes,
+      traitAxes
+    );
+    const gated = gatePass ? raw : 0;
+    const final = gated;
+
+    return { raw, gated, final, gatePass };
+  }
+
+  /**
    * Normalizes sexual axes from [0..100] to [0..1].
    *
    * @param {SexualState|null|undefined} sexualState - Raw sexual state data
@@ -675,6 +716,103 @@ class EmotionCalculatorService {
   }
 
   /**
+   * Calculates raw/gated/final signals for specified emotion prototypes.
+   *
+   * @param {MoodData} moodData - Mood axis values (including affiliation)
+   * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {SexualState|null|undefined} sexualState - Sexual state data
+   * @param {AffectTraits|null|undefined} [affectTraits] - Affect trait values (optional)
+   * @param {Set<string>|null|undefined} emotionFilter - Emotion names to calculate
+   * @returns {Map<string, { raw: number, gated: number, final: number, gatePass: boolean }>}
+   */
+  calculateEmotionTracesFiltered(
+    moodData,
+    sexualArousal,
+    sexualState,
+    affectTraits = null,
+    emotionFilter
+  ) {
+    if (!emotionFilter || emotionFilter.size === 0) {
+      return this.calculateEmotionTraces(
+        moodData,
+        sexualArousal,
+        sexualState,
+        affectTraits
+      );
+    }
+
+    const result = new Map();
+
+    const prototypes = this.#ensureEmotionPrototypes();
+    if (!prototypes) {
+      this.#logger.warn(
+        'EmotionCalculatorService: No emotion prototypes available.'
+      );
+      return result;
+    }
+
+    const normalizedAxes = this.#normalizeMoodAxes(moodData);
+    const sexualAxes = this.#normalizeSexualAxes(sexualState, sexualArousal);
+    const traitAxes = this.#normalizeAffectTraits(affectTraits);
+
+    for (const emotionName of emotionFilter) {
+      const prototype = prototypes[emotionName];
+      if (!prototype) continue;
+
+      result.set(
+        emotionName,
+        this.#computePrototypeSignals(
+          prototype,
+          normalizedAxes,
+          sexualAxes,
+          traitAxes
+        )
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Calculates raw/gated/final signals for all emotion prototypes.
+   *
+   * @param {MoodData} moodData - Mood axis values (including affiliation)
+   * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {SexualState|null|undefined} sexualState - Sexual state data
+   * @param {AffectTraits|null|undefined} [affectTraits] - Affect trait values (optional)
+   * @returns {Map<string, { raw: number, gated: number, final: number, gatePass: boolean }>}
+   */
+  calculateEmotionTraces(moodData, sexualArousal, sexualState, affectTraits = null) {
+    const result = new Map();
+
+    const prototypes = this.#ensureEmotionPrototypes();
+    if (!prototypes) {
+      this.#logger.warn(
+        'EmotionCalculatorService: No emotion prototypes available.'
+      );
+      return result;
+    }
+
+    const normalizedAxes = this.#normalizeMoodAxes(moodData);
+    const sexualAxes = this.#normalizeSexualAxes(sexualState, sexualArousal);
+    const traitAxes = this.#normalizeAffectTraits(affectTraits);
+
+    for (const [emotionName, prototype] of Object.entries(prototypes)) {
+      result.set(
+        emotionName,
+        this.#computePrototypeSignals(
+          prototype,
+          normalizedAxes,
+          sexualAxes,
+          traitAxes
+        )
+      );
+    }
+
+    return result;
+  }
+
+  /**
    * Calculates sexual state intensities from mood data.
    *
    * @param {MoodData} moodData - Mood axis values
@@ -703,6 +841,38 @@ class EmotionCalculatorService {
         sexualAxes
       );
       result.set(stateName, intensity);
+    }
+
+    return result;
+  }
+
+  /**
+   * Calculates raw/gated/final signals for sexual state prototypes.
+   *
+   * @param {MoodData} moodData - Mood axis values
+   * @param {number|null} sexualArousal - Calculated sexual arousal value
+   * @param {SexualState|null|undefined} sexualState - Sexual state data
+   * @returns {Map<string, { raw: number, gated: number, final: number, gatePass: boolean }>}
+   */
+  calculateSexualStateTraces(moodData, sexualArousal, sexualState) {
+    const result = new Map();
+
+    const prototypes = this.#ensureSexualPrototypes();
+    if (!prototypes) {
+      this.#logger.warn(
+        'EmotionCalculatorService: No sexual prototypes available.'
+      );
+      return result;
+    }
+
+    const normalizedAxes = this.#normalizeMoodAxes(moodData);
+    const sexualAxes = this.#normalizeSexualAxes(sexualState, sexualArousal);
+
+    for (const [stateName, prototype] of Object.entries(prototypes)) {
+      result.set(
+        stateName,
+        this.#computePrototypeSignals(prototype, normalizedAxes, sexualAxes)
+      );
     }
 
     return result;

@@ -19,6 +19,7 @@ class ExpressionPersistenceListener {
   #expressionContextBuilder;
   #expressionEvaluatorService;
   #expressionDispatcher;
+  #expressionEvaluationLogger;
   #entityManager;
   #logger;
   #previousStateCache;
@@ -32,6 +33,7 @@ class ExpressionPersistenceListener {
    * @param {object} deps.expressionContextBuilder - Context builder for expression evaluation.
    * @param {object} deps.expressionEvaluatorService - Evaluator service for expressions.
    * @param {object} deps.expressionDispatcher - Dispatcher for matched expressions.
+   * @param {object} deps.expressionEvaluationLogger - Logger for evaluation entries.
    * @param {object} deps.entityManager - Entity manager lookup.
    * @param {ILogger} deps.logger - Logger instance.
    */
@@ -39,6 +41,7 @@ class ExpressionPersistenceListener {
     expressionContextBuilder,
     expressionEvaluatorService,
     expressionDispatcher,
+    expressionEvaluationLogger,
     entityManager,
     logger,
   }) {
@@ -46,10 +49,13 @@ class ExpressionPersistenceListener {
       requiredMethods: ['buildContext'],
     });
     validateDependency(expressionEvaluatorService, 'IExpressionEvaluatorService', logger, {
-      requiredMethods: ['evaluate'],
+      requiredMethods: ['evaluate', 'evaluateAll'],
     });
     validateDependency(expressionDispatcher, 'IExpressionDispatcher', logger, {
-      requiredMethods: ['dispatch'],
+      requiredMethods: ['dispatch', 'dispatchWithResult'],
+    });
+    validateDependency(expressionEvaluationLogger, 'IExpressionEvaluationLogger', logger, {
+      requiredMethods: ['logEvaluation'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
       requiredMethods: ['getComponentData'],
@@ -59,6 +65,7 @@ class ExpressionPersistenceListener {
     this.#expressionContextBuilder = expressionContextBuilder;
     this.#expressionEvaluatorService = expressionEvaluatorService;
     this.#expressionDispatcher = expressionDispatcher;
+    this.#expressionEvaluationLogger = expressionEvaluationLogger;
     this.#entityManager = entityManager;
     this.#logger = logger;
     this.#previousStateCache = new Map();
@@ -103,7 +110,12 @@ class ExpressionPersistenceListener {
       this.#turnCounter += 1;
 
       try {
-        await this.#processStateChange(actorId, moodUpdate, sexualUpdate);
+        await this.#processStateChange(
+          actorId,
+          moodUpdate,
+          sexualUpdate,
+          event.type
+        );
         this.#expressionEvaluatedThisTurn.add(actorId);
       } catch (err) {
         this.#logger.error(`Expression listener error for actor ${actorId}`, err);
@@ -139,7 +151,12 @@ class ExpressionPersistenceListener {
     this.#turnCounter += 1;
 
     try {
-      await this.#processStateChange(actorId, moodUpdate, sexualUpdate);
+      await this.#processStateChange(
+        actorId,
+        moodUpdate,
+        sexualUpdate,
+        event.type
+      );
     } catch (err) {
       this.#logger.error(`Expression listener error for actor ${actorId}`, err);
     }
@@ -152,8 +169,9 @@ class ExpressionPersistenceListener {
    * @param {string} actorId - Actor identifier.
    * @param {object} moodUpdate - Mood axes update.
    * @param {object} sexualUpdate - Sexual state update.
+   * @param {string} eventType - Triggering event type.
    */
-  async #processStateChange(actorId, moodUpdate, sexualUpdate) {
+  async #processStateChange(actorId, moodUpdate, sexualUpdate, eventType) {
     const moodData = this.#getMoodData(actorId, moodUpdate);
     const sexualStateData = this.#getSexualStateData(actorId, sexualUpdate);
 
@@ -178,27 +196,69 @@ class ExpressionPersistenceListener {
       return;
     }
 
-    const matchedExpression = this.#expressionEvaluatorService.evaluate(context);
+    const matches = this.#expressionEvaluatorService.evaluateAll(context);
+    const selectedExpression = matches[0] || null;
 
-    if (matchedExpression) {
+    let dispatchResult = {
+      attempted: false,
+      success: false,
+      rateLimited: false,
+      reason: 'no_match',
+    };
+
+    if (selectedExpression) {
       this.#logger.info('Expression matched', {
         actorId,
         turnNumber: this.#turnCounter,
-        expressionId: matchedExpression.id ?? 'unknown',
+        expressionId: selectedExpression.id ?? 'unknown',
       });
 
-      await this.#expressionDispatcher.dispatch(
+      dispatchResult = await this.#expressionDispatcher.dispatchWithResult(
         actorId,
-        matchedExpression,
+        selectedExpression,
         this.#turnCounter
       );
     }
+
+    const entry = {
+      timestamp: new Date().toISOString(),
+      actorId,
+      turnNumber: this.#turnCounter,
+      eventType,
+      selected: selectedExpression
+        ? this.#summarizeExpression(selectedExpression)
+        : null,
+      matches: matches.map((expression) =>
+        this.#summarizeExpression(expression)
+      ),
+      dispatch: dispatchResult,
+    };
+
+    await this.#expressionEvaluationLogger.logEvaluation(entry);
 
     this.#previousStateCache.set(actorId, {
       emotions: context.emotions,
       sexualStates: context.sexualStates,
       moodAxes: context.moodAxes,
     });
+  }
+
+  /**
+   * Normalize expression metadata for logging.
+   *
+   * @private
+   * @param {object} expression
+   * @returns {{id: string, priority: number, category: string}}
+   */
+  #summarizeExpression(expression) {
+    const priority = Number.isFinite(expression?.priority)
+      ? expression.priority
+      : 0;
+    return {
+      id: expression?.id ?? 'unknown',
+      priority,
+      category: expression?.category ?? 'unknown',
+    };
   }
 
   /**

@@ -72,6 +72,34 @@ describe('monteCarloSamplingCoverage', () => {
     expect(variable.rating).toBe('partial');
   });
 
+  it('tracks zero-rate metrics for variables and domain summaries', () => {
+    const calculator = createSamplingCoverageCalculator({
+      variables: [
+        {
+          variablePath: 'emotions.joy',
+          domain: 'emotions',
+          min: 0,
+          max: 1,
+        },
+      ],
+      binCount: 4,
+      minSamplesPerBin: 1,
+      tailPercent: 0.1,
+    });
+
+    [0, 0, 0.5, 1].forEach((value) => {
+      calculator.recordObservation('emotions.joy', value);
+    });
+
+    const result = calculator.finalize();
+    const variable = result.variables[0];
+    const summary = result.summaryByDomain[0];
+
+    expect(variable.zeroCount).toBe(2);
+    expect(variable.zeroRate).toBeCloseTo(0.5, 5);
+    expect(summary.zeroRateAvg).toBeCloseTo(0.5, 5);
+  });
+
   it('marks unknown domains and excludes them from summaries', () => {
     const calculator = createSamplingCoverageCalculator({
       variables: [

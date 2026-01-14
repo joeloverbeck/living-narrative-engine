@@ -23,10 +23,21 @@ const createExpressionContextBuilder = () => ({
 
 const createExpressionEvaluatorService = () => ({
   evaluate: jest.fn(),
+  evaluateAll: jest.fn().mockReturnValue([]),
 });
 
 const createExpressionDispatcher = () => ({
   dispatch: jest.fn().mockResolvedValue(true),
+  dispatchWithResult: jest.fn().mockResolvedValue({
+    attempted: true,
+    success: true,
+    rateLimited: false,
+    reason: null,
+  }),
+});
+
+const createExpressionEvaluationLogger = () => ({
+  logEvaluation: jest.fn().mockResolvedValue(true),
 });
 
 const createEntityManager = () => ({
@@ -68,6 +79,7 @@ describe('ExpressionPersistenceListener', () => {
   let expressionContextBuilder;
   let expressionEvaluatorService;
   let expressionDispatcher;
+  let expressionEvaluationLogger;
   let entityManager;
   let logger;
   let listener;
@@ -78,6 +90,7 @@ describe('ExpressionPersistenceListener', () => {
     expressionContextBuilder = createExpressionContextBuilder();
     expressionEvaluatorService = createExpressionEvaluatorService();
     expressionDispatcher = createExpressionDispatcher();
+    expressionEvaluationLogger = createExpressionEvaluationLogger();
     entityManager = createEntityManager();
     logger = createLogger();
 
@@ -85,6 +98,7 @@ describe('ExpressionPersistenceListener', () => {
       expressionContextBuilder,
       expressionEvaluatorService,
       expressionDispatcher,
+      expressionEvaluationLogger,
       entityManager,
       logger,
     });
@@ -97,8 +111,8 @@ describe('ExpressionPersistenceListener', () => {
     });
 
     expect(expressionContextBuilder.buildContext).not.toHaveBeenCalled();
-    expect(expressionEvaluatorService.evaluate).not.toHaveBeenCalled();
-    expect(expressionDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(expressionEvaluatorService.evaluateAll).not.toHaveBeenCalled();
+    expect(expressionDispatcher.dispatchWithResult).not.toHaveBeenCalled();
     expect(listener.getTurnCounter()).toBe(0);
   });
 
@@ -109,8 +123,8 @@ describe('ExpressionPersistenceListener', () => {
     });
 
     expect(expressionContextBuilder.buildContext).not.toHaveBeenCalled();
-    expect(expressionEvaluatorService.evaluate).not.toHaveBeenCalled();
-    expect(expressionDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(expressionEvaluatorService.evaluateAll).not.toHaveBeenCalled();
+    expect(expressionDispatcher.dispatchWithResult).not.toHaveBeenCalled();
     expect(listener.getTurnCounter()).toBe(0);
   });
 
@@ -316,7 +330,7 @@ describe('ExpressionPersistenceListener', () => {
 
     await listener.handleEvent(createEvent({ moodUpdate }));
 
-    expect(expressionEvaluatorService.evaluate).toHaveBeenCalledWith(context);
+    expect(expressionEvaluatorService.evaluateAll).toHaveBeenCalledWith(context);
   });
 
   it('should dispatch matched expression', async () => {
@@ -335,11 +349,11 @@ describe('ExpressionPersistenceListener', () => {
       sexualStates: {},
       moodAxes: {},
     });
-    expressionEvaluatorService.evaluate.mockReturnValue(expression);
+    expressionEvaluatorService.evaluateAll.mockReturnValue([expression]);
 
     await listener.handleEvent(createEvent({ moodUpdate }));
 
-    expect(expressionDispatcher.dispatch).toHaveBeenCalledWith(
+    expect(expressionDispatcher.dispatchWithResult).toHaveBeenCalledWith(
       'actor-1',
       expression,
       1
@@ -349,6 +363,50 @@ describe('ExpressionPersistenceListener', () => {
       turnNumber: 1,
       expressionId: 'expr:one',
     });
+  });
+
+  it('should log evaluation entry with a selected match', async () => {
+    const moodUpdate = { valence: 10 };
+    const expression = { id: 'expr:one', priority: 91, category: 'mood' };
+    expressionContextBuilder.buildContext.mockReturnValue({
+      emotions: {},
+      sexualStates: {},
+      moodAxes: {},
+    });
+    expressionEvaluatorService.evaluateAll.mockReturnValue([expression]);
+    expressionDispatcher.dispatchWithResult.mockResolvedValue({
+      attempted: true,
+      success: true,
+      rateLimited: false,
+      reason: null,
+    });
+
+    await listener.handleEvent(createEvent({ moodUpdate }));
+
+    expect(expressionEvaluationLogger.logEvaluation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: 'actor-1',
+        eventType: ACTION_DECIDED_ID,
+        selected: {
+          id: 'expr:one',
+          priority: 91,
+          category: 'mood',
+        },
+        matches: [
+          {
+            id: 'expr:one',
+            priority: 91,
+            category: 'mood',
+          },
+        ],
+        dispatch: {
+          attempted: true,
+          success: true,
+          rateLimited: false,
+          reason: null,
+        },
+      })
+    );
   });
 
   it('should not dispatch when no expression matches', async () => {
@@ -366,11 +424,38 @@ describe('ExpressionPersistenceListener', () => {
       sexualStates: {},
       moodAxes: {},
     });
-    expressionEvaluatorService.evaluate.mockReturnValue(null);
+    expressionEvaluatorService.evaluateAll.mockReturnValue([]);
 
     await listener.handleEvent(createEvent({ moodUpdate }));
 
-    expect(expressionDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(expressionDispatcher.dispatchWithResult).not.toHaveBeenCalled();
+  });
+
+  it('should log evaluation entry when no expressions match', async () => {
+    const moodUpdate = { valence: 10 };
+    expressionContextBuilder.buildContext.mockReturnValue({
+      emotions: {},
+      sexualStates: {},
+      moodAxes: {},
+    });
+    expressionEvaluatorService.evaluateAll.mockReturnValue([]);
+
+    await listener.handleEvent(createEvent({ moodUpdate }));
+
+    expect(expressionEvaluationLogger.logEvaluation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: 'actor-1',
+        eventType: ACTION_DECIDED_ID,
+        selected: null,
+        matches: [],
+        dispatch: {
+          attempted: false,
+          success: false,
+          rateLimited: false,
+          reason: 'no_match',
+        },
+      })
+    );
   });
 
   it('should increment turn counter on each event with mood/sexual updates', async () => {
@@ -469,8 +554,8 @@ describe('ExpressionPersistenceListener', () => {
     );
 
     expect(expressionContextBuilder.buildContext).not.toHaveBeenCalled();
-    expect(expressionEvaluatorService.evaluate).not.toHaveBeenCalled();
-    expect(expressionDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(expressionEvaluatorService.evaluateAll).not.toHaveBeenCalled();
+    expect(expressionDispatcher.dispatchWithResult).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalled();
   });
 
@@ -503,10 +588,23 @@ describe('ExpressionPersistenceListener', () => {
           expressionContextBuilder,
           expressionEvaluatorService,
           expressionDispatcher: null,
+          expressionEvaluationLogger,
           entityManager,
           logger,
         })
     ).toThrow('Missing required dependency: IExpressionDispatcher.');
+
+    expect(
+      () =>
+        new ExpressionPersistenceListener({
+          expressionContextBuilder,
+          expressionEvaluatorService,
+          expressionDispatcher,
+          expressionEvaluationLogger: null,
+          entityManager,
+          logger,
+        })
+    ).toThrow('Missing required dependency: IExpressionEvaluationLogger.');
   });
 
   it('should clear cache with clearCache method', async () => {

@@ -77,7 +77,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -85,7 +85,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -102,7 +102,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -152,5 +152,6 @@
         "auditory": "A long exhale slips out of {actor}, followed by a softer voice—fewer clipped edges, more space between words, like they’re no longer double-checking every sound.",
         "tactile": "The tension around {actor} changes—less rigid, less guarded. It feels like a door left unlatched: not thrown open, just no longer held shut.",
         "limited": "{actor} relaxes in a way that looks like a choice, letting their guard fall without the jitter of fear."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

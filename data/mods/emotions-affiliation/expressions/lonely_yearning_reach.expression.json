@@ -113,5 +113,6 @@
         "auditory": "Their voice goes a touch quieter and thinner, words arriving with small pauses like they're weighing whether to say more. A soft exhale slips out between phrases, almost like a held-back sigh.",
         "tactile": "There’s a restless, careful motion—fingers rubbing a thumb, a hand hovering near a phone or sleeve, shoulders drawing in and then easing as if trying to be held without anyone there.",
         "limited": "{actor} looks caught on something internal—gentle, aching, and quietly reaching."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

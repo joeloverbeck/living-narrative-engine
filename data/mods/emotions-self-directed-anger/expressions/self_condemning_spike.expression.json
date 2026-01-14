@@ -1,0 +1,181 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-self-directed-anger:self_condemning_spike",
+    "description": "Self-directed anger\u2014the heat of frustration turns inward and becomes condemnation. The mind stops arguing with the world and starts prosecuting the self, with a harsh, punishing clarity that feels hard to interrupt.",
+    "category": "shame",
+    "actor_description": "The anger doesn\u2019t have anywhere to go, so it turns on me. My thoughts sharpen into accusations\u2014too fast, too late, too stupid\u2014like a judge already sure of the verdict. Heat crawls up my neck and my jaw locks, but underneath it is that sinking certainty: I\u2019m the problem and I can\u2019t get out of it. I want to hit something, and the only available target is me.",
+    "description_text": "{actor} goes tense and self-contained\u2014jaw tight, gaze dropping or going unfocused as if turning inward. Their expression hardens into something punishing, and their movements get clipped, like they\u2019re restraining an impulse they don\u2019t want anyone to see.",
+    "priority": 77,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anger"
+                                    },
+                                    0.60
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.frustration"
+                                    },
+                                    0.65
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.shame"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.guilt"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.triumph"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.confidence"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.remorse"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.self_evaluation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.self_evaluation"
+                                            }
+                                        ]
+                                    },
+                                    -12
+                                ]
+                            },
+                            {
+                                "or": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.anger"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.anger"
+                                                    }
+                                                ]
+                                            },
+                                            0.12
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.frustration"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.frustration"
+                                                    }
+                                                ]
+                                            },
+                                            0.12
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires anger/frustration paired with shame/guilt and strongly negative self_evaluation, with reduced agency and at least moderately elevated arousal. Caps outward-hostile (contempt/hatred) and triumphant/confident tones. Also caps high remorse so the beat stays punishing/prosecutorial rather than shifting into repair. Triggers only on the turn-inward step: self_evaluation drops sharply while anger/frustration rises."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a tight, controlled breath\u2014an exhale pressed through teeth\u2014like someone is swallowing words that would come out too sharp.",
+        "tactile": "The air feels charged around them; their body holds rigid, as if bracing against an impact that\u2019s coming from the inside.",
+        "limited": "Something in {actor} tightens and turns inward, their expression sharpening into self-judgment."
+    },
+    "diagnosticStatus": "unknown"
+}

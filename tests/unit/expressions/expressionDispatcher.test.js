@@ -104,6 +104,22 @@ describe('ExpressionDispatcher', () => {
     expect(Number.isNaN(Date.parse(payload.timestamp))).toBe(false);
   });
 
+  it('should return structured result from dispatchWithResult on success', async () => {
+    const { dispatcher, eventBus, entityManager } = createDispatcher();
+    entityManager.getComponentData = createComponentDataLookup();
+
+    const expression = createExpression();
+    const result = await dispatcher.dispatchWithResult('actor-1', expression, 1);
+
+    expect(result).toMatchObject({
+      attempted: true,
+      success: true,
+      rateLimited: false,
+      reason: null,
+    });
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+  });
+
   it('should replace {actor} placeholder with actor name', async () => {
     const { dispatcher, eventBus, entityManager } = createDispatcher();
     entityManager.getComponentData = createComponentDataLookup({
@@ -177,6 +193,23 @@ describe('ExpressionDispatcher', () => {
     expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
   });
 
+  it('should return rate-limited result from dispatchWithResult', async () => {
+    const { dispatcher, eventBus, entityManager } = createDispatcher();
+    entityManager.getComponentData = createComponentDataLookup();
+
+    const expression = createExpression();
+    await dispatcher.dispatchWithResult('actor-1', expression, 1);
+    const result = await dispatcher.dispatchWithResult('actor-2', expression, 1);
+
+    expect(result).toMatchObject({
+      attempted: false,
+      success: false,
+      rateLimited: true,
+      reason: 'rate_limited',
+    });
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+  });
+
   it('should return false when actor has no location', async () => {
     const { dispatcher, eventBus, entityManager, logger } = createDispatcher();
     entityManager.getComponentData = createComponentDataLookup({
@@ -187,6 +220,25 @@ describe('ExpressionDispatcher', () => {
     const result = await dispatcher.dispatch('actor-1', expression, 1);
 
     expect(result).toBe(false);
+    expect(eventBus.dispatch).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('should return missing-location result from dispatchWithResult', async () => {
+    const { dispatcher, eventBus, entityManager, logger } = createDispatcher();
+    entityManager.getComponentData = createComponentDataLookup({
+      locationId: null,
+    });
+
+    const expression = createExpression();
+    const result = await dispatcher.dispatchWithResult('actor-1', expression, 1);
+
+    expect(result).toMatchObject({
+      attempted: false,
+      success: false,
+      rateLimited: false,
+      reason: 'missing_location',
+    });
     expect(eventBus.dispatch).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalled();
   });
@@ -219,6 +271,27 @@ describe('ExpressionDispatcher', () => {
     const result = await dispatcher.dispatch('actor-1', expression, 1);
 
     expect(result).toBe(false);
+    expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalled();
+  });
+
+  it('should return error result from dispatchWithResult on failure', async () => {
+    const { dispatcher, eventBus, entityManager, logger } = createDispatcher({
+      eventBusOverrides: {
+        dispatch: jest.fn().mockRejectedValue(new Error('boom')),
+      },
+    });
+    entityManager.getComponentData = createComponentDataLookup();
+
+    const expression = createExpression();
+    const result = await dispatcher.dispatchWithResult('actor-1', expression, 1);
+
+    expect(result).toMatchObject({
+      attempted: true,
+      success: false,
+      rateLimited: false,
+      reason: 'dispatch_error',
+    });
     expect(eventBus.dispatch).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalled();
   });

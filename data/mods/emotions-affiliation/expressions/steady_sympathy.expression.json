@@ -104,7 +104,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -133,5 +133,6 @@
         "auditory": "I hear a calm, steady tone—few interruptions, more listening than talking. When words come, they land soft and deliberate, like someone choosing care over urgency.",
         "tactile": "The air feels less jagged around them—no jittery energy, no collapse. There’s a quiet steadiness you can almost lean on, like warmth held at a safe distance.",
         "limited": "{actor} looks quietly concerned but composed, attention fixed and gentle rather than overwhelmed."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

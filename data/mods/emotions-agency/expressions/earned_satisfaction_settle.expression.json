@@ -13,24 +13,56 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.contentment"
+                                "var": "emotions.small_victory"
                             },
                             0.55
                         ]
                     },
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "-": [
+                                "and": [
                                     {
-                                        "var": "emotions.contentment"
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.small_victory"
+                                            },
+                                            0.45
+                                        ]
                                     },
                                     {
-                                        "var": "previousEmotions.contentment"
+                                        ">=": [
+                                            {
+                                                "var": "emotions.small_victory"
+                                            },
+                                            0.55
+                                        ]
                                     }
                                 ]
                             },
-                            0.10
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.small_victory"
+                                            },
+                                            {
+                                                "var": "previousEmotions.small_victory"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.contentment"
+                            },
+                            0.35
                         ]
                     },
                     {
@@ -42,6 +74,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "moodAxes.threat"
@@ -50,23 +90,27 @@
                         ]
                     },
                     {
-                        "or": [
+                        "<=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "emotions.pride"
-                                    },
-                                    0.25
-                                ]
+                                "var": "moodAxes.arousal"
                             },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "emotions.confidence"
-                                    },
-                                    0.35
-                                ]
-                            }
+                                "var": "moodAxes.engagement"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
                         ]
                     },
                     {
@@ -116,33 +160,26 @@
                             {
                                 "var": "emotions.euphoria"
                             },
-                            0.30
+                            0.35
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.relief"
+                                "var": "emotions.enthusiasm"
                             },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.stress"
-                            },
-                            0.45
+                            0.6
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a noticeable rise into contentment plus a competence signature (agency_control and mild pride/confidence) while threat stays low. Triggers only when arousal or engagement drops sharply (the ‘task finished’ downshift). Blocks big-win states (triumph/euphoria) and keeps relief/stress from dominating so it reads like earned closure, not danger passing or white-knuckle effort."
+            "failure_message": "Requires a clear rise into small_victory (crossing or delta) plus a settled, post-effort downshift: threat low, agency/self-evaluation positive, arousal low and engagement moderated (with a noticeable drop from the previous step). Keeps contentment present so it reads as earned closure, and caps triumph/euphoria/enthusiasm so it doesn’t turn into celebration."
         }
     ],
     "alternate_descriptions": {
         "auditory": "I hear a long, unforced exhale—maybe a soft, satisfied hum or a quiet \"mm\" that sounds like putting a final period on a sentence.",
         "tactile": "The tension in the room changes: hands unclench, shoulders drop, and movement gets looser—as if the body just set something heavy down.",
         "limited": "My pace slows. I look steadier, less driven, like whatever I was holding in my head has finally been put away."
-    }
+    },
+    "diagnosticStatus": "impossible"
 }

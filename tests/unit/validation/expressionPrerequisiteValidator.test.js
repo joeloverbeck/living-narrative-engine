@@ -99,6 +99,57 @@ describe('ExpressionPrerequisiteValidator', () => {
     );
   });
 
+  it('flags unknown mood axes keys', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'emotions:bad_mood_axis',
+      prerequisites: [
+        { logic: { '>=': [{ var: 'moodAxes.affective_empathy' }, 50] } },
+      ],
+    };
+
+    const result = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/bad_mood_axis.expression.json',
+      validKeysByRoot,
+    });
+
+    expect(result.violations.some((v) => v.issueType === 'unknown_var_key')).toBe(
+      true
+    );
+  });
+
+  it('allows affectTraits roots and validates their keys', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'emotions:affect_traits_gate',
+      prerequisites: [
+        { logic: { '>=': [{ var: 'affectTraits.affective_empathy' }, 55] } },
+        { logic: { '>=': [{ var: 'affectTraits.unknown_trait' }, 10] } },
+      ],
+    };
+
+    const result = validator.validateExpression(expression, {
+      modId: 'emotions',
+      source: 'expressions/affect_traits_gate.expression.json',
+      validKeysByRoot: {
+        ...validKeysByRoot,
+        affectTraits: new Set(['affective_empathy', 'cognitive_empathy']),
+      },
+    });
+
+    expect(result.violations.some((v) => v.issueType === 'invalid_var_root')).toBe(
+      false
+    );
+    expect(result.violations.some((v) => v.issueType === 'unknown_var_key')).toBe(
+      true
+    );
+  });
+
   it('flags range mismatches for known roots', () => {
     const validator = new ExpressionPrerequisiteValidator({
       allowedOperations,

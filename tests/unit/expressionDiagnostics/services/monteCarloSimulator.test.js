@@ -191,6 +191,40 @@ describe('MonteCarloSimulator', () => {
       });
     });
 
+    it('yields to the event loop before processing samples', async () => {
+      const originalRequestIdleCallback = globalThis.requestIdleCallback;
+      globalThis.requestIdleCallback = undefined;
+      jest.useFakeTimers();
+
+      try {
+        const expression = {
+          id: 'test:yield',
+          prerequisites: [],
+        };
+
+        let resolved = false;
+        const promise = simulator.simulate(expression, { sampleCount: 1 });
+        promise.then(() => {
+          resolved = true;
+        });
+
+        await Promise.resolve();
+        expect(resolved).toBe(false);
+
+        jest.runAllTimers();
+        await Promise.resolve();
+        await promise;
+        expect(resolved).toBe(true);
+      } finally {
+        jest.useRealTimers();
+        if (originalRequestIdleCallback) {
+          globalThis.requestIdleCallback = originalRequestIdleCallback;
+        } else {
+          delete globalThis.requestIdleCallback;
+        }
+      }
+    });
+
     describe('Basic return values', () => {
       it('should return triggerRate in [0, 1] range', async () => {
         const expression = {
@@ -244,6 +278,9 @@ describe('MonteCarloSimulator', () => {
         const localAdapter = {
           calculateEmotions: jest.fn(() => ({})),
           calculateEmotionsFiltered: jest.fn(() => ({})),
+          calculateEmotionTraces: jest.fn(() => ({})),
+          calculateEmotionTracesFiltered: jest.fn(() => ({})),
+          calculateSexualStateTraces: jest.fn(() => ({})),
           calculateSexualArousal: jest.fn(() => 0),
           calculateSexualStates: jest.fn(() => ({})),
         };
@@ -283,6 +320,9 @@ describe('MonteCarloSimulator', () => {
         const localAdapter = {
           calculateEmotions: jest.fn(() => ({})),
           calculateEmotionsFiltered: jest.fn(() => ({})),
+          calculateEmotionTraces: jest.fn(() => ({})),
+          calculateEmotionTracesFiltered: jest.fn(() => ({})),
+          calculateSexualStateTraces: jest.fn(() => ({})),
           calculateSexualArousal: jest.fn(() => 0),
           calculateSexualStates: jest.fn(() => ({})),
         };

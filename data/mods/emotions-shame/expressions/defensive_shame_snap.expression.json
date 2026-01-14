@@ -1,0 +1,126 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-shame:defensive_shame_snap",
+    "description": "Shame turns outward for cover\u2014an abrupt, protective bite meant to stop attention from landing. The hostility is reactive and close to the skin: less cruelty than a reflexive 'back off' when being seen feels dangerous.",
+    "category": "anger",
+    "priority": 77,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.anger"
+                                    },
+                                    {
+                                        "var": "previousEmotions.anger"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "previousEmotions.shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.remorse"
+                            },
+                            0.30
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires shame already elevated, then a noticeable anger spike (not just baseline irritability). Grounds it in negative self-evaluation plus elevated threat/arousal (social heat). Caps contempt/hatred so it stays defensive rather than coldly degrading, and caps agency so it doesn’t read as swaggering dominance. Also caps remorse so a strongly harm-aware state doesn’t unrealistically present as a snapping cover response."
+        }
+    ],
+    "actor_description": "Heat crawls up my neck and I can feel myself shrinking inside my own skin\u2014like I'm being pinned by attention. Then the next thing out of me is sharp: a snap meant to make the moment back up. It\u2019s not courage; it\u2019s cover. I\u2019m trying to stop the looking before it gets under me.",
+    "description_text": "{actor}'s posture tightens as if bracing, then they lash out with a quick, cutting remark. Their eyes go hard for a beat\u2014less cruel than protective, like they're trying to shove attention away from a sore spot.",
+    "alternate_descriptions": {
+        "auditory": "The voice comes out clipped and louder than necessary\u2014edges in the consonants, a defensive bite that lands before a softer tone can catch up.",
+        "tactile": "The air around them feels suddenly prickly, like they\u2019ve thrown up invisible elbows; their movements get stiff, fast, and a little too forceful."
+    },
+    "diagnosticStatus": "unknown"
+}

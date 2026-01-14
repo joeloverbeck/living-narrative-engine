@@ -100,6 +100,30 @@ describe('buildSamplingCoverageConclusions', () => {
     expect(conclusions.variableSummary[0].text).toContain('truncated range');
   });
 
+  it('flags normalized domains as skewed/zero-inflated and suppresses healthy coverage labels', () => {
+    const samplingCoverage = {
+      summaryByDomain: [
+        {
+          domain: 'emotions',
+          variableCount: 3,
+          rangeCoverageAvg: 0.95,
+          binCoverageAvg: 0.95,
+          tailCoverageAvg: { low: 0.1, high: 0.1 },
+          zeroRateAvg: 0.85,
+          rating: 'good',
+        },
+      ],
+      variables: [],
+      config: { tailPercent: 0.1 },
+    };
+
+    const conclusions = buildSamplingCoverageConclusions(samplingCoverage);
+    const texts = conclusions.domainConclusions.map((entry) => entry.text);
+
+    expect(texts.some((text) => text.includes('skewed/zero-inflated'))).toBe(true);
+    expect(texts.some((text) => text.includes('coverage looks healthy'))).toBe(false);
+  });
+
   it('emits global implications and watchlist minima when requested', () => {
     const samplingCoverage = {
       summaryByDomain: [

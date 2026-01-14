@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-regulation:purposeful_grounding",
-    "description": "Active self-regulation: deliberate grounding that eases anxiety into steadier composure. Attention narrows to what’s controllable; the body downshifts from alert tension without collapsing into numbness.",
+    "description": "Active self-regulation: deliberate grounding that eases anxiety into steadier composure. Attention narrows to what\u2019s controllable; the body downshifts from alert tension without collapsing into numbness.",
     "category": "calm",
-    "actor_description": "I catch myself starting to spin and choose to intervene. I slow my breathing on purpose, loosen the tight places, and bring my focus back to something simple and real. The edge doesn’t vanish, but it stops steering me; I can feel my control returning in small, steady increments.",
-    "description_text": "{actor} visibly reins themself in—breath lengthening, shoulders lowering, movements becoming more deliberate. Their gaze steadies, as if they’ve found a foothold and are using it.",
+    "actor_description": "I catch myself starting to spin and choose to intervene. I slow my breathing on purpose, loosen the tight places, and bring my focus back to something simple and real. The edge doesn\u2019t vanish, but it stops steering me; I can feel my control returning in small, steady increments.",
+    "description_text": "{actor} visibly reins themself in\u2014breath lengthening, shoulders lowering, movements becoming more deliberate. Their gaze steadies, as if they\u2019ve found a foothold and are using it.",
     "priority": 68,
     "prerequisites": [
         {
@@ -192,8 +192,9 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a slow, intentional exhale—breathing that sounds counted rather than stolen. Their voice, if it comes, lands steadier and less rushed.",
+        "auditory": "I hear a slow, intentional exhale\u2014breathing that sounds counted rather than stolen. Their voice, if it comes, lands steadier and less rushed.",
         "tactile": "The jitter in the space fades: less fidgeting, less twitchy movement. It feels like tension draining out of the shoulders and hands, replaced by controlled stillness.",
         "limited": "{actor} takes a deliberate breath and steadies themself, tension easing into a more controlled posture."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

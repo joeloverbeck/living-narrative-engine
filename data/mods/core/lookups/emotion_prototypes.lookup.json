@@ -279,19 +279,55 @@
         "agency_control >= 0.10"
       ]
     },
-    "entrancement": {
+    "entranced": {
       "weights": {
         "engagement": 1.0,
-        "arousal": 0.45,
-        "agency_control": -0.55,
-        "threat": -0.45,
-        "valence": 0.25,
-        "future_expectancy": 0.10
+        "agency_control": -0.85,
+        "threat": -0.50,
+        "arousal": -0.20,
+        "valence": 0.15,
+        "future_expectancy": 0.05
       },
       "gates": [
         "engagement >= 0.45",
-        "arousal >= 0.10",
-        "arousal <= 0.60",
+        "agency_control <= 0.05",
+        "threat <= 0.35",
+        "arousal <= 0.45",
+        "arousal >= -0.15",
+        "valence >= -0.10"
+      ]
+    },
+    "transfixed": {
+      "weights": {
+        "engagement": 1.0,
+        "arousal": 0.85,
+        "agency_control": -0.45,
+        "threat": -0.25,
+        "valence": 0.10,
+        "future_expectancy": 0.05
+      },
+      "gates": [
+        "engagement >= 0.45",
+        "arousal >= 0.25",
+        "arousal <= 0.95",
+        "threat <= 0.45",
+        "agency_control <= 0.30",
+        "valence >= -0.20"
+      ]
+    },
+    "quiet_absorption": {
+      "weights": {
+        "engagement": 1.0,
+        "arousal": -0.45,
+        "agency_control": -0.60,
+        "threat": -0.45,
+        "valence": 0.20,
+        "future_expectancy": 0.05
+      },
+      "gates": [
+        "engagement >= 0.35",
+        "arousal <= 0.35",
+        "arousal >= -0.40",
         "threat <= 0.35",
         "agency_control <= 0.10",
         "valence >= -0.10"
@@ -525,9 +561,7 @@
       "gates": [
         "arousal >= 0.20",
         "engagement >= 0.15",
-        "agency_control <= 0.10",
         "threat >= 0.10",
-        "threat <= 0.45",
         "valence <= 0.10"
       ]
     },
@@ -835,6 +869,24 @@
         "self_evaluation >= 0.25"
       ]
     },
+    "small_victory": {
+      "weights": {
+        "self_evaluation": 0.70,
+        "agency_control": 0.65,
+        "valence": 0.55,
+        "engagement": 0.45,
+        "arousal": 0.20,
+        "future_expectancy": 0.15,
+        "threat": -0.10
+      },
+      "gates": [
+        "valence >= 0.15",
+        "agency_control >= 0.15",
+        "self_evaluation >= 0.10",
+        "engagement >= 0.10",
+        "arousal >= -0.20"
+      ]
+    },
     "triumph": {
       "weights": {
         "valence": 0.80,
@@ -847,9 +899,8 @@
       },
       "gates": [
         "valence >= 0.35",
-        "arousal >= 0.40",
-        "agency_control >= 0.35",
-        "self_evaluation >= 0.25"
+        "arousal >= 0.35",
+        "agency_control >= 0.30"
       ]
     },
     "shame": {
@@ -908,6 +959,26 @@
         "valence <= -0.10",
         "affective_empathy >= 0.15",
         "cognitive_empathy >= 0.10"
+      ]
+    },
+    "remorse": {
+      "weights": {
+        "valence": -0.30,
+        "self_evaluation": -0.25,
+        "agency_control": -0.10,
+        "engagement": 0.35,
+        "affiliation": 0.25,
+        "threat": 0.10,
+        "affective_empathy": 0.55,
+        "cognitive_empathy": 0.35,
+        "harm_aversion": 0.70
+      },
+      "gates": [
+        "harm_aversion >= 0.20",
+        "affective_empathy >= 0.15",
+        "cognitive_empathy >= 0.10",
+        "self_evaluation <= 0.55",
+        "valence <= 0.55"
       ]
     },
     "regret": {
@@ -1041,14 +1112,15 @@
     },
     "gratitude": {
       "weights": {
-        "valence": 0.8,
-        "threat": -0.3,
-        "self_evaluation": 0.2,
-        "agency_control": 0.1,
-        "affiliation": 0.3
+        "valence": 0.85,
+        "affiliation": 0.45,
+        "threat": -0.35,
+        "self_evaluation": -0.10,
+        "agency_control": -0.05
       },
       "gates": [
-        "valence >= 0.20"
+        "valence >= 0.15",
+        "threat <= 0.60"
       ]
     },
     "affection": {

@@ -11,6 +11,8 @@ import ExpressionContextBuilder from '../../expressions/expressionContextBuilder
 import ExpressionEvaluatorService from '../../expressions/expressionEvaluatorService.js';
 import ExpressionDispatcher from '../../expressions/expressionDispatcher.js';
 import ExpressionPersistenceListener from '../../expressions/expressionPersistenceListener.js';
+import ExpressionEvaluationLogger from '../../expressions/expressionEvaluationLogger.js';
+import { getEndpointConfig } from '../../config/endpointConfig.js';
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -57,11 +59,21 @@ export function registerExpressionServices(container) {
     });
   });
 
+  registrar.singletonFactory(tokens.IExpressionEvaluationLogger, (c) => {
+    return new ExpressionEvaluationLogger({
+      endpointConfig: getEndpointConfig(),
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+
   registrar.singletonFactory(tokens.IExpressionPersistenceListener, (c) => {
     return new ExpressionPersistenceListener({
       expressionContextBuilder: c.resolve(tokens.IExpressionContextBuilder),
       expressionEvaluatorService: c.resolve(tokens.IExpressionEvaluatorService),
       expressionDispatcher: c.resolve(tokens.IExpressionDispatcher),
+      expressionEvaluationLogger: c.resolve(
+        tokens.IExpressionEvaluationLogger
+      ),
       entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
     });

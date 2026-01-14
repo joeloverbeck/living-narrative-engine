@@ -12,6 +12,9 @@ const createLogger = () => ({
 const createEmotionCalculatorService = () => ({
   calculateEmotions: jest.fn(),
   calculateEmotionsFiltered: jest.fn(),
+  calculateEmotionTraces: jest.fn(),
+  calculateEmotionTracesFiltered: jest.fn(),
+  calculateSexualStateTraces: jest.fn(),
   calculateSexualArousal: jest.fn(),
   calculateSexualStates: jest.fn(),
 });
@@ -151,6 +154,106 @@ describe('EmotionCalculatorAdapter', () => {
       sexualState
     );
     expect(output).toEqual({ sexual_lust: 0.2 });
+  });
+
+  it('delegates calculateEmotionTracesFiltered and converts Map output', () => {
+    const emotionCalculatorService = createEmotionCalculatorService();
+    const logger = createLogger();
+    const adapter = new EmotionCalculatorAdapter({
+      emotionCalculatorService,
+      logger,
+    });
+
+    const mood = { valence: 50, arousal: -25 };
+    const sexualState = { sex_excitation: 10 };
+    const affectTraits = { affective_empathy: 75 };
+    const emotionFilter = new Set(['joy', 'fear']);
+    const results = new Map([['joy', { raw: 0.1, gated: 0, final: 0, gatePass: false }]]);
+    emotionCalculatorService.calculateEmotionTracesFiltered.mockReturnValue(results);
+
+    const output = adapter.calculateEmotionTracesFiltered(
+      mood,
+      sexualState,
+      affectTraits,
+      emotionFilter
+    );
+
+    expect(
+      emotionCalculatorService.calculateEmotionTracesFiltered
+    ).toHaveBeenCalledWith(
+      mood,
+      null,
+      sexualState,
+      affectTraits,
+      emotionFilter
+    );
+    expect(output).toEqual({
+      joy: { raw: 0.1, gated: 0, final: 0, gatePass: false },
+    });
+  });
+
+  it('falls back to calculateEmotionTraces when no filter is provided', () => {
+    const emotionCalculatorService = createEmotionCalculatorService();
+    const logger = createLogger();
+    const adapter = new EmotionCalculatorAdapter({
+      emotionCalculatorService,
+      logger,
+    });
+
+    const mood = { valence: 50, arousal: -25 };
+    const sexualState = { sex_excitation: 10 };
+    const affectTraits = { affective_empathy: 75 };
+    const results = new Map([['joy', { raw: 0.2, gated: 0.2, final: 0.2, gatePass: true }]]);
+    emotionCalculatorService.calculateEmotionTraces.mockReturnValue(results);
+
+    const output = adapter.calculateEmotionTracesFiltered(
+      mood,
+      sexualState,
+      affectTraits,
+      null
+    );
+
+    expect(emotionCalculatorService.calculateEmotionTraces).toHaveBeenCalledWith(
+      mood,
+      null,
+      sexualState,
+      affectTraits
+    );
+    expect(output).toEqual({
+      joy: { raw: 0.2, gated: 0.2, final: 0.2, gatePass: true },
+    });
+  });
+
+  it('delegates calculateSexualStateTraces and converts Map output', () => {
+    const emotionCalculatorService = createEmotionCalculatorService();
+    const logger = createLogger();
+    const adapter = new EmotionCalculatorAdapter({
+      emotionCalculatorService,
+      logger,
+    });
+
+    const mood = { valence: 20 };
+    const sexualState = { sex_excitation: 10 };
+    const sexualArousal = 0.4;
+    const results = new Map([
+      ['sexual_lust', { raw: 0.3, gated: 0.3, final: 0.3, gatePass: true }],
+    ]);
+    emotionCalculatorService.calculateSexualStateTraces.mockReturnValue(results);
+
+    const output = adapter.calculateSexualStateTraces(
+      mood,
+      sexualState,
+      sexualArousal
+    );
+
+    expect(emotionCalculatorService.calculateSexualStateTraces).toHaveBeenCalledWith(
+      mood,
+      sexualArousal,
+      sexualState
+    );
+    expect(output).toEqual({
+      sexual_lust: { raw: 0.3, gated: 0.3, final: 0.3, gatePass: true },
+    });
   });
 
   it('validates required dependencies', () => {

@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-guilt:halting_apology_blurt",
-    "description": "A halting apology / confession blurt—guilt pushes outward into speech before it can be fully rehearsed. The impulse is repair: owning it aloud, trying to lessen harm, trying to be understood.",
+    "description": "A halting apology / confession blurt\u2014guilt pushes outward into speech before it can be fully rehearsed. The impulse is repair: owning it aloud, trying to lessen harm, trying to be understood.",
     "category": "shame",
-    "actor_description": "I can't keep it inside anymore; the words push out rough and unfinished. My stomach drops as I say it, like I'm stepping off a ledge on purpose. I try to own it cleanly, but my voice keeps catching—half apology, half confession, all urgency to make it right.",
-    "description_text": "{actor} blurts an apology with uneven phrasing, as if the admission outruns their preparation. Their gaze flickers, shoulders tight, but they keep leaning back into the words—owning it even while they stumble through it.",
+    "actor_description": "I can't keep it inside anymore; the words push out rough and unfinished. My stomach drops as I say it, like I'm stepping off a ledge on purpose. I try to own it cleanly, but my voice keeps catching\u2014half apology, half confession, all urgency to make it right.",
+    "description_text": "{actor} blurts an apology with uneven phrasing, as if the admission outruns their preparation. Their gaze flickers, shoulders tight, but they keep leaning back into the words\u2014owning it even while they stumble through it.",
     "priority": 76,
     "prerequisites": [
         {
@@ -13,9 +13,17 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.remorse"
+                            },
+                            0.52
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "emotions.guilt"
                             },
-                            0.55
+                            0.45
                         ]
                     },
                     {
@@ -81,6 +89,41 @@
                                     {
                                         "-": [
                                             {
+                                                "var": "emotions.remorse"
+                                            },
+                                            {
+                                                "var": "previousEmotions.remorse"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.remorse"
+                                            },
+                                            0.52
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.remorse"
+                                            },
+                                            0.52
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
                                                 "var": "emotions.guilt"
                                             },
                                             {
@@ -115,12 +158,13 @@
                     }
                 ]
             },
-            "failure_message": "Requires guilt strong enough to drive repair, plus mild social anxiety. Grounds in lowered self-evaluation while affiliation stays positive (still caring about connection). Caps shame so it’s not identity-collapse, and caps threat/panic/dissociation so it stays a halting apology rather than panic-flight or shutdown. Triggers only on a guilt spike or crossing to prevent spam."
+            "failure_message": "Requires remorse strong enough to drive repair (with guilt still meaningfully present), plus mild social anxiety. Grounds in lowered self-evaluation while affiliation stays positive (still caring about connection). Caps shame so it’s not identity-collapse, and caps threat/panic/dissociation so it stays a halting apology rather than panic-flight or shutdown. Triggers only on a remorse/guilt spike or crossing to prevent spam."
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a rushed, uneven apology—words tripping over each other, a swallow in the middle, the last syllables coming out smaller than the first.",
-        "tactile": "The air feels tight with held breath and restless hands—fingers worrying at fabric, shoulders locked, posture trying to stay forward while the body wants to shrink.",
-        "limited": "An awkward, earnest apology breaks out—messy but unmistakably meant."
-    }
+        "auditory": "I hear a rushed, uneven apology\u2014words tripping over each other, a swallow in the middle, the last syllables coming out smaller than the first.",
+        "tactile": "The air feels tight with held breath and restless hands\u2014fingers worrying at fabric, shoulders locked, posture trying to stay forward while the body wants to shrink.",
+        "limited": "An awkward, earnest apology breaks out\u2014messy but unmistakably meant."
+    },
+    "diagnosticStatus": "unknown"
 }

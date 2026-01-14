@@ -112,10 +112,10 @@
       "failure_message": "Requires a noticeable startle rise (via surprise_startle spike or a sudden arousal/threat jump) with at least mild negative appraisal (alarm/fear or mild threat). Excludes high panic/freeze so a brief flinch doesn't mislabel a larger spiral or immobility response."
     }
   ],
-  "actor_description": "My body jumps before my mind catches up-sharp inhale, shoulders snapping up, hands rising like a shield. For a beat my heart is a fist in my chest and I'm already halfway into defend / run. Then the world resolves and I'm left standing in the echo of the reflex, embarrassed at how fast it took me.",
-  "description_text": "{actor} flinches hard-shoulders jerking up, hands flashing into a guard, eyes wide as they snap toward the source. The reaction is instant and involuntary, like a wire got yanked.",
+  "actor_description": "My body jolts before I can think—sharp inhale yanked through my teeth, shoulders wrenching up, hands snapping to cover or block. My heart slams once, twice, a hammer behind my ribs, and every muscle coils tight. Then it's over. The world clicks back into focus and I'm standing there, adrenaline fizzing under my skin, caught in the aftershock of a reaction I never chose to make.",
+  "description_text": "{actor} jolts violently—shoulders wrenching upward, arms jerking in to protect their core, head snapping toward the source. Their eyes go wide and their breath catches audibly. The whole reaction is a single convulsive movement, raw reflex with no conscious thought behind it.",
   "alternate_descriptions": {
-    "auditory": "I hear a sharp gasp-then a quick scuff or stumble, something bumped or grabbed too fast."
+    "auditory": "A sharp, involuntary gasp cuts the air—then a sudden scrape or shuffle of feet jerking position, maybe the thud of a hand hitting wall or furniture. Quick, tactile sounds of a body moving without permission."
   },
   "category": "threat",
   "diagnosticStatus": "unknown"

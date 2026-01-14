@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-moral-injury",
+  "version": "1.0.0",
+  "name": "Emotions - Moral Injury",
+  "description": "Moral injury expressions blending guilt, disgust, and hopeless self-condemnation.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "moral_injury_corrode.expression.json"
+    ]
+  }
+}

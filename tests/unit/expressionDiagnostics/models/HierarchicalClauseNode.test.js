@@ -295,6 +295,8 @@ describe('HierarchicalClauseNode', () => {
 
       expect(json).toEqual({
         id: '0',
+        clauseId: null,
+        clauseType: null,
         nodeType: 'leaf',
         description: 'emotions.joy >= 0.5',
         failureCount: 1,
@@ -354,6 +356,9 @@ describe('HierarchicalClauseNode', () => {
         gatePassAndClausePassInRegimeCount: null,
         gatePassAndClauseFailInRegimeCount: null,
         passRateGivenGateInRegime: null,
+        rawPassInRegimeCount: null,
+        lostPassInRegimeCount: null,
+        lostPassRateInRegime: null,
         redundantInRegime: null,
         tuningDirection: null,
         children: [],
@@ -547,6 +552,38 @@ describe('HierarchicalClauseNode', () => {
       expect(node.thresholdValue).toBe(50);
       expect(node.comparisonOperator).toBe('<=');
       expect(node.variablePath).toBe('mood.valence');
+    });
+  });
+
+  describe('clause metadata', () => {
+    it('should include clauseId and clauseType in toJSON()', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test condition',
+        clauseId: 'var:emotions.joy:>=:0.5',
+        clauseType: 'threshold',
+      });
+
+      const json = node.toJSON();
+
+      expect(json.clauseId).toBe('var:emotions.joy:>=:0.5');
+      expect(json.clauseType).toBe('threshold');
+    });
+
+    it('should restore clause metadata from JSON', () => {
+      const node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'test condition',
+        clauseId: 'delta:emotions.joy:>=:0.1',
+        clauseType: 'delta',
+      });
+
+      const restored = HierarchicalClauseNode.fromJSON(node.toJSON());
+
+      expect(restored.clauseId).toBe('delta:emotions.joy:>=:0.1');
+      expect(restored.clauseType).toBe('delta');
     });
   });
 
