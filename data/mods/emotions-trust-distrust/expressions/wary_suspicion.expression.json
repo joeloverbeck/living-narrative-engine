@@ -130,6 +130,49 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.22
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.release"
+                                    },
+                                    0.30
+                                ]
+                            },
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    0.30
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.04
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 "<=": [
@@ -244,7 +287,7 @@
                     }
                 ]
             },
-            "failure_message": "Wary suspicion is interpretive distrust, not organized execution. Strong executive_focus suppresses it unless suspicion sharply spikes in a guarded social posture (affiliation low-ish, arousal moderate), preserving ‘reading inconsistencies’ without letting generic pressured competence trigger it."
+            "failure_message": "Wary suspicion is incompatible with a strong or rising ‘unbrace’ signal. Adds a strict low+stable release guard (and keeps the controlled-threat band) so high release routes to release/settling beats instead."
         }
     ],
     "alternate_descriptions": {

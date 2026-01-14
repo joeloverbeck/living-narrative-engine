@@ -10,9 +10,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.relief"
+                                "var": "emotions.release"
                             },
-                            0.5
+                            0.55
                         ]
                     },
                     {
@@ -29,6 +29,14 @@
                                 "var": "moodAxes.threat"
                             },
                             20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
                         ]
                     },
                     {
@@ -78,18 +86,38 @@
                     {
                         "or": [
                             {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
                                 ">=": [
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.relief"
+                                                "var": "emotions.release"
                                             },
                                             {
-                                                "var": "previousEmotions.relief"
+                                                "var": "previousEmotions.release"
                                             }
                                         ]
                                     },
-                                    0.08
+                                    0.10
                                 ]
                             },
                             {
@@ -156,7 +184,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires relief to be present and fear/panic to be low, plus evidence of recent tension (fear/alarm/panic/stress) and a modest release signal (relief rise or fear/threat/arousal/stress downshift)."
+            "failure_message": "Requires a real unbracing: release is high while fear/panic are low and threat is low, with some engagement still online. Also needs evidence of recent tension (fear/alarm/panic/stress) and a clear release event (release crossing/spike or fear/threat/arousal/stress downshift) to prevent spam."
         }
     ],
     "actor_description": "The breath leaves me all at once, like my body finally got the message. My shoulders unclench. The tight band around my ribs loosens. For a second I just stand there and let the \"not happening\" of it sink in.",

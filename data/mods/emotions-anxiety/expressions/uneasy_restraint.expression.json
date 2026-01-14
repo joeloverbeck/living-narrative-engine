@@ -142,6 +142,49 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.28
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.release"
+                                    },
+                                    0.36
+                                ]
+                            },
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    0.36
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -197,7 +240,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires controlled unease plus suspicion/anxiety with real threat grounding; keeps attention online and explicitly excludes dissociation; stays pre-panic and excludes freeze/terror extremes; uses affiliation as a 'guardedness' check (not overly warm/open); gated by unease spike/crossing or a threat jump."
+            "failure_message": "Controlled unease with real threat grounding and deliberate restraint; explicitly excludes dissociation and pre-panic extremes. Adds a low+stable release guard so this doesn’t fire in the release regime’s threat-overlap band."
         }
     ],
     "alternate_descriptions": {

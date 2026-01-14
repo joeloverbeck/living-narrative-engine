@@ -31,23 +31,11 @@
                         ]
                     },
                     {
-                        "or": [
+                        ">=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "emotions.calm"
-                                    },
-                                    0.25
-                                ]
+                                "var": "emotions.release"
                             },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.relief"
-                                    },
-                                    0.25
-                                ]
-                            }
+                            0.30
                         ]
                     },
                     {
@@ -183,12 +171,47 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.30
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.30
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires anxiety/unease with emerging calm/relief, grounded by moderate threat and near-neutral valence. Blocks panic/freeze/dissociation. Fires only on a noticeable regulation shift: anxiety/unease drop, threat drop, or agency_control rise."
+            "failure_message": "Requires anxiety/unease with a deliberate downshift signature: release present as the bodily unclench while threat is moderate (not zero, not peak) and valence stays near-neutral. Blocks panic/freeze/dissociation. Fires only on a noticeable regulation shift: anxiety/unease drop, threat drop, agency_control rise, or release crossing/spike."
         }
     ],
     "alternate_descriptions": {

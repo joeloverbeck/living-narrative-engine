@@ -47,9 +47,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.relief"
+                                "var": "emotions.release"
                             },
-                            0.3
+                            0.38
                         ]
                     },
                     {
@@ -89,31 +89,15 @@
                             {
                                 "var": "emotions.numbness"
                             },
-                            0.55
+                            0.60
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.apathy"
+                                "var": "emotions.dissociation"
                             },
                             0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.25
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.35
                         ]
                     },
                     {
@@ -130,7 +114,7 @@
                                             }
                                         ]
                                     },
-                                    0.12
+                                    0.08
                                 ]
                             },
                             {
@@ -145,7 +129,27 @@
                                             }
                                         ]
                                     },
-                                    0.12
+                                    0.08
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.38
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.38
+                                        ]
+                                    }
                                 ]
                             },
                             {
@@ -153,14 +157,29 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.relief"
+                                                "var": "emotions.release"
                                             },
                                             {
-                                                "var": "previousEmotions.relief"
+                                                "var": "previousEmotions.release"
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    12
                                 ]
                             },
                             {
@@ -175,14 +194,14 @@
                                             }
                                         ]
                                     },
-                                    10
+                                    8
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires active sadness/grief (but not peaking) with at least mild relief, low threat, and low-to-mid arousal while still engaged. Blocks shutdown (numbness/apathy) and hijacks (panic/freeze). Triggers only on a noticeable shift: grief/sadness easing, relief rising, or future expectancy lifting."
+            "failure_message": "Requires active sadness/grief (but not peaking) in a safe, low-to-mid arousal state while still engaged, with release present as the bodily 'letting go' signal. Needs a settling shift: grief/sadness easing, release crossing/spiking, arousal dropping, or future expectancy lifting."
         }
     ],
     "actor_description": "It’s still there—heavy—but I stop pushing against it for a breath. The tightness in my chest gives a little, like a knot finally deciding to loosen. I feel sad, unmistakably, but the sadness isn’t a fight right now; it’s just real. A small exhale slips out of me and, for once, it doesn’t feel like surrender—it feels like settling.",
@@ -191,5 +210,5 @@
         "auditory": "A slow, controlled exhale leaves {actor}, followed by a brief silence where their voice, if it comes, sounds lower and steadier—less strained, more settled.",
         "tactile": "{actor}'s tension shifts: not gone, but redistributed—hands unclench slightly, shoulders drop a fraction, and the air around them feels less braced."
     },
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

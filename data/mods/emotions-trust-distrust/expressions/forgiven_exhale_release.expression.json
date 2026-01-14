@@ -13,7 +13,7 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.relief"
+                                "var": "emotions.release"
                             },
                             0.55
                         ]
@@ -54,6 +54,14 @@
                         ">=": [
                             {
                                 "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
                             },
                             10
                         ]
@@ -111,7 +119,7 @@
                                     {
                                         "<": [
                                             {
-                                                "var": "previousEmotions.relief"
+                                                "var": "previousEmotions.release"
                                             },
                                             0.55
                                         ]
@@ -119,18 +127,33 @@
                                     {
                                         ">=": [
                                             {
-                                                "var": "emotions.relief"
+                                                "var": "emotions.release"
                                             },
-                                            0.65
+                                            0.62
                                         ]
                                     }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a forgiveness-like repair shift: relief and trust are up while threat is low and affiliation is positive, with prior remorse present but easing (not spiraling into shame). Blocks cynicism so the beat reads as repair received, not bitter doubt. Fires only on a noticeable remorse drop, threat drop, or relief crossing to prevent spam."
+            "failure_message": "Requires a forgiveness-like repair shift: release is high (the unbracing), trust is up, threat is low, affiliation is positive, and prior remorse was present but is easing (not spiraling). Blocks cynicism so the beat reads as repair received, not bitter doubt. Fires only on a noticeable remorse drop, threat drop, or release crossing/spike to prevent spam."
         }
     ],
     "alternate_descriptions": {

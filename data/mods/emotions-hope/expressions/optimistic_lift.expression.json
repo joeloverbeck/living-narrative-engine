@@ -88,6 +88,29 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [

@@ -54,6 +54,14 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.protest_anger"
@@ -187,12 +195,47 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.40
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.40
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires trust (or trusting_surrender) crossing into a clear-on state, grounded by low threat + affiliative warmth and soft arousal. Blocks suspicion/anxiety, shame/humiliation, and anger/contempt so it reads as genuine easing—not paranoia, self-protection, or hostility. Triggers only on a trust spike or a meaningful threat drop to prevent spam."
+            "failure_message": "Requires trust (or trusting_surrender) crossing into a clear-on state, plus a bodily unbracing signal (release), grounded by low threat + affiliative warmth and soft arousal. Blocks suspicion/anxiety, shame/humiliation, and anger/contempt so it reads as genuine easing—not paranoia, self-protection, or hostility. Triggers only on a trust spike, a meaningful threat drop, or a release crossing/spike to prevent spam."
         }
     ],
     "alternate_descriptions": {

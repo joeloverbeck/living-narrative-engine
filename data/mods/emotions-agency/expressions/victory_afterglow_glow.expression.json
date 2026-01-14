@@ -22,7 +22,23 @@
                             {
                                 "var": "emotions.pride"
                             },
-                            0.4
+                            0.40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.28
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.62
                         ]
                     },
                     {
@@ -30,7 +46,7 @@
                             {
                                 "var": "moodAxes.valence"
                             },
-                            30
+                            25
                         ]
                     },
                     {
@@ -42,11 +58,27 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            15
+                            5
                         ]
                     },
                     {
@@ -60,14 +92,6 @@
                     {
                         "<=": [
                             {
-                                "var": "moodAxes.threat"
-                            },
-                            25
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "emotions.panic"
                             },
                             0.22
@@ -76,9 +100,33 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.terror"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.alarm"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.shame"
                             },
-                            0.5
+                            0.50
                         ]
                     },
                     {
@@ -94,7 +142,7 @@
                             {
                                 "var": "emotions.embarrassment"
                             },
-                            0.5
+                            0.50
                         ]
                     },
                     {
@@ -102,36 +150,51 @@
                             {
                                 "and": [
                                     {
-                                        ">=": [
+                                        "<": [
                                             {
-                                                "var": "previousEmotions.triumph"
+                                                "var": "previousEmotions.release"
                                             },
-                                            0.54
+                                            0.28
                                         ]
                                     },
                                     {
                                         ">=": [
                                             {
-                                                "var": "emotions.triumph"
+                                                "var": "emotions.release"
                                             },
-                                            0.54
-                                        ]
-                                    },
-                                    {
-                                        ">=": [
-                                            {
-                                                "-": [
-                                                    {
-                                                        "var": "moodAxes.arousal"
-                                                    },
-                                                    {
-                                                        "var": "moodAxes.arousal"
-                                                    }
-                                                ]
-                                            },
-                                            0.08
+                                            0.28
                                         ]
                                     }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    10
                                 ]
                             },
                             {
@@ -171,7 +234,7 @@
                                                     }
                                                 ]
                                             },
-                                            0.1
+                                            0.10
                                         ]
                                     }
                                 ]

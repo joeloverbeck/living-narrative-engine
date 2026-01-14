@@ -192,6 +192,29 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "-": [

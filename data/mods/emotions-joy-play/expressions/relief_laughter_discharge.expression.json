@@ -13,9 +13,17 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.relief"
+                                "var": "emotions.release"
                             },
                             0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.40
                         ]
                     },
                     {
@@ -73,6 +81,14 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.threat"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.grief"
                             },
                             0.35
@@ -112,6 +128,41 @@
                                 ]
                             },
                             {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.63
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -123,14 +174,14 @@
                                             }
                                         ]
                                     },
-                                    0.12
+                                    0.10
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires strong relief plus a playful/joy signal with valence up and engagement present. Treats it as a discharge by needing a sharp threat drop or a relief spike, and blocks grief/despair and panic so it doesn\u2019t mislabel darker or hijacked states."
+            "failure_message": "Requires a real discharge: release is strong (unbracing) with relief present, plus a playful/joy signal and positive valence while engagement stays online. Treats it as an event by needing a sharp threat drop or a release crossing/spike (relief spike allowed as secondary). Blocks grief/despair and panic so it doesn’t mislabel darker or hijacked states."
         }
     ],
     "alternate_descriptions": {

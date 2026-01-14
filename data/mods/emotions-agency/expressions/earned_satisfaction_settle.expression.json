@@ -19,7 +19,162 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.34
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.alarm"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.triumph"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.euphoria"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.enthusiasm"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
                         "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.34
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.34
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
                             {
                                 "and": [
                                     {
@@ -54,67 +209,7 @@
                                     },
                                     0.12
                                 ]
-                            }
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "emotions.contentment"
                             },
-                            0.35
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            20
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.self_evaluation"
-                            },
-                            10
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.threat"
-                            },
-                            20
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            0
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            20
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            5
-                        ]
-                    },
-                    {
-                        "or": [
                             {
                                 ">=": [
                                     {
@@ -129,51 +224,12 @@
                                     },
                                     12
                                 ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "previousMoodAxes.engagement"
-                                            },
-                                            {
-                                                "var": "moodAxes.engagement"
-                                            }
-                                        ]
-                                    },
-                                    12
-                                ]
                             }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.triumph"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.euphoria"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.enthusiasm"
-                            },
-                            0.6
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a clear rise into small_victory (crossing or delta) plus a settled, post-effort downshift: threat low, agency/self-evaluation positive, arousal low and engagement moderated (with a noticeable drop from the previous step). Keeps contentment present so it reads as earned closure, and caps triumph/euphoria/enthusiasm so it doesn’t turn into celebration."
+            "failure_message": "Requires a clear completion signal (small_victory) plus a bodily downshift (release) as the primary driver. Grounds the beat in low threat, competent agency/self-evaluation, bounded engagement, and low-to-moderate arousal (not coma-calm). Blocks panic/terror/hypervigilance/alarm and caps triumph/euphoria/enthusiasm so it stays ‘quiet done’ rather than celebration. Fires on a release crossing/spike (or small_victory crossing) to prevent spam."
         }
     ],
     "alternate_descriptions": {

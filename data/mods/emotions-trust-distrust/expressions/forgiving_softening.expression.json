@@ -41,6 +41,14 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.release"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.affiliation"
                             },
                             10
@@ -59,7 +67,7 @@
                             {
                                 "var": "moodAxes.valence"
                             },
-                            5
+                            -5
                         ]
                     },
                     {
@@ -68,6 +76,14 @@
                                 "var": "moodAxes.arousal"
                             },
                             20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
                         ]
                     },
                     {
@@ -163,12 +179,47 @@
                                     },
                                     0.12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.35
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires compassion/affection plus trust, grounded in a safer/warmer appraisal (threat low, affiliation up, gently positive valence, low arousal). Blocks hostile dominance (resentment/contempt/hatred) and prevents shame from swallowing the moment. Fires only on a release shift (trust rise or threat/resentment/anger drop)."
+            "failure_message": "Requires compassion/affection plus trust, with a chosen unclench (release) grounded in safer appraisal (threat low, affiliation up, low arousal, near-neutral valence). Blocks hostile dominance (resentment/contempt/hatred) and prevents shame from swallowing the moment. Fires only on a release shift (release crossing/spike) or a trust rise / threat / resentment / anger drop."
         }
     ],
     "alternate_descriptions": {
