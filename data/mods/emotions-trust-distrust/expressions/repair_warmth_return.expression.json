@@ -19,15 +19,15 @@
                         ]
                     },
                     {
-                        "or": [
+                        ">=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "emotions.relief"
-                                    },
-                                    0.35
-                                ]
+                                "var": "emotions.release"
                             },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
                             {
                                 ">=": [
                                     {
@@ -42,6 +42,14 @@
                                         "var": "emotions.gratitude"
                                     },
                                     0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    0.25
                                 ]
                             }
                         ]
@@ -75,7 +83,7 @@
                             {
                                 "var": "moodAxes.valence"
                             },
-                            5
+                            0
                         ]
                     },
                     {
@@ -180,12 +188,47 @@
                                         ]
                                     }
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.35
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires trust restoration with a repair signature (relief/affection/gratitude) grounded in low threat and positive affiliation. Caps suspicion and hot anger (rage/resentment) so it doesn’t misfire during active conflict. Triggers only on a trust crossing, a sharp guilt drop, or a threat drop paired with an affiliation rise."
+            "failure_message": "Requires trust restoration with a repair signature (affection/gratitude or modest relief) and a clear unbracing signal (release), grounded in low threat and positive affiliation. Caps suspicion and hot anger (rage/resentment) so it doesn’t misfire during active conflict. Triggers only on a trust crossing, a sharp guilt drop, a threat+affiliation shift, or a release crossing/spike."
         }
     ],
     "alternate_descriptions": {

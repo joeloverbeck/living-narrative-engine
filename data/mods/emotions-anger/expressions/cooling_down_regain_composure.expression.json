@@ -31,23 +31,11 @@
                         ]
                     },
                     {
-                        "or": [
+                        ">=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "emotions.relief"
-                                    },
-                                    0.25
-                                ]
+                                "var": "emotions.release"
                             },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.remorse"
-                                    },
-                                    0.35
-                                ]
-                            }
+                            0.28
                         ]
                     },
                     {
@@ -64,6 +52,14 @@
                                 "var": "moodAxes.agency_control"
                             },
                             0
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
                         ]
                     },
                     {
@@ -132,6 +128,41 @@
                             {
                                 "and": [
                                     {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.28
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.28
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
                                         ">=": [
                                             {
                                                 "-": [
@@ -186,7 +217,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires anger or frustration still meaningfully present, but de-escalating (negative delta) or accompanied by a notable arousal drop. Relief must be present OR remorse must rise enough to read as the moment control returns and consequences register. Blocks high rage (too late—already a snap) and high contempt (cooling calcifies into dismissal instead of composure)."
+            "failure_message": "Requires anger or frustration still meaningfully present, but de-escalating (negative delta) or accompanied by a notable arousal drop, with release present as the unbracing/composure-return signal. Remorse-rise can also qualify if it coincides with de-escalation. Blocks high rage (too late—already a snap) and high contempt (cooling calcifies into dismissal instead of composure)."
         }
     ],
     "alternate_descriptions": {

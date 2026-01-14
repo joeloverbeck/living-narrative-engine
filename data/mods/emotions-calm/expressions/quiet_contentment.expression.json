@@ -100,6 +100,49 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.34
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.release"
+                                    },
+                                    0.42
+                                ]
+                            },
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    0.42
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 "<=": [

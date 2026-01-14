@@ -124,6 +124,49 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.release"
+                                    },
+                                    0.38
+                                ]
+                            },
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    0.38
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "max": [
@@ -154,7 +197,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires sustained anxiety/unease with activated arousal/engagement (restless energy) while staying clearly pre-panic (panic capped low), below terror/hypervigilance, not collapsing into numb fatigue; explicitly excludes dissociation; excludes freeze so the expression remains mobile."
+            "failure_message": "Requires sustained anxiety/unease with restless arousal/engagement while staying pre-panic and non-shutdown. Explicitly blocks release spikes/crossings so this doesn’t narrate as an unclench/settle beat in the threat-overlap band."
         }
     ],
     "actor_description": "I can't get comfortable. My body keeps trying to do something-shift, check, adjust-like motion might keep the worry from landing. My thoughts don't sprint; they circle. The same few possibilities, each one sharpening a little as it comes around again. I notice my jaw set, my hands busy with nothing, my breath stuck high in my chest. Even when I tell myself it's fine, my nervous system doesn't believe me. I keep scanning for a problem I can fix, because the feeling itself won't sit still long enough to name.",

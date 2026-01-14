@@ -11,9 +11,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.relief"
+                                "var": "emotions.release"
                             },
-                            0.45
+                            0.50
                         ]
                     },
                     {
@@ -65,7 +65,7 @@
                             {
                                 "var": "moodAxes.valence"
                             },
-                            -15
+                            -25
                         ]
                     },
                     {
@@ -74,6 +74,14 @@
                                 "var": "moodAxes.threat"
                             },
                             25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
                         ]
                     },
                     {
@@ -152,26 +160,41 @@
                                     {
                                         "<": [
                                             {
-                                                "var": "previousEmotions.relief"
+                                                "var": "previousEmotions.release"
                                             },
-                                            0.45
+                                            0.50
                                         ]
                                     },
                                     {
                                         ">=": [
                                             {
-                                                "var": "emotions.relief"
+                                                "var": "emotions.release"
                                             },
-                                            0.45
+                                            0.50
                                         ]
                                     }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.10
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires relief to be meaningfully present while guilt/remorse have recently been moderate-high but are now easing. Grounds the beat in recovering self-evaluation/valence and low threat. Blocks humiliation/shame spikes and high cynicism so resolution doesn’t misfire during self-attack or bitter detachment. Triggers only on a self-evaluation jump, a guilt/remorse drop, or a relief crossing to prevent spam."
+            "failure_message": "Requires a real self-forgiveness unclench: release is meaningfully present while guilt/remorse were recently moderate-high but are now easing. Grounds in recovering self-evaluation and low-ish threat (but allows valence to remain slightly negative). Blocks humiliation/shame spikes and high cynicism so it doesn’t misfire during self-attack or bitter detachment. Triggers only on a self-evaluation jump, a guilt/remorse drop, or a release crossing/spike to prevent spam."
         }
     ],
     "actor_description": "The pressure in my chest finally unhooks. I can take a full breath without it catching, like my body stopped bracing for punishment. The accusation in my head goes quiet for a moment, replaced by a tired, honest softness\u2014maybe I\u2019m allowed to be human and still move forward.",

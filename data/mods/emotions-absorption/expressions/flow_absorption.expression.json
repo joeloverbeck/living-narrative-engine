@@ -122,6 +122,29 @@
                             },
                             0.45
                         ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
                     }
                 ]
             }
@@ -225,5 +248,5 @@
         "olfactory": "The air carries warm effort rather than stress-clean sweat, steady concentration, none of the sharp sour note of panic."
     },
     "category": "attention",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -91,6 +91,49 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.32
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.release"
+                                    },
+                                    0.40
+                                ]
+                            },
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    0.40
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -126,7 +169,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires a recent high-threat activation signature (prior stress/fear/alarm), with arousal still up while threat drops sharply. Blocks panic/freeze/dissociation so it reads as comedown, not hijack or shutdown. Triggers only on a relief spike or a big threat drop to prevent spam."
+            "failure_message": "Aftershock is ‘threat dropped but body still jittery.’ Keeps arousal high and requires a threat drop, while explicitly blocking high/rising release so this doesn’t get misread as a clean unclench/settle beat."
         }
     ],
     "actor_description": "My body is still running hard even though the danger feeling is already slipping away. I start shaking--hands, knees, breath--like the leftover charge has nowhere to go. A laugh tries to break out, or tears do, and it's not even about sadness; it's my nervous system dumping. I feel wrung out and weirdly light at the same time, like I'm arriving back in my own skin.",

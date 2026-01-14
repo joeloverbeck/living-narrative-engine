@@ -96,6 +96,49 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.32
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.release"
+                                    },
+                                    0.40
+                                ]
+                            },
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    0.40
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 "<=": [
@@ -124,7 +167,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires steady calm with low arousal and low perceived threat, without significant stress/anxiety/anger dragging the state away from serenity. Blocks 'just-earned win' moments by requiring small_victory to be low, or not rising meaningfully."
+            "failure_message": "Requires steady calm with low arousal and low threat, without stress/anxiety/anger. Explicitly excludes release spikes/crossings so ‘serene’ doesn’t steal moments that should narrate as an unclench/sigh/settling beat."
         }
     ],
     "actor_description": "Nothing is pulling at me. My breath goes all the way down without catching, and my thoughts don't keep grabbing for the next thing. The quiet isn't empty-it's spacious. Shoulders loose. Jaw unclenched. Even my hands feel unhurried, like they've forgotten what it was to brace. I'm just here. Present. Not trying to outrun anything, not trying to force anything. A calm that doesn't need explanation.",

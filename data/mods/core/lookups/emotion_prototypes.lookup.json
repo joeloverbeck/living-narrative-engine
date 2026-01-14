@@ -130,7 +130,23 @@
         "threat": -0.9
       },
       "gates": [
-        "threat <= 0.20"
+        "threat <= 0.20",
+        "valence >= -0.05"
+      ]
+    },
+    "release": {
+      "weights": {
+        "threat": -1.0,
+        "arousal": -0.2,
+        "engagement": 0.45,
+        "agency_control": 0.15,
+        "future_expectancy": 0.10,
+        "valence": 0.05
+      },
+      "gates": [
+        "threat <= 0.30",
+        "engagement >= 0.10",
+        "arousal <= 0.60"
       ]
     },
     "confidence": {
