@@ -55,6 +55,7 @@ export function createSamplingCoverageCalculator(config = {}) {
       binHits: new Array(binCount).fill(0),
       lowTailCount: 0,
       highTailCount: 0,
+      zeroCount: 0,
     });
   }
 
@@ -67,6 +68,9 @@ export function createSamplingCoverageCalculator(config = {}) {
     }
 
     tracker.sampleCount += 1;
+    if (value === 0) {
+      tracker.zeroCount += 1;
+    }
     tracker.minObserved =
       tracker.minObserved === null
         ? value
@@ -140,6 +144,7 @@ export function createSamplingCoverageCalculator(config = {}) {
           binCoverageTotal: 0,
           tailLowTotal: 0,
           tailHighTotal: 0,
+          zeroRateTotal: 0,
         });
       }
 
@@ -149,6 +154,7 @@ export function createSamplingCoverageCalculator(config = {}) {
       summary.binCoverageTotal += variablePayload.binCoverage;
       summary.tailLowTotal += variablePayload.tailCoverage.low;
       summary.tailHighTotal += variablePayload.tailCoverage.high;
+      summary.zeroRateTotal += variablePayload.zeroRate ?? 0;
     }
 
     const summaryByDomain = [];
@@ -159,6 +165,7 @@ export function createSamplingCoverageCalculator(config = {}) {
         low: summary.tailLowTotal / summary.variableCount,
         high: summary.tailHighTotal / summary.variableCount,
       };
+      const zeroRateAvg = summary.zeroRateTotal / summary.variableCount;
 
       summaryByDomain.push({
         domain: summary.domain,
@@ -166,6 +173,7 @@ export function createSamplingCoverageCalculator(config = {}) {
         rangeCoverageAvg,
         binCoverageAvg,
         tailCoverageAvg,
+        zeroRateAvg,
         rating: getCoverageRating(rangeCoverageAvg, binCoverageAvg),
       });
     }
@@ -205,6 +213,8 @@ function buildVariablePayload(
       tailCoverage: null,
       rating: 'unknown',
       sampleCount: tracker.sampleCount,
+      zeroCount: tracker.zeroCount,
+      zeroRate: tracker.sampleCount > 0 ? tracker.zeroCount / tracker.sampleCount : null,
     };
   }
 
@@ -222,6 +232,8 @@ function buildVariablePayload(
       tailCoverage: { low: 0, high: 0 },
       rating: 'poor',
       sampleCount,
+      zeroCount: tracker.zeroCount,
+      zeroRate: sampleCount > 0 ? tracker.zeroCount / sampleCount : null,
     };
   }
 
@@ -247,6 +259,8 @@ function buildVariablePayload(
     tailCoverage,
     rating: getCoverageRating(rangeCoverage, binCoverage),
     sampleCount,
+    zeroCount: tracker.zeroCount,
+    zeroRate: sampleCount > 0 ? tracker.zeroCount / sampleCount : null,
   };
 }
 

@@ -421,6 +421,91 @@
   color: var(--status-impossible-text);
 }
 
+.integrity-flag {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--status-extremely-rare-bg);
+  color: var(--status-extremely-rare-text);
+  vertical-align: middle;
+}
+
+.integrity-flag[hidden] {
+  display: none !important;
+}
+
+.integrity-warning-samples {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+}
+
+.integrity-warning-samples span {
+  margin-right: 0.25rem;
+}
+
+.integrity-sample-button {
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg-color);
+  color: var(--primary-text-color);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.integrity-sample-button:hover {
+  background: var(--tertiary-bg-color, var(--secondary-bg-color));
+}
+
+.mc-integrity-drilldown {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--secondary-bg-color);
+}
+
+.mc-integrity-drilldown-summary {
+  font-size: 0.9rem;
+  color: var(--primary-text-color);
+  margin-bottom: 0.5rem;
+}
+
+.mc-integrity-drilldown-scale,
+.mc-integrity-drilldown-missing {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  margin-bottom: 0.5rem;
+}
+
+.mc-integrity-drilldown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.mc-integrity-drilldown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.mc-integrity-drilldown-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--secondary-text-color);
+}
+
 .classification-badge.classification-balanced {
   background: var(--status-normal-bg);
   color: var(--status-normal-text);
@@ -1074,6 +1159,10 @@
   margin-bottom: 1rem;
 }
 
+.sensitivity-warning[hidden] {
+  display: none !important;
+}
+
 .sensitivity-warning .warning-icon {
   flex-shrink: 0;
 }
@@ -1082,6 +1171,114 @@
   font-size: 0.8125rem;
   color: var(--primary-text-color);
   line-height: 1.4;
+}
+
+/* ========================= */
+/* Recommendations Section   */
+/* ========================= */
+
+.mc-recommendations {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color-subtle);
+}
+
+.mc-recommendations > h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--primary-text-color);
+}
+
+.mc-recommendations-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.recommendation-card {
+  background: var(--panel-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recommendation-card h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--primary-text-color);
+}
+
+.recommendation-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+}
+
+.recommendation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--secondary-bg-color);
+  border: 1px solid var(--border-color-subtle);
+  font-weight: 500;
+}
+
+.recommendation-why {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--primary-text-color);
+}
+
+.recommendation-evidence,
+.recommendation-actions {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.8125rem;
+  color: var(--primary-text-color);
+}
+
+.recommendation-evidence li,
+.recommendation-actions li {
+  margin-bottom: 0.35rem;
+}
+
+.recommendation-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.recommendation-links a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.recommendation-links a:hover {
+  text-decoration: underline;
+}
+
+.recommendation-funnel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+}
+
+.recommendation-funnel span {
+  background: var(--secondary-bg-color);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border-color-subtle);
 }
 
 .sensitivity-table-container {
@@ -2030,6 +2227,10 @@
   .branch-overview {
     flex-direction: column;
     gap: 0.25rem;
+  }
+
+  .mc-recommendations-list {
+    grid-template-columns: 1fr;
   }
 
   .volume-indicator {

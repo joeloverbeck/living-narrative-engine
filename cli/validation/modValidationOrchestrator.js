@@ -9,6 +9,7 @@
 import { validateDependency } from '../../src/utils/dependencyUtils.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import ExpressionPrerequisiteValidator, {
+  DEFAULT_AFFECT_TRAITS,
   DEFAULT_MOOD_AXES,
 } from '../../src/validation/expressionPrerequisiteValidator.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
@@ -976,6 +977,7 @@ class ModValidationOrchestrator {
 
   async #loadExpressionReferenceData() {
     const moodAxes = new Set(DEFAULT_MOOD_AXES);
+    const affectTraits = new Set(DEFAULT_AFFECT_TRAITS);
     const emotionKeys = await this.#loadLookupKeys(
       'emotion_prototypes.lookup.json'
     );
@@ -987,6 +989,7 @@ class ModValidationOrchestrator {
       emotions: emotionKeys,
       sexualStates: sexualStateKeys,
       moodAxes,
+      affectTraits,
     };
   }
 

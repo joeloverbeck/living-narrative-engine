@@ -1,0 +1,160 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-vigilance:hair_trigger_flinch_while_scanning",
+    "description": "Hair-trigger flinch while scanning: hypervigilance is already online, and a sudden cue yanks the body into a reflexive startle before attention snaps right back into threat-monitoring.",
+    "priority": 86,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.surprise_startle"
+                                            },
+                                            {
+                                                "var": "previousEmotions.surprise_startle"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires scanning-mode vigilance already online (hypervigilance+fear with high threat/arousal/engagement), plus a genuine startle spike (surprise_startle jump or sudden arousal/threat jump). Excludes dissociation/panic/freeze so it reads as a hair-trigger reflex inside active monitoring, not collapse or overwhelm."
+        }
+    ],
+    "actor_description": "I'm already sweeping the room—corners, hands, exits—when something twitches wrong and my body flinches hard on its own. Sharp inhale, shoulders up, hands half-raised. Then it's gone, and I'm scanning even faster, jaw tight, trying to prove to myself I didn't miss the real threat.",
+    "description_text": "{actor} is already scanning—eyes darting, head turning—when a sudden cue yanks a hard flinch out of them. Shoulders jump, breath catches, hands flash up defensively… then they snap right back into rapid, tense monitoring, tracking corners and exits like the danger just moved.",
+    "alternate_descriptions": {
+        "auditory": "A sharp inhale—cloth and feet scuff in a quick defensive jolt—then a hush of constant small repositioning as if someone is tracking the room by sound.",
+        "tactile": "A jolt of tension ripples through them—an involuntary jump—followed immediately by a sustained, vibrating readiness, like a spring that refuses to settle."
+    },
+    "category": "threat",
+    "diagnosticStatus": "unknown"
+}

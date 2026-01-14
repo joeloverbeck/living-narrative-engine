@@ -1,0 +1,158 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-heartbreak:attachment_rupture_ache",
+    "description": "Heartbreak: an attachment injury where love stays online while the bond feels torn. Attention narrows and circles back; hope dims; the body keeps reaching for closeness that no longer feels secure.",
+    "category": "loss",
+    "actor_description": "Love is still there, embarrassingly alive, and that\u2019s what makes it hurt. My mind keeps snapping back to them like a tongue to a broken tooth\u2014testing the gap, flinching, returning anyway. My chest feels hollow and hot at once, and the future suddenly looks thinner, like it lost a room I was counting on. I can\u2019t quite stop reaching, even if it\u2019s only with my attention.",
+    "description_text": "{actor} looks caught on something they can't set down\u2014their gaze lingering, attention looping back, breath coming a little shallow. Their expression carries a tender ache that doesn\u2019t harden into anger, more like a quiet wound staying open while they try to stand upright.",
+    "priority": 82,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.love_attachment"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.grief"
+                                    },
+                                    0.5
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.sadness"
+                                    },
+                                    0.6
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.trust"
+                                            },
+                                            {
+                                                "var": "emotions.trust"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.resentment"
+                                            },
+                                            {
+                                                "var": "previousEmotions.resentment"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires attachment still active (love_attachment + lonely_yearning) plus strong loss-tone (grief or sadness), with affiliative orientation and high engagement (can't stop looping) while hope drops. Caps hatred/contempt/rage to keep it heartbreak, not hostile breakup. Onset gate triggers on a trust-fracture drop or a sharp spike in resentment (rejection sting proxy)."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "My voice goes careful and thin, as if I have to measure every word to keep it from breaking. There\u2019s a long swallow between sentences, and my breathing keeps hitching like it forgot the rhythm.",
+        "tactile": "It feels like pressure under my ribs\u2014tight, tender, persistent\u2014paired with restless hands that keep opening and closing with nothing to hold.",
+        "limited": "{actor} seems strained with a quiet, lingering ache\u2014present, attentive, but wounded in a way that doesn\u2019t turn sharp."
+    },
+    "diagnosticStatus": "unknown"
+}

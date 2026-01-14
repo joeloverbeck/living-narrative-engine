@@ -25,17 +25,29 @@
                                     {
                                         "var": "emotions.frustration"
                                     },
-                                    0.50
+                                    0.5
                                 ]
                             }
                         ]
                     },
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "var": "emotions.relief"
+                                ">=": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    0.25
+                                ]
                             },
-                            0.25
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.remorse"
+                                    },
+                                    0.35
+                                ]
+                            }
                         ]
                     },
                     {
@@ -84,7 +96,7 @@
                                             }
                                         ]
                                     },
-                                    -0.10
+                                    -0.1
                                 ]
                             },
                             {
@@ -99,7 +111,7 @@
                                             }
                                         ]
                                     },
-                                    -0.10
+                                    -0.1
                                 ]
                             },
                             {
@@ -116,17 +128,71 @@
                                     },
                                     -12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.remorse"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.remorse"
+                                                    }
+                                                ]
+                                            },
+                                            0.1
+                                        ]
+                                    },
+                                    {
+                                        "or": [
+                                            {
+                                                "<=": [
+                                                    {
+                                                        "-": [
+                                                            {
+                                                                "var": "emotions.anger"
+                                                            },
+                                                            {
+                                                                "var": "previousEmotions.anger"
+                                                            }
+                                                        ]
+                                                    },
+                                                    -0.05
+                                                ]
+                                            },
+                                            {
+                                                "<=": [
+                                                    {
+                                                        "-": [
+                                                            {
+                                                                "var": "emotions.frustration"
+                                                            },
+                                                            {
+                                                                "var": "previousEmotions.frustration"
+                                                            }
+                                                        ]
+                                                    },
+                                                    -0.05
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires anger or frustration still meaningfully present, but de-escalating (negative delta) or accompanied by a notable arousal drop. Relief must be rising enough to read as regulation rather than mere exhaustion. Blocks high rage (too late—already a snap) and high contempt (cooling calcifies into dismissal instead of composure)."
+            "failure_message": "Requires anger or frustration still meaningfully present, but de-escalating (negative delta) or accompanied by a notable arousal drop. Relief must be present OR remorse must rise enough to read as the moment control returns and consequences register. Blocks high rage (too late—already a snap) and high contempt (cooling calcifies into dismissal instead of composure)."
         }
     ],
     "alternate_descriptions": {
         "auditory": "I hear the breath slow and deepen—less hissing through teeth, more controlled exhale. If words come, they’re lower and more measured, the sharpness sanded down.",
         "tactile": "The air feels less tight around them, like tension is bleeding out through their shoulders and hands. The heat is still there, but it’s contained—no longer spilling over.",
         "limited": "Something in {actor} settles: the agitation eases, and their control becomes visible again."
-    }
+    },
+    "diagnosticStatus": "impossible"
 }

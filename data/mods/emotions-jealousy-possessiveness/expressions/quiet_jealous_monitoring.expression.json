@@ -1,0 +1,158 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-jealousy-possessiveness:quiet_jealous_monitoring",
+    "description": "Quiet jealous monitoring\u2014cold vigilance and comparison. Attention narrows into measuring, tracking, and subtle control impulses without overt fluster or explosion; the mind stays sharp, watchful, and privately possessive.",
+    "category": "threat",
+    "actor_description": "My attention goes cold and tight, like a lens clicking into focus. I start measuring—who stands where, how long a laugh lasts, the angle of a glance. Everything becomes data I can't stop collecting, numbers in a ledger I didn't ask to keep. My breathing stays even, face stays blank, but underneath my muscles are wired and my mind won't stop calculating distances, cataloging every small shift like I'm preparing for something I refuse to name.",
+    "description_text": "{actor}'s stillness takes on a watchful quality—eyes tracking with precision, expression carefully neutral but jaw subtly tight. Their gaze lingers a beat too long on movements and proximities, as if running calculations, checking and re-checking variables in an equation only they can see. Nothing seems to escape their peripheral vision.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.suspicion"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.joy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.suspicion"
+                                            },
+                                            {
+                                                "var": "previousEmotions.suspicion"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.jealousy"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.jealousy"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.affiliation"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.affiliation"
+                                                    }
+                                                ]
+                                            },
+                                            -10
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires jealousy with a suspicious, watchful edge plus high engagement (attention locked). Grounds the tone in moderate threat and strained affiliation. Excludes panic/freeze (controlled, not overwhelmed) and caps joy/relief to prevent tonal drift. Triggers only on a suspicion jump or a jealousy crossing paired with a notable affiliation drop."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Someone's voice, when it surfaces, comes out measured and precise—words chosen carefully, tone flat and controlled. Silences stretch long, filled with listening that feels less like attention and more like surveillance.",
+        "tactile": "The air around someone feels calibrated—a held stillness with wire-taut edges beneath it, like vigilance compressed into something narrower and colder than ordinary attention.",
+        "limited": "I sense someone going still and watchful, tracking things with sharp, quiet attention—outwardly composed, inwardly wired."
+    },
+    "diagnosticStatus": "unknown"
+}

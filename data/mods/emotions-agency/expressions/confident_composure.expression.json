@@ -12,7 +12,7 @@
                             {
                                 "var": "emotions.confidence"
                             },
-                            0.6
+                            0.55
                         ]
                     },
                     {
@@ -60,7 +60,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            35
+                            30
                         ]
                     },
                     {
@@ -68,7 +68,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            -20
+                            -5
                         ]
                     },
                     {
@@ -76,39 +76,7 @@
                             {
                                 "var": "emotions.anxiety"
                             },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.stress"
-                            },
-                            0.5
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.shame"
-                            },
-                            0.3
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.anger"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.contempt"
-                            },
-                            0.5
+                            0.35
                         ]
                     },
                     {
@@ -116,11 +84,112 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.1
+                            0.15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.threat"
+                                    }
+                                ]
+                            },
+                            12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.arousal"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.arousal"
+                                    }
+                                ]
+                            },
+                            18
                         ]
                     },
                     {
                         "or": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "emotions.small_victory"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.small_victory"
+                                            },
+                                            {
+                                                "var": "previousEmotions.small_victory"
+                                            }
+                                        ]
+                                    },
+                                    0.05
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.confidence"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.confidence"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
                             {
                                 ">=": [
                                     {
@@ -141,14 +210,14 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "previousMoodAxes.threat"
+                                                "var": "moodAxes.agency_control"
                                             },
                                             {
-                                                "var": "moodAxes.threat"
+                                                "var": "previousMoodAxes.agency_control"
                                             }
                                         ]
                                     },
-                                    15
+                                    12
                                 ]
                             }
                         ]
@@ -163,5 +232,5 @@
         "olfactory": "I smell little sign of stress-sweat; mostly steady breath and warmed skin, the air feeling \"ready\" rather than strained."
     },
     "category": "agency",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal"
 }

@@ -33,7 +33,7 @@
                                     {
                                         "var": "emotions.fear"
                                     },
-                                    0.30
+                                    0.3
                                 ]
                             }
                         ]
@@ -141,5 +141,6 @@
         "auditory": "I hear a quick, quiet agreement—short phrases, softened consonants, a careful steadiness like someone choosing words that won’t ignite anything.",
         "tactile": "Their movements shrink: shoulders draw in, hands stay close, weight shifting as if making room for someone else to take the space.",
         "limited": "{actor} becomes noticeably compliant, giving ground quickly with a guarded, uneasy restraint."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

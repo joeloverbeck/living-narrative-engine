@@ -2,8 +2,8 @@
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-anxiety:uneasy_restraint",
     "description": "Mid-tone threat awareness: controlled unease with deliberate self-restraint-careful, quiet, not yet panic or scanning frenzy.",
-    "actor_description": "Something feels slightly wrong, and I start rationing my movement. I keep my face neutral, but my attention narrows-listening harder, watching edges, weighing what to do and what not to do. My body holds tension like a kept secret: breath smaller, shoulders steadier, impulse checked before it reaches my hands.",
-    "description_text": "{actor} goes subtly controlled-movements smaller, pauses longer, expression carefully neutral. They seem to hold themselves back, as if choosing silence and restraint over instinctive reaction.",
+    "actor_description": "Something's wrong, and my body knows it before I can name it. I pull everything inward—breath shallow and held high in my chest, movements whittled down to only what's necessary. My muscles stay ready but leashed, like a fist that won't quite close. I watch without seeming to watch, listen without turning my head. Each impulse gets caught and weighed before I let it reach my hands or face. The stillness isn't calm—it's effort, tension wrapped tight and hidden behind neutral silence. I ration everything: words, glances, reactions. Keep the surface smooth while underneath I'm tracking, calculating, deciding what not to do.",
+    "description_text": "{actor} shifts into a careful economy of movement—pauses stretch longer, gestures become smaller and more deliberate, face held neutral even when circumstances might  warrant reaction. They seem to be running everything through an internal filter  before responding: a beat too long before answering, eyes that track but don't obviously scan, controlled stillness that reads as intentional rather than frozen.",
     "priority": 72,
     "prerequisites": [
         {
@@ -201,10 +201,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "Their voice comes out quieter and flatter than before-short answers, a careful pace between words, listening more than speaking.",
-        "tactile": "The air around them tightens-controlled tension held in the chest and shoulders, like a hand hovering over a brake.",
-        "limited": "{actor} grows cautious and measured, holding back reflexes and keeping their expression under control."
+        "auditory": "Someone's voice drops to something quieter and more measured—words chosen carefully, responses brief, sentences that leave space between them like stepping stones. They listen with focus, letting silence do work where they might normally fill it, and when they do speak, each word feels weighed before release.",
+        "tactile": "The tension pools in their shoulders and jaw—not the sharp spike of panic but a sustained pressure, muscles held deliberately taut like a bowstring at half-draw. The air around them feels compressed, their presence somehow smaller, pulled inward. Each movement carries a quality of controlled release, like they're measuring out their reactions in careful doses.",
+        "limited": "I sense someone going watchful and contained, movements smaller and more deliberate, holding their reactions on a short leash."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare"
 }

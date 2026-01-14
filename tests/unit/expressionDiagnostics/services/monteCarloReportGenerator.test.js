@@ -180,7 +180,9 @@ describe('MonteCarloReportGenerator', () => {
 
       expect(typeof report).toBe('string');
       expect(report).toContain('# Monte Carlo Analysis Report');
+      expect(report).toContain('**Gating model**: HARD (gate fail => final = 0)');
       expect(report).toContain('## Executive Summary');
+      expect(report).toContain('## Signal Lineage');
       expect(report).toContain('## Blocker Analysis');
       expect(report).toContain('## Legend');
     });
@@ -241,6 +243,7 @@ describe('MonteCarloReportGenerator', () => {
             rangeCoverageAvg: 0.2,
             binCoverageAvg: 0.1,
             tailCoverageAvg: { low: 0.01, high: 0.02 },
+            zeroRateAvg: 0.85,
             rating: 'poor',
           },
           {
@@ -249,6 +252,7 @@ describe('MonteCarloReportGenerator', () => {
             rangeCoverageAvg: 0.8,
             binCoverageAvg: 0.7,
             tailCoverageAvg: { low: 0.1, high: 0.1 },
+            zeroRateAvg: 0.05,
             rating: 'good',
           },
         ],
@@ -300,10 +304,12 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain('## Sampling Coverage');
       expect(report).toContain('**Sampling Mode**: dynamic');
       expect(report).toContain('### Summary by Domain');
+      expect(report).toContain('Zero Rate Avg');
       expect(report).toContain('### Lowest Coverage Variables');
       expect(report).toContain('### Coverage Conclusions');
       expect(report).toContain('emotions.anger');
       expect(report).toContain('Sampling coverage is low for emotions');
+      expect(report).toContain('85.00%');
       expect(report).toContain('Worst range coverage');
 
       const conclusionsMatch = report.match(
@@ -1764,6 +1770,8 @@ describe('MonteCarloReportGenerator', () => {
         evaluationCount: 7500,
         inRegimeEvaluationCount: 10,
         inRegimeFailureCount: 4,
+        inRegimePassRate: 0.6,
+        gatePassRateInRegime: 0.7,
         gateClampRateInRegime: 0.3,
         gateFailInRegimeCount: 3,
         gatePassInRegimeCount: 7,
@@ -1787,9 +1795,13 @@ describe('MonteCarloReportGenerator', () => {
         summary: '',
       });
 
-      expect(report).toContain('| Gate clamp (mood) | Pass \\| gate (mood) |');
+      expect(report).toContain(
+        '| Gate pass (mood) | Gate clamp (mood) | Pass \\| gate (mood) | Pass \\| mood (mood) |'
+      );
+      expect(report).toContain('70.00% (7 / 10)');
       expect(report).toContain('30.00% (3 / 10)');
       expect(report).toContain('42.86% (3 / 7)');
+      expect(report).toContain('60.00% (6 / 10)');
     });
 
     it('should omit gate columns when no emotion leaves are present', () => {
@@ -1826,6 +1838,8 @@ describe('MonteCarloReportGenerator', () => {
       expect(headerLine).toBeDefined();
       expect(headerLine).not.toContain('Gate clamp (mood)');
       expect(headerLine).not.toContain('Pass | gate (mood)');
+      expect(headerLine).not.toContain('Gate pass (mood)');
+      expect(headerLine).not.toContain('Pass | mood (mood)');
     });
 
     it('should display evaluation count in Support column', () => {
@@ -1917,8 +1931,10 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain('### Per-Clause Metrics');
       expect(report).toContain('**Fail% global**');
       expect(report).toContain('**Fail% | mood-pass**');
+      expect(report).toContain('**Gate pass (mood)**');
       expect(report).toContain('**Gate clamp (mood)**');
       expect(report).toContain('**Pass | gate (mood)**');
+      expect(report).toContain('**Pass | mood (mood)**');
       expect(report).toContain('**Violation Magnitude**');
       expect(report).toContain('**P50 (Median)**');
       expect(report).toContain('**P90 (90th Percentile)**');
@@ -2257,14 +2273,17 @@ describe('MonteCarloReportGenerator', () => {
 
   describe('Global Sensitivity Analysis', () => {
     it('shows global sensitivity tables with a low-confidence warning when baseline hits are low', () => {
+      const storedContexts = Array.from({ length: 12 }, () => ({
+        emotions: { joy: 0.2 },
+      }));
       const globalSensitivityData = [
         {
           varPath: 'emotions.joy',
           operator: '>=',
           originalThreshold: 0.4,
           grid: [
-            { threshold: 0.35, triggerRate: 0.0003, triggerCount: 3, sampleCount: 10000 },
-            { threshold: 0.40, triggerRate: 0.0004, triggerCount: 4, sampleCount: 10000 },
+            { threshold: 0.35, triggerRate: 0.3, triggerCount: 4, sampleCount: 12 },
+            { threshold: 0.40, triggerRate: 0.25, triggerCount: 3, sampleCount: 12 },
           ],
           isExpressionLevel: true,
         },
@@ -2272,7 +2291,10 @@ describe('MonteCarloReportGenerator', () => {
 
       const report = generator.generate({
         expressionName: 'test_expression',
-        simulationResult: createMockSimulationResult(),
+        simulationResult: createMockSimulationResult({
+          sampleCount: 12,
+          storedContexts,
+        }),
         blockers: [createMockBlocker()],
         summary: 'Test summary',
         globalSensitivityData,
@@ -2280,6 +2302,9 @@ describe('MonteCarloReportGenerator', () => {
 
       expect(report).toContain('## Global Expression Sensitivity Analysis');
       expect(report).toContain('Low confidence');
+      expect(report).toContain('population stored-global');
+      expect(report).toContain('N=12');
+      expect(report).toContain('hits≈3');
       expect(report).toContain('| Threshold | Trigger Rate | Change | Samples |');
     });
 

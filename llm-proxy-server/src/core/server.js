@@ -59,7 +59,9 @@ import {
   EXPRESSION_ROUTE_DEFINITIONS,
 } from '../routes/expressionRoutes.js';
 import { ExpressionStatusController } from '../handlers/expressionStatusController.js';
+import { ExpressionLogController } from '../handlers/expressionLogController.js';
 import { ExpressionFileService } from '../services/expressionFileService.js';
+import { ExpressionLogService } from '../services/expressionLogService.js';
 import { validateRouteMethodsAgainstCors } from '../utils/corsValidation.js';
 
 const shutdownSignals = ['SIGTERM', 'SIGINT', 'SIGHUP'];
@@ -265,6 +267,11 @@ export function createProxyServer(options = {}) {
     proxyLogger,
     expressionFileService
   );
+  const expressionLogService = new ExpressionLogService(proxyLogger);
+  const expressionLogController = new ExpressionLogController(
+    proxyLogger,
+    expressionLogService
+  );
 
   app.get('/metrics', async (req, res) => {
     try {
@@ -344,7 +351,10 @@ export function createProxyServer(options = {}) {
 
   app.use('/api/mods', createModsRoutes(modsController));
   app.use('/api/game-config', createGameConfigRoutes(gameConfigController));
-  app.use('/api/expressions', createExpressionRoutes(expressionStatusController));
+  app.use(
+    '/api/expressions',
+    createExpressionRoutes(expressionStatusController, expressionLogController)
+  );
 
   let server = null;
   let isShuttingDown = false;

@@ -45,6 +45,30 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.surprise_startle"
@@ -125,5 +149,5 @@
         "tactile": "Someone's body holds a searching tension-still, but not relaxed, like their attention is reaching for something it can't quite grasp."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "frequent"
 }

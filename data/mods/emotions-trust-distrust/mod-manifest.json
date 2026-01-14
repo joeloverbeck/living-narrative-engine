@@ -8,8 +8,10 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
+      "forgiven_exhale_release.expression.json",
       "forgiving_softening.expression.json",
       "guard_lowering.expression.json",
+      "repair_warmth_return.expression.json",
       "tentative_trust_reach.expression.json",
       "trust_fracture.expression.json",
       "trusting_surrender.expression.json",

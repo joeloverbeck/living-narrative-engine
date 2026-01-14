@@ -148,6 +148,9 @@ describe('MonteCarloReportGenerator report integrity warnings', () => {
     );
 
     expect(report).toContain('Report Integrity Warnings');
+    expect(report).toContain('## Integrity Summary');
+    expect(report).toContain('**Integrity warnings**: 4');
+    expect(report).toContain('**Gate/final mismatches**: 3');
     expect(warningCodes).toEqual(
       expect.arrayContaining([
         'I1_GATE_FAILED_NONZERO_FINAL',
@@ -172,7 +175,39 @@ describe('MonteCarloReportGenerator report integrity warnings', () => {
       })
     );
     expect(report).toContain('examples: index 0');
-    expect(report).toContain('Impact');
+    expect(report).toContain('**Example indices**: 0');
+    expect(report).toContain('Impact (full sample)');
+  });
+
+  it('renders cached integrity warnings and marks gate-dependent metrics as UNRELIABLE', () => {
+    const generator = new MonteCarloReportGenerator({
+      logger: mockLogger,
+    });
+
+    const simulationResult = createMockSimulationResult({
+      storedContexts: [],
+      reportIntegrityWarnings: [
+        {
+          code: 'I1_GATE_FAILED_NONZERO_FINAL',
+          message: 'Gate failed but final intensity is non-zero in stored contexts.',
+          populationHash: 'pop-123',
+          prototypeId: 'joy',
+        },
+      ],
+    });
+
+    const report = generator.generate({
+      expressionName: 'test:cached_warnings',
+      simulationResult,
+      blockers: [],
+      summary: 'Test summary',
+      prerequisites: [],
+    });
+
+    expect(report).toContain('Report Integrity Warnings');
+    expect(report).toContain('I1_GATE_FAILED_NONZERO_FINAL');
+    expect(report).toContain('Gate-dependent metrics');
+    expect(report).toContain('UNRELIABLE');
   });
 
   it('includes non-monotonic sweep warnings in report output', () => {

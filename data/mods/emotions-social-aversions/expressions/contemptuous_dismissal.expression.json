@@ -133,10 +133,26 @@
                             },
                             0.45
                         ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.remorse"
+                            },
+                            0.25
+                        ]
                     }
                 ]
             },
-            "failure_message": "Requires contempt to cross/spike into a clear dominant state, grounded in low affiliation and high agency (upper-hand posture) with mildly elevated self-evaluation. Caps warm/prosocial tones (compassion/affection/gratitude) and empathic distress so it reads as dismissal, not care or shared pain. Arousal stays low-to-mid to keep it cool rather than explosive."
+            "failure_message": "Requires contempt to cross/spike into a clear dominant state, grounded in low affiliation and high agency (upper-hand posture) with mildly elevated self-evaluation. Caps warm/prosocial tones and empathic distress so it reads as dismissal, not care or shared pain. Also caps guilt/remorse so high harm-awareness doesn’t make the superior coolness unrealistic. Arousal stays low-to-mid to keep it cool rather than explosive."
         }
     ],
     "actor_description": "I feel a cold clarity: this doesn’t deserve my effort. My thoughts narrow into a neat little verdict, and my face goes still, almost bored. There’s a faint lift in my chest—like I’m stepping over something on the floor and refusing to even look down.",

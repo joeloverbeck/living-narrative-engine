@@ -1,0 +1,162 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-empathy-distress:compassion_fatigue_flatten",
+    "description": "Compassion fatigue: care remains, but the system goes dim. Empathy is still there in principle, yet the capacity to feel and respond collapses into a flat, numb depletion.",
+    "category": "shutdown",
+    "actor_description": "I still care—I can tell I do—but it lands at a distance, like my feelings are behind thick glass. My chest feels dull and heavy, and my thoughts start taking shortcuts: less room for nuance, less energy for the ache. I keep going on habit, but something in me has quietly powered down. Even my concern feels tired.",
+    "description_text": "{actor} looks present but dimmed—responses slower, eyes less bright, as if their feelings have to travel farther to reach the surface. Their posture sags in small ways, concern muted into a flat steadiness that reads more like depletion than calm.",
+    "priority": 76,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.empathic_distress"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.compassion"
+                                    },
+                                    0.65
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "affectTraits.affective_empathy"
+                            },
+                            65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.joy"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contentment"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.calm"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.numbness"
+                                            },
+                                            {
+                                                "var": "previousEmotions.numbness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.numbness"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.numbness"
+                                            },
+                                            0.65
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires prior empathic load (empathic_distress or compassion high) plus a current shutdown signature (numbness high with falling arousal/engagement/hope). Blocks joy and clean calm/contentment so it reads as depletion. Triggers on numbness spike or a sharp engagement drop."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "Their voice comes out quieter and a beat late, words chosen like each one costs effort. The empathy is still in the wording, but the warmth behind it is thinned out.",
+        "tactile": "The air around them feels heavy and still, like a room after the last guest leaves—no edge, no spark, just a tired pressure settling into everything.",
+        "limited": "{actor} seems emotionally depleted—still attentive in principle, but flattened and slower, as if their capacity has run out."
+    },
+    "diagnosticStatus": "rare"
+}

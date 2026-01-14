@@ -99,7 +99,7 @@
                             {
                                 "var": "emotions.contempt"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -229,5 +229,6 @@
     "alternate_descriptions": {
         "auditory": "I hear a thank-you that comes out a little too fast, then a small stumble in the phrasing—extra qualifiers, a nervous half-laugh, a tone that tries to make repayment out of words.",
         "tactile": "The air feels suddenly heavier and closer, like the space between people gained a new weight. Shoulders tuck in; hands fidget as if looking for somewhere to put the obligation."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

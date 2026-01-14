@@ -1,0 +1,11 @@
+{
+  "id": "emotions-sexual-repulsion",
+  "version": "1.0.0",
+  "name": "emotions-sexual-repulsion",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "hard_no_recoil_boundary.expression.json"
+    ]
+  }
+}

@@ -1,15 +1,39 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-surprise:stunned_processing_pause",
-    "description": "Cognitive shock without panic—attention locks hard while the mind stalls to re-parse what it just took in. The body isn’t fleeing; it’s buffering.",
+    "description": "Cognitive shock without panic\u2014attention locks hard while the mind stalls to re-parse what it just took in. The body isn\u2019t fleeing; it\u2019s buffering.",
     "category": "attention",
-    "actor_description": "For a second my brain just... stops. I can feel my attention clamp down like a vise, but the meaning won’t load—thoughts queue up and then jam. My posture holds mid-motion, breath shallow, eyes fixed like I’m re-reading reality. It isn’t terror; it’s the lag between hearing it and understanding it.",
-    "description_text": "{actor} goes still in a focused, baffled pause—gaze locked, mouth slightly parted, as if replaying something internally. Their movements resume a beat late, careful and recalibrated rather than panicked.",
+    "actor_description": "For a second my brain just... stops. I can feel my attention clamp down like a vise, but the meaning won\u2019t load\u2014thoughts queue up and then jam. My posture holds mid-motion, breath shallow, eyes fixed like I\u2019m re-reading reality. It isn\u2019t terror; it\u2019s the lag between hearing it and understanding it.",
+    "description_text": "{actor} goes still in a focused, baffled pause\u2014gaze locked, mouth slightly parted, as if replaying something internally. Their movements resume a beat late, careful and recalibrated rather than panicked.",
     "priority": 72,
     "prerequisites": [
         {
             "logic": {
                 "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.35
+                        ]
+                    },
                     {
                         "or": [
                             {
@@ -60,6 +84,14 @@
                                 "var": "moodAxes.arousal"
                             },
                             45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            40
                         ]
                     },
                     {
@@ -131,7 +163,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -148,16 +180,52 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.transfixed"
+                                            },
+                                            {
+                                                "var": "previousEmotions.transfixed"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.transfixed"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.transfixed"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Needs a moderate surprise/confusion signal plus high engagement (locked on) with a small agency dip (processing lag), mid arousal (not maxed). Blocks panic/terror/freeze and caps joy/euphoria so it stays 'buffering to comprehend,' not fear spike or delighted surprise. Requires a surprise/confusion spike or engagement jump to avoid repeating every tick."
+            "failure_message": "Needs a surprise/confusion driver plus transfixed attention-lock (buffering), grounded in high engagement with a brief agency dip and mid arousal. Caps entranced/quiet_absorption so it doesn't read like savoring or trance-capture. Blocks panic/terror/freeze and caps joy/euphoria so it stays 're-parse lag,' not fear spike or delighted surprise. Requires a spike/crossing to avoid repeating every tick."
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a sharp intake that doesn’t become a scream—more like someone swallowed their next sentence. A beat of silence follows, then a careful, delayed \"...wait.\"",
-        "tactile": "The air feels suddenly tight, like the room is holding its breath. There’s a tiny tremor in still hands—muscles braced to move, waiting for the brain to decide how."
-    }
+        "auditory": "I hear a sharp intake that doesn\u2019t become a scream\u2014more like someone swallowed their next sentence. A beat of silence follows, then a careful, delayed \"...wait.\"",
+        "tactile": "The air feels suddenly tight, like the room is holding its breath. There\u2019s a tiny tremor in still hands\u2014muscles braced to move, waiting for the brain to decide how."
+    },
+    "diagnosticStatus": "unknown"
 }

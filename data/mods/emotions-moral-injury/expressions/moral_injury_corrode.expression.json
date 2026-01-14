@@ -1,0 +1,180 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-moral-injury:moral_injury_corrode",
+    "description": "Moral injury: a corrosive blend of guilt and self-directed disgust that curdles into hopelessness\u2014less about fear of punishment and more about feeling fundamentally stained. The mind loops on the irreversible, and the future narrows into a dead-end certainty.",
+    "category": "shame",
+    "actor_description": "It feels like something inside me has curdled. The guilt isn\u2019t just heavy\u2014it\u2019s contaminating, like I can\u2019t touch my own thoughts without getting dirty. I keep replaying it until the edges go raw, and the worst part is the certainty: I can\u2019t undo it. The future doesn\u2019t look scary; it looks sealed shut.",
+    "description_text": "{actor} goes rigid and inward\u2014jaw set, gaze unfocused, like they're staring through the room at something they can't escape. Their face tightens with a faint, self-recoiling revulsion, and their breathing turns shallow, controlled, as if holding themselves together takes all their attention.",
+    "priority": 86,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.remorse"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.despair"
+                                    },
+                                    0.60
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.future_expectancy"
+                                    },
+                                    -45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anger"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.relief"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "or": [
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "-": [
+                                                            {
+                                                                "var": "emotions.remorse"
+                                                            },
+                                                            {
+                                                                "var": "previousEmotions.remorse"
+                                                            }
+                                                        ]
+                                                    },
+                                                    0.12
+                                                ]
+                                            },
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "-": [
+                                                            {
+                                                                "var": "emotions.guilt"
+                                                            },
+                                                            {
+                                                                "var": "previousEmotions.guilt"
+                                                            }
+                                                        ]
+                                                    },
+                                                    0.12
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.self_evaluation"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.self_evaluation"
+                                                    }
+                                                ]
+                                            },
+                                            -12
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.future_expectancy"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.future_expectancy"
+                                            }
+                                        ]
+                                    },
+                                    -15
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires high remorse (harm-aware self-recoil) plus high guilt and moderate disgust with a hopelessness signature (despair or very low future_expectancy). Anchors in strongly negative self_evaluation and negative valence, with engagement high to represent rumination. Caps anger (not defensiveness) and relief (no clean exhale). Triggers on a remorse/guilt spike paired with a self-worth drop, or a sharp hit to future expectancy to prevent spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "My voice comes out smaller and flatter than I expect\u2014words clipped, like I\u2019m rationing air. When I pause, it\u2019s not thoughtful; it\u2019s stuck, a silence with pressure behind it.",
+        "tactile": "There\u2019s a cold, crawling tightness under my skin, like my body wants to peel away from itself. My shoulders hold high and tense, and even small movements feel wrong\u2014too loud, too visible.",
+        "limited": "I go quiet and withdrawn, posture tightening as if I\u2019m trying to contain something that feels irreversible."
+    },
+    "diagnosticStatus": "unknown"
+}

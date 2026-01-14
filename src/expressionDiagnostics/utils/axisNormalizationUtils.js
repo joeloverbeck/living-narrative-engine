@@ -17,10 +17,7 @@ const normalizeAxisValue = (value, scale) => {
   if (Number.isNaN(value) || !Number.isFinite(value)) {
     return null;
   }
-  if (scale === 100) {
-    return Math.abs(value) <= 1 ? value : value / 100;
-  }
-  return value <= 1 ? value : value / scale;
+  return value / scale;
 };
 
 /**
@@ -35,10 +32,13 @@ const normalizeMoodAxes = (moodData) => {
 
   const normalized = {};
   for (const [axis, value] of Object.entries(moodData)) {
-    const normalizedValue = normalizeAxisValue(value, 100);
-    if (typeof normalizedValue === 'number') {
-      normalized[axis] = normalizedValue;
+    if (typeof value !== 'number') {
+      continue;
     }
+    if (Number.isNaN(value) || !Number.isFinite(value)) {
+      continue;
+    }
+    normalized[axis] = value / 100;
   }
 
   return normalized;

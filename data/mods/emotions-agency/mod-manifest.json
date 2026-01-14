@@ -9,11 +9,13 @@
   "content": {
     "expressions": [
       "assertive_boundary_no.expression.json",
+      "choice_paralysis_hesitation.expression.json",
       "confident_composure.expression.json",
       "determined_focus.expression.json",
       "earned_satisfaction_settle.expression.json",
       "quiet_pride.expression.json",
-      "triumphant_release.expression.json"
+      "triumphant_release.expression.json",
+      "victory_afterglow_glow.expression.json"
     ]
   }
 }

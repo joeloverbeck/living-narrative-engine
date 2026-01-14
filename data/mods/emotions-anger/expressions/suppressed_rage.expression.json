@@ -134,6 +134,22 @@
                                 ]
                             }
                         ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.guilt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.remorse"
+                            },
+                            0.3
+                        ]
                     }
                 ]
             }
@@ -190,5 +206,5 @@
         "tactile": "The air feels charged. A body is rigid with restraint-heat, tension, and tiny tremors contained under stillness."
     },
     "category": "anger",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare"
 }

@@ -15,7 +15,7 @@
                             {
                                 "var": "emotions.trust"
                             },
-                            0.5
+                            0.38
                         ]
                     },
                     {
@@ -23,23 +23,23 @@
                             {
                                 "var": "emotions.trust"
                             },
-                            0.8
+                            0.72
                         ]
                     },
                     {
                         ">=": [
                             {
-                                "var": "emotions.suspicion"
+                                "var": "emotions.unease"
                             },
-                            0.25
+                            0.22
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.suspicion"
+                                "var": "emotions.unease"
                             },
-                            0.6
+                            0.65
                         ]
                     },
                     {
@@ -55,7 +55,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            45
+                            30
                         ]
                     },
                     {
@@ -63,7 +63,7 @@
                             {
                                 "var": "moodAxes.affiliation"
                             },
-                            10
+                            12
                         ]
                     },
                     {
@@ -79,23 +79,7 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            -10
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.trusting_surrender"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.jealousy"
-                            },
-                            0.35
+                            -5
                         ]
                     },
                     {
@@ -103,7 +87,7 @@
                             {
                                 "var": "emotions.cynicism"
                             },
-                            0.35
+                            0.45
                         ]
                     },
                     {
@@ -111,47 +95,52 @@
                             {
                                 "var": "emotions.contempt"
                             },
-                            0.25
+                            0.35
                         ]
                     },
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "-": [
+                                ">=": [
                                     {
-                                        "var": "emotions.trust"
+                                        "-": [
+                                            {
+                                                "var": "emotions.trust"
+                                            },
+                                            {
+                                                "var": "previousEmotions.trust"
+                                            }
+                                        ]
                                     },
-                                    {
-                                        "var": "previousEmotions.trust"
-                                    }
+                                    0.07
                                 ]
                             },
-                            0.1
-                        ]
-                    },
-                    {
-                        ">=": [
                             {
-                                "-": [
+                                ">=": [
                                     {
-                                        "var": "previousEmotions.suspicion"
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.unease"
+                                            },
+                                            {
+                                                "var": "emotions.unease"
+                                            }
+                                        ]
                                     },
-                                    {
-                                        "var": "emotions.suspicion"
-                                    }
+                                    0.06
                                 ]
-                            },
-                            0.08
+                            }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires trust in the mid band while suspicion is still present (guard half up). Grounded in moderate threat, positive affiliation, and engaged attention with agency not collapsed. Blocks overly-open surrender and cynical/jealous/contempt tones. Triggers only on a meaningful trust rise plus a suspicion drop so it reads as a deliberate micro-risk, not a background vibe."
+            "failure_message": "Requires a mid-band trust level paired with ongoing unease (guard still up), under moderate threat and positive affiliation. Blocks cynical/contempt tones. Triggers on either a meaningful trust rise OR a meaningful easing of unease so it reads as a deliberate micro-risk, not a background vibe."
         }
     ],
     "alternate_descriptions": {
         "auditory": "A beat of careful silence, then {actor}'s voice comes a shade warmer—still measured, but less guarded at the edges.",
         "tactile": "The tension doesn't vanish; it shifts. Like a hand unclenching partway—ready to pull back, but choosing not to, for now.",
         "limited": "{actor} offers a small, cautious opening—trust testing the line while caution stays close."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

@@ -1,153 +1,153 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-alarm:alarm_surge",
-  "description": "Alarm surge: a sharp mobilization into fight/flight readiness—fast, keyed-up, and action-oriented—without tipping into panic, freezing, or dissociative shutdown.",
-  "actor_description": "Something in me snaps to attention like a switch got thrown. My breath goes high, pulse loud, and my body feels pre-loaded to move—hands ready, weight already shifting. Thoughts narrow into simple options: go, block, get out—clean and fast, not scrambled.",
-  "description_text": "{actor} goes instantly alert—posture tightening, gaze cutting sharp, breath quickening as if they’re about to move. Their stance shifts into readiness, keyed-up but still coordinated.",
-  "priority": 84,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.alarm"
-              },
-              0.6
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "emotions.fear"
-                  },
-                  0.45
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.hypervigilance"
-                  },
-                  0.4
-                ]
-              }
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              35
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              25
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.agency_control"
-              },
-              -10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.35
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.dissociation"
-              },
-              0.35
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.alarm"
-                      },
-                      {
-                        "var": "previousEmotions.alarm"
-                      }
-                    ]
-                  },
-                  0.12
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.threat"
-                      },
-                      {
-                        "var": "previousMoodAxes.threat"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              },
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-alarm:alarm_surge",
+    "description": "Alarm surge: a sharp mobilization into fight/flight readiness—fast, keyed-up, and action-oriented—without tipping into panic, freezing, or dissociative shutdown.",
+    "actor_description": "Something in me snaps to attention like a switch got thrown. My breath goes high, pulse loud, and my body feels pre-loaded to move—hands ready, weight already shifting. Thoughts narrow into simple options: go, block, get out—clean and fast, not scrambled.",
+    "description_text": "{actor} goes instantly alert—posture tightening, gaze cutting sharp, breath quickening as if they’re about to move. Their stance shifts into readiness, keyed-up but still coordinated.",
+    "priority": 84,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    "<": [
-                      {
-                        "var": "previousMoodAxes.threat"
-                      },
-                      35
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "moodAxes.threat"
-                      },
-                      35
-                    ]
-                  }
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.alarm"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.hypervigilance"
+                                    },
+                                    0.4
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.alarm"
+                                            },
+                                            {
+                                                "var": "previousEmotions.alarm"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            },
+                                            35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            35
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires strong alarm plus fear/hypervigilance with high threat and arousal while agency remains at least partially intact (not helpless). Blocks panic/freeze/dissociation so it stays 'mobilized readiness' rather than collapse or immobility. Triggers only on an alarm spike or threat jump/crossing to prevent spam."
-    }
-  ],
-  "alternate_descriptions": {
-    "auditory": "I hear a sharp intake of breath and a clipped, controlled exhale—like someone trying to stay quiet while getting ready to move.",
-    "tactile": "The air feels tight and charged; there's a restless micro-tremor in their stillness, like a coiled spring held in place."
-  },
-  "category": "threat",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Requires strong alarm plus fear/hypervigilance with high threat and arousal while agency remains at least partially intact (not helpless). Blocks panic/freeze/dissociation so it stays 'mobilized readiness' rather than collapse or immobility. Triggers only on an alarm spike or threat jump/crossing to prevent spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a sharp intake of breath and a clipped, controlled exhale—like someone trying to stay quiet while getting ready to move.",
+        "tactile": "The air feels tight and charged; there's a restless micro-tremor in their stillness, like a coiled spring held in place."
+    },
+    "category": "threat",
+    "diagnosticStatus": "normal"
 }

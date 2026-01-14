@@ -1,174 +1,210 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-trust-distrust:wary_suspicion",
-  "description": "Wary suspicion: attention narrows into interpretive vigilance—reading tone, timing, and inconsistencies. Not panic, not scanning-for-immediate-danger; it's a cautious, skeptical tracking that keeps options open.",
-  "actor_description": "Something doesn't line up, and my mind stops giving the benefit of the doubt. I feel myself measuring—pauses, phrasing, little mismatches—like I'm assembling a quiet pattern in the background. My body stays mostly steady, but my attention keeps returning to it, sharpening around what I can't quite name. I'm not afraid enough to bolt; I'm just not willing to relax.",
-  "description_text": "{actor} goes watchful and guarded—eyes lingering a beat too long, expression tightening into a skeptical neutrality. Their attention keeps circling the same details, as if weighing what's being said against what isn't.",
-  "priority": 73,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.suspicion"
-              },
-              0.58
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              18
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              15
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.affiliation"
-              },
-              5
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.28
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.terror"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.hypervigilance"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.anxiety"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.dread"
-              },
-              0.5
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.fatigue"
-              },
-              0.6
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.numbness"
-              },
-              0.5
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.suspicion"
-                      },
-                      {
-                        "var": "previousEmotions.suspicion"
-                      }
-                    ]
-                  },
-                  0.12
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.threat"
-                      },
-                      {
-                        "var": "previousMoodAxes.threat"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              },
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-trust-distrust:wary_suspicion",
+    "description": "Wary suspicion: attention narrows into interpretive vigilance—reading tone, timing, and inconsistencies. Not panic, not scanning-for-immediate-danger; it's a cautious, skeptical tracking that keeps options open.",
+    "actor_description": "Something doesn't line up, and my mind stops giving the benefit of the doubt. I feel myself measuring—pauses, phrasing, little mismatches—like I'm assembling a quiet pattern in the background. My body stays mostly steady, but my attention keeps returning to it, sharpening around what I can't quite name. I'm not afraid enough to bolt; I'm just not willing to relax.",
+    "description_text": "{actor} goes watchful and guarded—eyes lingering a beat too long, expression tightening into a skeptical neutrality. Their attention keeps circling the same details, as if weighing what's being said against what isn't.",
+    "priority": 73,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    "<": [
-                      {
-                        "var": "previousEmotions.suspicion"
-                      },
-                      0.58
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.suspicion"
-                      },
-                      0.58
-                    ]
-                  }
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.suspicion"
+                            },
+                            0.52
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.7
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fatigue"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.suspicion"
+                                            },
+                                            {
+                                                "var": "previousEmotions.suspicion"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.suspicion"
+                                            },
+                                            0.4
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.suspicion"
+                                            },
+                                            0.52
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.threat"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.threat"
+                                                    }
+                                                ]
+                                            },
+                                            18
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.suspicion"
+                                            },
+                                            0.52
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires suspicion with engaged tracking and moderate threat plus cool/low affiliation. Excludes panic/terror and high hypervigilance so it stays interpretive distrust (not alarm). Caps anxiety/dread and blocks fatigue/numbness so it doesn't fire as low-energy rumination. Triggers only on a suspicion spike, a threat uptick, or a threshold crossing."
-    }
-  ],
-  "alternate_descriptions": {
-    "auditory": "I hear {actor}'s voice flatten slightly—shorter answers, fewer fillers—like they've switched to careful wording. Their breathing stays controlled, but the pauses get more deliberate, as if they're choosing what to reveal.",
-    "tactile": "{actor}'s presence feels edged but contained: posture a touch more rigid, movements economical, hands less expressive. It's the sensation of someone holding space open around themselves, ready to step back without making a scene.",
-    "limited": "{actor} looks guarded and watchful, attention repeatedly returning to the same details."
-  },
-  "category": "threat",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Requires engaged, awake attention with moderate threat and a cool/guarded social tone. Needs suspicion to be genuinely present (not gate-clamped), while excluding panic/terror and keeping hypervigilance moderate so it reads as interpretive distrust, not alarm. Also blocks low-energy shutdown (fatigue/numbness). Fires only on a meaningful suspicion rise, a clear crossing into suspicion, or a notable threat uptick while suspicion is already active."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear {actor}'s voice flatten slightly—shorter answers, fewer fillers—like they've switched to careful wording. Their breathing stays controlled, but the pauses get more deliberate, as if they're choosing what to reveal.",
+        "tactile": "{actor}'s presence feels edged but contained: posture a touch more rigid, movements economical, hands less expressive. It's the sensation of someone holding space open around themselves, ready to step back without making a scene.",
+        "limited": "{actor} looks guarded and watchful, attention repeatedly returning to the same details."
+    },
+    "category": "threat",
+    "diagnosticStatus": "unknown"
 }

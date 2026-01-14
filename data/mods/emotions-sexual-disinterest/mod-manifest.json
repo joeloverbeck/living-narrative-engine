@@ -1,0 +1,11 @@
+{
+  "id": "emotions-sexual-disinterest",
+  "version": "1.0.0",
+  "name": "emotions-sexual-disinterest",
+  "dependencies": [],
+  "content": {
+    "expressions": [
+      "brakes_engaged_nothing_there.expression.json"
+    ]
+  }
+}

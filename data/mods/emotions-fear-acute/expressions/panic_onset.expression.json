@@ -160,10 +160,10 @@
             "failure_message": "Panic onset is a change-event: panic must be present and grounded in very high threat/arousal with felt loss of control (negative valence, attention online), while excluding freeze/shutdown branches. Fires only on real onset (panic spike/crossing, sharp agency drop, or abrupt threat/arousal surge)."
         }
     ],
-    "actor_description": "It snaps on like a breaker. My heart starts hammering with no warm-up and my breath turns useless-too fast, too shallow, like I can't get enough air no matter how much I take. The world narrows into signals and edges. My thoughts stop being sentences and become one repeating instruction: move, now-except I can't decide where 'safe' even is.",
-    "description_text": "{actor} goes rigid and frantic at once-eyes wide, breath thin and rapid, hands twitching as if searching for a grip on something invisible. Their head jerks in quick scans, attention stuck on danger that seems to be everywhere at the same time.",
+    "actor_description": "My heart slams into gear—no warning, just instant thunder in my chest. My breath goes shallow and rapid, pulling at air that won't fill my lungs. Everything sharpens into threats and exits. My thoughts fragment into one screaming loop: move move move—but my body can't parse which direction means safe. I'm wired to flee with nowhere to run.",
+    "description_text": "{actor} snaps taut—body locked mid-motion, eyes blown wide and darting. Their breath comes in quick, shallow gasps, chest visibly stuttering. Hands flutter and clench at nothing, fingers seeking purchase on empty air. Their head whips in fractured scans, trying to track threats from every angle at once, movements jagged and incomplete.",
     "alternate_descriptions": {
-        "auditory": "I hear breathing turn sharp and fast-air dragged in like it's not working. There's a shaky exhale, a small broken sound in the throat, and the scrape of movement that can't settle."
+        "auditory": "I hear breathing fractures into rapid, shallow pulls—air sucked in hard but never finishing the exhale. There's a choked, high sound caught in the throat, almost a whimper swallowed back. Movement sounds jerky, abrupt: fabric rustling in stops and starts, feet shifting without going anywhere, maybe a hand slapping or scraping against a surface searching for something solid."
     },
     "category": "threat",
     "diagnosticStatus": "unknown"

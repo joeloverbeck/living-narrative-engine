@@ -5,7 +5,8 @@
   "dependencies": [],
   "content": {
     "expressions": [
-      "flustered_jealousy.expression.json"
+      "flustered_jealousy.expression.json",
+      "quiet_jealous_monitoring.expression.json"
     ]
   }
 }

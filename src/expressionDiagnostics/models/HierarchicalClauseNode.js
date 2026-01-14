@@ -20,6 +20,12 @@ class HierarchicalClauseNode {
   /** @type {string} Path-based ID (e.g., "0.2.1") */
   #id;
 
+  /** @type {string|null} Deterministic clause ID for leaf nodes */
+  #clauseId = null;
+
+  /** @type {'threshold' | 'delta' | 'compound' | 'other' | null} Clause type */
+  #clauseType = null;
+
   /** @type {NodeType} Node type */
   #nodeType;
 
@@ -101,6 +107,18 @@ class HierarchicalClauseNode {
   /** @type {number} Count of times this OR alternative passed exclusively when the parent OR succeeded */
   #orExclusivePassCount = 0;
 
+  /** @type {number} Count of OR block successes with exactly one passing child (global) */
+  #orBlockExclusivePassCount = 0;
+
+  /** @type {number} Count of OR block successes with exactly one passing child (in-regime) */
+  #orBlockExclusivePassInRegimeCount = 0;
+
+  /** @type {Map<string, number>} Count of pairwise passes for OR children (global) */
+  #orPairPassCounts = new Map();
+
+  /** @type {Map<string, number>} Count of pairwise passes for OR children (in-regime) */
+  #orPairPassInRegimeCounts = new Map();
+
   /** @type {'and' | 'or' | 'root' | null} Parent node type for context-aware analysis */
   #parentNodeType = null;
 
@@ -127,6 +145,12 @@ class HierarchicalClauseNode {
 
   /** @type {number} Gate pass + clause pass count within mood regime */
   #gatePassAndClausePassInRegimeCount = 0;
+
+  /** @type {number|null} Raw pass count (>= threshold before gating) within mood regime */
+  #rawPassInRegimeCount = null;
+
+  /** @type {number|null} Lost pass count (raw >= threshold, gated < threshold) within mood regime */
+  #lostPassInRegimeCount = null;
   /**
    * @param {object} params
    * @param {string} params.id - Path-based ID (e.g., "0.2.1")
@@ -134,8 +158,18 @@ class HierarchicalClauseNode {
    * @param {string} params.description - Human-readable description
    * @param {object | null} [params.logic] - JSON Logic for leaf nodes
    * @param {HierarchicalClauseNode[]} [params.children] - Child nodes
+   * @param {string|null} [params.clauseId] - Deterministic clause id
+   * @param {'threshold' | 'delta' | 'compound' | 'other' | null} [params.clauseType]
    */
-  constructor({ id, nodeType, description, logic = null, children = [] }) {
+  constructor({
+    id,
+    nodeType,
+    description,
+    logic = null,
+    children = [],
+    clauseId = null,
+    clauseType = null,
+  }) {
     if (typeof id !== 'string' || id.length === 0) {
       throw new Error('HierarchicalClauseNode: id must be a non-empty string');
     }
@@ -155,6 +189,8 @@ class HierarchicalClauseNode {
     this.#description = description;
     this.#logic = logic;
     this.#children = Array.isArray(children) ? children : [];
+    this.#clauseId = typeof clauseId === 'string' ? clauseId : null;
+    this.#clauseType = clauseType ?? null;
     this.#failureCount = 0;
     this.#evaluationCount = 0;
     this.#violationSum = 0;
@@ -163,6 +199,16 @@ class HierarchicalClauseNode {
   /** @returns {string} */
   get id() {
     return this.#id;
+  }
+
+  /** @returns {string|null} */
+  get clauseId() {
+    return this.#clauseId;
+  }
+
+  /** @returns {'threshold' | 'delta' | 'compound' | 'other' | null} */
+  get clauseType() {
+    return this.#clauseType;
   }
 
   /** @returns {NodeType} */
@@ -436,6 +482,42 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Raw pass count within mood regime (only tracked for >= thresholds).
+   *
+   * @returns {number|null}
+   */
+  get rawPassInRegimeCount() {
+    return this.#rawPassInRegimeCount;
+  }
+
+  /**
+   * Lost pass count within mood regime (raw >= threshold, gated < threshold).
+   *
+   * @returns {number|null}
+   */
+  get lostPassInRegimeCount() {
+    return this.#lostPassInRegimeCount;
+  }
+
+  /**
+   * Lost pass rate within mood regime.
+   *
+   * @returns {number|null}
+   */
+  get lostPassRateInRegime() {
+    if (
+      this.#rawPassInRegimeCount === null ||
+      this.#rawPassInRegimeCount === 0
+    ) {
+      return null;
+    }
+    if (this.#lostPassInRegimeCount === null) {
+      return null;
+    }
+    return this.#lostPassInRegimeCount / this.#rawPassInRegimeCount;
+  }
+
+  /**
    * P(clause pass | gate pass, mood regime).
    *
    * @returns {number|null}
@@ -631,6 +713,26 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Whether this clause is trivially satisfied due to gate clamping in regime.
+   *
+   * @returns {boolean|null} Null when in-regime stats are unavailable or not applicable.
+   */
+  get clampTrivialInRegime() {
+    if (this.#nodeType !== 'leaf' || !this.#comparisonOperator) return null;
+    if (this.#comparisonOperator !== '<=' && this.#comparisonOperator !== '<') {
+      return null;
+    }
+
+    const gatePassRate = this.gatePassRateInRegime;
+    const inRegimeMax = this.inRegimeMaxObservedValue;
+    if (typeof gatePassRate !== 'number' || typeof inRegimeMax !== 'number') {
+      return null;
+    }
+
+    return gatePassRate === 0 && inRegimeMax === 0;
+  }
+
+  /**
    * Tuning direction labels derived from the comparison operator.
    *
    * @returns {{loosen: string, tighten: string}|null}
@@ -740,6 +842,60 @@ class HierarchicalClauseNode {
    */
   get orExclusivePassCount() {
     return this.#orExclusivePassCount;
+  }
+
+  /**
+   * Get the OR block union pass count (global).
+   *
+   * @returns {number}
+   */
+  get orUnionPassCount() {
+    return this.#evaluationCount - this.#failureCount;
+  }
+
+  /**
+   * Get the OR block union pass count (in-regime).
+   *
+   * @returns {number}
+   */
+  get orUnionPassInRegimeCount() {
+    return this.#inRegimeEvaluationCount - this.#inRegimeFailureCount;
+  }
+
+  /**
+   * Get the OR block exclusive pass count (global).
+   *
+   * @returns {number}
+   */
+  get orBlockExclusivePassCount() {
+    return this.#orBlockExclusivePassCount;
+  }
+
+  /**
+   * Get the OR block exclusive pass count (in-regime).
+   *
+   * @returns {number}
+   */
+  get orBlockExclusivePassInRegimeCount() {
+    return this.#orBlockExclusivePassInRegimeCount;
+  }
+
+  /**
+   * Get pairwise OR pass counts (global).
+   *
+   * @returns {{leftId: string, rightId: string, passCount: number}[]}
+   */
+  get orPairPassCounts() {
+    return this.#serializeOrPairCounts(this.#orPairPassCounts);
+  }
+
+  /**
+   * Get pairwise OR pass counts (in-regime).
+   *
+   * @returns {{leftId: string, rightId: string, passCount: number}[]}
+   */
+  get orPairPassInRegimeCounts() {
+    return this.#serializeOrPairCounts(this.#orPairPassInRegimeCounts);
   }
 
   /**
@@ -1028,6 +1184,32 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Record lost pass outcomes for >= thresholds in-regime.
+   *
+   * @param {boolean} rawPass
+   * @param {boolean} clausePassed
+   * @param {boolean} inRegime
+   */
+  recordLostPassInRegime(rawPass, clausePassed, inRegime) {
+    if (!inRegime) {
+      return;
+    }
+    if (typeof rawPass !== 'boolean' || typeof clausePassed !== 'boolean') {
+      return;
+    }
+    if (this.#rawPassInRegimeCount === null) {
+      this.#rawPassInRegimeCount = 0;
+      this.#lostPassInRegimeCount = 0;
+    }
+    if (rawPass) {
+      this.#rawPassInRegimeCount++;
+      if (!clausePassed) {
+        this.#lostPassInRegimeCount++;
+      }
+    }
+  }
+
+  /**
    * Record whether this evaluation was a near-miss.
    * A near-miss is when |actual - threshold| < epsilon.
    *
@@ -1112,6 +1294,42 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * Record that an OR block succeeded with exactly one passing child.
+   *
+   * @param {boolean} [inRegime=false]
+   */
+  recordOrBlockExclusivePass(inRegime = false) {
+    this.#orBlockExclusivePassCount++;
+    if (inRegime) {
+      this.#orBlockExclusivePassInRegimeCount++;
+    }
+  }
+
+  /**
+   * Record that a pair of OR children passed together.
+   *
+   * @param {string} leftId
+   * @param {string} rightId
+   * @param {boolean} [inRegime=false]
+   */
+  recordOrPairPass(leftId, rightId, inRegime = false) {
+    if (typeof leftId !== 'string' || typeof rightId !== 'string') {
+      return;
+    }
+    if (leftId === rightId) {
+      return;
+    }
+    const key = this.#buildOrPairKey(leftId, rightId);
+    this.#orPairPassCounts.set(key, (this.#orPairPassCounts.get(key) ?? 0) + 1);
+    if (inRegime) {
+      this.#orPairPassInRegimeCounts.set(
+        key,
+        (this.#orPairPassInRegimeCounts.get(key) ?? 0) + 1
+      );
+    }
+  }
+
+  /**
    * Record an evaluation result for this node.
    *
    * @param {boolean} passed - Whether the node evaluated to true
@@ -1157,6 +1375,10 @@ class HierarchicalClauseNode {
     this.#orSuccessCount = 0;
     this.#orPassCount = 0;
     this.#orExclusivePassCount = 0;
+    this.#orBlockExclusivePassCount = 0;
+    this.#orBlockExclusivePassInRegimeCount = 0;
+    this.#orPairPassCounts = new Map();
+    this.#orPairPassInRegimeCounts = new Map();
     this.#inRegimeEvaluationCount = 0;
     this.#inRegimeFailureCount = 0;
     this.#inRegimeMaxObservedValue = -Infinity;
@@ -1165,6 +1387,8 @@ class HierarchicalClauseNode {
     this.#gatePassCount = 0;
     this.#gatePassInRegimeCount = 0;
     this.#gatePassAndClausePassInRegimeCount = 0;
+    this.#rawPassInRegimeCount = null;
+    this.#lostPassInRegimeCount = null;
     // Note: Do NOT reset #isSingleClause - it's metadata, not a stat
     for (const child of this.#children) {
       child.resetStats();
@@ -1192,6 +1416,8 @@ class HierarchicalClauseNode {
   toJSON() {
     return {
       id: this.#id,
+      clauseId: this.#clauseId,
+      clauseType: this.#clauseType,
       nodeType: this.#nodeType,
       description: this.#description,
       failureCount: this.#failureCount,
@@ -1233,6 +1459,13 @@ class HierarchicalClauseNode {
       orExclusivePassCount: this.#orExclusivePassCount,
       orPassRate: this.orPassRate,
       orExclusivePassRate: this.orExclusivePassRate,
+      orUnionPassCount: this.orUnionPassCount,
+      orUnionPassInRegimeCount: this.orUnionPassInRegimeCount,
+      orBlockExclusivePassCount: this.#orBlockExclusivePassCount,
+      orBlockExclusivePassInRegimeCount:
+        this.#orBlockExclusivePassInRegimeCount,
+      orPairPassCounts: this.orPairPassCounts,
+      orPairPassInRegimeCounts: this.orPairPassInRegimeCounts,
       isSingleClause: this.isSingleClause,
       parentNodeType: this.#parentNodeType,
       inRegimeEvaluationCount: this.#inRegimeEvaluationCount,
@@ -1253,7 +1486,11 @@ class HierarchicalClauseNode {
       gatePassAndClauseFailInRegimeCount:
         this.gatePassAndClauseFailInRegimeCount,
       passRateGivenGateInRegime: this.passRateGivenGateInRegime,
+      rawPassInRegimeCount: this.rawPassInRegimeCount,
+      lostPassInRegimeCount: this.lostPassInRegimeCount,
+      lostPassRateInRegime: this.lostPassRateInRegime,
       redundantInRegime: this.redundantInRegime,
+      clampTrivialInRegime: this.clampTrivialInRegime,
       tuningDirection: this.tuningDirection,
       children: this.#children.map((c) => c.toJSON()),
     };
@@ -1273,6 +1510,8 @@ class HierarchicalClauseNode {
       description: obj.description,
       logic: null,
       children: (obj.children || []).map((c) => HierarchicalClauseNode.fromJSON(c)),
+      clauseId: obj.clauseId ?? null,
+      clauseType: obj.clauseType ?? null,
     });
     // Restore stats by recording fake evaluations
     // This is approximate but preserves the data
@@ -1300,6 +1539,22 @@ class HierarchicalClauseNode {
     node.#orExclusivePassCount = Number.isFinite(obj.orExclusivePassCount)
       ? obj.orExclusivePassCount
       : 0;
+    node.#orBlockExclusivePassCount = Number.isFinite(
+      obj.orBlockExclusivePassCount
+    )
+      ? obj.orBlockExclusivePassCount
+      : 0;
+    node.#orBlockExclusivePassInRegimeCount = Number.isFinite(
+      obj.orBlockExclusivePassInRegimeCount
+    )
+      ? obj.orBlockExclusivePassInRegimeCount
+      : 0;
+    node.#orPairPassCounts = HierarchicalClauseNode.#parseOrPairCounts(
+      obj.orPairPassCounts
+    );
+    node.#orPairPassInRegimeCounts = HierarchicalClauseNode.#parseOrPairCounts(
+      obj.orPairPassInRegimeCounts
+    );
     node.#inRegimeEvaluationCount = Number.isFinite(obj.inRegimeEvaluationCount)
       ? obj.inRegimeEvaluationCount
       : 0;
@@ -1334,7 +1589,50 @@ class HierarchicalClauseNode {
     )
       ? obj.gatePassAndClausePassInRegimeCount
       : 0;
+    node.#rawPassInRegimeCount = Number.isFinite(obj.rawPassInRegimeCount)
+      ? obj.rawPassInRegimeCount
+      : null;
+    node.#lostPassInRegimeCount = Number.isFinite(obj.lostPassInRegimeCount)
+      ? obj.lostPassInRegimeCount
+      : null;
     return node;
+  }
+
+  #buildOrPairKey(leftId, rightId) {
+    return leftId < rightId
+      ? `${leftId}::${rightId}`
+      : `${rightId}::${leftId}`;
+  }
+
+  #serializeOrPairCounts(map) {
+    return [...map.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, passCount]) => {
+        const [leftId, rightId] = key.split('::');
+        return { leftId, rightId, passCount };
+      });
+  }
+
+  static #parseOrPairCounts(list) {
+    const map = new Map();
+    if (!Array.isArray(list)) {
+      return map;
+    }
+    for (const item of list) {
+      if (!item || typeof item.passCount !== 'number') {
+        continue;
+      }
+      const leftId = item.leftId;
+      const rightId = item.rightId;
+      if (typeof leftId !== 'string' || typeof rightId !== 'string') {
+        continue;
+      }
+      const key = leftId < rightId
+        ? `${leftId}::${rightId}`
+        : `${rightId}::${leftId}`;
+      map.set(key, item.passCount);
+    }
+    return map;
   }
 }
 

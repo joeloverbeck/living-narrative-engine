@@ -3,8 +3,8 @@
     "id": "emotions-affiliation:shared_laughter_bond",
     "description": "Playful social bonding—shared laughter that lands as synchrony. The moment feels easy and mutual, like a quiet agreement to be on the same side of the world for a beat.",
     "category": "affection",
-    "actor_description": "The laugh slips out and I feel it answered—like the air between us loosens in the same instant. My face warms and my shoulders drop without me deciding to, and the next breath comes easier. For a moment my thoughts stop performing; it’s just the clean comfort of being in sync.",
-    "description_text": "{actor} breaks into an easy laugh that invites rather than deflects—eyes bright, posture opening as if the room just became friendlier. They settle into the moment with a small, unmistakable ease, like they’ve found the same rhythm as everyone else.",
+    "actor_description": "The laugh slips out and I feel it answered like the air between us loosens in the same instant. My face warms and my shoulders drop without me deciding to, and the next breath comes easier. For a moment my thoughts stop performing; it's just the clean comfort of being in sync.",
+    "description_text": "{actor} breaks into an easy laugh that invites rather than deflects: eyes bright, posture opening as if the room just became friendlier. They settle into the moment with a small, unmistakable ease, like they've found the same rhythm as everyone else.",
     "priority": 68,
     "prerequisites": [
         {
@@ -170,8 +170,9 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a light, genuine laugh that comes out unguarded—then a second one answering it right on the beat, like a small harmony.",
-        "tactile": "The tension in the space eases; shoulders unhook, faces soften, and there’s a faint sense of everyone leaning the same direction at once.",
-        "limited": "I catch a shared laugh and a quick, warm ease—an instant where the mood aligns and then moves on."
-    }
+        "auditory": "I hear a light, genuine laugh that comes out unguarded, then a second one answering it right on the beat, like a small harmony.",
+        "tactile": "The tension in the space eases; shoulders unhook, faces soften, and there's a faint sense of everyone leaning the same direction at once.",
+        "limited": "I catch a shared laugh and a quick, warm ease; an instant where the mood aligns and then moves on."
+    },
+    "diagnosticStatus": "normal"
 }

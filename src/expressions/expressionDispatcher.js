@@ -38,21 +38,49 @@ class ExpressionDispatcher {
    * @returns {Promise<boolean>} True if dispatched, false if rate limited or blocked.
    */
   async dispatch(actorId, expression, turnNumber) {
+    const result = await this.dispatchWithResult(
+      actorId,
+      expression,
+      turnNumber
+    );
+    return result.success;
+  }
+
+  /**
+   * Dispatch an expression with a structured result.
+   *
+   * @param {string} actorId - Actor experiencing the expression.
+   * @param {object} expression - Matched expression to dispatch.
+   * @param {number} turnNumber - Current turn number for rate limiting.
+   * @returns {Promise<{attempted: boolean, success: boolean, rateLimited: boolean, reason: string | null}>}
+   */
+  async dispatchWithResult(actorId, expression, turnNumber) {
     const hasTurnNumber = Number.isInteger(turnNumber);
     if (hasTurnNumber && this.#lastDispatchTurn === turnNumber) {
       this.#logger.debug(
         `Expression dispatch rate limited on turn ${turnNumber}`
       );
-      return false;
+      return {
+        attempted: false,
+        success: false,
+        rateLimited: true,
+        reason: 'rate_limited',
+      };
     }
 
+    let attempted = false;
     try {
       const locationId = this.#getActorLocationId(actorId);
       if (!locationId) {
         this.#logger.warn(
           `Cannot dispatch expression: actor ${actorId} has no location`
         );
-        return false;
+        return {
+          attempted: false,
+          success: false,
+          rateLimited: false,
+          reason: 'missing_location',
+        };
       }
 
       const actorName = this.#getActorName(actorId);
@@ -89,6 +117,7 @@ class ExpressionDispatcher {
         },
       };
 
+      attempted = true;
       await this.#eventBus.dispatch(EVENT_ID, eventPayload);
 
       if (hasTurnNumber) {
@@ -103,13 +132,23 @@ class ExpressionDispatcher {
         }
       );
 
-      return true;
+      return {
+        attempted,
+        success: true,
+        rateLimited: false,
+        reason: null,
+      };
     } catch (err) {
       this.#logger.error(
         `Failed to dispatch expression ${expression?.id ?? 'unknown'}`,
         err
       );
-      return false;
+      return {
+        attempted,
+        success: false,
+        rateLimited: false,
+        reason: 'dispatch_error',
+      };
     }
   }
 

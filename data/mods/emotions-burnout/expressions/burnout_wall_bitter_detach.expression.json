@@ -1,156 +1,157 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-burnout:burnout_wall_bitter_detach",
-  "description": "A burnout wall: stress has stayed high long enough that exhaustion and bitterness take the wheel, and caring starts to feel expensive. Style note: consider adding category 'burnout' for the specific triad of stress + fatigue + cynicism (work-drained, bitter, disengaging), since it’s distinct from pure shutdown or pure loss.",
-  "category": "shutdown",
-  "actor_description": "I hit a flat wall inside me—like the part that cares just clocked out. Everything tastes bitter, even the things I used to try for, and my thoughts get sharp in a tired, cutting way. I can still move, still function, but it’s on fumes and resentment, not will.",
-  "description_text": "{actor} goes dim and brittle at once—movements slower, expression tight, attention slipping away from what’s in front of them. Their replies turn dry or clipped, like caring costs too much to spend.",
-  "priority": 74,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.stress"
-              },
-              0.65
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "emotions.fatigue"
-              },
-              0.6
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "emotions.cynicism"
-                  },
-                  0.45
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-burnout:burnout_wall_bitter_detach",
+    "description": "A burnout wall: stress has stayed high long enough that exhaustion and bitterness take the wheel, and caring starts to feel expensive. Style note: consider adding category 'burnout' for the specific triad of stress + fatigue + cynicism (work-drained, bitter, disengaging), since it’s distinct from pure shutdown or pure loss.",
+    "category": "shutdown",
+    "actor_description": "I hit a flat wall inside me—like the part that cares just clocked out. Everything tastes bitter, even the things I used to try for, and my thoughts get sharp in a tired, cutting way. I can still move, still function, but it’s on fumes and resentment, not will.",
+    "description_text": "{actor} goes dim and brittle at once—movements slower, expression tight, attention slipping away from what’s in front of them. Their replies turn dry or clipped, like caring costs too much to spend.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.fatigue"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.cynicism"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.apathy"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.joy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.euphoria"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.fatigue"
+                                            },
+                                            {
+                                                "var": "previousEmotions.fatigue"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.apathy"
-                  },
-                  0.55
-                ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              -10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              -10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.future_expectancy"
-              },
-              -15
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.agency_control"
-              },
-              5
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.terror"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.joy"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.euphoria"
-              },
-              0.2
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.fatigue"
-                      },
-                      {
-                        "var": "previousEmotions.fatigue"
-                      }
-                    ]
-                  },
-                  0.12
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "previousMoodAxes.engagement"
-                      },
-                      {
-                        "var": "moodAxes.engagement"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires high stress plus high fatigue, with either cynicism (bitter edge) or rising apathy (can’t-care slide). Anchored in low arousal, slipping engagement, and negative future expectancy, with low-ish agency. Excludes panic/terror (too hot) and joy/euphoria (wrong tone). Triggers only on a fatigue spike or a sharp engagement drop to prevent spam."
-    }
-  ],
-  "alternate_descriptions": {
-    "auditory": "I hear a long, thin exhale and a tired dryness in the voice—short answers, a faint edge that says ‘don’t ask me for more.’",
-    "tactile": "The air feels heavy around them; their body carries a dull ache of overuse—shoulders set, hands slow, like everything takes an extra step."
-  }
+            },
+            "failure_message": "Requires high stress plus high fatigue, with either cynicism (bitter edge) or rising apathy (can’t-care slide). Anchored in low arousal, slipping engagement, and negative future expectancy, with low-ish agency. Excludes panic/terror (too hot) and joy/euphoria (wrong tone). Triggers only on a fatigue spike or a sharp engagement drop to prevent spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a long, thin exhale and a tired dryness in the voice—short answers, a faint edge that says ‘don’t ask me for more.’",
+        "tactile": "The air feels heavy around them; their body carries a dull ache of overuse—shoulders set, hands slow, like everything takes an extra step."
+    },
+    "diagnosticStatus": "impossible"
 }

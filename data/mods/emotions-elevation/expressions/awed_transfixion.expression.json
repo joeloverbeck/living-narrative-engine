@@ -18,9 +18,41 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.entranced"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.85
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.75
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.engagement"
                             },
                             15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
                         ]
                     },
                     {
@@ -28,7 +60,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            10
+                            -10
                         ]
                     },
                     {
@@ -36,7 +68,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            75
+                            60
                         ]
                     },
                     {
@@ -97,33 +129,6 @@
                                 ]
                             }
                         ]
-                    },
-                    {
-                        "or": [
-                            {
-                                "<=": [
-                                    {
-                                        "var": "emotions.entrancement"
-                                    },
-                                    0.6
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "emotions.awe"
-                                            },
-                                            {
-                                                "var": "emotions.entrancement"
-                                            }
-                                        ]
-                                    },
-                                    0.1
-                                ]
-                            }
-                        ]
                     }
                 ]
             }
@@ -170,6 +175,41 @@
                                         "var": "emotions.awe"
                                     },
                                     0.75
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.entranced"
+                                    },
+                                    {
+                                        "var": "previousEmotions.entranced"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.entranced"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.entranced"
+                                    },
+                                    0.6
                                 ]
                             }
                         ]

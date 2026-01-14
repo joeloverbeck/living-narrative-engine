@@ -18,6 +18,22 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.transfixed"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.engagement"
                             },
                             15
@@ -40,11 +56,19 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.15
+                            0.25
                         ]
                     },
                     {
@@ -142,6 +166,21 @@
                             {
                                 ">=": [
                                     {
+                                        "-": [
+                                            {
+                                                "var": "emotions.transfixed"
+                                            },
+                                            {
+                                                "var": "previousEmotions.transfixed"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
                                         "var": "emotions.fascination"
                                     },
                                     0.82
@@ -161,5 +200,5 @@
         "olfactory": "The air carries warm skin and faint, dry adrenaline-awake energy without the sour bite of panic."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare"
 }

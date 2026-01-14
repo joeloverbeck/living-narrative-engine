@@ -161,6 +161,21 @@ export const formatConstraints = (constraints) => {
   }
 
   return constraints
-    .map((constraint) => `\`${constraint.varPath} ${constraint.operator} ${constraint.threshold}\``)
+    .map((constraint) => {
+      const base = `${constraint.varPath} ${constraint.operator} ${constraint.threshold}`;
+      if (isMoodVarPath(constraint.varPath, true)) {
+        const normalized =
+          typeof constraint.threshold === 'number' &&
+          Number.isFinite(constraint.threshold)
+            ? (constraint.threshold / 100).toFixed(2)
+            : null;
+
+        if (normalized !== null) {
+          return `\`${base} (normalized ${constraint.operator} ${normalized})\``;
+        }
+      }
+
+      return `\`${base}\``;
+    })
     .join(', ');
 };

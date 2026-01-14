@@ -8,6 +8,7 @@ const DEFAULT_ALLOWED_VAR_ROOTS = new Set([
   'sexualStates',
   'sexualArousal',
   'moodAxes',
+  'affectTraits',
   'previousEmotions',
   'previousSexualStates',
   'previousMoodAxes',
@@ -22,6 +23,12 @@ const DEFAULT_MOOD_AXES = [
   'future_expectancy',
   'self_evaluation',
   'affiliation',
+];
+
+const DEFAULT_AFFECT_TRAITS = [
+  'affective_empathy',
+  'cognitive_empathy',
+  'harm_aversion',
 ];
 
 const COMPARISON_OPERATORS = new Set([
@@ -79,6 +86,7 @@ const RANGE_BY_ROOT = new Map([
   ['sexualStates', { min: 0, max: 1 }],
   ['sexualArousal', { min: 0, max: 1 }],
   ['moodAxes', { min: -100, max: 100 }],
+  ['affectTraits', { min: 0, max: 100 }],
   ['previousEmotions', { min: 0, max: 1 }],
   ['previousSexualStates', { min: 0, max: 1 }],
   ['previousMoodAxes', { min: -100, max: 100 }],
@@ -761,6 +769,9 @@ class ExpressionPrerequisiteValidator {
     if (root === 'moodAxes' || root === 'previousMoodAxes') {
       return validKeysByRoot.moodAxes || null;
     }
+    if (root === 'affectTraits') {
+      return validKeysByRoot.affectTraits || null;
+    }
 
     return null;
   }
@@ -790,6 +801,7 @@ class ExpressionPrerequisiteValidator {
 
 export {
   DEFAULT_ALLOWED_VAR_ROOTS,
+  DEFAULT_AFFECT_TRAITS,
   DEFAULT_MOOD_AXES,
   ExpressionPrerequisiteValidator,
 };

@@ -3,8 +3,8 @@
     "id": "emotions-shame:imposter_doubt",
     "description": "A competence-threat wobble: self-worth dips and the mind starts auditing itself. It reads as rumination and over-monitoring rather than collapse or public mortification.",
     "category": "shame",
-    "actor_description": "My confidence goes thin all at once, like someone tugged a thread and the whole story starts to fray. I keep replaying my last few moves, hunting for proof I don’t belong here. I can still act, but every step feels watched—by me—like I’m trying to preempt being found out.",
-    "description_text": "{actor} grows tight and self-conscious, checking themselves mid-motion as if rehearsing how to seem competent. Their focus stays locked in, but it has a brittle, over-controlled quality—eyes scanning, voice smaller, decisions second-guessed.",
+    "actor_description": "My confidence goes thin all at once, like someone tugged a thread and the whole story starts to fray. I keep replaying my last few moves, hunting for proof I don\u2019t belong here. I can still act, but every step feels watched\u2014by me\u2014like I\u2019m trying to preempt being found out.",
+    "description_text": "{actor} grows tight and self-conscious, checking themselves mid-motion as if rehearsing how to seem competent. Their focus stays locked in, but it has a brittle, over-controlled quality\u2014eyes scanning, voice smaller, decisions second-guessed.",
     "priority": 73,
     "prerequisites": [
         {
@@ -33,7 +33,7 @@
                                     {
                                         "var": "emotions.unease"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             },
                             {
@@ -181,8 +181,9 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear {actor} restart sentences mid-stream, adding quick qualifiers—\"I mean,\" \"maybe,\" \"if that makes sense\"—like they’re padding for impact.",
-        "tactile": "The air around {actor} feels tight with restraint—hands hovering, shoulders held, movements corrected halfway through as if they can’t trust the first try.",
+        "auditory": "I hear {actor} restart sentences mid-stream, adding quick qualifiers\u2014\"I mean,\" \"maybe,\" \"if that makes sense\"\u2014like they\u2019re padding for impact.",
+        "tactile": "The air around {actor} feels tight with restraint\u2014hands hovering, shoulders held, movements corrected halfway through as if they can\u2019t trust the first try.",
         "limited": "{actor} hesitates, visibly second-guessing themself, attention fixed and uneasy."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

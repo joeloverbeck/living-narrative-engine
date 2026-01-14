@@ -13,14 +13,6 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.suspicion"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
                                 "var": "moodAxes.threat"
                             },
                             18
@@ -31,7 +23,7 @@
                             {
                                 "var": "moodAxes.engagement"
                             },
-                            12
+                            25
                         ]
                     },
                     {
@@ -43,11 +35,27 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.suspicion"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.rage"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -71,7 +79,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -125,12 +133,13 @@
                     }
                 ]
             },
-            "failure_message": "Requires suspicion rising into a meaningful threat appraisal while engagement stays high and affiliation turns negative (warmth withdraws). Excludes rage/hatred so it reads as cold realization, and caps panic/freeze so it doesn’t collide with overwhelm or immobility. Triggers only on a suspicion spike, threat jump, or sharp affiliation drop to prevent spam."
+            "failure_message": "Requires an alert, engaged threat appraisal where suspicion clears its gate (arousal >= 0, engagement high) and affiliation turns negative (warmth withdraws). Excludes rage/hatred so it reads as cold realization, and caps panic/freeze so it doesn’t collide with overwhelm or immobility. Triggers only on a suspicion spike, threat jump, or sharp affiliation drop to prevent spam."
         }
     ],
     "alternate_descriptions": {
         "auditory": "I hear the pause before words land—the quiet recalibration where the next sentence comes out cooler, more careful, like every syllable is being weighed.",
         "tactile": "The air feels a degree colder; there’s a subtle retreat in their presence, like someone pulling their hands back from a surface they suddenly don’t trust.",
         "limited": "{actor} grows guarded—attention sharp, warmth withdrawn, body subtly making space."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

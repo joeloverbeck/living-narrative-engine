@@ -17,6 +17,9 @@ const buildSimulator = ({ currentSexual, previousSexual }) => {
   const mockEmotionCalculatorAdapter = {
     calculateEmotions: jest.fn(() => ({})),
     calculateEmotionsFiltered: jest.fn(() => ({})),
+    calculateEmotionTraces: jest.fn(() => ({})),
+    calculateEmotionTracesFiltered: jest.fn(() => ({})),
+    calculateSexualStateTraces: jest.fn(() => ({})),
     calculateSexualArousal: jest.fn(() => 0.42),
     calculateSexualStates: jest.fn(() => ({ aroused: 0.3 })),
   };

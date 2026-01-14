@@ -8,6 +8,7 @@
  * @property {string} baseUrl - Base URL for the LLM proxy server
  * @property {string} debugLog - Debug log endpoint
  * @property {string} llmRequest - LLM request endpoint
+ * @property {string} expressionLog - Expression evaluation log endpoint
  * @property {string} tracesWrite - Traces write endpoint
  * @property {string} tracesWriteBatch - Batch traces write endpoint
  * @property {string} health - Health check endpoint
@@ -100,6 +101,7 @@ class EndpointConfig {
       baseUrl: this.#baseUrl,
       debugLog: `${this.#baseUrl}/api/debug-log`,
       llmRequest: `${this.#baseUrl}/api/llm-request`,
+      expressionLog: `${this.#baseUrl}/api/expressions/log`,
       tracesWrite: `${this.#baseUrl}/api/traces/write`,
       tracesWriteBatch: `${this.#baseUrl}/api/traces/write-batch`,
       health: `${this.#baseUrl}/health`,
@@ -122,6 +124,15 @@ class EndpointConfig {
    */
   getLlmRequestEndpoint() {
     return `${this.#baseUrl}/api/llm-request`;
+  }
+
+  /**
+   * Get expression evaluation log endpoint URL
+   *
+   * @returns {string} Expression evaluation log endpoint URL
+   */
+  getExpressionLogEndpoint() {
+    return `${this.#baseUrl}/api/expressions/log`;
   }
 
   /**

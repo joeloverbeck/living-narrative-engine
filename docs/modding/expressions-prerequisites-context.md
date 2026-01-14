@@ -24,6 +24,9 @@
   - moodAxes: raw mood axis values from the mood component (defaults to 0 if missing)
       - Keys: valence, arousal, agency_control, threat, engagement, future_expectancy, self_evaluation
       - Values: numbers (typically -100..100 based on how mood components are stored).
+  - affectTraits: stable affect trait values from the affect traits component (defaults to 50 if missing)
+      - Keys: affective_empathy, cognitive_empathy, harm_aversion
+      - Values: integers in [0..100].
   - sexualArousal: number in [0..1] or null if no sexual state component
       - Calculated from sex_excitation, sex_inhibition, and baseline_libido.
   - previousEmotions: object with the same keys as emotions

@@ -103,6 +103,7 @@ async function initialize() {
           reportGenerator,
           reportModal,
           prototypeFitRankingService,
+          prototypeConstraintAnalyzer,
           sensitivityAnalyzer,
         });
 

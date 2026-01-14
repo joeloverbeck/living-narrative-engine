@@ -62,7 +62,8 @@
             "threat": -36,
             "engagement": 77,
             "future_expectancy": 43,
-            "self_evaluation": 77
+            "self_evaluation": 77,
+            "affiliation": 35
         },
         "core:sexual_state": {
             "sex_excitation": 15,

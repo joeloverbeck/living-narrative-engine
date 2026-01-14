@@ -141,5 +141,6 @@
         "auditory": "I hear clipped emphasis—words landing with sharp, deliberate stress, like each sentence is a verdict being placed on the table.",
         "tactile": "The air feels charged and tight; there’s a contained tremor in stillness, like the body is holding back a bigger motion on purpose.",
         "limited": "{actor} looks intensely engaged and visibly irritated, as if ready to challenge something they find unacceptable."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

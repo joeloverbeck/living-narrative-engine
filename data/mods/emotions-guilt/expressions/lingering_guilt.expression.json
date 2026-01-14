@@ -10,33 +10,29 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.guilt"
-                            },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.guilt"
-                            },
-                            0.7
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
                                 "var": "emotions.regret"
                             },
                             0.18
                         ]
                     },
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "var": "previousEmotions.guilt"
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.guilt"
+                                    },
+                                    0.28
+                                ]
                             },
-                            0.28
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.remorse"
+                                    },
+                                    0.28
+                                ]
+                            }
                         ]
                     },
                     {
@@ -92,7 +88,7 @@
                             {
                                 "var": "emotions.shame"
                             },
-                            0.5
+                            0.50
                         ]
                     },
                     {
@@ -100,7 +96,7 @@
                             {
                                 "var": "emotions.humiliation"
                             },
-                            0.2
+                            0.20
                         ]
                     },
                     {
@@ -108,7 +104,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.2
+                            0.20
                         ]
                     },
                     {
@@ -120,33 +116,123 @@
                         ]
                     },
                     {
-                        "<=": [
+                        "or": [
                             {
-                                "-": [
+                                "and": [
                                     {
-                                        "var": "emotions.guilt"
+                                        ">=": [
+                                            {
+                                                "var": "emotions.guilt"
+                                            },
+                                            0.40
+                                        ]
                                     },
                                     {
-                                        "var": "previousEmotions.guilt"
+                                        "<=": [
+                                            {
+                                                "var": "emotions.guilt"
+                                            },
+                                            0.70
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.remorse"
+                                            },
+                                            0.75
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.guilt"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.guilt"
+                                                    }
+                                                ]
+                                            },
+                                            0.06
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.guilt"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.guilt"
+                                                    }
+                                                ]
+                                            },
+                                            -0.06
+                                        ]
                                     }
                                 ]
                             },
-                            0.06
-                        ]
-                    },
-                    {
-                        ">=": [
                             {
-                                "-": [
+                                "and": [
                                     {
-                                        "var": "emotions.guilt"
+                                        ">=": [
+                                            {
+                                                "var": "emotions.remorse"
+                                            },
+                                            0.40
+                                        ]
                                     },
                                     {
-                                        "var": "previousEmotions.guilt"
+                                        "<=": [
+                                            {
+                                                "var": "emotions.remorse"
+                                            },
+                                            0.70
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.guilt"
+                                            },
+                                            0.75
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.remorse"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.remorse"
+                                                    }
+                                                ]
+                                            },
+                                            0.06
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.remorse"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.remorse"
+                                                    }
+                                                ]
+                                            },
+                                            -0.06
+                                        ]
                                     }
                                 ]
-                            },
-                            -0.06
+                            }
                         ]
                     }
                 ]

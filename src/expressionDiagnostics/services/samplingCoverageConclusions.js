@@ -3,6 +3,12 @@
  */
 
 const DEFAULT_TAIL_PERCENT = 0.1;
+const NORMALIZED_DOMAINS = new Set([
+  'emotions',
+  'previousEmotions',
+  'sexualStates',
+  'previousSexualStates',
+]);
 const SEVERITY_RANK = {
   critical: 0,
   warn: 1,
@@ -62,6 +68,7 @@ export function buildSamplingCoverageConclusions(
     const binCoverage = toNumber(summary.binCoverageAvg);
     const tailLow = toNumber(summary.tailCoverageAvg?.low);
     const tailHigh = toNumber(summary.tailCoverageAvg?.high);
+    const zeroRateAvg = toNumber(summary.zeroRateAvg);
 
     const tailLowRatio =
       tailLow !== null && tailPercent > 0 ? tailLow / tailPercent : null;
@@ -91,6 +98,23 @@ export function buildSamplingCoverageConclusions(
 
     const domainFindings = [];
     let hasTailNearZero = false;
+    const isNormalizedDomain = NORMALIZED_DOMAINS.has(domain);
+    const isSkewedZeroInflated =
+      isNormalizedDomain &&
+      ((tailHigh !== null && tailHigh < 0.001) ||
+        (zeroRateAvg !== null && zeroRateAvg >= 0.8));
+
+    if (isSkewedZeroInflated) {
+      const severity = tailHigh !== null && tailHigh < 0.001 ? 'critical' : 'warn';
+      const zeroRateLabel =
+        zeroRateAvg !== null
+          ? ` zeroRateAvg=${formatPercent(zeroRateAvg, 2)}`
+          : '';
+      domainFindings.push({
+        severity,
+        text: `${domain}: sampling looks skewed/zero-inflated${zeroRateLabel}; zero-heavy or gated distributions can mask threshold behavior.`,
+      });
+    }
 
     if (tailHighRatio !== null && tailHighRatio < 0.05) {
       hasTailNearZero = true;
@@ -161,6 +185,7 @@ export function buildSamplingCoverageConclusions(
       binCoverage !== null &&
       tailLowRatio !== null &&
       tailHighRatio !== null &&
+      !isSkewedZeroInflated &&
       rangeCoverage >= 0.9 &&
       binCoverage >= 0.9 &&
       tailLowRatio >= 0.7 &&

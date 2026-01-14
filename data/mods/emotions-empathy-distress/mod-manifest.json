@@ -8,6 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
+      "compassion_fatigue_flatten.expression.json",
       "empathic_overwhelm.expression.json"
     ]
   }

@@ -53,6 +53,11 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
         weights: { threat: -0.8, agency_control: 0.8 },
         gates: ['threat <= 0.20', 'agency_control >= 0.10'],
       },
+      // Gate uses threat, but weights only use valence to force lost-pass cases.
+      joy_locked: {
+        weights: { valence: 1.0 },
+        gates: ['threat >= 0.30'],
+      },
     },
   };
 
@@ -647,6 +652,48 @@ describe('MonteCarloSimulator - Gate Enforcement', () => {
       expect(fearClause.gatePassRateInRegime).toBe(1);
       expect(fearClause.gateClampRateInRegime).toBe(0);
       expect(fearClause.passRateGivenGateInRegime).not.toBeNull();
+    });
+
+    it('should track lost passes when raw values clear threshold but gates clamp', async () => {
+      const simulator = new MonteCarloSimulator({
+        dataRegistry: mockDataRegistry,
+        logger: mockLogger,
+        emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+        randomStateGenerator,
+      });
+
+      const expression = {
+        prerequisites: [
+          {
+            logic: { '>=': [{ var: 'emotions.joy_locked' }, 0.6] },
+            failure_message: 'Joy locked must be high',
+          },
+          {
+            logic: { '>=': [{ var: 'moodAxes.valence' }, 70] },
+            failure_message: 'Valence must be high',
+          },
+          {
+            logic: { '<=': [{ var: 'moodAxes.threat' }, -50] },
+            failure_message: 'Threat must be low',
+          },
+        ],
+      };
+
+      const result = await simulator.simulate(expression, {
+        sampleCount: 2000,
+        distribution: 'uniform',
+      });
+
+      const joyLockedClause = result.clauseFailures.find((clause) =>
+        clause.clauseDescription.includes('emotions.joy_locked')
+      );
+
+      expect(joyLockedClause).toBeDefined();
+      expect(joyLockedClause.rawPassInRegimeCount).toBeGreaterThan(0);
+      expect(joyLockedClause.lostPassInRegimeCount).toBe(
+        joyLockedClause.rawPassInRegimeCount
+      );
+      expect(joyLockedClause.lostPassRateInRegime).toBe(1);
     });
   });
 });

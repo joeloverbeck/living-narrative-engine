@@ -16,11 +16,43 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "moodAxes.threat"
                             },
-                            40
+                            35
                         ]
                     },
                     {
@@ -28,7 +60,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            35
+                            30
                         ]
                     },
                     {
@@ -166,6 +198,41 @@
                             },
                             12
                         ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.quiet_absorption"
+                                    },
+                                    {
+                                        "var": "previousEmotions.quiet_absorption"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.quiet_absorption"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.quiet_absorption"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
@@ -178,5 +245,5 @@
         "olfactory": "I sense mild warmth-skin, fabric, clean air-the faint comfort-smell of someone settling."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal"
 }

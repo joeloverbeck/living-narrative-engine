@@ -91,7 +91,7 @@
                             {
                                 "var": "emotions.hatred"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -116,7 +116,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -175,5 +175,6 @@
         "auditory": "My voice comes out softer than I expect—less sharp, more measured—like I'm done keeping the blade honed.",
         "tactile": "The tension drains from my hands and shoulders; the air around me feels less prickly, like I’m no longer bracing for impact.",
         "limited": "A quiet thaw—guard down, breath steadier, the urge to fight replaced by a cautious willingness to be kind."
-    }
+    },
+    "diagnosticStatus": "unknown"
 }

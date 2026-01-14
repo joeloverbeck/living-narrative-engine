@@ -13,6 +13,30 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.transfixed"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.engagement"
                             },
                             -8
@@ -55,7 +79,7 @@
                             {
                                 "var": "emotions.apathy"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -112,12 +136,13 @@
                     }
                 ]
             },
-            "failure_message": "Requires a mild engagement drop into slightly negative territory while threat stays low and arousal stays low-to-mid. Excludes apathy/fatigue (shutdown) and stress/anxiety (avoidance). Uses an engagement crossing gate to prevent spam."
+            "failure_message": "Requires a mild engagement drop into slightly negative territory while threat stays low and arousal stays low-to-mid. Caps transfixed/entranced (not locked-on or trance-captured) and caps quiet_absorption (not immersed). Excludes apathy/fatigue (shutdown) and stress/anxiety (avoidance). Uses an engagement crossing gate to prevent spam."
         }
     ],
     "alternate_descriptions": {
         "auditory": "Their responses come a half-beat late—small filler sounds, a soft \"hmm,\" like they’re listening from a few steps away.",
         "tactile": "The moment feels slightly less sharp; movements turn a touch automatic, as if they’re operating on gentle autopilot.",
         "limited": "For a brief stretch, {actor} seems mentally elsewhere—present in body, but attention drifting."
-    }
+    },
+    "diagnosticStatus": "normal"
 }

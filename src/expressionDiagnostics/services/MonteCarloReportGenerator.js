@@ -35,6 +35,8 @@ import {
   evaluateSweepMonotonicity,
   findBaselineGridPoint,
 } from '../utils/sweepIntegrityUtils.js';
+import RecommendationFactsBuilder from './RecommendationFactsBuilder.js';
+import RecommendationEngine from './RecommendationEngine.js';
 
 /**
  * Generates comprehensive markdown reports from Monte Carlo simulation results.
@@ -91,6 +93,9 @@ class MonteCarloReportGenerator {
     this.#logger.debug(`Generating report for expression: ${expressionName}`);
 
     const populationSummary = this.#resolvePopulationSummary(simulationResult);
+    const existingWarnings = Array.isArray(simulationResult?.reportIntegrityWarnings)
+      ? simulationResult.reportIntegrityWarnings
+      : [];
 
     // Extract axis constraints from prerequisites if analyzer is available
     const axisConstraints = this.#extractAxisConstraints(prerequisites);
@@ -123,9 +128,13 @@ class MonteCarloReportGenerator {
       sweepWarningContext,
     });
     reportIntegrityWarnings.push(...sweepIntegrityWarnings);
+    const mergedWarnings = this.#mergeReportIntegrityWarnings(
+      existingWarnings,
+      reportIntegrityWarnings
+    );
 
     if (simulationResult && typeof simulationResult === 'object') {
-      simulationResult.reportIntegrityWarnings = reportIntegrityWarnings;
+      simulationResult.reportIntegrityWarnings = mergedWarnings;
     }
 
     // Perform prototype fit analysis if service is available
@@ -137,6 +146,8 @@ class MonteCarloReportGenerator {
     const sections = [
       this.#generateHeader(expressionName, simulationResult),
       this.#generatePopulationSummary(populationSummary),
+      this.#generateIntegritySummarySection(mergedWarnings),
+      this.#generateSignalLineageSection(),
       this.#generateExecutiveSummary(simulationResult, summary),
       this.#generateSamplingCoverageSection(
         simulationResult.samplingCoverage,
@@ -152,8 +163,14 @@ class MonteCarloReportGenerator {
         storedPopulations,
         hasOrMoodConstraintsFlag,
         moodConstraints,
-        simulationResult.gateCompatibility
+        simulationResult.gateCompatibility,
+        simulationResult
       ),
+      this.#generateRecommendationsSection({
+        expressionName,
+        prerequisites,
+        simulationResult,
+      }),
       this.#generateConditionalPassRatesSection(
         prerequisites,
         blockers,
@@ -200,7 +217,7 @@ class MonteCarloReportGenerator {
         storedPopulations
       ),
       this.#generateStaticCrossReference(staticAnalysis, blockers),
-      this.#generateReportIntegrityWarningsSection(reportIntegrityWarnings),
+      this.#generateReportIntegrityWarningsSection(mergedWarnings),
       this.#generateLegend(),
     ];
 
@@ -228,6 +245,9 @@ class MonteCarloReportGenerator {
       return [];
     }
 
+    const existingWarnings = Array.isArray(simulationResult?.reportIntegrityWarnings)
+      ? simulationResult.reportIntegrityWarnings
+      : [];
     const axisConstraints = this.#extractAxisConstraints(prerequisites);
     const moodConstraints = extractMoodConstraints(prerequisites, {
       includeMoodAlias: true,
@@ -257,8 +277,12 @@ class MonteCarloReportGenerator {
     });
     reportIntegrityWarnings.push(...sweepIntegrityWarnings);
 
-    simulationResult.reportIntegrityWarnings = reportIntegrityWarnings;
-    return reportIntegrityWarnings;
+    const mergedWarnings = this.#mergeReportIntegrityWarnings(
+      existingWarnings,
+      reportIntegrityWarnings
+    );
+    simulationResult.reportIntegrityWarnings = mergedWarnings;
+    return mergedWarnings;
   }
 
   /**
@@ -664,6 +688,29 @@ class MonteCarloReportGenerator {
     return `${lines.join('\n')}\n\n`;
   }
 
+  #mergeReportIntegrityWarnings(existing, incoming) {
+    const merged = [];
+    const seen = new Set();
+    const combined = [...(existing ?? []), ...(incoming ?? [])].filter(Boolean);
+
+    for (const warning of combined) {
+      const key = [
+        warning.code ?? '',
+        warning.prototypeId ?? '',
+        warning.populationHash ?? '',
+        warning.signal ?? '',
+        warning.message ?? '',
+      ].join('|');
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      merged.push(warning);
+    }
+
+    return merged;
+  }
+
   /**
    * Collect report integrity warnings based on stored context data.
    * @private
@@ -826,10 +873,15 @@ class MonteCarloReportGenerator {
           if (!context) {
             continue;
           }
-          const normalized = this.#normalizeContextAxes(context);
-          let gatePass = true;
+          const traceSignals = this.#getGateTraceSignals(
+            context,
+            type,
+            prototypeId
+          );
+          let gatePass = traceSignals ? Boolean(traceSignals.gatePass) : true;
 
-          if (parsedGates.length > 0) {
+          if (!traceSignals && parsedGates.length > 0) {
+            const normalized = this.#normalizeContextAxes(context);
             for (const constraint of parsedGates) {
               const axisValue = resolveAxisValue(
                 constraint.axis,
@@ -1023,7 +1075,7 @@ class MonteCarloReportGenerator {
       typeof warning?.code === 'string' && warning.code.startsWith('I')
     );
     const impactNote = hasGateMismatchWarning
-      ? '\n\n> **Impact**: Gate/final mismatches can invalidate pass-rate and blocker metrics; treat threshold feasibility as provisional until resolved.\n'
+      ? '\n\n> **Impact (full sample)**: Gate/final mismatches can invalidate pass-rate and blocker metrics; treat threshold feasibility as provisional until resolved.\n'
       : '\n';
     return `## Report Integrity Warnings\n${lines.join('\n')}${impactNote}`;
   }
@@ -1659,12 +1711,122 @@ ${populationLabel}${sections.join('\n')}`;
 **Distribution**: ${distribution}
 **Sample Size**: ${sampleCount}
 **Sampling Mode**: ${samplingMode} - ${samplingDescription}
+**Gating model**: HARD (gate fail => final = 0)
 **Regime Note**: Report includes global vs in-regime (mood-pass) statistics
 
 ${samplingMetadata.note ? `> **Note**: ${samplingMetadata.note}` : ''}
 
 ---
 `;
+  }
+
+  /**
+   * Generate a concise integrity summary block near the top of the report.
+   * @private
+   * @param {Array<object>} warnings
+   * @returns {string}
+   */
+  #generateIntegritySummarySection(warnings) {
+    if (!Array.isArray(warnings) || warnings.length === 0) {
+      return '';
+    }
+
+    const integrityWarnings = warnings.filter((warning) =>
+      typeof warning?.code === 'string' && warning.code.startsWith('I')
+    );
+    if (integrityWarnings.length === 0) {
+      return '';
+    }
+
+    const mismatchWarnings = integrityWarnings.filter((warning) =>
+      this.#isGateMismatchWarning(warning)
+    );
+    const mismatchCount = mismatchWarnings.length;
+    const affectedPrototypes = [
+      ...new Set(
+        mismatchWarnings.map((warning) => warning.prototypeId).filter(Boolean)
+      ),
+    ];
+
+    const exampleIndices = [];
+    for (const warning of mismatchWarnings) {
+      const sampleIndices = warning?.details?.sampleIndices;
+      if (!Array.isArray(sampleIndices)) {
+        continue;
+      }
+      for (const sampleIndex of sampleIndices) {
+        if (exampleIndices.length >= REPORT_INTEGRITY_SAMPLE_LIMIT) {
+          break;
+        }
+        if (!exampleIndices.includes(sampleIndex)) {
+          exampleIndices.push(sampleIndex);
+        }
+      }
+      if (exampleIndices.length >= REPORT_INTEGRITY_SAMPLE_LIMIT) {
+        break;
+      }
+    }
+
+    const warningCount = integrityWarnings.length;
+    const reliabilityLabel = mismatchCount > 0 ? 'UNRELIABLE' : 'OK';
+    const mismatchNote =
+      mismatchCount > 0
+        ? '\n> **Note**: Gate-dependent metrics (pass rates, blocker stats) are unreliable while mismatches exist.\n'
+        : '\n';
+
+    const prototypeLabel =
+      affectedPrototypes.length > 0 ? affectedPrototypes.join(', ') : 'None';
+    const exampleLabel =
+      exampleIndices.length > 0 ? exampleIndices.join(', ') : 'None';
+
+    return `## Integrity Summary
+
+- **Integrity warnings**: ${warningCount}
+- **Gate/final mismatches**: ${mismatchCount}
+- **Gate-dependent metrics**: ${reliabilityLabel}
+- **Affected prototypes**: ${prototypeLabel}
+- **Example indices**: ${exampleLabel}${mismatchNote}
+---
+`;
+  }
+
+  /**
+   * Generate a short signal lineage section (raw -> gated -> final).
+   * @private
+   * @returns {string}
+   */
+  #generateSignalLineageSection() {
+    return `## Signal Lineage
+
+- **Raw**: Weighted sum of normalized axes (clamped to 0..1).
+- **Gated**: Raw value when gate constraints pass; otherwise 0.
+- **Final**: Hard-gated output (final = gated).
+
+**Gate input scales**
+- Mood axes: raw [-100, 100] -> normalized [-1, 1]
+- Sexual axes: raw [0, 100] -> normalized [0, 1] (sexual_arousal derived, clamped)
+- Affect traits: raw [0, 100] -> normalized [0, 1]
+
+---
+`;
+  }
+
+  /**
+   * Identify warnings that signal gate/final mismatches.
+   * @private
+   * @param {object} warning
+   * @returns {boolean}
+   */
+  #isGateMismatchWarning(warning) {
+    const code = warning?.code;
+    if (typeof code !== 'string') {
+      return false;
+    }
+    return (
+      code.startsWith('I1_') ||
+      code.startsWith('I2_') ||
+      code.startsWith('I3_')
+    );
   }
 
   /**
@@ -1723,11 +1885,11 @@ ${summary || 'No summary available.'}
 
     if (summaryByDomain.length > 0) {
       section += '### Summary by Domain\n\n';
-      section += '| Domain | Variables | Range Coverage | Bin Coverage | Tail Low | Tail High | Rating |\n';
-      section += '|--------|-----------|----------------|--------------|----------|-----------|--------|\n';
+      section += '| Domain | Variables | Range Coverage | Bin Coverage | Tail Low | Tail High | Zero Rate Avg | Rating |\n';
+      section += '|--------|-----------|----------------|--------------|----------|-----------|---------------|--------|\n';
 
       for (const summary of summaryByDomain) {
-        section += `| ${summary.domain} | ${summary.variableCount} | ${this.#formatPercentage(summary.rangeCoverageAvg)} | ${this.#formatPercentage(summary.binCoverageAvg)} | ${this.#formatPercentage(summary.tailCoverageAvg?.low)} | ${this.#formatPercentage(summary.tailCoverageAvg?.high)} | ${summary.rating} |\n`;
+        section += `| ${summary.domain} | ${summary.variableCount} | ${this.#formatPercentage(summary.rangeCoverageAvg)} | ${this.#formatPercentage(summary.binCoverageAvg)} | ${this.#formatPercentage(summary.tailCoverageAvg?.low)} | ${this.#formatPercentage(summary.tailCoverageAvg?.high)} | ${this.#formatPercentage(summary.zeroRateAvg)} | ${summary.rating} |\n`;
       }
       section += '\n';
     }
@@ -2073,7 +2235,8 @@ ${traits}`;
     storedPopulations = null,
     hasOrMoodConstraints = false,
     moodConstraints = [],
-    gateCompatibility = null
+    gateCompatibility = null,
+    simulationResult = null
   ) {
     if (!blockers || blockers.length === 0) {
       return `## Blocker Analysis
@@ -2103,11 +2266,280 @@ No blockers identified.
 > **Note on Sole-Blocker N values**: Each clause's N represents samples where all *other* clauses passed (excluding itself). Different clauses have different "others" sets, so N naturally varies. This is correct behavior indicating which clause is the decisive blocker when others succeed.
 `;
 
+    const probabilityFunnel = this.#generateProbabilityFunnel({
+      sampleCount,
+      blockers,
+      simulationResult,
+    });
+
     return `## Blocker Analysis
 Signal: final (gate-clamped intensity).
 
+${probabilityFunnel}
+
 ${blockerSections.join('\n')}
 ${note}`;
+  }
+
+  #generateProbabilityFunnel({ sampleCount, blockers, simulationResult }) {
+    if (!Number.isFinite(sampleCount)) {
+      return '';
+    }
+
+    const lines = ['### Probability Funnel'];
+
+    lines.push(`- **Full sample**: ${this.#formatCount(sampleCount)}`);
+
+    const inRegimeSampleCount = simulationResult?.inRegimeSampleCount;
+    const moodRate =
+      Number.isFinite(inRegimeSampleCount) && sampleCount > 0
+        ? inRegimeSampleCount / sampleCount
+        : null;
+    lines.push(
+      `- **Mood-regime pass**: ${this.#formatRateWithCounts(
+        moodRate,
+        inRegimeSampleCount,
+        sampleCount
+      )}`
+    );
+
+    const keyThresholds = this.#selectKeyThresholdClauses({
+      blockers,
+      clauseFailures: simulationResult?.clauseFailures,
+      ablationImpact: simulationResult?.ablationImpact,
+    });
+    if (keyThresholds.length > 0) {
+      for (const leaf of keyThresholds) {
+        const gatePassCount = leaf.gatePassInRegimeCount;
+        const inRegimeEvaluationCount = leaf.inRegimeEvaluationCount;
+        const gatePassRate =
+          Number.isFinite(gatePassCount) &&
+          Number.isFinite(inRegimeEvaluationCount) &&
+          inRegimeEvaluationCount > 0
+            ? gatePassCount / inRegimeEvaluationCount
+            : null;
+        const label = this.#formatFunnelClauseLabel(leaf);
+        lines.push(
+          `- **Gate pass | mood-pass (${label})**: ${this.#formatRateWithCounts(
+            gatePassRate,
+            gatePassCount,
+            inRegimeEvaluationCount
+          )}`
+        );
+      }
+    } else {
+      lines.push('- **Gate pass | mood-pass**: N/A');
+    }
+
+    const orBlocks = this.#collectOrBlocks(blockers);
+    if (orBlocks.length > 0) {
+      orBlocks.forEach((orNode, index) => {
+        const useInRegime =
+          Number.isFinite(orNode?.inRegimeEvaluationCount) &&
+          orNode.inRegimeEvaluationCount > 0;
+        const evaluationCount = useInRegime
+          ? orNode.inRegimeEvaluationCount
+          : orNode?.evaluationCount;
+        const unionCount = useInRegime
+          ? this.#resolveOrUnionInRegimeCount(orNode)
+          : this.#resolveOrUnionCount(orNode);
+        const unionRate =
+          Number.isFinite(unionCount) &&
+          Number.isFinite(evaluationCount) &&
+          evaluationCount > 0
+            ? unionCount / evaluationCount
+            : null;
+        lines.push(
+          `- **OR union pass | mood-pass (OR Block #${
+            index + 1
+          })**: ${this.#formatRateWithCounts(
+            unionRate,
+            unionCount,
+            evaluationCount
+          )}`
+        );
+      });
+    } else {
+      lines.push('- **OR union pass | mood-pass**: N/A');
+    }
+
+    const triggerCount = simulationResult?.triggerCount;
+    const triggerRate =
+      Number.isFinite(triggerCount) && sampleCount > 0
+        ? triggerCount / sampleCount
+        : null;
+    lines.push(
+      `- **Final trigger**: ${this.#formatRateWithCounts(
+        triggerRate,
+        triggerCount,
+        sampleCount
+      )}`
+    );
+
+    return `${lines.join('\n')}\n`;
+  }
+
+  #collectOrBlocks(blockers) {
+    const orBlocks = [];
+    const seen = new Set();
+    if (!Array.isArray(blockers)) {
+      return orBlocks;
+    }
+
+    const register = (node) => {
+      if (!node || node.nodeType !== 'or') {
+        return;
+      }
+      const key =
+        node.id ??
+        `${node.description ?? 'or'}:${node.evaluationCount ?? 'na'}:${
+          node.failureCount ?? 'na'
+        }`;
+      if (seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+      orBlocks.push(node);
+    };
+
+    const walk = (node) => {
+      if (!node) return;
+      register(node);
+      if (Array.isArray(node.children)) {
+        for (const child of node.children) {
+          walk(child);
+        }
+      }
+    };
+
+    for (const blocker of blockers) {
+      const root = blocker?.hierarchicalBreakdown;
+      if (root) {
+        walk(root);
+      }
+    }
+
+    return orBlocks;
+  }
+
+  #collectFunnelLeaves({ blockers, clauseFailures }) {
+    const sources =
+      Array.isArray(clauseFailures) && clauseFailures.length > 0
+        ? clauseFailures
+        : blockers;
+    const leaves = [];
+    if (!Array.isArray(sources)) {
+      return leaves;
+    }
+
+    for (const source of sources) {
+      const root = source?.hierarchicalBreakdown ?? source;
+      if (!root) continue;
+      this.#flattenLeaves(root, leaves);
+    }
+
+    return leaves;
+  }
+
+  #selectKeyThresholdClauses({ blockers, clauseFailures, ablationImpact }) {
+    const leafNodes = this.#collectFunnelLeaves({ blockers, clauseFailures });
+    const eligibleLeaves = leafNodes.filter(
+      (leaf) =>
+        leaf?.nodeType === 'leaf' &&
+        Number.isFinite(leaf?.gatePassInRegimeCount) &&
+        Number.isFinite(leaf?.inRegimeEvaluationCount)
+    );
+
+    if (eligibleLeaves.length === 0) {
+      return [];
+    }
+
+    const leafByClauseId = new Map();
+    for (const leaf of eligibleLeaves) {
+      if (leaf.clauseId && !leafByClauseId.has(leaf.clauseId)) {
+        leafByClauseId.set(leaf.clauseId, leaf);
+      }
+    }
+
+    const impacts = Array.isArray(ablationImpact?.clauseImpacts)
+      ? [...ablationImpact.clauseImpacts]
+      : [];
+    impacts.sort(
+      (a, b) =>
+        (b?.impact ?? 0) - (a?.impact ?? 0) ||
+        String(a?.clauseId ?? '').localeCompare(String(b?.clauseId ?? ''))
+    );
+
+    const selected = [];
+    for (const impact of impacts) {
+      const leaf = leafByClauseId.get(impact?.clauseId);
+      if (!leaf) continue;
+      selected.push(leaf);
+      if (selected.length >= 2) {
+        break;
+      }
+    }
+
+    if (selected.length > 0) {
+      return selected;
+    }
+
+    return eligibleLeaves
+      .map((leaf) => {
+        const score =
+          typeof leaf?.inRegimeFailureRate === 'number'
+            ? leaf.inRegimeFailureRate
+            : typeof leaf?.failureRate === 'number'
+              ? leaf.failureRate
+              : 0;
+        return { leaf, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 2)
+      .map((entry) => entry.leaf);
+  }
+
+  #formatFunnelClauseLabel(leaf) {
+    const description = leaf?.description;
+    if (description) {
+      return `\`${description}\``;
+    }
+    const variablePath = leaf?.variablePath ?? 'unknown';
+    const operator = leaf?.comparisonOperator ?? '?';
+    const thresholdValue = leaf?.thresholdValue;
+    const threshold =
+      typeof thresholdValue === 'number'
+        ? this.#formatNumber(thresholdValue)
+        : thresholdValue ?? 'N/A';
+    return `\`${variablePath} ${operator} ${threshold}\``;
+  }
+
+  #resolveOrUnionCount(orNode) {
+    if (!orNode) return null;
+    if (Number.isFinite(orNode.orUnionPassCount)) {
+      return orNode.orUnionPassCount;
+    }
+    if (
+      Number.isFinite(orNode.evaluationCount) &&
+      Number.isFinite(orNode.failureCount)
+    ) {
+      return orNode.evaluationCount - orNode.failureCount;
+    }
+    return null;
+  }
+
+  #resolveOrUnionInRegimeCount(orNode) {
+    if (!orNode) return null;
+    if (Number.isFinite(orNode.orUnionPassInRegimeCount)) {
+      return orNode.orUnionPassInRegimeCount;
+    }
+    if (
+      Number.isFinite(orNode.inRegimeEvaluationCount) &&
+      Number.isFinite(orNode.inRegimeFailureCount)
+    ) {
+      return orNode.inRegimeEvaluationCount - orNode.inRegimeFailureCount;
+    }
+    return null;
   }
 
   /**
@@ -2147,6 +2579,14 @@ ${note}`;
     const redundantInRegime =
       blocker.redundantInRegime ?? hb.redundantInRegime ?? null;
     const redundancyStr = this.#formatBooleanValue(redundantInRegime);
+    const clampTrivialInRegime = this.#resolveClampTrivialInRegime({
+      ...hb,
+      clampTrivialInRegime:
+        blocker.clampTrivialInRegime !== undefined
+          ? blocker.clampTrivialInRegime
+          : hb.clampTrivialInRegime,
+    });
+    const clampTrivialStr = this.#formatClampTrivialLabel(clampTrivialInRegime);
     const globalFailStr = this.#formatFailRate(
       failureRate,
       failureCount,
@@ -2186,13 +2626,18 @@ ${note}`;
       gateCompatibility
     );
 
+    const clauseAnchorId = this.#buildClauseAnchorId(hb.clauseId);
+    const clauseAnchor = clauseAnchorId ? `<a id="${clauseAnchorId}"></a>\n` : '';
+
     return `### Blocker #${rank}: \`${clauseDesc}\`
 
+${clauseAnchor}
 ${conditionLine}
 **Fail% global**: ${globalFailStr}
 **Fail% | mood-pass**: ${inRegimeFailStr}
 **Severity**: ${severity}
 **Redundant in regime**: ${redundancyStr}
+**Clamp-trivial in regime**: ${clampTrivialStr}
 
 ${this.#generateFlags(blocker)}
 
@@ -2214,6 +2659,225 @@ ${this.#generateRecommendation(blocker)}
 
 ---
 `;
+  }
+
+  /**
+   * Generate the deterministic recommendations section based on MC diagnostics.
+   * @private
+   * @param {object} params
+   * @param {string} params.expressionName
+   * @param {Array|null} params.prerequisites
+   * @param {object} params.simulationResult
+   * @returns {string}
+   */
+  #generateRecommendationsSection({ expressionName, prerequisites, simulationResult }) {
+    if (!simulationResult) {
+      return '';
+    }
+
+    const expression = {
+      id: expressionName ?? null,
+      prerequisites: Array.isArray(prerequisites) ? prerequisites : null,
+    };
+
+    const factsBuilder = new RecommendationFactsBuilder({
+      prototypeConstraintAnalyzer: this.#prototypeConstraintAnalyzer,
+      logger: this.#logger,
+    });
+    const diagnosticFacts = factsBuilder.build({
+      expression,
+      simulationResult,
+    });
+
+    if (!diagnosticFacts) {
+      return '';
+    }
+
+    const invariantFailures = (diagnosticFacts.invariants ?? []).filter(
+      (inv) => inv.ok === false
+    );
+    if (invariantFailures.length > 0) {
+      return `## Recommendations
+
+> Recommendations suppressed: invariant violations detected in diagnostic facts.
+
+---
+`;
+    }
+
+    const engine = new RecommendationEngine();
+    const recommendations = engine.generate(diagnosticFacts);
+    if (!Array.isArray(recommendations) || recommendations.length === 0) {
+      return '';
+    }
+
+    const impactByClauseId = new Map(
+      (diagnosticFacts.clauses ?? []).map((clause) => [
+        clause.clauseId,
+        clause.impact,
+      ])
+    );
+
+    const cards = recommendations.map((recommendation, index) =>
+      this.#formatRecommendationCard(recommendation, index, impactByClauseId)
+    );
+
+    return `## Recommendations
+
+${cards.join('\n')}
+
+---
+`;
+  }
+
+  /**
+   * Format a single recommendation as a markdown "card".
+   * @private
+   * @param {object} recommendation
+   * @param {number} index
+   * @param {Map<string, number>} impactByClauseId
+   * @returns {string}
+   */
+  #formatRecommendationCard(recommendation, index, impactByClauseId) {
+    const title = recommendation.title ?? 'Recommendation';
+    const confidence = recommendation.confidence ?? 'low';
+    const severity = recommendation.severity ?? 'low';
+    const type = recommendation.type ?? 'unknown';
+    const impact = this.#resolveRecommendationImpact(
+      recommendation,
+      impactByClauseId
+    );
+    const impactStr =
+      typeof impact === 'number' ? this.#formatSignedPercentagePoints(impact) : 'n/a';
+
+    const evidenceLines = this.#formatRecommendationEvidence(
+      recommendation.evidence ?? []
+    );
+    const actionLines = this.#formatRecommendationActions(
+      recommendation.actions ?? []
+    );
+    const relatedClauseLinks = this.#formatRecommendationLinks(
+      recommendation.relatedClauseIds ?? []
+    );
+
+    const bullets = [
+      `- **Type**: ${type}`,
+      `- **Severity**: ${severity}`,
+      `- **Confidence**: ${confidence}`,
+      `- **Impact (full sample)**: ${impactStr}`,
+    ];
+
+    if (recommendation.why) {
+      bullets.push(`- **Why**: ${recommendation.why}`);
+    }
+    if (evidenceLines.length > 0) {
+      bullets.push(`- **Evidence**:\n${evidenceLines.join('\n')}`);
+    }
+    if (actionLines.length > 0) {
+      bullets.push(`- **Actions**:\n${actionLines.join('\n')}`);
+    }
+    if (recommendation.predictedEffect) {
+      bullets.push(`- **Predicted Effect**: ${recommendation.predictedEffect}`);
+    }
+    if (relatedClauseLinks.length > 0) {
+      bullets.push(`- **Related Clauses**: ${relatedClauseLinks.join(', ')}`);
+    }
+
+    return `### Recommendation ${index + 1}: ${title}
+
+${bullets.join('\n')}
+`;
+  }
+
+  #resolveRecommendationImpact(recommendation, impactByClauseId) {
+    const relatedClauseIds = recommendation.relatedClauseIds ?? [];
+    for (const clauseId of relatedClauseIds) {
+      if (impactByClauseId.has(clauseId)) {
+        return impactByClauseId.get(clauseId);
+      }
+    }
+    return null;
+  }
+
+  #formatRecommendationEvidence(evidence) {
+    if (!Array.isArray(evidence) || evidence.length === 0) {
+      return [];
+    }
+
+    return evidence.map((entry) => {
+      const numerator = this.#formatEvidenceCount(entry.numerator);
+      const denominator = this.#formatEvidenceCount(entry.denominator);
+      const ratio = `${numerator}/${denominator}`;
+      const valueStr = this.#formatEvidenceValue(
+        entry.value,
+        entry.denominator
+      );
+      const populationLabel = this.#formatPopulationEvidenceLabel(
+        entry.population
+      );
+      const base = `  - ${entry.label}: ${ratio} (${valueStr})`;
+      return populationLabel ? `${base} | ${populationLabel}` : base;
+    });
+  }
+
+  #formatPopulationEvidenceLabel(population) {
+    if (!population || typeof population.name !== 'string') {
+      return null;
+    }
+    if (!Number.isFinite(population.count)) {
+      return null;
+    }
+    const countStr = this.#formatCount(population.count);
+    return `Population: ${population.name} (N=${countStr})`;
+  }
+
+  #formatRecommendationActions(actions) {
+    if (!Array.isArray(actions) || actions.length === 0) {
+      return [];
+    }
+    return actions.map((action) => `  - ${action}`);
+  }
+
+  #formatRecommendationLinks(relatedClauseIds) {
+    if (!Array.isArray(relatedClauseIds) || relatedClauseIds.length === 0) {
+      return [];
+    }
+
+    return relatedClauseIds.map((clauseId) => {
+      const anchorId = this.#buildClauseAnchorId(clauseId);
+      if (anchorId) {
+        return `[${clauseId}](#${anchorId})`;
+      }
+      return clauseId;
+    });
+  }
+
+  #formatEvidenceCount(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return '?';
+    }
+    return Number.isInteger(value) ? value : this.#formatNumber(value);
+  }
+
+  #formatEvidenceValue(value, denominator) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return 'n/a';
+    }
+    if (value >= 0 && value <= 1 && denominator !== 1) {
+      return this.#formatPercentage(value);
+    }
+    return this.#formatNumber(value);
+  }
+
+  #buildClauseAnchorId(clauseId) {
+    if (!clauseId) {
+      return null;
+    }
+    const token = String(clauseId)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return token ? `clause-${token}` : null;
   }
 
   /**
@@ -2883,7 +3547,7 @@ ${orConstraintWarning}${populationLabel}${sections.join('\n\n')}`;
       moodConstraints,
     });
     const gateCompatibilityBlock = this.#formatGateCompatibilityBlock(
-      { prototypeId, type },
+      { prototypeId, type, comparisonOperator },
       gateCompatibility
     );
 
@@ -3278,9 +3942,26 @@ ${recommendations}`;
     const rawValues = [];
     const finalValues = [];
     let gatePassCount = 0;
+    const traceTarget = this.#resolveGateTraceTarget(varPath);
 
-    if (weights && Object.keys(weights).length > 0) {
-      for (const context of contexts) {
+    for (const context of contexts) {
+      if (traceTarget) {
+        const traceSignals = this.#getGateTraceSignals(
+          context,
+          traceTarget.type,
+          traceTarget.prototypeId
+        );
+        if (traceSignals) {
+          rawValues.push(traceSignals.raw);
+          finalValues.push(traceSignals.final);
+          if (traceSignals.gatePass) {
+            gatePassCount++;
+          }
+          continue;
+        }
+      }
+
+      if (weights && Object.keys(weights).length > 0) {
         const normalized = this.#normalizeContextAxes(context);
         const signals = computeIntensitySignals({
           weights,
@@ -3295,14 +3976,16 @@ ${recommendations}`;
         if (signals.gatePass) {
           gatePassCount++;
         }
+        continue;
       }
-    } else {
-      for (const context of contexts) {
-        const value = this.#getNestedValue(context, varPath);
-        if (typeof value === 'number') {
-          finalValues.push(value);
-        }
+
+      const value = this.#getNestedValue(context, varPath);
+      if (typeof value === 'number') {
+        finalValues.push(value);
       }
+    }
+
+    if ((!weights || Object.keys(weights).length === 0) && rawValues.length === 0) {
       gatePassCount = null;
     }
 
@@ -3357,7 +4040,10 @@ ${recommendations}`;
    * @param {object|null} gateCompatibility
    * @returns {string}
    */
-  #formatGateCompatibilityBlock({ prototypeId, type }, gateCompatibility) {
+  #formatGateCompatibilityBlock(
+    { prototypeId, type, comparisonOperator },
+    gateCompatibility
+  ) {
     if (!gateCompatibility) {
       return '**Gate Compatibility (mood regime)**: N/A';
     }
@@ -3376,7 +4062,17 @@ ${recommendations}`;
       return '**Gate Compatibility (mood regime)**: ✅ compatible';
     }
 
+    const isBenignCeiling =
+      comparisonOperator === '<=' || comparisonOperator === '<';
     const reason = status.reason ? ` - ${status.reason}` : '';
+    if (isBenignCeiling) {
+      return (
+        '**Gate Compatibility (mood regime)**: ⚠️ incompatible ' +
+        '(benign for <=/< clauses)' +
+        `${reason}`
+      );
+    }
+
     return `**Gate Compatibility (mood regime)**: ❌ incompatible${reason}`;
   }
 
@@ -3449,6 +4145,47 @@ ${recommendations}`;
     const traitAxes = normalizeAffectTraits(context?.affectTraits);
 
     return { moodAxes, sexualAxes, traitAxes };
+  }
+
+  /**
+   * Resolve stored gate trace signals from context.
+   * @private
+   * @param {object} context
+   * @param {'emotion'|'sexual'} type
+   * @param {string} prototypeId
+   * @returns {{ raw: number, gated: number, final: number, gatePass: boolean }|null}
+   */
+  #getGateTraceSignals(context, type, prototypeId) {
+    const gateTrace = context?.gateTrace ?? null;
+    if (!gateTrace || !prototypeId) {
+      return null;
+    }
+    if (type === 'emotion') {
+      return gateTrace.emotions?.[prototypeId] ?? null;
+    }
+    if (type === 'sexual') {
+      return gateTrace.sexualStates?.[prototypeId] ?? null;
+    }
+    return null;
+  }
+
+  /**
+   * Resolve gate trace target from a variable path.
+   * @private
+   * @param {string} varPath
+   * @returns {{ type: 'emotion'|'sexual', prototypeId: string }|null}
+   */
+  #resolveGateTraceTarget(varPath) {
+    if (!varPath || typeof varPath !== 'string') {
+      return null;
+    }
+    if (varPath.startsWith('emotions.')) {
+      return { type: 'emotion', prototypeId: varPath.slice('emotions.'.length) };
+    }
+    if (varPath.startsWith('sexualStates.')) {
+      return { type: 'sexual', prototypeId: varPath.slice('sexualStates.'.length) };
+    }
+    return null;
   }
 
   /**
@@ -3537,6 +4274,33 @@ ${recommendations}`;
     if (value === true) return 'yes';
     if (value === false) return 'no';
     return 'N/A';
+  }
+
+  #formatClampTrivialLabel(value) {
+    if (value === true) {
+      return 'Trivially satisfied (clamped)';
+    }
+    return this.#formatBooleanValue(value);
+  }
+
+  #resolveClampTrivialInRegime(leaf) {
+    if (!leaf) return null;
+    if (typeof leaf.clampTrivialInRegime === 'boolean') {
+      return leaf.clampTrivialInRegime;
+    }
+
+    const operator = leaf.comparisonOperator;
+    if (operator !== '<=' && operator !== '<') {
+      return null;
+    }
+
+    const gatePassRate = leaf.gatePassRateInRegime;
+    const inRegimeMax = leaf.inRegimeMaxObservedValue;
+    if (typeof gatePassRate !== 'number' || typeof inRegimeMax !== 'number') {
+      return null;
+    }
+
+    return gatePassRate === 0 && inRegimeMax === 0;
   }
 
   /**
@@ -3640,21 +4404,50 @@ ${recommendations}`;
    * Calculate the effective pass rate for an OR block.
    * An OR block passes if ANY child passes.
    * @private
-   * @param {object[]} children - Array of structured child nodes
+   * @param {object} orNode - OR node from hierarchical breakdown
    * @returns {number} Combined pass rate (0-1)
    */
-  #calculateOrPassRate(children) {
-    if (!children || children.length === 0) return 0;
+  #calculateOrPassRate(orNode) {
+    if (!orNode) return 0;
+    const evaluationCount = orNode.evaluationCount;
+    const failureCount = orNode.failureCount;
 
-    // P(OR passes) = 1 - P(all children fail)
-    // P(all fail) = product of individual failure rates
-    let allFailProb = 1;
-    for (const child of children) {
-      const childNode = child.node;
-      const failRate = childNode.failureRate ?? 1;
-      allFailProb *= failRate;
+    if (
+      typeof evaluationCount === 'number' &&
+      evaluationCount > 0 &&
+      typeof failureCount === 'number'
+    ) {
+      return (evaluationCount - failureCount) / evaluationCount;
     }
-    return 1 - allFailProb;
+
+    const failureRate = orNode.failureRate;
+    if (typeof failureRate === 'number') {
+      return 1 - failureRate;
+    }
+
+    return 0;
+  }
+
+  /**
+   * Calculate in-regime failure rate for an OR block.
+   * @private
+   * @param {object} orNode - OR node from hierarchical breakdown
+   * @returns {number|null} In-regime failure rate (0-1) or null when unavailable
+   */
+  #calculateOrInRegimeFailureRate(orNode) {
+    if (!orNode) return null;
+    const inRegimeEvaluationCount = orNode.inRegimeEvaluationCount;
+    const inRegimeFailureCount = orNode.inRegimeFailureCount;
+
+    if (
+      typeof inRegimeEvaluationCount === 'number' &&
+      inRegimeEvaluationCount > 0 &&
+      typeof inRegimeFailureCount === 'number'
+    ) {
+      return inRegimeFailureCount / inRegimeEvaluationCount;
+    }
+
+    return orNode.inRegimeFailureRate ?? null;
   }
 
   /**
@@ -3680,6 +4473,7 @@ ${recommendations}`;
     const inRegimeFailureCount = leaf.inRegimeFailureCount ?? null;
     const inRegimeEvaluationCount = leaf.inRegimeEvaluationCount ?? null;
     const redundantInRegime = leaf.redundantInRegime ?? null;
+    const clampTrivialInRegime = this.#resolveClampTrivialInRegime(leaf);
     const evaluationCount = leaf.evaluationCount ?? 0;
     const threshold = leaf.thresholdValue;
     const ceilingGap = leaf.ceilingGap;
@@ -3725,6 +4519,7 @@ ${recommendations}`;
       inRegimeEvaluationCount
     );
     const redundantStr = this.#formatBooleanValue(redundantInRegime);
+    const clampTrivialStr = this.#formatClampTrivialLabel(clampTrivialInRegime);
 
     // Format ceiling gap with indicator
     let gapStr = '-';
@@ -3771,10 +4566,22 @@ ${recommendations}`;
       lastMileStr = '-';
     }
 
+    let gatePassStr = '';
     let gateClampStr = '';
     let passGivenGateStr = '';
+    let passInRegimeStr = '';
     if (includeGateMetrics) {
       if (this.#isEmotionThresholdLeaf(leaf)) {
+        const inRegimePassCount =
+          typeof inRegimeEvaluationCount === 'number' &&
+          typeof inRegimeFailureCount === 'number'
+            ? inRegimeEvaluationCount - inRegimeFailureCount
+            : null;
+        gatePassStr = this.#formatRateWithCounts(
+          leaf.gatePassRateInRegime ?? null,
+          leaf.gatePassInRegimeCount ?? null,
+          inRegimeEvaluationCount ?? null
+        );
         gateClampStr = this.#formatRateWithCounts(
           leaf.gateClampRateInRegime ?? null,
           leaf.gateFailInRegimeCount ?? null,
@@ -3785,18 +4592,25 @@ ${recommendations}`;
           leaf.gatePassAndClausePassInRegimeCount ?? null,
           leaf.gatePassInRegimeCount ?? null
         );
+        passInRegimeStr = this.#formatRateWithCounts(
+          leaf.inRegimePassRate ?? null,
+          inRegimePassCount,
+          inRegimeEvaluationCount ?? null
+        );
       } else {
+        gatePassStr = 'N/A';
         gateClampStr = 'N/A';
         passGivenGateStr = 'N/A';
+        passInRegimeStr = 'N/A';
       }
     }
 
-    const baseRow = `| ${index} | \`${description}\` | ${globalFailStr} | ${inRegimeFailStr} | ${evaluationCount} | ${boundObsStr} | ${thresholdStr} | ${gapStr} | ${tunabilityStr} | ${redundantStr} | ${lastMileStr} |`;
+    const baseRow = `| ${index} | \`${description}\` | ${globalFailStr} | ${inRegimeFailStr} | ${evaluationCount} | ${boundObsStr} | ${thresholdStr} | ${gapStr} | ${tunabilityStr} | ${redundantStr} | ${clampTrivialStr} | ${lastMileStr} |`;
     if (!includeGateMetrics) {
       return baseRow;
     }
 
-    return `${baseRow} ${gateClampStr} | ${passGivenGateStr} |`;
+    return `${baseRow} ${gatePassStr} | ${gateClampStr} | ${passGivenGateStr} | ${passInRegimeStr} |`;
   }
 
   /**
@@ -3875,14 +4689,17 @@ ${recommendations}`;
       // Generate OR block sections
       for (const orBlock of orBlocks) {
         const orBlockTitle = `OR Block #${orBlockIndex}`;
-        const orPassRate = this.#calculateOrPassRate(orBlock.children);
+        const orPassRate = this.#calculateOrPassRate(orBlock.node);
+        const orInRegimeFailureRate = this.#calculateOrInRegimeFailureRate(
+          orBlock.node
+        );
         const orSection = this.#generateConditionGroup(
           `${orBlockTitle} (ANY ONE must pass)`,
           orBlock.children,
           sampleCount,
           rowIndex,
           orPassRate,
-          orBlock.node?.inRegimeFailureRate ?? null
+          orInRegimeFailureRate
         );
 
         // Add OR contribution breakdown after the table
@@ -3890,21 +4707,29 @@ ${recommendations}`;
           orBlockTitle,
           orBlock.children
         );
+        const overlapBreakdown = this.#generateOrOverlapBreakdown(
+          orBlockTitle,
+          orBlock.node,
+          orBlock.children
+        );
 
-        sections.push(orSection.markdown + contributionBreakdown);
+        sections.push(orSection.markdown + contributionBreakdown + overlapBreakdown);
         rowIndex = orSection.nextRowIndex;
         orBlockIndex++;
       }
     } else if (structured.type === 'or') {
       // Top-level OR (less common)
-      const orPassRate = this.#calculateOrPassRate(structured.children);
+      const orPassRate = this.#calculateOrPassRate(structured.node);
+      const orInRegimeFailureRate = this.#calculateOrInRegimeFailureRate(
+        structured.node
+      );
       const orSection = this.#generateConditionGroup(
         'OR Block (ANY ONE must pass)',
         structured.children,
         sampleCount,
         rowIndex,
         orPassRate,
-        structured.node?.inRegimeFailureRate ?? null
+        orInRegimeFailureRate
       );
 
       // Add OR contribution breakdown after the table
@@ -3912,8 +4737,13 @@ ${recommendations}`;
         'OR Block',
         structured.children
       );
+      const overlapBreakdown = this.#generateOrOverlapBreakdown(
+        'OR Block',
+        structured.node,
+        structured.children
+      );
 
-      sections.push(orSection.markdown + contributionBreakdown);
+      sections.push(orSection.markdown + contributionBreakdown + overlapBreakdown);
     }
 
     if (sections.length === 0) {
@@ -3996,10 +4826,16 @@ ${sections.join('\n\n')}`;
       'Gap',
       'Tunable',
       'Redundant (regime)',
+      'Clamp-trivial (regime)',
       'Sole-Blocker Rate',
     ];
     const gateColumns = includeGateMetrics
-      ? ['Gate clamp (mood)', 'Pass \\| gate (mood)']
+      ? [
+        'Gate pass (mood)',
+        'Gate clamp (mood)',
+        'Pass \\| gate (mood)',
+        'Pass \\| mood (mood)',
+      ]
       : [];
     const columns = baseColumns.concat(gateColumns);
 
@@ -4156,6 +4992,132 @@ ${sections.join('\n\n')}`;
   }
 
   /**
+   * Generate OR overlap breakdown with absolute union/exclusive/overlap rates.
+   * @private
+   * @param {string} orBlockTitle - Title for the OR block (e.g., "OR Block #1")
+   * @param {object} orNode - OR node from hierarchical breakdown
+   * @param {object[]} children - Structured children of the OR block
+   * @returns {string} Markdown section with overlap breakdown
+   */
+  #generateOrOverlapBreakdown(orBlockTitle, orNode, children) {
+    if (!orNode) {
+      return '';
+    }
+
+    const evaluationCount = orNode.evaluationCount;
+    if (!Number.isFinite(evaluationCount) || evaluationCount <= 0) {
+      return '';
+    }
+
+    const idToLabel = new Map();
+    for (const child of children ?? []) {
+      if (!child?.node) {
+        continue;
+      }
+      let desc = child.node.description ?? 'Unknown condition';
+      if (child.type === 'and') {
+        const leaves = this.#flattenLeaves(child.node);
+        desc = leaves.length > 0
+          ? `(AND: ${leaves.map((l) => l.description ?? '?').join(' & ')})`
+          : 'AND group';
+      }
+      if (child.node.id) {
+        idToLabel.set(child.node.id, desc);
+      }
+    }
+
+    const childExclusiveCount = (children ?? []).reduce(
+      (sum, child) => sum + (child?.node?.orExclusivePassCount ?? 0),
+      0
+    );
+
+    const unionCount = Number.isFinite(orNode.orUnionPassCount)
+      ? orNode.orUnionPassCount
+      : evaluationCount - (orNode.failureCount ?? 0);
+    const exclusiveCount = Number.isFinite(orNode.orBlockExclusivePassCount)
+      ? orNode.orBlockExclusivePassCount
+      : childExclusiveCount;
+    const overlapCount = Math.max(0, unionCount - exclusiveCount);
+
+    const formatRate = (count, denominator) => {
+      if (!Number.isFinite(denominator) || denominator <= 0) {
+        return 'N/A';
+      }
+      return `${this.#formatPercentage(count / denominator)} (${this.#formatCount(
+        count
+      )}/${this.#formatCount(denominator)})`;
+    };
+
+    const formatTopPair = (pairs, denominator) => {
+      if (!Array.isArray(pairs) || pairs.length === 0) {
+        return 'None';
+      }
+      const topPair = pairs.reduce(
+        (best, current) =>
+          current.passCount > best.passCount ? current : best,
+        pairs[0]
+      );
+      const leftLabel = idToLabel.get(topPair.leftId) ?? topPair.leftId ?? '?';
+      const rightLabel = idToLabel.get(topPair.rightId) ?? topPair.rightId ?? '?';
+      const rateStr = formatRate(topPair.passCount ?? 0, denominator);
+      return `\`${leftLabel}\` + \`${rightLabel}\` ${rateStr}`;
+    };
+
+    const rows = [
+      `| Global | ${formatRate(unionCount, evaluationCount)} | ${formatRate(
+        exclusiveCount,
+        evaluationCount
+      )} | ${formatRate(overlapCount, evaluationCount)} | ${formatTopPair(
+        orNode.orPairPassCounts,
+        evaluationCount
+      )} |`,
+    ];
+
+    const inRegimeEvaluationCount = orNode.inRegimeEvaluationCount;
+    if (
+      Number.isFinite(inRegimeEvaluationCount) &&
+      inRegimeEvaluationCount > 0
+    ) {
+      const inRegimeUnionCount = Number.isFinite(
+        orNode.orUnionPassInRegimeCount
+      )
+        ? orNode.orUnionPassInRegimeCount
+        : inRegimeEvaluationCount - (orNode.inRegimeFailureCount ?? 0);
+      const inRegimeExclusiveCount = Number.isFinite(
+        orNode.orBlockExclusivePassInRegimeCount
+      )
+        ? orNode.orBlockExclusivePassInRegimeCount
+        : 0;
+      const inRegimeOverlapCount = Math.max(
+        0,
+        inRegimeUnionCount - inRegimeExclusiveCount
+      );
+      rows.push(
+        `| Mood regime | ${formatRate(
+          inRegimeUnionCount,
+          inRegimeEvaluationCount
+        )} | ${formatRate(
+          inRegimeExclusiveCount,
+          inRegimeEvaluationCount
+        )} | ${formatRate(
+          inRegimeOverlapCount,
+          inRegimeEvaluationCount
+        )} | ${formatTopPair(
+          orNode.orPairPassInRegimeCounts,
+          inRegimeEvaluationCount
+        )} |`
+      );
+    }
+
+    const header = `\n\n**${orBlockTitle} OR Overlap (absolute rates)**:`;
+    const tableHeader =
+      '| Population | Union (any pass) | Exclusive (exactly one) | Overlap (2+ pass) | Top overlap pair |';
+    const tableDivider = '|------------|------------------|------------------------|-------------------|------------------|';
+
+    return `${header}\n\n${tableHeader}\n${tableDivider}\n${rows.join('\n')}`;
+  }
+
+  /**
    * Generate detailed analysis for the worst offending leaf conditions.
    * @private
    * @param {object} blocker - Blocker object with worstOffenders
@@ -4165,11 +5127,35 @@ ${sections.join('\n\n')}`;
   #generateWorstOffenderAnalysis(blocker, _sampleCount) {
     // Use worstOffenders if available, otherwise extract from hierarchicalBreakdown
     let offenders = blocker.worstOffenders ?? [];
+    const includeClampTrivial = blocker.includeClampTrivialOffenders === true;
+    const leafByDescription = new Map();
 
     // If no worstOffenders, try to extract from hierarchicalBreakdown
-    if (offenders.length === 0 && blocker.hierarchicalBreakdown) {
+    if (blocker.hierarchicalBreakdown) {
       const leaves = this.#flattenLeaves(blocker.hierarchicalBreakdown);
-      offenders = leaves.filter((l) => (l.failureRate ?? 0) > 0.1);
+      for (const leaf of leaves) {
+        const desc = leaf.description ?? null;
+        if (typeof desc === 'string' && !leafByDescription.has(desc)) {
+          leafByDescription.set(desc, leaf);
+        }
+      }
+      if (offenders.length === 0) {
+        offenders = leaves.filter((l) => (l.failureRate ?? 0) > 0.1);
+      }
+    }
+
+    if (leafByDescription.size > 0) {
+      offenders = offenders.map((offender) => {
+        const desc = offender.description ?? null;
+        const matched = typeof desc === 'string' ? leafByDescription.get(desc) : null;
+        return matched ? { ...matched, ...offender } : offender;
+      });
+    }
+
+    if (!includeClampTrivial) {
+      offenders = offenders.filter(
+        (offender) => !this.#resolveClampTrivialInRegime(offender)
+      );
     }
 
     // Always deduplicate offenders by description to avoid listing the same condition twice
@@ -4448,6 +5434,7 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
       lines.push(
         '_Thresholds are integer-effective; decimals collapse to integer boundaries._'
       );
+      lines.push('');
     }
 
     // Add recommendation if original threshold has very low pass rate
@@ -4577,6 +5564,7 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
       lines.push(
         '_Thresholds are integer-effective; decimals collapse to integer boundaries._'
       );
+      lines.push('');
     }
 
     // Add recommendation if original threshold has very low trigger rate
@@ -4677,22 +5665,45 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
 
     // Check if baseline samples are sufficient for meaningful analysis
     // With < 5 baseline hits, sampling noise dominates and results are unreliable
-    const lowConfidenceResults = globalSensitivityData.filter((result) => {
-      if (!result.grid || result.grid.length === 0) return false;
-      const originalIndex = result.grid.findIndex(
-        (pt) => Math.abs(pt.threshold - result.originalThreshold) < 0.001
-      );
-      if (originalIndex < 0) return false;
-      const baseline = result.grid[originalIndex];
-      // Calculate approximate baseline hits: triggerRate * sampleCount
-      const estimatedHits = baseline.triggerRate * baseline.sampleCount;
-      return estimatedHits < 5;
-    });
+    const lowConfidenceResults = globalSensitivityData.reduce(
+      (acc, result) => {
+        if (!result.grid || result.grid.length === 0) return acc;
+        const originalIndex = result.grid.findIndex(
+          (pt) => Math.abs(pt.threshold - result.originalThreshold) < 0.001
+        );
+        if (originalIndex < 0) return acc;
+        const baseline = result.grid[originalIndex];
+        // Calculate approximate baseline hits: triggerRate * sampleCount
+        const estimatedHits = baseline.triggerRate * baseline.sampleCount;
+        if (estimatedHits < 5) {
+          acc.push({
+            sampleCount: baseline.sampleCount,
+            estimatedHits,
+          });
+        }
+        return acc;
+      },
+      []
+    );
 
-    const lowConfidenceWarning =
-      lowConfidenceResults.length > 0
-        ? '> ⚠️ **Low confidence**: fewer than 5 baseline expression hits. Global sensitivity tables are shown for reference.\n\n'
-        : '';
+    const lowConfidenceWarning = (() => {
+      if (lowConfidenceResults.length === 0) {
+        return '';
+      }
+
+      const populationName =
+        storedPopulations?.storedGlobal?.name ??
+        (populationSummary?.storedContextCount > 0
+          ? 'stored contexts'
+          : 'full sample');
+      const sampleCount =
+        lowConfidenceResults[0]?.sampleCount ?? populationSummary?.sampleCount;
+      const estimatedHits = lowConfidenceResults[0]?.estimatedHits;
+      const sampleCountStr = this.#formatCount(sampleCount);
+      const hitCountStr = this.#formatCount(Math.round(estimatedHits ?? 0));
+
+      return `> ⚠️ **Low confidence**: fewer than 5 baseline expression hits for population ${populationName} (N=${sampleCountStr}, hits≈${hitCountStr}). Global sensitivity tables are shown for reference.\n\n`;
+    })();
 
     const sections = globalSensitivityData.map((result) =>
       this.#formatGlobalSensitivityResult(result, sweepWarningContext)
@@ -5054,9 +6065,12 @@ ${populationLabel}
 ### Per-Clause Metrics
 - **Fail% global**: Percentage of samples where this specific clause evaluated to false (unconditional)
 - **Fail% | mood-pass**: Percentage of samples where this clause evaluated to false within the mood regime
+- **Gate pass (mood)**: Percentage of mood-regime samples where gates passed (emotion-threshold clauses only)
 - **Gate clamp (mood)**: Percentage of mood-regime samples where gates failed and the final intensity was clamped to 0 (emotion-threshold clauses only)
 - **Pass | gate (mood)**: Percentage of gate-pass samples that passed the threshold within the mood regime (emotion-threshold clauses only)
+- **Pass | mood (mood)**: Percentage of mood-regime samples that passed the threshold (emotion-threshold clauses only)
 - **Support**: Number of samples evaluated for this clause (evaluation count)
+- **Clamp-trivial (regime)**: Clause is trivially satisfied because gates always clamp intensity to 0 in regime (<= or < thresholds only)
 - **Violation Magnitude**: How far the actual value was from the threshold when the clause failed
 - **P50 (Median)**: Middle value of violations; 50% of failures had violations at or below this
 - **P90 (90th Percentile)**: 90% of failures had violations at or below this; indicates severity of worst cases
@@ -5298,6 +6312,15 @@ ${populationLabel}
     }
 
     return `${pct.toFixed(decimals)}%`;
+  }
+
+  #formatSignedPercentagePoints(value) {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+      return 'N/A';
+    }
+    const points = value * 100;
+    const sign = points > 0 ? '+' : points < 0 ? '-' : '';
+    return `${sign}${Math.abs(points).toFixed(2)} pp`;
   }
 
   /**

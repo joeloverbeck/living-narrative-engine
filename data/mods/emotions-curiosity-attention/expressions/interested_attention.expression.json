@@ -32,6 +32,46 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.38
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.suspicion"
@@ -182,5 +222,5 @@
         "olfactory": "The air carries warm skin and a faint, clean sweat note-focused presence rather than stress-like someone has leaned in and stayed there."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal"
 }
