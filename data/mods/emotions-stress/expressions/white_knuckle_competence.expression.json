@@ -13,29 +13,29 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.stress"
+                                "var": "emotions.executive_focus"
                             },
-                            0.58
+                            0.6
                         ]
                     },
                     {
-                        ">=": [
-                            {
-                                "var": "emotions.determination"
-                            },
-                            0.5
-                        ]
-                    },
-                    {
-                        ">=": [
+                        ">= ": [
                             {
                                 "var": "moodAxes.engagement"
                             },
-                            25
+                            40
                         ]
                     },
                     {
-                        ">=": [
+                        ">= ": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        ">= ": [
                             {
                                 "var": "moodAxes.arousal"
                             },
@@ -45,9 +45,53 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.arousal"
+                            },
+                            75
+                        ]
+                    },
+                    {
+                        ">= ": [
+                            {
                                 "var": "moodAxes.threat"
                             },
-                            55
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.determination"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.stress"
+                                    },
+                                    0.42
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    30
+                                ]
+                            }
                         ]
                     },
                     {
@@ -83,7 +127,66 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.flow"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
                         "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.6
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.6
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
                             {
                                 ">=": [
                                     {
@@ -100,26 +203,6 @@
                                 ]
                             },
                             {
-                                "and": [
-                                    {
-                                        "<": [
-                                            {
-                                                "var": "previousEmotions.stress"
-                                            },
-                                            0.58
-                                        ]
-                                    },
-                                    {
-                                        ">=": [
-                                            {
-                                                "var": "emotions.stress"
-                                            },
-                                            0.58
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -133,12 +216,27 @@
                                     },
                                     0.1
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires elevated stress plus determination with high engagement and at least moderately high arousal. Caps threat so it reads as pressure, not terror/panic. Blocks shutdown drift (apathy/despair) and triggers only on a fresh stress spike/crossing or a determination lift."
+            "failure_message": "Requires strong executive_focus (high engagement + high control under moderate threat) plus evidence of load (determination OR stress OR higher threat). Keeps it as pressured competence, not trance/flow or panic/terror. Triggers only on a fresh executive-focus spike/crossing, or a stress/determination/threat surge."
         }
     ],
     "alternate_descriptions": {

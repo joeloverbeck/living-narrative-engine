@@ -26,6 +26,14 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.threat"
                             },
                             30
@@ -48,11 +56,94 @@
                         ]
                     },
                     {
-                        ">=": [
+                        "<": [
                             {
-                                "var": "emotions.surprise_startle"
+                                "var": "emotions.dissociation"
                             },
-                            0.45
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.30
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            15
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.40
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.18
+                                ]
+                            }
                         ]
                     },
                     {
@@ -103,50 +194,10 @@
                                 ]
                             }
                         ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.dissociation"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.2
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            -15
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.numbness"
-                            },
-                            0.55
-                        ]
                     }
                 ]
             },
-            "failure_message": "Requires scanning-mode vigilance already online (hypervigilance+fear with high threat/arousal/engagement), plus a genuine startle spike (surprise_startle jump or sudden arousal/threat jump). Excludes dissociation/panic/freeze so it reads as a hair-trigger reflex inside active monitoring, not collapse or overwhelm."
+            "failure_message": "Requires hypervigilance+fear with a true startle spike inside active monitoring. Explicitly excludes strong executive_focus unless executive_focus just dropped hard (organized grip broke). Keeps it as reactive scanning + flinch, not pressured competence."
         }
     ],
     "actor_description": "I'm already sweeping the room—corners, hands, exits—when something twitches wrong and my body flinches hard on its own. Sharp inhale, shoulders up, hands half-raised. Then it's gone, and I'm scanning even faster, jaw tight, trying to prove to myself I didn't miss the real threat.",

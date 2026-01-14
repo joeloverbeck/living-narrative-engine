@@ -12,39 +12,23 @@
                             {
                                 "var": "emotions.flow"
                             },
-                            0.7
+                            0.65
                         ]
                     },
                     {
                         ">=": [
                             {
-                                "var": "emotions.quiet_absorption"
-                            },
-                            0.6
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.transfixed"
-                            },
-                            0.65
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.entranced"
+                                "var": "emotions.focused_absorption"
                             },
                             0.55
                         ]
                     },
                     {
-                        "<": [
+                        ">=": [
                             {
-                                "var": "emotions.freeze"
+                                "var": "moodAxes.engagement"
                             },
-                            0.15
+                            20
                         ]
                     },
                     {
@@ -56,27 +40,11 @@
                         ]
                     },
                     {
-                        ">=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            15
-                        ]
-                    },
-                    {
                         "<=": [
                             {
                                 "var": "moodAxes.threat"
                             },
-                            20
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            -10
+                            12
                         ]
                     },
                     {
@@ -84,7 +52,15 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            65
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -30
                         ]
                     },
                     {
@@ -110,7 +86,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.stress"
+                                "var": "emotions.transfixed"
                             },
                             0.45
                         ]
@@ -118,39 +94,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.anxiety"
-                            },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.confusion"
-                            },
-                            0.4
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.boredom"
-                            },
-                            0.3
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.fatigue"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.apathy"
+                                "var": "emotions.entranced"
                             },
                             0.35
                         ]
@@ -158,33 +102,25 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.stress"
                             },
-                            0.45
+                            0.35
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.frustration"
+                                "var": "emotions.anxiety"
                             },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.dissociation"
-                            },
-                            0.25
+                            0.3
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.panic"
+                                "var": "emotions.executive_focus"
                             },
-                            0.1
+                            0.45
                         ]
                     }
                 ]
@@ -193,6 +129,26 @@
         {
             "logic": {
                 "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.flow"
+                                    },
+                                    0.65
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.flow"
+                                    },
+                                    0.65
+                                ]
+                            }
+                        ]
+                    },
                     {
                         ">=": [
                             {
@@ -205,7 +161,7 @@
                                     }
                                 ]
                             },
-                            0.06
+                            0.08
                         ]
                     },
                     {
@@ -213,14 +169,14 @@
                             {
                                 "-": [
                                     {
-                                        "var": "emotions.quiet_absorption"
+                                        "var": "emotions.focused_absorption"
                                     },
                                     {
-                                        "var": "previousEmotions.quiet_absorption"
+                                        "var": "previousEmotions.focused_absorption"
                                     }
                                 ]
                             },
-                            0.06
+                            0.08
                         ]
                     },
                     {
@@ -241,19 +197,19 @@
                     {
                         "and": [
                             {
-                                "<": [
+                                ">": [
                                     {
-                                        "var": "previousEmotions.flow"
+                                        "var": "previousMoodAxes.threat"
                                     },
-                                    0.85
+                                    20
                                 ]
                             },
                             {
-                                ">=": [
+                                "<=": [
                                     {
-                                        "var": "emotions.flow"
+                                        "var": "moodAxes.threat"
                                     },
-                                    0.85
+                                    12
                                 ]
                             }
                         ]
@@ -269,5 +225,5 @@
         "olfactory": "The air carries warm effort rather than stress-clean sweat, steady concentration, none of the sharp sour note of panic."
     },
     "category": "attention",
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "normal"
 }

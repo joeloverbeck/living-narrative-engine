@@ -79,6 +79,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.executive_focus"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -139,12 +147,47 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.60
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.40
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.18
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires elevated anxiety plus dread/unease with high engagement and low agency (a cognitive loop, not a shutdown). Caps panic/freeze so it doesn’t steal acute-collapse beats, and caps overly positive valence. Triggers only on a notable change (anxiety spike, hope-drop, lonely-yearning rise, or a sudden affiliation reach) to prevent repetitive spam."
+            "failure_message": "Rumination is ‘control slips into looping.’ Explicitly excludes strong executive_focus, unless executive_focus just dropped hard (a snap from organized grip into spiral)."
         }
     ],
     "alternate_descriptions": {

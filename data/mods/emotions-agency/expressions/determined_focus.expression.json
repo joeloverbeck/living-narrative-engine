@@ -18,6 +18,14 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.executive_focus"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "emotions.interest"
                             },
                             0.15
@@ -26,9 +34,17 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.engagement"
                             },
-                            20
+                            35
                         ]
                     },
                     {
@@ -36,7 +52,79 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
                             5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.stress"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.flow"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.transfixed"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.entranced"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.quiet_absorption"
+                            },
+                            0.7
                         ]
                     },
                     {
@@ -74,6 +162,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.confusion"
                             },
                             0.55
@@ -96,11 +192,79 @@
                         ]
                     },
                     {
-                        "<=": [
+                        ">=": [
                             {
-                                "var": "emotions.panic"
+                                "-": [
+                                    {
+                                        "var": "emotions.determination"
+                                    },
+                                    {
+                                        "var": "emotions.enthusiasm"
+                                    }
+                                ]
                             },
-                            0.25
+                            0.05
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.executive_focus"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    {
+                                        "var": "previousEmotions.executive_focus"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.determination"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.determination"
+                                    },
+                                    0.6
+                                ]
+                            }
                         ]
                     },
                     {
@@ -119,18 +283,53 @@
                         ]
                     },
                     {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.focused_absorption"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.focused_absorption"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "-": [
                                     {
-                                        "var": "emotions.determination"
+                                        "var": "emotions.focused_absorption"
                                     },
                                     {
-                                        "var": "emotions.enthusiasm"
+                                        "var": "previousEmotions.focused_absorption"
                                     }
                                 ]
                             },
-                            0.05
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.agency_control"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.agency_control"
+                                    }
+                                ]
+                            },
+                            12
                         ]
                     }
                 ]
@@ -145,5 +344,5 @@
         "olfactory": "There's warm effort in the air-work-breath, not panic-breath."
     },
     "category": "agency",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "rare"
 }

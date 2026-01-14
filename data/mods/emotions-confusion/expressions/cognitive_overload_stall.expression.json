@@ -21,6 +21,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.quiet_absorption"
                             },
                             0.35
@@ -143,6 +151,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.executive_focus"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -173,12 +189,47 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.60
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.40
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.18
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires high confusion with stress (or light anxiety) while engagement stays positive—still trying to process. Caps quiet_absorption so it can't read as smooth immersion/flow. Caps transfixed/entranced so it doesn't collapse into a stunned-lock or trance-capture beat. Grounds the stall in mid-high arousal and reduced agency. Excludes dissociation/numbness (not checked out), panic/freeze (not terror), and rage (not an anger beat). Triggers on a confusion spike or a noticeable agency-control drop."
+            "failure_message": "Overload stall is ‘trying, but structure slips.’ Strong executive_focus suppresses it unless executive_focus just dropped sharply (grip collapses into buffering)."
         }
     ],
     "alternate_descriptions": {

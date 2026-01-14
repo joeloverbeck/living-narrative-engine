@@ -40,6 +40,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.32
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.engagement"
@@ -76,7 +84,7 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            55
+                            35
                         ]
                     },
                     {
@@ -126,6 +134,53 @@
                                             0.05
                                         ]
                                     }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.60
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.42
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            }
+                                        ]
+                                    },
+                                    0.18
                                 ]
                             }
                         ]
@@ -225,5 +280,5 @@
         "tactile": "I sense someone becoming unnaturally still. The air feels steadier, as if their movement has stopped so completely it changes the texture of the space."
     },
     "category": "joy",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

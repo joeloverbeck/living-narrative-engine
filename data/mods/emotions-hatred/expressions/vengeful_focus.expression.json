@@ -45,6 +45,14 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.executive_focus"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.agency_control"
                             },
                             25
@@ -55,7 +63,7 @@
                             {
                                 "var": "moodAxes.engagement"
                             },
-                            20
+                            30
                         ]
                     },
                     {
@@ -147,43 +155,77 @@
                         ]
                     },
                     {
-                        ">=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "moodAxes.agency_control"
-                                    },
-                                    {
-                                        "var": "previousMoodAxes.agency_control"
-                                    }
-                                ]
-                            },
-                            12
-                        ]
-                    },
-                    {
                         "or": [
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.hatred"
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            }
+                                        ]
                                     },
-                                    0.6
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            0.55
+                                        ]
+                                    }
                                 ]
                             },
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.anger"
+                                        "-": [
+                                            {
+                                                "var": "emotions.executive_focus"
+                                            },
+                                            {
+                                                "var": "previousEmotions.executive_focus"
+                                            }
+                                        ]
                                     },
-                                    0.55
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.hatred"
+                                            },
+                                            {
+                                                "var": "previousEmotions.hatred"
+                                            }
+                                        ]
+                                    },
+                                    0.08
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a vengeful signal (hatred high OR anger+resentment high) plus high agency and engagement with negative valence and moderate arousal/threat. Blocks 'too hot' rage and panic hijack. Critically caps guilt/remorse and prosocial warmth so the state reads as consequence-seeking, not conflicted or self-reproaching. Triggers on a decisive agency_control jump (heat → plan) while hatred/anger remains high."
+            "failure_message": "Requires a vengeful signal (hatred high OR anger+resentment high) PLUS executive_focus (anger turns into organized intention). Anchors the state in high control/engagement with negative valence and moderate arousal/threat. Blocks rage/panic and caps warmth/guilt/remorse so it reads as consequence-seeking. Triggers on an executive-focus spike/crossing or a decisive agency jump."
         }
     ],
     "alternate_descriptions": {

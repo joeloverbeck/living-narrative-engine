@@ -56,14 +56,6 @@
                         ]
                     },
                     {
-                        ">=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            -15
-                        ]
-                    },
-                    {
                         "<=": [
                             {
                                 "var": "emotions.panic"
@@ -85,6 +77,26 @@
                                 "var": "emotions.numbness"
                             },
                             0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.agency_control"
+                                    },
+                                    15
+                                ]
+                            }
                         ]
                     },
                     {
@@ -130,8 +142,7 @@
                         ]
                     }
                 ]
-            },
-            "failure_message": "Requires hypervigilance+fear with credible threat and mobilized arousal plus sustained attention; explicitly excludes dissociation; stays below panic and excludes freeze so scanning remains active; gated by crossing/spike into scanning or a threat jump."
+            }
         }
     ],
     "actor_description": "My attention won't settle—it keeps snagging on everything, pulling tight. Every sound sharpens into a question mark: footsteps, doors, voices dropping. My eyes track movement before I decide to look, scanning doorways, hands, exits in loops I can't stop running. My chest stays tight, breath never quite deep enough, muscles coiled like I'm about to need them. It's exhausting, but the exhaustion doesn't matter—stopping feels like lowering my guard right before the hit comes. If I just scan one more time, maybe I'll catch it. Maybe I'll be ready.",

@@ -132,6 +132,53 @@
                     {
                         "or": [
                             {
+                                "<=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.suspicion"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.suspicion"
+                                                    }
+                                                ]
+                                            },
+                                            0.12
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -197,7 +244,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires engaged, awake attention with moderate threat and a cool/guarded social tone. Needs suspicion to be genuinely present (not gate-clamped), while excluding panic/terror and keeping hypervigilance moderate so it reads as interpretive distrust, not alarm. Also blocks low-energy shutdown (fatigue/numbness). Fires only on a meaningful suspicion rise, a clear crossing into suspicion, or a notable threat uptick while suspicion is already active."
+            "failure_message": "Wary suspicion is interpretive distrust, not organized execution. Strong executive_focus suppresses it unless suspicion sharply spikes in a guarded social posture (affiliation low-ish, arousal moderate), preserving ‘reading inconsistencies’ without letting generic pressured competence trigger it."
         }
     ],
     "alternate_descriptions": {

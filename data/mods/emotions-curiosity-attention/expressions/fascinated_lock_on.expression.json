@@ -32,6 +32,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.focused_absorption"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.engagement"
@@ -84,7 +92,15 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            55
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -5
                         ]
                     },
                     {
@@ -125,6 +141,14 @@
                                 "var": "emotions.panic"
                             },
                             0.15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.executive_focus"
+                            },
+                            0.45
                         ]
                     },
                     {
@@ -200,5 +224,5 @@
         "olfactory": "The air carries warm skin and faint, dry adrenaline-awake energy without the sour bite of panic."
     },
     "category": "attention",
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }
