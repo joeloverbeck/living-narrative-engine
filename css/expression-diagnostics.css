@@ -23,6 +23,11 @@
   --status-impossible-bg: #F9E7E2;
   --status-impossible-text: #5C1708;
 
+  /* Unobserved status (sampling found 0, but not logically impossible) */
+  --status-unobserved-fill: #DDAA33;
+  --status-unobserved-bg: #FDF5E6;
+  --status-unobserved-text: #6B5317;
+
   /* Extremely rare status */
   --status-extremely-rare-fill: #EE7733;
   --status-extremely-rare-bg: #FDEFE7;
@@ -32,6 +37,11 @@
   --status-rare-fill: #EE3377;
   --status-rare-bg: #FDE7EF;
   --status-rare-text: #6B1736;
+
+  /* Uncommon status (between rare and normal) */
+  --status-uncommon-fill: #33BBEE;
+  --status-uncommon-bg: #E8F8FD;
+  --status-uncommon-text: #175E6B;
 
   /* Normal status */
   --status-normal-fill: #009988;
@@ -193,8 +203,10 @@
 /* Status indicator backgrounds - using CSS custom properties */
 .status-unknown { background: var(--status-unknown-bg); color: var(--status-unknown-text); }
 .status-impossible { background: var(--status-impossible-bg); color: var(--status-impossible-text); }
+.status-unobserved { background: var(--status-unobserved-bg); color: var(--status-unobserved-text); }
 .status-extremely-rare { background: var(--status-extremely-rare-bg); color: var(--status-extremely-rare-text); }
 .status-rare { background: var(--status-rare-bg); color: var(--status-rare-text); }
+.status-uncommon { background: var(--status-uncommon-bg); color: var(--status-uncommon-text); }
 .status-normal { background: var(--status-normal-bg); color: var(--status-normal-text); }
 .status-frequent { background: var(--status-frequent-bg); color: var(--status-frequent-text); }
 
@@ -292,8 +304,10 @@
 
 /* Rarity indicator backgrounds - using CSS custom properties */
 .rarity-indicator.rarity-impossible { background: var(--status-impossible-bg); color: var(--status-impossible-text); }
+.rarity-indicator.rarity-unobserved { background: var(--status-unobserved-bg); color: var(--status-unobserved-text); }
 .rarity-indicator.rarity-extremely-rare { background: var(--status-extremely-rare-bg); color: var(--status-extremely-rare-text); }
 .rarity-indicator.rarity-rare { background: var(--status-rare-bg); color: var(--status-rare-text); }
+.rarity-indicator.rarity-uncommon { background: var(--status-uncommon-bg); color: var(--status-uncommon-text); }
 .rarity-indicator.rarity-normal { background: var(--status-normal-bg); color: var(--status-normal-text); }
 .rarity-indicator.rarity-frequent { background: var(--status-frequent-bg); color: var(--status-frequent-text); }
 
@@ -923,7 +937,7 @@
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s, transform 0.1s;
   font-size: 0.875rem;
-  max-width: 200px;
+  max-width: 350px; /* Increased from 200px to allow longer expression names */
 }
 
 .expression-pill:hover {
@@ -947,8 +961,10 @@
 
 .status-circle.status-unknown { background-color: var(--status-unknown-fill); }
 .status-circle.status-impossible { background-color: var(--status-impossible-fill); }
+.status-circle.status-unobserved { background-color: var(--status-unobserved-fill); }
 .status-circle.status-extremely-rare { background-color: var(--status-extremely-rare-fill); }
 .status-circle.status-rare { background-color: var(--status-rare-fill); }
+.status-circle.status-uncommon { background-color: var(--status-uncommon-fill); }
 .status-circle.status-normal { background-color: var(--status-normal-fill); }
 .status-circle.status-frequent { background-color: var(--status-frequent-fill); }
 
@@ -967,10 +983,74 @@
   padding: 0.5rem 0;
 }
 
+/* No Data Message */
+.pills-container .no-data-message {
+  color: var(--secondary-text-color);
+  font-style: italic;
+  padding: 0.5rem 0;
+  width: 100%;
+  text-align: center;
+}
+
 /* Loading State */
 .pills-container.loading {
   opacity: 0.7;
   pointer-events: none;
+}
+
+/* ==========================================================================
+   LOW TRIGGER RATE EXPRESSIONS PANEL
+   ========================================================================== */
+
+.low-trigger-rate-panel {
+  background: var(--panel-bg-color);
+  border: 1px solid var(--border-color-subtle);
+}
+
+.low-trigger-rate-panel .panel-description {
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+  margin: 0 0 1rem 0;
+}
+
+/* Trigger Rate Badge - displayed alongside pill name */
+.trigger-rate-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 2.5rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Trigger rate badge colors by status */
+.trigger-rate-badge.status-extremely-rare {
+  background: var(--status-extremely-rare-bg);
+  color: var(--status-extremely-rare-text);
+}
+
+.trigger-rate-badge.status-rare {
+  background: var(--status-rare-bg);
+  color: var(--status-rare-text);
+}
+
+.trigger-rate-badge.status-uncommon {
+  background: var(--status-uncommon-bg);
+  color: var(--status-uncommon-text);
+}
+
+.trigger-rate-badge.status-normal {
+  background: var(--status-normal-bg);
+  color: var(--status-normal-text);
+}
+
+.trigger-rate-badge.status-frequent {
+  background: var(--status-frequent-bg);
+  color: var(--status-frequent-text);
 }
 
 /* ====================================== */

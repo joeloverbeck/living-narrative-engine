@@ -325,20 +325,20 @@
     "entranced": {
       "weights": {
         "engagement": 1.0,
-        "agency_control": -0.85,
+        "agency_control": -0.60,
         "threat": -0.50,
         "arousal": -0.20,
         "valence": 0.15,
         "future_expectancy": 0.05,
-        "inhibitory_control": -0.6,
-        "self_control": -0.4
+        "inhibitory_control": -0.45,
+        "self_control": -0.30
       },
       "gates": [
         "engagement >= 0.45",
-        "agency_control <= 0.05",
+        "agency_control <= 0.20",
         "threat <= 0.35",
-        "arousal <= 0.45",
-        "arousal >= -0.15",
+        "arousal <= 0.25",
+        "arousal >= -0.35",
         "valence >= -0.10"
       ]
     },
@@ -380,6 +380,26 @@
         "threat <= 0.35",
         "agency_control <= 0.25",
         "valence >= -0.10"
+      ]
+    },
+    "spellbound_absorption": {
+      "weights": {
+        "engagement": 1.0,
+        "arousal": -0.55,
+        "agency_control": -0.85,
+        "threat": -0.40,
+        "valence": 0.10,
+        "inhibitory_control": -0.50,
+        "self_control": -0.40,
+        "future_expectancy": 0.0
+      },
+      "gates": [
+        "engagement >= 0.40",
+        "threat <= 0.40",
+        "arousal <= 0.20",
+        "arousal >= -0.55",
+        "agency_control <= 0.05",
+        "valence >= -0.25"
       ]
     },
     "focused_absorption": {
@@ -656,7 +676,7 @@
         "threat >= 0.10"
       ]
     },
-    "stress": {
+    "stress_acute": {
       "weights": {
         "arousal": 0.85,
         "threat": 0.45,
@@ -665,14 +685,34 @@
         "engagement": 0.35,
         "future_expectancy": -0.20,
         "self_evaluation": -0.10,
-        "inhibitory_control": -0.3,
-        "self_control": -0.3
+        "inhibitory_control": -0.30,
+        "self_control": -0.30
       },
       "gates": [
         "arousal >= 0.20",
         "engagement >= 0.15",
         "threat >= 0.10",
         "valence <= 0.10"
+      ]
+    },
+    "strain_chronic": {
+      "weights": {
+        "threat": 0.55,
+        "agency_control": -0.60,
+        "future_expectancy": -0.45,
+        "engagement": -0.35,
+        "arousal": -0.45,
+        "valence": -0.25,
+        "self_evaluation": -0.15,
+        "inhibitory_control": 0.20,
+        "self_control": 0.20
+      },
+      "gates": [
+        "threat >= 0.10",
+        "agency_control <= 0.30",
+        "future_expectancy <= 0.10",
+        "arousal <= 0.35",
+        "valence <= 0.20"
       ]
     },
     "anxiety": {
@@ -894,21 +934,6 @@
         "valence <= -0.10"
       ]
     },
-    "hot_anger": {
-      "weights": {
-        "valence": -0.8,
-        "arousal": 0.8,
-        "agency_control": 0.7,
-        "threat": 0.3,
-        "affiliation": -0.3,
-        "inhibitory_control": -0.7,
-        "self_control": -0.6
-      },
-      "gates": [
-        "valence <= -0.15",
-        "arousal >= 0.10"
-      ]
-    },
     "smoldering_anger": {
       "weights": {
         "valence": -0.85,
@@ -951,17 +976,37 @@
     },
     "rage": {
       "weights": {
-        "valence": -0.9,
-        "arousal": 1.0,
-        "agency_control": 0.8,
-        "threat": 0.4,
-        "affiliation": -0.4,
-        "inhibitory_control": -0.8,
-        "self_control": -0.7
+        "valence": -0.85,
+        "arousal": 0.95,
+        "agency_control": 0.75,
+        "threat": 0.35,
+        "affiliation": -0.35,
+        "inhibitory_control": -0.75,
+        "self_control": -0.65
       },
       "gates": [
-        "valence <= -0.25",
-        "arousal >= 0.25"
+        "valence <= -0.20",
+        "arousal >= 0.20"
+      ]
+    },
+    "wrath": {
+      "weights": {
+        "valence": -0.75,
+        "arousal": 1.0,
+        "inhibitory_control": -1.0,
+        "self_control": -0.9,
+        "agency_control": -0.15,
+        "threat": -0.25,
+        "affiliation": -0.15,
+        "engagement": 0.20
+      },
+      "gates": [
+        "valence <= -0.15",
+        "arousal >= 0.35",
+        "inhibitory_control <= -0.10",
+        "self_control <= -0.10",
+        "threat <= 0.60",
+        "agency_control >= -0.10"
       ]
     },
     "resentment": {

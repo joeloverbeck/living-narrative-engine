@@ -102,8 +102,14 @@
     },
     "diagnosticStatus": {
       "type": "string",
-      "enum": ["unknown", "impossible", "extremely_rare", "rare", "normal", "frequent"],
+      "enum": ["unknown", "impossible", "unobserved", "extremely_rare", "rare", "uncommon", "normal", "frequent"],
       "description": "Diagnostic status determined by static analysis or Monte Carlo simulation. Absence means 'unknown'. This field is managed by the Expression Diagnostics tool."
+    },
+    "triggerRate": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Trigger rate as probability (0.0-1.0). 0.0=never triggers, 1.0=always triggers. Example: 0.15 = 15% trigger rate. Managed by Expression Diagnostics tool."
     }
   },
   "required": ["id", "description", "actor_description", "description_text", "category"],

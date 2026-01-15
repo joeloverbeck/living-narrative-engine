@@ -92,14 +92,6 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "emotions.rage"
                             },
                             0.25
@@ -178,44 +170,34 @@
                         ]
                     },
                     {
-                        "<=": [
+                        "<": [
                             {
                                 "var": "emotions.release"
                             },
-                            0.22
+                            0.30
                         ]
                     },
                     {
-                        "and": [
+                        "<": [
                             {
-                                "<": [
-                                    {
-                                        "var": "previousEmotions.release"
-                                    },
-                                    0.30
-                                ]
+                                "var": "previousEmotions.release"
                             },
-                            {
-                                "<": [
-                                    {
-                                        "var": "emotions.release"
-                                    },
-                                    0.30
-                                ]
-                            }
+                            0.30
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "-": [
-                                    {
-                                        "var": "emotions.release"
-                                    },
-                                    {
-                                        "var": "previousEmotions.release"
-                                    }
-                                ]
+                                "abs": {
+                                    "-": [
+                                        {
+                                            "var": "emotions.release"
+                                        },
+                                        {
+                                            "var": "previousEmotions.release"
+                                        }
+                                    ]
+                                }
                             },
                             0.04
                         ]

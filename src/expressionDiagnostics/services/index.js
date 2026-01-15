@@ -16,4 +16,11 @@ export { default as RecommendationFactsBuilder } from './RecommendationFactsBuil
 export { default as RecommendationEngine } from './RecommendationEngine.js';
 export { default as InvariantValidator } from './InvariantValidator.js';
 export { default as PrototypeSynthesisService } from './PrototypeSynthesisService.js';
+export { default as ReportFormattingService } from './ReportFormattingService.js';
+export { default as WitnessFormatter } from './WitnessFormatter.js';
+export { default as StatisticalComputationService } from './StatisticalComputationService.js';
+export { default as ReportDataExtractor } from './ReportDataExtractor.js';
+export { default as BlockerTreeTraversal } from './BlockerTreeTraversal.js';
+export { default as ReportIntegrityAnalyzer } from './ReportIntegrityAnalyzer.js';
+export { createReportGenerator } from './reportGeneratorFactory.js';
 export { buildSamplingCoverageConclusions } from './samplingCoverageConclusions.js';

@@ -205,5 +205,6 @@
         "tactile": "The air around them feels less sharp; there’s a subtle ease, like tension leaving the shoulders and hands at the same time.",
         "limited": "{actor} pauses, then gives a small, genuine sign of appreciation—calmer eyes, softened posture, and a restrained warmth."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0188
 }

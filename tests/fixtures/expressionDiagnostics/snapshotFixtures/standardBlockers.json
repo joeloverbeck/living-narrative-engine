@@ -1,0 +1,196 @@
+{
+  "_comment": "Deterministic blockers fixture for snapshot testing. DO NOT MODIFY without updating snapshots.",
+  "blockers": [
+    {
+      "clauseDescription": "emotions.joy >= 0.5",
+      "failureRate": 0.75,
+      "averageViolation": 0.3,
+      "rank": 1,
+      "severity": "high",
+      "advancedAnalysis": {
+        "percentileAnalysis": {
+          "status": "normal",
+          "insight": "Normal distribution of values"
+        },
+        "nearMissAnalysis": {
+          "status": "moderate",
+          "tunability": "moderate",
+          "insight": "Some near misses detected"
+        },
+        "ceilingAnalysis": {
+          "status": "achievable",
+          "achievable": true,
+          "headroom": 0.1,
+          "insight": "Threshold is reachable"
+        },
+        "lastMileAnalysis": {
+          "status": "moderate",
+          "isDecisive": false,
+          "insight": "Not a decisive blocker"
+        },
+        "recommendation": {
+          "action": "tune_threshold",
+          "priority": "medium",
+          "message": "Consider adjusting threshold"
+        }
+      },
+      "hierarchicalBreakdown": {
+        "variablePath": "emotions.joy",
+        "comparisonOperator": ">=",
+        "thresholdValue": 0.5,
+        "violationP50": 0.2,
+        "violationP90": 0.4,
+        "nearMissRate": 0.08,
+        "nearMissEpsilon": 0.05,
+        "maxObservedValue": 0.6,
+        "ceilingGap": -0.1,
+        "lastMileFailRate": 0.3,
+        "othersPassedCount": 5000,
+        "isSingleClause": false,
+        "failCount": 7500,
+        "inRegimeFailCount": 3500,
+        "inRegimeFailRate": 0.35
+      }
+    },
+    {
+      "clauseDescription": "emotions.fear <= 0.3",
+      "failureRate": 0.4,
+      "averageViolation": 0.15,
+      "rank": 2,
+      "severity": "medium",
+      "advancedAnalysis": {
+        "percentileAnalysis": {
+          "status": "skewed",
+          "insight": "Values skewed toward upper range"
+        },
+        "nearMissAnalysis": {
+          "status": "low",
+          "tunability": "low",
+          "insight": "Few near misses"
+        },
+        "ceilingAnalysis": {
+          "status": "difficult",
+          "achievable": false,
+          "headroom": -0.2,
+          "insight": "Ceiling is challenging"
+        },
+        "lastMileAnalysis": {
+          "status": "low",
+          "isDecisive": true,
+          "insight": "This is a decisive blocker"
+        },
+        "recommendation": {
+          "action": "accept_limitation",
+          "priority": "low",
+          "message": "May need alternative approach"
+        }
+      },
+      "hierarchicalBreakdown": {
+        "variablePath": "emotions.fear",
+        "comparisonOperator": "<=",
+        "thresholdValue": 0.3,
+        "violationP50": 0.15,
+        "violationP90": 0.25,
+        "nearMissRate": 0.03,
+        "nearMissEpsilon": 0.05,
+        "maxObservedValue": 0.35,
+        "ceilingGap": 0.05,
+        "lastMileFailRate": 0.6,
+        "othersPassedCount": 8000,
+        "isSingleClause": false,
+        "failCount": 4000,
+        "inRegimeFailCount": 1500,
+        "inRegimeFailRate": 0.15
+      }
+    },
+    {
+      "clauseDescription": "(emotions.joy >= 0.5 OR emotions.curiosity >= 0.4)",
+      "failureRate": 0.25,
+      "averageViolation": 0.1,
+      "rank": 3,
+      "severity": "low",
+      "advancedAnalysis": {
+        "percentileAnalysis": {
+          "status": "normal",
+          "insight": "Normal distribution"
+        },
+        "nearMissAnalysis": {
+          "status": "high",
+          "tunability": "high",
+          "insight": "Many near misses"
+        },
+        "ceilingAnalysis": {
+          "status": "achievable",
+          "achievable": true,
+          "headroom": 0.2,
+          "insight": "Easily achievable"
+        },
+        "lastMileAnalysis": {
+          "status": "high",
+          "isDecisive": false,
+          "insight": "Not decisive"
+        },
+        "recommendation": {
+          "action": "tune_threshold",
+          "priority": "high",
+          "message": "Small adjustment could help"
+        }
+      },
+      "hierarchicalBreakdown": {
+        "type": "or",
+        "variablePath": null,
+        "children": [
+          {
+            "variablePath": "emotions.joy",
+            "comparisonOperator": ">=",
+            "thresholdValue": 0.5,
+            "violationP50": 0.15,
+            "violationP90": 0.3,
+            "nearMissRate": 0.12,
+            "nearMissEpsilon": 0.05,
+            "maxObservedValue": 0.65,
+            "ceilingGap": -0.15,
+            "lastMileFailRate": 0.2,
+            "othersPassedCount": 6000,
+            "failCount": 3000,
+            "passCount": 7000,
+            "inRegimeFailCount": 1200,
+            "inRegimeFailRate": 0.12
+          },
+          {
+            "variablePath": "emotions.curiosity",
+            "comparisonOperator": ">=",
+            "thresholdValue": 0.4,
+            "violationP50": 0.1,
+            "violationP90": 0.2,
+            "nearMissRate": 0.15,
+            "nearMissEpsilon": 0.05,
+            "maxObservedValue": 0.55,
+            "ceilingGap": -0.15,
+            "lastMileFailRate": 0.15,
+            "othersPassedCount": 7000,
+            "failCount": 2500,
+            "passCount": 7500,
+            "inRegimeFailCount": 1000,
+            "inRegimeFailRate": 0.1
+          }
+        ],
+        "failCount": 2500,
+        "passCount": 7500,
+        "inRegimeFailCount": 800,
+        "inRegimeFailRate": 0.08
+      }
+    }
+  ],
+  "prerequisites": [
+    {
+      "logic": {
+        "and": [
+          { ">=": [{ "var": "moodAxes.valence" }, 0.4] },
+          { ">=": [{ "var": "moodAxes.arousal" }, 0.3] },
+          { "<=": [{ "var": "moodAxes.threat" }, 0.6] }
+        ]
+      }
+    }
+  ]
+}

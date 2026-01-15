@@ -16,6 +16,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.affiliation"
@@ -61,6 +69,22 @@
                                 "var": "moodAxes.threat"
                             },
                             55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
                         ]
                     },
                     {
@@ -132,15 +156,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.5
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.7
+                            0.55
                         ]
                     },
                     {

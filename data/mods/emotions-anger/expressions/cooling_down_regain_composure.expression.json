@@ -23,7 +23,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "previousEmotions.hot_anger"
+                                        "var": "previousEmotions.rage"
                                     },
                                     0.45
                                 ]
@@ -177,7 +177,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.3
+                            0.35
                         ]
                     },
                     {
@@ -195,10 +195,10 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.hot_anger"
+                                                "var": "emotions.rage"
                                             },
                                             {
-                                                "var": "previousEmotions.hot_anger"
+                                                "var": "previousEmotions.rage"
                                             }
                                         ]
                                     },
@@ -274,10 +274,10 @@
                                                     {
                                                         "-": [
                                                             {
-                                                                "var": "emotions.hot_anger"
+                                                                "var": "emotions.rage"
                                                             },
                                                             {
-                                                                "var": "previousEmotions.hot_anger"
+                                                                "var": "previousEmotions.rage"
                                                             }
                                                         ]
                                                     },
@@ -327,7 +327,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires smoldering anger as the post-heat landing state plus evidence it was hotter before. Anchors in low-to-mid arousal with engagement still online and either regained agency_control or a clear control jump. Adds regulatory return: inhibitory_control must be at least baseline and either high or clearly rising (with trait support or compensatory white-knuckling). Requires explicit cooling (hot anger/frustration/arousal dropping and/or release rising) to prevent baseline cold anger from spamming. Caps rage (still escalating) and contempt (drifts into cold fury/dismissal)."
+            "failure_message": "Requires smoldering anger as the post-heat landing state plus evidence it was hotter before (rage/frustration/arousal). Anchors in low-to-mid arousal with engagement still online and either regained agency_control or a clear control jump. Adds regulatory return: inhibitory_control must be at least baseline and either high or clearly rising (with trait support or compensatory white-knuckling). Requires explicit cooling (rage/frustration/arousal dropping and/or release rising) to prevent baseline cold anger from spamming. Caps current rage (still escalating) and contempt (drifts into cold fury/dismissal)."
         }
     ],
     "alternate_descriptions": {
@@ -335,5 +335,5 @@
         "tactile": "The air feels less tight around them, like tension is bleeding out through their shoulders and hands. The heat is still there, but it’s contained—no longer spilling over.",
         "limited": "Something in {actor} settles: the agitation eases, and their control becomes visible again."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare"
 }

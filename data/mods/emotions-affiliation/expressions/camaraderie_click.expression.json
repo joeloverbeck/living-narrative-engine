@@ -133,5 +133,6 @@
         "tactile": "The space feels closer in a good way; posture loosens, shoulders drop, and there’s an easy lean-in as if the body has stopped holding itself apart.",
         "limited": "I feel a small, steady warmth and an instinct to stay near—like the room finally has a place for me."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0117
 }

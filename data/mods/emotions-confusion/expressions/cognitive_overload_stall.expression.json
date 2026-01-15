@@ -37,6 +37,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.spellbound_absorption"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.transfixed"
                             },
                             0.6
@@ -55,7 +63,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.stress"
+                                        "var": "emotions.stress_acute"
                                     },
                                     0.5
                                 ]

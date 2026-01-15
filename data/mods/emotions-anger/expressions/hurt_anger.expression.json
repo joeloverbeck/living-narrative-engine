@@ -16,6 +16,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.affiliation"

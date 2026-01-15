@@ -19,7 +19,7 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.hot_anger"
+                                "var": "emotions.wrath"
                             },
                             0.45
                         ]
@@ -29,10 +29,10 @@
                             {
                                 "-": [
                                     {
-                                        "var": "emotions.hot_anger"
+                                        "var": "emotions.wrath"
                                     },
                                     {
-                                        "var": "previousEmotions.hot_anger"
+                                        "var": "previousEmotions.wrath"
                                     }
                                 ]
                             },
@@ -53,6 +53,14 @@
                                 "var": "moodAxes.self_evaluation"
                             },
                             -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -5
                         ]
                     },
                     {
@@ -153,7 +161,7 @@
                     }
                 ]
             },
-            "failure_message": "Adds disinhibition gating: a defensive snap is a response-inhibition failure under social heat. High inhibitory_control (white-knuckling) should block it unless disinhibition is present; low trait self_control makes the outburst more likely at these shame/anger levels."
+            "failure_message": "Defensive snap is shame + threat + arousal, expressed as a brief restraint failure: uses wrath (not rage) as the anger-family driver and requires a wrath spike. Blocks cold cruelty by capping contempt/hatred, and blocks white-knuckle control by requiring low inhibitory_control (with trait self_control modulating likelihood)."
         }
     ],
     "actor_description": "Heat crawls up my neck and I can feel myself shrinking inside my own skin\u2014like I'm being pinned by attention. Then the next thing out of me is sharp: a snap meant to make the moment back up. It\u2019s not courage; it\u2019s cover. I\u2019m trying to stop the looking before it gets under me.",

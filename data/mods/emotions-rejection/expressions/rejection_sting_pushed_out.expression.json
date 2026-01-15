@@ -55,7 +55,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.hot_anger"
+                                        "var": "emotions.rage"
                                     },
                                     0.35
                                 ]

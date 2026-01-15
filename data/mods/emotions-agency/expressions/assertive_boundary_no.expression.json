@@ -73,14 +73,6 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "emotions.rage"
                             },
                             0.2
@@ -155,5 +147,6 @@
         "tactile": "The air tightens like a line drawn. Their stillness has weight—grounded feet, squared shoulders, a boundary you can almost bump into.",
         "limited": "{actor} refuses firmly—controlled, unwavering, and not heated."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0025
 }

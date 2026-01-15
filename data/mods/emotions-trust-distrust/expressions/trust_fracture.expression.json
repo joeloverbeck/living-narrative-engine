@@ -89,14 +89,6 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "emotions.panic"
                             },
                             0.25
@@ -196,7 +188,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires engaged threat appraisal with suspicion clearing its gate and affiliation turning negative (warmth withdrawn). Adds a cold-edge co-driver: smoldering anger (or sufficiently negative valence) so the beat reads as chilling appraisal rather than pure anxious suspicion. Blocks rage/hatred and caps hot anger so it doesn’t become an anger outburst; caps panic/freeze so it stays decisive and interpretive. Triggers on suspicion/threat/affiliation change or a smoldering rise to prevent spam."
+            "failure_message": "Requires engaged threat appraisal with suspicion clearing its gate and affiliation turning negative (warmth withdrawn). Adds a cold-edge co-driver: smoldering anger (or sufficiently negative valence) so the beat reads as chilling appraisal rather than pure anxious suspicion. Blocks rage/hatred so it doesn’t become an anger outburst; caps panic/freeze so it stays decisive and interpretive. Triggers on suspicion/threat/affiliation change or a smoldering rise to prevent spam."
         }
     ],
     "alternate_descriptions": {

@@ -275,7 +275,60 @@ describe('ExpressionFileService', () => {
         id: 'emotions-test:test',
         filePath: expect.stringContaining('emotions-test/expressions/test.expression.json'),
         diagnosticStatus: 'rare',
+        triggerRate: null,
       });
+    });
+
+    it('should include triggerRate when present in expression file', async () => {
+      const mockModDirs = [{ name: 'emotions-test', isDirectory: () => true }];
+
+      fs.readdir.mockImplementation(async (dirPath) => {
+        if (dirPath.endsWith('mods')) {
+          return mockModDirs;
+        }
+        return ['test.expression.json'];
+      });
+
+      fs.access.mockResolvedValue(undefined);
+      fs.readFile.mockResolvedValue(
+        JSON.stringify({
+          id: 'emotions-test:test',
+          diagnosticStatus: 'rare',
+          triggerRate: 0.00125,
+        })
+      );
+
+      const results = await service.scanAllExpressionStatuses();
+
+      expect(results[0]).toEqual({
+        id: 'emotions-test:test',
+        filePath: expect.stringContaining('emotions-test/expressions/test.expression.json'),
+        diagnosticStatus: 'rare',
+        triggerRate: 0.00125,
+      });
+    });
+
+    it('should return null triggerRate when not set', async () => {
+      const mockModDirs = [{ name: 'emotions-test', isDirectory: () => true }];
+
+      fs.readdir.mockImplementation(async (dirPath) => {
+        if (dirPath.endsWith('mods')) {
+          return mockModDirs;
+        }
+        return ['test.expression.json'];
+      });
+
+      fs.access.mockResolvedValue(undefined);
+      fs.readFile.mockResolvedValue(
+        JSON.stringify({
+          id: 'emotions-test:test',
+          diagnosticStatus: 'rare',
+        })
+      );
+
+      const results = await service.scanAllExpressionStatuses();
+
+      expect(results[0].triggerRate).toBeNull();
     });
 
     it('should return empty array when scan fails', async () => {
@@ -412,6 +465,269 @@ describe('ExpressionFileService', () => {
 
       expect(result.success).toBe(false);
       expect(result.message).toBe('Expression file not found');
+    });
+
+    describe('should accept all valid statuses including uncommon and unobserved', () => {
+      const ALL_VALID_STATUSES = [
+        'unknown',
+        'impossible',
+        'unobserved',
+        'extremely_rare',
+        'rare',
+        'uncommon',
+        'normal',
+        'frequent',
+      ];
+
+      it.each(ALL_VALID_STATUSES)(
+        'should accept status: %s',
+        async (status) => {
+          const existingContent = JSON.stringify({
+            id: 'test:expr',
+            diagnosticStatus: null,
+          });
+
+          fs.readFile.mockResolvedValue(existingContent);
+          fs.writeFile.mockResolvedValue(undefined);
+
+          const result = await service.updateExpressionStatus(
+            'data/mods/emotions-test/expressions/test.expression.json',
+            status
+          );
+
+          expect(result.success).toBe(true);
+          expect(result.expressionId).toBe('test:expr');
+          expect(fs.writeFile).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.stringContaining(`"diagnosticStatus": "${status}"`),
+            'utf-8'
+          );
+        }
+      );
+
+      it('should specifically accept uncommon status', async () => {
+        const existingContent = JSON.stringify({
+          id: 'test:uncommon-expr',
+          diagnosticStatus: null,
+        });
+
+        fs.readFile.mockResolvedValue(existingContent);
+        fs.writeFile.mockResolvedValue(undefined);
+
+        const result = await service.updateExpressionStatus(
+          'data/mods/emotions-curiosity/expressions/test.expression.json',
+          'uncommon'
+        );
+
+        expect(result.success).toBe(true);
+        expect(result.message).not.toContain('Invalid status');
+      });
+
+      it('should specifically accept unobserved status', async () => {
+        const existingContent = JSON.stringify({
+          id: 'test:unobserved-expr',
+          diagnosticStatus: null,
+        });
+
+        fs.readFile.mockResolvedValue(existingContent);
+        fs.writeFile.mockResolvedValue(undefined);
+
+        const result = await service.updateExpressionStatus(
+          'data/mods/emotions-attention/expressions/test.expression.json',
+          'unobserved'
+        );
+
+        expect(result.success).toBe(true);
+        expect(result.message).not.toContain('Invalid status');
+      });
+    });
+  });
+
+  describe('updateExpressionTriggerRate', () => {
+    it('should reject non-number trigger rate', async () => {
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        'not-a-number'
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('must be a number');
+    });
+
+    it('should reject NaN trigger rate', async () => {
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        NaN
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('must be a number');
+    });
+
+    it('should reject trigger rate below 0', async () => {
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        -0.1
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('between 0.0 and 1.0');
+    });
+
+    it('should reject trigger rate above 1.0', async () => {
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        1.5
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('between 0.0 and 1.0');
+    });
+
+    it('should reject invalid file paths', async () => {
+      const result = await service.updateExpressionTriggerRate(
+        '../../../etc/passwd',
+        0.5
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Invalid file path');
+    });
+
+    it('should update trigger rate successfully', async () => {
+      const existingContent = JSON.stringify({
+        id: 'test:expr',
+        diagnosticStatus: 'normal',
+      });
+
+      fs.readFile.mockResolvedValue(existingContent);
+      fs.writeFile.mockResolvedValue(undefined);
+
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        0.125
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.expressionId).toBe('test:expr');
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"triggerRate": 0.125'),
+        'utf-8'
+      );
+    });
+
+    it('should round trigger rate to 6 decimal places', async () => {
+      const existingContent = JSON.stringify({
+        id: 'test:expr',
+        diagnosticStatus: 'normal',
+      });
+
+      fs.readFile.mockResolvedValue(existingContent);
+      fs.writeFile.mockResolvedValue(undefined);
+
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        0.123456789
+      );
+
+      expect(result.success).toBe(true);
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"triggerRate": 0.123457'),
+        'utf-8'
+      );
+    });
+
+    it('should skip write when trigger rate unchanged', async () => {
+      const existingContent = JSON.stringify({
+        id: 'test:expr',
+        diagnosticStatus: 'normal',
+        triggerRate: 0.125,
+      });
+
+      fs.readFile.mockResolvedValue(existingContent);
+
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        0.125
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Trigger rate unchanged');
+      expect(fs.writeFile).not.toHaveBeenCalled();
+    });
+
+    it('should handle file not found', async () => {
+      const error = new Error('File not found');
+      error.code = 'ENOENT';
+      fs.readFile.mockRejectedValue(error);
+
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/missing.expression.json',
+        0.5
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Expression file not found');
+    });
+
+    it('should handle invalid JSON in file', async () => {
+      fs.readFile.mockResolvedValue('not valid json');
+
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        0.5
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('invalid JSON');
+    });
+
+    it('should accept boundary values 0.0 and 1.0', async () => {
+      const existingContent = JSON.stringify({
+        id: 'test:expr',
+        diagnosticStatus: 'normal',
+      });
+
+      fs.readFile.mockResolvedValue(existingContent);
+      fs.writeFile.mockResolvedValue(undefined);
+
+      // Test 0.0
+      let result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        0.0
+      );
+      expect(result.success).toBe(true);
+
+      // Test 1.0
+      result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        1.0
+      );
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept very small trigger rates like EXTREMELY_RARE threshold', async () => {
+      const existingContent = JSON.stringify({
+        id: 'test:expr',
+        diagnosticStatus: 'normal',
+      });
+
+      fs.readFile.mockResolvedValue(existingContent);
+      fs.writeFile.mockResolvedValue(undefined);
+
+      const result = await service.updateExpressionTriggerRate(
+        'data/mods/test/expressions/test.expression.json',
+        0.00001 // EXTREMELY_RARE threshold
+      );
+
+      expect(result.success).toBe(true);
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"triggerRate": 0.00001'),
+        'utf-8'
+      );
     });
   });
 });

@@ -14,8 +14,10 @@ import path from 'path';
 const VALID_STATUSES = Object.freeze([
   'unknown',
   'impossible',
+  'unobserved',
   'extremely_rare',
   'rare',
+  'uncommon',
   'normal',
   'frequent',
 ]);
@@ -25,6 +27,7 @@ const VALID_STATUSES = Object.freeze([
  * @property {string} id - Expression ID (e.g., 'emotions-attention:flow_absorption')
  * @property {string} filePath - Relative path to expression file from project root
  * @property {string|null} diagnosticStatus - Current status or null if not set
+ * @property {number|null} triggerRate - Trigger rate as probability (0.0-1.0) or null if not set
  */
 
 /**
@@ -188,6 +191,107 @@ export class ExpressionFileService {
   }
 
   /**
+   * Updates the triggerRate field in an expression file.
+   * @param {string} filePath - Relative path to expression file from project root
+   * @param {number} newTriggerRate - New trigger rate value (0.0-1.0)
+   * @returns {Promise<UpdateResult>} Result indicating success or failure
+   */
+  async updateExpressionTriggerRate(filePath, newTriggerRate) {
+    // Validate trigger rate value
+    if (typeof newTriggerRate !== 'number' || Number.isNaN(newTriggerRate)) {
+      this.#logger.warn('ExpressionFileService: Invalid trigger rate type', {
+        newTriggerRate,
+        type: typeof newTriggerRate,
+      });
+      return {
+        success: false,
+        message: 'Invalid trigger rate: must be a number',
+      };
+    }
+
+    if (newTriggerRate < 0.0 || newTriggerRate > 1.0) {
+      this.#logger.warn('ExpressionFileService: Trigger rate out of range', {
+        newTriggerRate,
+      });
+      return {
+        success: false,
+        message: `Invalid trigger rate: ${newTriggerRate}. Must be between 0.0 and 1.0`,
+      };
+    }
+
+    // Validate file path
+    if (!this.validateFilePath(filePath)) {
+      this.#logger.warn('ExpressionFileService: Invalid file path', { filePath });
+      return {
+        success: false,
+        message: 'Invalid file path - must be within data/mods/ and end with .expression.json',
+      };
+    }
+
+    const fullPath = path.resolve(this.#projectRoot, filePath);
+
+    try {
+      // Read existing file
+      const content = await fs.readFile(fullPath, 'utf-8');
+      let expression;
+      try {
+        expression = JSON.parse(content);
+      } catch {
+        this.#logger.error('ExpressionFileService: Invalid JSON in file', { filePath });
+        return { success: false, message: 'File contains invalid JSON' };
+      }
+
+      // Round to 6 decimal places for precision
+      const roundedRate = Math.round(newTriggerRate * 1000000) / 1000000;
+
+      // Check if trigger rate actually changed
+      const previousRate =
+        typeof expression.triggerRate === 'number' ? expression.triggerRate : null;
+      if (previousRate === roundedRate) {
+        this.#logger.debug('ExpressionFileService: Trigger rate unchanged', {
+          filePath,
+          triggerRate: roundedRate,
+        });
+        return {
+          success: true,
+          message: 'Trigger rate unchanged',
+          expressionId: expression.id,
+        };
+      }
+
+      // Update the triggerRate field
+      expression.triggerRate = roundedRate;
+
+      // Write back with consistent formatting (4-space indent)
+      await fs.writeFile(fullPath, JSON.stringify(expression, null, 4), 'utf-8');
+
+      this.#logger.info('ExpressionFileService: Updated trigger rate', {
+        filePath,
+        expressionId: expression.id,
+        previousRate,
+        newTriggerRate: roundedRate,
+      });
+
+      return {
+        success: true,
+        message: 'Trigger rate updated successfully',
+        expressionId: expression.id,
+      };
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        this.#logger.warn('ExpressionFileService: File not found', { filePath });
+        return { success: false, message: 'Expression file not found' };
+      }
+
+      this.#logger.error('ExpressionFileService: Failed to update trigger rate', {
+        filePath,
+        error: error.message,
+      });
+      return { success: false, message: `Failed to update file: ${error.message}` };
+    }
+  }
+
+  /**
    * Scans all expression files in all mods and returns their diagnostic statuses.
    * Uses parallel I/O for performance to avoid timeout issues with many files.
    * @returns {Promise<ExpressionStatusInfo[]>} Array of expression status information
@@ -234,6 +338,8 @@ export class ExpressionFileService {
                 id: expression.id,
                 filePath: relativeFilePath,
                 diagnosticStatus: expression.diagnosticStatus || null,
+                triggerRate:
+                  typeof expression.triggerRate === 'number' ? expression.triggerRate : null,
               };
             } catch (err) {
               this.#logger.warn('ExpressionFileService: Failed to read expression file', {

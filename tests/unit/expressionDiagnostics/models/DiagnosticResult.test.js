@@ -89,10 +89,10 @@ describe('DiagnosticResult Model', () => {
       expect(result.rarityCategory).toBe('unknown');
     });
 
-    it('should return "impossible" when triggerRate is 0', () => {
+    it('should return "unobserved" when triggerRate is 0 (not logically impossible)', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0 });
-      expect(result.rarityCategory).toBe('impossible');
+      expect(result.rarityCategory).toBe('unobserved');
     });
 
     it('should return "extremely_rare" for rate < 0.00001', () => {
@@ -125,13 +125,31 @@ describe('DiagnosticResult Model', () => {
       expect(result.rarityCategory).toBe('rare');
     });
 
-    it('should return "normal" for rate 0.0005 (boundary)', () => {
+    it('should return "uncommon" for rate 0.0005 (boundary)', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0.0005 });
+      expect(result.rarityCategory).toBe('uncommon');
+    });
+
+    it('should return "uncommon" for rate in range 0.0005-0.005', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setMonteCarloResults({ triggerRate: 0.002 }); // 0.2%
+      expect(result.rarityCategory).toBe('uncommon');
+    });
+
+    it('should return "uncommon" for rate at upper boundary (0.00499)', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setMonteCarloResults({ triggerRate: 0.00499 });
+      expect(result.rarityCategory).toBe('uncommon');
+    });
+
+    it('should return "normal" for rate 0.005 (boundary)', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setMonteCarloResults({ triggerRate: 0.005 });
       expect(result.rarityCategory).toBe('normal');
     });
 
-    it('should return "normal" for rate in range 0.0005-0.02', () => {
+    it('should return "normal" for rate in range 0.005-0.02', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0.01 }); // 1%
       expect(result.rarityCategory).toBe('normal');
@@ -175,6 +193,16 @@ describe('DiagnosticResult Model', () => {
       });
     });
 
+    it('should return correct indicator for unobserved', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setMonteCarloResults({ triggerRate: 0 });
+      expect(result.statusIndicator).toMatchObject({
+        color: 'amber',
+        emoji: '🟡',
+        label: 'Unobserved',
+      });
+    });
+
     it('should return correct indicator for extremely_rare', () => {
       const result = new DiagnosticResult('test:expression');
       result.setMonteCarloResults({ triggerRate: 0.000005 });
@@ -192,6 +220,16 @@ describe('DiagnosticResult Model', () => {
         color: 'magenta',
         emoji: '🟣',
         label: 'Rare',
+      });
+    });
+
+    it('should return correct indicator for uncommon', () => {
+      const result = new DiagnosticResult('test:expression');
+      result.setMonteCarloResults({ triggerRate: 0.002 }); // 0.2%
+      expect(result.statusIndicator).toMatchObject({
+        color: 'cyan',
+        emoji: '🩵',
+        label: 'Uncommon',
       });
     });
 
@@ -694,14 +732,17 @@ describe('DiagnosticResult Model', () => {
       expect(DiagnosticResult.RARITY_THRESHOLDS.IMPOSSIBLE).toBe(0);
       expect(DiagnosticResult.RARITY_THRESHOLDS.EXTREMELY_RARE).toBe(0.00001);
       expect(DiagnosticResult.RARITY_THRESHOLDS.RARE).toBe(0.0005);
+      expect(DiagnosticResult.RARITY_THRESHOLDS.UNCOMMON).toBe(0.005);
       expect(DiagnosticResult.RARITY_THRESHOLDS.NORMAL).toBe(0.02);
     });
 
     it('should export RARITY_CATEGORIES', () => {
       expect(DiagnosticResult.RARITY_CATEGORIES).toBeDefined();
       expect(DiagnosticResult.RARITY_CATEGORIES.IMPOSSIBLE).toBe('impossible');
+      expect(DiagnosticResult.RARITY_CATEGORIES.UNOBSERVED).toBe('unobserved');
       expect(DiagnosticResult.RARITY_CATEGORIES.EXTREMELY_RARE).toBe('extremely_rare');
       expect(DiagnosticResult.RARITY_CATEGORIES.RARE).toBe('rare');
+      expect(DiagnosticResult.RARITY_CATEGORIES.UNCOMMON).toBe('uncommon');
       expect(DiagnosticResult.RARITY_CATEGORIES.NORMAL).toBe('normal');
       expect(DiagnosticResult.RARITY_CATEGORIES.FREQUENT).toBe('frequent');
     });
@@ -709,8 +750,10 @@ describe('DiagnosticResult Model', () => {
     it('should export STATUS_INDICATORS', () => {
       expect(DiagnosticResult.STATUS_INDICATORS).toBeDefined();
       expect(DiagnosticResult.STATUS_INDICATORS.impossible.color).toBe('red');
+      expect(DiagnosticResult.STATUS_INDICATORS.unobserved.color).toBe('amber');
       expect(DiagnosticResult.STATUS_INDICATORS.extremely_rare.color).toBe('orange');
       expect(DiagnosticResult.STATUS_INDICATORS.rare.color).toBe('magenta');
+      expect(DiagnosticResult.STATUS_INDICATORS.uncommon.color).toBe('cyan');
       expect(DiagnosticResult.STATUS_INDICATORS.normal.color).toBe('teal');
       expect(DiagnosticResult.STATUS_INDICATORS.frequent.color).toBe('indigo');
     });
@@ -734,8 +777,8 @@ describe('DiagnosticResult Model', () => {
   });
 
   describe('getRarityCategoryForRate() static helper', () => {
-    it('should return "impossible" for rate 0', () => {
-      expect(DiagnosticResult.getRarityCategoryForRate(0)).toBe('impossible');
+    it('should return "unobserved" for rate 0', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0)).toBe('unobserved');
     });
 
     it('should return "extremely_rare" for rate < 0.00001 (0.001%)', () => {
@@ -752,11 +795,19 @@ describe('DiagnosticResult Model', () => {
       expect(DiagnosticResult.getRarityCategoryForRate(0.0001)).toBe('rare');
     });
 
-    it('should return "normal" for rate at RARE threshold (boundary)', () => {
-      expect(DiagnosticResult.getRarityCategoryForRate(0.0005)).toBe('normal');
+    it('should return "uncommon" for rate at RARE threshold (boundary)', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.0005)).toBe('uncommon');
     });
 
-    it('should return "normal" for rate in RARE-NORMAL range', () => {
+    it('should return "uncommon" for rate in RARE-UNCOMMON range', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.002)).toBe('uncommon');
+    });
+
+    it('should return "normal" for rate at UNCOMMON threshold (boundary)', () => {
+      expect(DiagnosticResult.getRarityCategoryForRate(0.005)).toBe('normal');
+    });
+
+    it('should return "normal" for rate in UNCOMMON-NORMAL range', () => {
       expect(DiagnosticResult.getRarityCategoryForRate(0.01)).toBe('normal');
     });
 
@@ -770,7 +821,7 @@ describe('DiagnosticResult Model', () => {
     });
 
     it('should match instance rarityCategory getter for all rates', () => {
-      const rates = [0, 0.000005, 0.00001, 0.0001, 0.0005, 0.01, 0.02, 0.05];
+      const rates = [0, 0.000005, 0.00001, 0.0001, 0.0005, 0.002, 0.005, 0.01, 0.02, 0.05];
 
       // Test each rate - all use the same setMonteCarloResults pattern
       for (const rate of rates) {

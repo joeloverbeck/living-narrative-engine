@@ -114,6 +114,8 @@ class ExpressionDiagnosticsController {
   #generateReportBtn;
   // Problematic Expressions DOM elements
   #problematicPillsContainer;
+  // Low Trigger Rate Expressions DOM elements
+  #lowTriggerRatePillsContainer;
   #problematicErrorBanner;
   #problematicErrorTitle;
   #problematicErrorMessage;
@@ -382,6 +384,10 @@ class ExpressionDiagnosticsController {
     // Problematic Expressions elements
     this.#problematicPillsContainer = document.getElementById(
       'problematic-pills-container'
+    );
+    // Low Trigger Rate Expressions elements
+    this.#lowTriggerRatePillsContainer = document.getElementById(
+      'low-trigger-rate-pills-container'
     );
     // MC Witnesses elements (ground-truth witnesses from Monte Carlo)
     this.#mcWitnessesContainer = document.getElementById('mc-witnesses');
@@ -902,9 +908,10 @@ class ExpressionDiagnosticsController {
       // Update Status Summary to reflect Monte Carlo results
       this.#updateStatusFromResult();
 
-      // Persist the new status and refresh problematic panel
+      // Persist the new status and trigger rate, then refresh problematic panel
       const newStatus = this.#currentResult.rarityCategory;
-      await this.#persistExpressionStatus(newStatus);
+      const triggerRate = this.#currentResult.triggerRate;
+      await this.#persistExpressionStatus(newStatus, triggerRate);
     } catch (error) {
       this.#logger.error('Monte Carlo simulation failed:', error);
       this.#updateStatus('impossible', 'Simulation Error', error.message);
@@ -3592,6 +3599,13 @@ class ExpressionDiagnosticsController {
 
       this.#renderProblematicPills(problematic);
 
+      // Render low trigger rate expressions section
+      const lowTriggerRate = this.#expressionStatusService.getLowTriggerRateExpressions(
+        this.#expressionStatuses,
+        10
+      );
+      this.#renderLowTriggerRatePills(lowTriggerRate);
+
       // Update dropdown option statuses now that we have the data
       this.#updateDropdownStatuses();
     } catch (error) {
@@ -3627,6 +3641,13 @@ class ExpressionDiagnosticsController {
       10
     );
     this.#renderProblematicPills(problematic);
+
+    // Also refresh low trigger rate expressions
+    const lowTriggerRate = this.#expressionStatusService.getLowTriggerRateExpressions(
+      this.#expressionStatuses,
+      10
+    );
+    this.#renderLowTriggerRatePills(lowTriggerRate);
   }
 
   /**
@@ -3675,6 +3696,65 @@ class ExpressionDiagnosticsController {
       });
       
       this.#problematicPillsContainer.appendChild(pill);
+    }
+  }
+
+  /**
+   * Render pills for expressions with low trigger rates.
+   * Shows expressions sorted by trigger rate (lowest first) with percentage badges.
+   * @param {Array<{id: string, diagnosticStatus: string|null, triggerRate: number|null}>} lowTriggerRateExpressions
+   */
+  #renderLowTriggerRatePills(lowTriggerRateExpressions) {
+    if (!this.#lowTriggerRatePillsContainer) return;
+
+    this.#lowTriggerRatePillsContainer.innerHTML = '';
+
+    const selectableExpressions = this.#statusSelectDropdown
+      ? lowTriggerRateExpressions.filter((expr) =>
+          this.#hasExpressionOption(expr.id)
+        )
+      : lowTriggerRateExpressions;
+
+    if (selectableExpressions.length === 0) {
+      this.#lowTriggerRatePillsContainer.innerHTML =
+        '<p class="no-data-message">No trigger rate data available. Run Monte Carlo analysis first.</p>';
+      return;
+    }
+
+    for (const expr of selectableExpressions) {
+      const pill = document.createElement('button');
+      pill.className = 'expression-pill';
+      pill.type = 'button';
+      pill.setAttribute('aria-label', `Select expression ${expr.id}`);
+
+      // Extract just the expression name (last segment after colon)
+      const displayName = this.#getExpressionName(expr.id) || expr.id;
+
+      // Status circle color class
+      const statusClass = getStatusCircleCssClass(expr.diagnosticStatus, this.#logger);
+
+      // Format trigger rate as percentage
+      const triggerRatePercent = this.#expressionStatusService.formatTriggerRatePercent(
+        expr.triggerRate
+      );
+
+      // Determine badge CSS class from status (convert to kebab-case)
+      const statusBadgeClass = expr.diagnosticStatus
+        ? `status-${expr.diagnosticStatus.replace(/_/g, '-')}`
+        : '';
+
+      pill.innerHTML = `
+        <span class="status-circle ${statusClass}"></span>
+        <span class="pill-name" title="${expr.id}">${displayName}</span>
+        <span class="trigger-rate-badge ${statusBadgeClass}">${triggerRatePercent}</span>
+      `;
+
+      // Click handler to select this expression in the dropdown
+      pill.addEventListener('click', () => {
+        this.#selectExpressionById(expr.id);
+      });
+
+      this.#lowTriggerRatePillsContainer.appendChild(pill);
     }
   }
 
@@ -3868,8 +3948,9 @@ class ExpressionDiagnosticsController {
    *
    * @private
    * @param {string} status - The new diagnostic status
+   * @param {number|null} [triggerRate=null] - Optional trigger rate (0.0-1.0)
    */
-  async #persistExpressionStatus(status) {
+  async #persistExpressionStatus(status, triggerRate = null) {
     if (!this.#selectedExpression) return;
 
     // Find the file path for the selected expression
@@ -3898,7 +3979,8 @@ class ExpressionDiagnosticsController {
     try {
       const updateResult = await this.#expressionStatusService.updateStatus(
         filePath,
-        status
+        status,
+        triggerRate
       );
       if (!updateResult.success) {
         this.#logger.warn('ExpressionStatusService: Update failed', updateResult);
@@ -3929,6 +4011,9 @@ class ExpressionDiagnosticsController {
       );
       if (existingEntry) {
         existingEntry.diagnosticStatus = status;
+        if (typeof triggerRate === 'number') {
+          existingEntry.triggerRate = triggerRate;
+        }
       }
 
       // Refresh the problematic panel using local cache to avoid race condition.

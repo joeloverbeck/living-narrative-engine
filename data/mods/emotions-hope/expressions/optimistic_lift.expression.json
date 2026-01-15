@@ -50,7 +50,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.stress"
+                                "var": "emotions.stress_acute"
                             },
                             0.55
                         ]

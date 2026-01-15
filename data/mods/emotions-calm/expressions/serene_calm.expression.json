@@ -34,7 +34,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.stress"
+                                "var": "emotions.strain_chronic"
                             },
                             0.35
                         ]
@@ -58,7 +58,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.hot_anger"
+                                "var": "emotions.rage"
                             },
                             0.3
                         ]

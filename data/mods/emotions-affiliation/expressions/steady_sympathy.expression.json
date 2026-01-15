@@ -134,5 +134,6 @@
         "tactile": "The air feels less jagged around them—no jittery energy, no collapse. There’s a quiet steadiness you can almost lean on, like warmth held at a safe distance.",
         "limited": "{actor} looks quietly concerned but composed, attention fixed and gentle rather than overwhelmed."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0017
 }

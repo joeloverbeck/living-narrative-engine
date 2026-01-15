@@ -55,6 +55,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 "<=": [
@@ -152,7 +160,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires strong disgust plus real threat/negative valence, with fear/alarm present but not full terror; if sympathy is high, revulsion must clearly dominate (very high disgust + low affiliation)."
+            "failure_message": "Requires strong disgust plus real threat/negative valence, with fear/alarm present but not full terror. Explicitly blocks high wrath so the beat stays revulsion/withdrawal rather than anger-eruption. If sympathy is high, revulsion must clearly dominate (very high disgust + low affiliation)."
         }
     ],
     "actor_description": "My stomach drops and then turns-an instant, violent rejection. My skin feels too tight on my body, like I want to crawl out of it. I can't decide whether to stare or look away; both options feel wrong. There's a sharp, sour rush in my mouth and a cold sweat on my back, the mind screaming no while the body already starts retreating.",
