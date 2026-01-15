@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:mood",
-  "description": "Tracks the 8 emotional axes that define a character's current mood state. Each axis ranges from -100 to +100.",
+  "description": "Tracks the 9 mood axes that define a character's current affective/regulatory state. Each axis ranges from -100 to +100.",
   "dataSchema": {
     "type": "object",
     "properties": {
@@ -60,6 +60,13 @@
         "maximum": 100,
         "default": 0,
         "description": "Social warmth and connectedness. Captures momentary interpersonal orientation. (-100=cold/detached/hostile, 0=neutral, +100=warm/connected/affiliative)"
+      },
+      "inhibitory_control": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Momentary restraint/response inhibition. +100=tightly restrained/white-knuckling; 0=baseline; -100=disinhibited/impulsive."
       }
     },
     "required": [
@@ -70,7 +77,8 @@
       "engagement",
       "future_expectancy",
       "self_evaluation",
-      "affiliation"
+      "affiliation",
+      "inhibitory_control"
     ],
     "additionalProperties": false
   }

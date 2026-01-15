@@ -19,11 +19,13 @@ const MOOD_AXES = [
   'future_expectancy',
   'self_evaluation',
   'affiliation',
+  'inhibitory_control',
 ];
 const AFFECT_TRAITS = [
   'affective_empathy',
   'cognitive_empathy',
   'harm_aversion',
+  'self_control',
 ];
 
 class RandomStateGenerator {

@@ -32,6 +32,9 @@ export const diagnosticsTokens = freeze({
   // Prototype Fit Ranking (Monte Carlo prototype fit analysis)
   IPrototypeFitRankingService: 'IPrototypeFitRankingService',
 
+  // Prototype Synthesis (PROCRESUGREC-002)
+  IPrototypeSynthesisService: 'IPrototypeSynthesisService',
+
   // Sensitivity Analysis (EXPDIAMONCARREFREP-008)
   ISensitivityAnalyzer: 'ISensitivityAnalyzer',
 

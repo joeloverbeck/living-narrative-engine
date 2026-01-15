@@ -797,6 +797,37 @@ class PrototypeFitRankingService {
     };
   }
 
+
+  /**
+   * Get prototype definitions for specified prototype references.
+   * Returns weights and gates for each requested prototype.
+   *
+   * @param {Array<{id: string, type: 'emotion'|'sexual'}>} prototypeRefs - Array of prototype references
+   * @returns {Record<string, {weights: Record<string, number>, gates: string[]}>} Definitions keyed by qualified ID
+   */
+  getPrototypeDefinitions(prototypeRefs) {
+    const definitions = {};
+    if (!Array.isArray(prototypeRefs)) {
+      return definitions;
+    }
+
+    for (const ref of prototypeRefs) {
+      const prototypes = this.#getPrototypesByType(ref.type);
+      const proto = prototypes.find((p) => p.id === ref.id);
+      if (proto) {
+        const key =
+          ref.type === 'emotion'
+            ? `emotions:${ref.id}`
+            : `sexualStates:${ref.id}`;
+        definitions[key] = {
+          weights: proto.weights ?? {},
+          gates: proto.gates ?? [],
+        };
+      }
+    }
+    return definitions;
+  }
+
   async #yieldToBrowser() {
     await new Promise((resolve) => {
       if (typeof globalThis.requestIdleCallback === 'function') {

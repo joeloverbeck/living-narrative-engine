@@ -15,4 +15,5 @@ export { default as PrototypeConstraintAnalyzer } from './PrototypeConstraintAna
 export { default as RecommendationFactsBuilder } from './RecommendationFactsBuilder.js';
 export { default as RecommendationEngine } from './RecommendationEngine.js';
 export { default as InvariantValidator } from './InvariantValidator.js';
+export { default as PrototypeSynthesisService } from './PrototypeSynthesisService.js';
 export { buildSamplingCoverageConclusions } from './samplingCoverageConclusions.js';

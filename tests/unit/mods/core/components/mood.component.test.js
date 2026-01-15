@@ -1,6 +1,6 @@
 /**
  * @file Tests for the core:mood component schema validation
- * @description Validates the 8-axis emotional state model with integer ranges [-100, 100]
+ * @description Validates the 9-axis emotional/regulatory state model with integer ranges [-100, 100]
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -30,6 +30,7 @@ describe('core:mood component schema', () => {
         future_expectancy: 0,
         self_evaluation: 0,
         affiliation: 0,
+        inhibitory_control: 0,
       });
       expect(result.isValid).toBe(true);
     });
@@ -44,6 +45,7 @@ describe('core:mood component schema', () => {
         future_expectancy: -100,
         self_evaluation: -100,
         affiliation: -100,
+        inhibitory_control: -100,
       });
       expect(result.isValid).toBe(true);
     });
@@ -58,6 +60,7 @@ describe('core:mood component schema', () => {
         future_expectancy: 100,
         self_evaluation: 100,
         affiliation: 100,
+        inhibitory_control: 100,
       });
       expect(result.isValid).toBe(true);
     });
@@ -72,6 +75,7 @@ describe('core:mood component schema', () => {
         future_expectancy: -15,
         self_evaluation: 90,
         affiliation: -45,
+        inhibitory_control: 0,
       });
       expect(result.isValid).toBe(true);
     });
@@ -87,6 +91,7 @@ describe('core:mood component schema', () => {
       'future_expectancy',
       'self_evaluation',
       'affiliation',
+      'inhibitory_control',
     ];
 
     requiredFields.forEach((field) => {
@@ -100,6 +105,7 @@ describe('core:mood component schema', () => {
           future_expectancy: 0,
           self_evaluation: 0,
           affiliation: 0,
+          inhibitory_control: 0,
         };
         delete data[field];
         const result = validate(data);
@@ -118,6 +124,7 @@ describe('core:mood component schema', () => {
       'future_expectancy',
       'self_evaluation',
       'affiliation',
+      'inhibitory_control',
     ];
 
     axes.forEach((axis) => {
@@ -131,6 +138,7 @@ describe('core:mood component schema', () => {
           future_expectancy: 0,
           self_evaluation: 0,
           affiliation: 0,
+          inhibitory_control: 0,
         };
         data[axis] = -101;
         const result = validate(data);
@@ -147,6 +155,7 @@ describe('core:mood component schema', () => {
           future_expectancy: 0,
           self_evaluation: 0,
           affiliation: 0,
+          inhibitory_control: 0,
         };
         data[axis] = 101;
         const result = validate(data);
@@ -166,6 +175,7 @@ describe('core:mood component schema', () => {
         future_expectancy: 0,
         self_evaluation: 0,
         affiliation: 0,
+        inhibitory_control: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -180,6 +190,7 @@ describe('core:mood component schema', () => {
         future_expectancy: 0,
         self_evaluation: 0,
         affiliation: 0,
+        inhibitory_control: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -194,6 +205,7 @@ describe('core:mood component schema', () => {
         future_expectancy: 0,
         self_evaluation: 0,
         affiliation: 0,
+        inhibitory_control: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -210,6 +222,7 @@ describe('core:mood component schema', () => {
         future_expectancy: 0,
         self_evaluation: 0,
         affiliation: 0,
+        inhibitory_control: 0,
         unknown_property: 42,
       });
       expect(result.isValid).toBe(false);
@@ -232,6 +245,7 @@ describe('core:mood component schema', () => {
         future_expectancy: 100,
         self_evaluation: -100,
         affiliation: 100,
+        inhibitory_control: -100,
       });
       expect(result.isValid).toBe(true);
     });

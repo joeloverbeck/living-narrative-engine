@@ -1,7 +1,7 @@
 // src/domUI/emotionalStatePanel.js
 
 /**
- * @file Widget displaying character's current emotional state as 8 mood axes.
+ * @file Widget displaying character's current emotional state as 9 mood axes.
  *
  * Subscribes to TURN_STARTED_ID to refresh the current actor's emotional state.
  * Subscribes to COMPONENT_ADDED_ID to refresh when mood component changes.
@@ -38,6 +38,7 @@ const AXIS_COLORS = {
   future_expectancy: { negative: '#6f42c1', positive: '#20c997' }, // purple to teal
   self_evaluation: { negative: '#fd7e14', positive: '#6610f2' }, // orange to indigo
   affiliation: { negative: '#4e73df', positive: '#e83e8c' }, // cool blue to warm pink
+  inhibitory_control: { negative: '#FF7043', positive: '#7E57C2' }, // orange for impulsive, purple for restrained
 };
 
 /**
@@ -54,6 +55,7 @@ const AXIS_LABELS = {
   future_expectancy: { negative: 'Hopeless', positive: 'Hopeful' },
   self_evaluation: { negative: 'Shame', positive: 'Pride' },
   affiliation: { negative: 'Detached', positive: 'Connected' },
+  inhibitory_control: { negative: 'Impulsive', positive: 'Restrained' },
 };
 
 /**
@@ -70,13 +72,14 @@ const AXIS_ORDER = [
   'future_expectancy',
   'self_evaluation',
   'affiliation',
+  'inhibitory_control',
 ];
 
 /**
- * Widget displaying character's current emotional state as 8 mood axis bars.
+ * Widget displaying character's current emotional state as 9 mood axis bars.
  *
  * Displays:
- * - 8 horizontal bars representing mood axes
+ * - 9 horizontal bars representing mood axes
  * - Each bar shows negative values extending left, positive values extending right
  * - Calculated emotions text below the bars
  *

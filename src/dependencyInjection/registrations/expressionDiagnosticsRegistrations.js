@@ -17,6 +17,7 @@ import PrototypeConstraintAnalyzer from '../../expressionDiagnostics/services/Pr
 import PrototypeFitRankingService from '../../expressionDiagnostics/services/PrototypeFitRankingService.js';
 import EmotionCalculatorAdapter from '../../expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import SensitivityAnalyzer from '../../expressionDiagnostics/services/SensitivityAnalyzer.js';
+import PrototypeSynthesisService from '../../expressionDiagnostics/services/PrototypeSynthesisService.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -159,6 +160,16 @@ export function registerExpressionDiagnosticsServices(container) {
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.IPrototypeFitRankingService}`);
+
+  // Prototype Synthesis Service (PROCRESUGREC-002)
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeSynthesisService,
+    (c) =>
+      new PrototypeSynthesisService({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeSynthesisService}`);
 
   registrar.singletonFactory(
     diagnosticsTokens.ISensitivityAnalyzer,

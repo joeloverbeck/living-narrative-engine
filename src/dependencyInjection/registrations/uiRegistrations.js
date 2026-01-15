@@ -441,6 +441,9 @@ export function registerRenderers(registrar, logger) {
         prototypeFitRankingService: c.resolve(
           diagnosticsTokens.IPrototypeFitRankingService
         ),
+        prototypeSynthesisService: c.resolve(
+          diagnosticsTokens.IPrototypeSynthesisService
+        ),
       }),
     { lifecycle: 'singletonFactory' },
     logger

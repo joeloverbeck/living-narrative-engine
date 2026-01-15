@@ -52,14 +52,40 @@ describe('moodUpdateOnlyInstructionText affiliation axis', () => {
     expect(instructionText).toMatch(/"affiliation":\s*\.\.\./);
   });
 
-  test('should mention 8 mood axes (not 7) in mood ranges documentation', () => {
+  test('should mention 9 mood axes (not 8) in mood ranges documentation', () => {
     const instructionText = corePromptText.moodUpdateOnlyInstructionText;
 
-    // Should reference 8 axes, not 7
-    // The RANGES section lists all mood axes - affiliation should be included
+    // Should reference 9 axes including inhibitory_control
+    // The RANGES section lists all mood axes - affiliation and inhibitory_control should be included
     expect(instructionText).toMatch(
-      /valence.*arousal.*agency_control.*threat.*engagement.*future_expectancy.*self_evaluation.*affiliation/i
+      /valence.*arousal.*agency_control.*threat.*engagement.*future_expectancy.*self_evaluation.*affiliation.*inhibitory_control/i
     );
+  });
+
+  test('should define inhibitory_control axis with restraint/impulsive semantics', () => {
+    const instructionText = corePromptText.moodUpdateOnlyInstructionText;
+
+    // The definition should include key semantic terms for inhibitory control
+    expect(instructionText).toMatch(/Inhibitory Control/i);
+    expect(instructionText).toMatch(/restrained|white-knuckling/i);
+    expect(instructionText).toMatch(/disinhibited|impulsive/i);
+  });
+
+  test('should include inhibitory_control in OUTPUT FORMAT JSON example', () => {
+    const instructionText = corePromptText.moodUpdateOnlyInstructionText;
+
+    // The JSON output format should include inhibitory_control
+    expect(instructionText).toMatch(/"inhibitory_control":\s*\.\.\./);
+  });
+
+  test('should include inhibitory control heuristics in DEFAULT UPDATE HEURISTICS', () => {
+    const instructionText = corePromptText.moodUpdateOnlyInstructionText;
+
+    // At least one of the four inhibitory control heuristics should be present
+    expect(instructionText).toMatch(/Losing temper.*Inhibitory Control down/i);
+    expect(instructionText).toMatch(/holding back reaction.*Inhibitory Control up/i);
+    expect(instructionText).toMatch(/maintaining composure.*Inhibitory Control up/i);
+    expect(instructionText).toMatch(/Release of suppressed.*Inhibitory Control down/i);
   });
 
   test('affiliation axis should have proper value range description', () => {
@@ -101,9 +127,9 @@ describe('mood component schema alignment', () => {
     expect(required).toContain('affiliation');
   });
 
-  test('mood component should define 8 axes total', () => {
+  test('mood component should define 9 axes total', () => {
     const required = moodComponentSchema.dataSchema.required;
-    expect(required.length).toBe(8);
+    expect(required.length).toBe(9);
     expect(required).toEqual(
       expect.arrayContaining([
         'valence',
@@ -114,6 +140,7 @@ describe('mood component schema alignment', () => {
         'future_expectancy',
         'self_evaluation',
         'affiliation',
+        'inhibitory_control',
       ])
     );
   });

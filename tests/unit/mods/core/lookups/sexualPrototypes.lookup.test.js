@@ -63,6 +63,7 @@ describe('core:sexual_prototypes lookup', () => {
 
   describe('weight validation', () => {
     const validAxes = [
+      // Mood axes
       'valence',
       'arousal',
       'agency_control',
@@ -70,10 +71,15 @@ describe('core:sexual_prototypes lookup', () => {
       'engagement',
       'future_expectancy',
       'self_evaluation',
+      'affiliation',
+      'inhibitory_control',
+      // Sexual-specific axes
       'sexual_arousal',
       'sex_excitation',
       'sex_inhibition',
       'sexual_inhibition',
+      // Affect traits (stable personality traits that can influence sexual states)
+      'self_control',
     ];
 
     Object.entries(lookupData.entries).forEach(([stateName, stateData]) => {
@@ -115,8 +121,9 @@ describe('core:sexual_prototypes lookup', () => {
   });
 
   describe('gate validation', () => {
+    // Pattern includes mood axes, sexual axes, and affect traits
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|affiliation|inhibitory_control|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|self_control)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([stateName, stateData]) => {
       if (stateData.gates) {

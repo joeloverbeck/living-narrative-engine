@@ -68,10 +68,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 11 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeFitRankingService + SensitivityAnalyzer)', () => {
+    it('should register exactly 12 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeFitRankingService + PrototypeSynthesisService + SensitivityAnalyzer)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(11);
+      expect(mockContainer.register).toHaveBeenCalledTimes(12);
     });
 
     it('should register PrototypeFitRankingService', () => {
@@ -155,7 +155,7 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(11);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(12);
     });
   });
 

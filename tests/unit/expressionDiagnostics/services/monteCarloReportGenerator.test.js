@@ -2377,6 +2377,200 @@ describe('MonteCarloReportGenerator', () => {
         'Thresholds are integer-effective; decimals collapse to integer boundaries.'
       );
     });
+
+    it('should show +∞ when baseline triggerRate is 0 and other point has triggers', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          isExpressionLevel: true,
+          grid: [
+            { threshold: 0.35, triggerRate: 0.05, triggerCount: 50, sampleCount: 1000 },
+            { threshold: 0.40, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      expect(report).toContain('+∞');
+    });
+
+    it('should show -100% when baseline has triggers but other point is 0', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          isExpressionLevel: true,
+          grid: [
+            { threshold: 0.35, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+            { threshold: 0.40, triggerRate: 0.05, triggerCount: 50, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      expect(report).toContain('-100%');
+    });
+
+    it('should show negative percentage when other point has lower triggerRate than baseline', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          isExpressionLevel: true,
+          grid: [
+            { threshold: 0.35, triggerRate: 0.05, triggerCount: 50, sampleCount: 1000 },
+            { threshold: 0.40, triggerRate: 0.10, triggerCount: 100, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      // When other rate (0.05) < baseline rate (0.10), change should be negative (-50%)
+      expect(report).toContain('-50.00%');
+    });
+
+    it('should show 0% when both baseline and other point have 0 triggerRate', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          isExpressionLevel: true,
+          grid: [
+            { threshold: 0.35, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+            { threshold: 0.40, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      // Extract global sensitivity section specifically
+      const globalSensitivityMatch = report.match(
+        /### 🎯 Global Expression Sensitivity[\s\S]*?(?=###|## |$)/
+      );
+      expect(globalSensitivityMatch).not.toBeNull();
+      const globalSection = globalSensitivityMatch[0];
+
+      // In the global section, non-baseline row should show 0% (not +∞ or -100%)
+      expect(globalSection).toContain('| 0.35 | 0.00% | 0% |');
+      expect(globalSection).not.toContain('+∞');
+    });
+
+    it('should show first triggering threshold recommendation when baseline is 0', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          isExpressionLevel: true,
+          grid: [
+            { threshold: 0.30, triggerRate: 0.15, triggerCount: 150, sampleCount: 1000 },
+            { threshold: 0.35, triggerRate: 0.05, triggerCount: 50, sampleCount: 1000 },
+            { threshold: 0.40, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      expect(report).toContain('First threshold with triggers');
+      expect(report).toContain('Actionable Insight');
+      expect(report).toContain('0.30');
+    });
+
+    it('should show no triggers warning when all thresholds produce 0 triggerRate', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          isExpressionLevel: true,
+          grid: [
+            { threshold: 0.30, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+            { threshold: 0.35, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+            { threshold: 0.40, triggerRate: 0, triggerCount: 0, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      expect(report).toContain('No Triggers Found');
+      expect(report).toContain(
+        'None of the tested thresholds produced expression triggers'
+      );
+    });
+
+    it('should show actionable insight when originalRate < 1% and 5x improvement exists', () => {
+      const globalSensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.4,
+          isExpressionLevel: true,
+          grid: [
+            { threshold: 0.30, triggerRate: 0.05, triggerCount: 50, sampleCount: 1000 },
+            { threshold: 0.40, triggerRate: 0.005, triggerCount: 5, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        globalSensitivityData,
+      });
+
+      // originalRate = 0.005 (< 0.01), and 0.05 >= 0.005 * 5
+      expect(report).toContain('Actionable Insight');
+      expect(report).toContain('0.30');
+    });
   });
 
   describe('Static Analysis Cross-Reference', () => {
@@ -2574,6 +2768,283 @@ describe('MonteCarloReportGenerator', () => {
       });
 
       expect(report).toContain('— Not observed');
+    });
+
+    // Note: The "Agreement" case was removed from the source as it was unreachable.
+    // The function returns early if both gateConflicts and unreachableThresholds are empty,
+    // so when the Cross-Reference Summary is rendered, totalStaticIssues is always > 0.
+
+    it('should format gate conflict with requiredMin > requiredMax (no description)', () => {
+      const staticAnalysis = {
+        gateConflicts: [
+          {
+            axis: 'arousal',
+            requiredMin: 0.8,
+            requiredMax: 0.2,
+            // No description field - should use formatted min/max
+          },
+        ],
+        unreachableThresholds: [],
+      };
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        staticAnalysis,
+      });
+
+      expect(report).toContain('Requires ≥0.80 AND ≤0.20');
+    });
+
+    it('should show fallback "Conflicting constraints" for gate conflict without description or valid min/max', () => {
+      const staticAnalysis = {
+        gateConflicts: [
+          {
+            axis: 'valence',
+            // No description, no requiredMin/requiredMax
+          },
+        ],
+        unreachableThresholds: [],
+      };
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        staticAnalysis,
+      });
+
+      expect(report).toContain('Conflicting constraints');
+    });
+
+    it('should show "✅ Confirmed" for gate conflict when axis matches but no failureRate', () => {
+      const staticAnalysis = {
+        gateConflicts: [{ axis: 'valence', description: 'test conflict' }],
+        unreachableThresholds: [],
+      };
+
+      const blockerNoFailRate = {
+        ...createMockBlocker(),
+        hierarchicalBreakdown: {
+          variablePath: 'moodAxes.valence',
+          // No failureRate - should return "✅ Confirmed" without percentages
+        },
+      };
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [blockerNoFailRate],
+        summary: 'Test summary',
+        staticAnalysis,
+      });
+
+      expect(report).toContain('✅ Confirmed');
+      expect(report).not.toMatch(/✅ Fail% global:/);
+    });
+
+    it('should show "— No MC data" for unreachable thresholds with empty blockers', () => {
+      const staticAnalysis = {
+        gateConflicts: [],
+        unreachableThresholds: [
+          { prototypeId: 'joy', threshold: 0.5, maxPossible: 0.3 },
+        ],
+      };
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [],
+        summary: 'Test summary',
+        staticAnalysis,
+      });
+
+      expect(report).toContain('— No MC data');
+    });
+
+    it('should show "✅ Confirmed" for emotion when prototype matches but no failureRate', () => {
+      const staticAnalysis = {
+        gateConflicts: [],
+        unreachableThresholds: [
+          { prototypeId: 'fear', threshold: 0.6, maxPossible: 0.4 },
+        ],
+      };
+
+      const blockerNoFailRate = {
+        ...createMockBlocker(),
+        hierarchicalBreakdown: {
+          variablePath: 'emotions.fear',
+          // No failureRate - should return "✅ Confirmed" without percentages
+        },
+      };
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [blockerNoFailRate],
+        summary: 'Test summary',
+        staticAnalysis,
+      });
+
+      expect(report).toContain('✅ Confirmed');
+    });
+  });
+
+  // ===========================================================================
+  // Small Percentage Formatting Tests
+  // ===========================================================================
+
+  describe('Small Percentage Formatting', () => {
+    it('should format very small percentages (0.001% to 0.01%) with 4 decimal places', () => {
+      // Value of 0.00005 = 0.005% which is in the 0.001% to 0.01% range
+      const blockerTinyRate = {
+        ...createMockBlocker(),
+        hierarchicalBreakdown: {
+          variablePath: 'moodAxes.affiliation',
+          failureRate: 0.00005, // 0.005%
+        },
+      };
+
+      const staticAnalysis = {
+        gateConflicts: [{ axis: 'affiliation', description: 'conflict' }],
+        unreachableThresholds: [],
+      };
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [blockerTinyRate],
+        summary: 'Test summary',
+        staticAnalysis,
+      });
+
+      // 0.00005 * 100 = 0.005, should show 4 decimals: 0.0050%
+      expect(report).toMatch(/0\.0050%/);
+    });
+
+    // Note: The "< 0.005%" branch (3 decimal places) was removed from the source
+    // as it was unreachable dead code. The pct < 0.01 check above catches all
+    // values that would have fallen into that range.
+  });
+
+  // ===========================================================================
+  // Invalid Value Formatting Tests
+  // ===========================================================================
+
+  describe('Invalid Value Formatting', () => {
+    it('should handle NaN impact in recommendation clause via ablationImpact', () => {
+      // NaN passes `typeof impact === 'number'` check and reaches formatSignedPercentagePoints
+      // which returns 'N/A' for NaN values (line 6319)
+      const simulationResultWithNaN = {
+        ...createMockSimulationResult(),
+        ablationImpact: {
+          clauseImpacts: [{ clauseId: 'clause_joy_0', impact: NaN }],
+        },
+        clauseFailures: [
+          {
+            clauseId: 'clause_joy_0',
+            clauseDescription: 'emotions.joy >= 0.5',
+            failureRate: 0.8,
+            hierarchicalBreakdown: [
+              {
+                clauseId: 'clause_joy_0',
+                description: 'emotions.joy >= 0.5',
+                variablePath: 'emotions.joy',
+                comparisonOperator: '>=',
+                thresholdValue: 0.5,
+              },
+            ],
+          },
+        ],
+      };
+
+      // Create blocker with analysis that triggers recommendation generation
+      const blockerWithRecommendation = {
+        ...createMockBlocker(),
+        clauseDescription: 'emotions.joy >= 0.5',
+        advancedAnalysis: {
+          ...createMockBlocker().advancedAnalysis,
+          recommendation: {
+            action: 'tune_threshold',
+            priority: 'high',
+            message: 'Adjust threshold',
+          },
+        },
+      };
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: simulationResultWithNaN,
+        blockers: [blockerWithRecommendation],
+        summary: 'Test summary',
+      });
+
+      // The NaN impact should be formatted as 'N/A' in the recommendation card
+      // or 'n/a' if the impact resolution returns null (non-matching clauseId)
+      // The key is that the report generates without error
+      expect(typeof report).toBe('string');
+    });
+
+    it('should handle NaN threshold in sensitivity data', () => {
+      const sensitivityData = [
+        {
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.5,
+          grid: [
+            { threshold: NaN, passRate: 0.5, sampleCount: 1000 },
+            { threshold: 0.5, passRate: 0.3, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        sensitivityData,
+      });
+
+      expect(report).toContain('N/A');
+    });
+
+    it('should handle undefined effectiveThreshold in integer domain sensitivity data', () => {
+      const sensitivityData = [
+        {
+          varPath: 'inventory.count',
+          operator: '>=',
+          originalThreshold: 3,
+          isIntegerDomain: true,
+          grid: [
+            {
+              threshold: 3,
+              passRate: 0.5,
+              sampleCount: 1000,
+              effectiveThreshold: undefined,
+            },
+            {
+              threshold: 4,
+              passRate: 0.3,
+              sampleCount: 1000,
+              effectiveThreshold: 4,
+            },
+          ],
+        },
+      ];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult(),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        sensitivityData,
+      });
+
+      expect(report).toContain('—');
     });
   });
 
@@ -3253,6 +3724,610 @@ describe('MonteCarloReportGenerator', () => {
 
       // Both leaves are OR-children and should be annotated
       expect(report).toContain('⚠️ OR-alternative');
+    });
+  });
+
+  // ===========================================================================
+  // Prototype Fit Error Handling and Edge Cases
+  // ===========================================================================
+
+  describe('Prototype Fit Error Handling', () => {
+    it('should handle prototypeFitRankingService errors gracefully', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => {
+          throw new Error('Analysis failed');
+        }),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => null),
+      };
+      const generatorWithError = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [
+        { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } },
+      ];
+
+      const report = generatorWithError.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Should still generate a report (graceful degradation)
+      expect(report).toContain('test_expression');
+      expect(report).toContain('Test summary');
+      // Should have logged the warning
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to perform prototype fit analysis:',
+        'Analysis failed'
+      );
+      // Should NOT contain prototype fit section since analysis failed
+      expect(report).not.toContain('## 🎯 Prototype Fit Analysis');
+    });
+
+    it('should format conflicting axes details for top 3 prototypes', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({
+          leaderboard: [
+            {
+              rank: 1,
+              prototypeId: 'joy',
+              gatePassRate: 0.75,
+              intensityDistribution: { pAboveThreshold: 0.6, p50: 0.4, p90: 0.7, p95: 0.8 },
+              conflictScore: 0.2,
+              compositeScore: 1.0,
+              conflictingAxes: [
+                { axis: 'valence', weight: 0.8, direction: 'positive' },
+                { axis: 'arousal', weight: 0.3, direction: 'negative' },
+              ],
+              conflictMagnitude: 0.15,
+            },
+          ],
+        })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => null),
+      };
+      const generatorWithConflicts = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [
+        { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } },
+      ];
+
+      const report = generatorWithConflicts.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Should contain conflicting axes details
+      expect(report).toContain('**Conflicting Axes**');
+      expect(report).toContain('valence');
+      expect(report).toContain('weight=');
+      expect(report).toContain('positive');
+      expect(report).toContain('arousal');
+      expect(report).toContain('negative');
+      expect(report).toContain('**Conflict Magnitude**');
+      expect(report).toContain('0.15');
+    });
+
+    it('should suggest prototype substitution when second best scores >20% better', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({
+          leaderboard: [
+            {
+              rank: 1,
+              prototypeId: 'sadness',
+              gatePassRate: 0.6,
+              intensityDistribution: { pAboveThreshold: 0.5, p50: 0.3, p90: 0.5, p95: 0.6 },
+              conflictScore: 0.3,
+              compositeScore: 0.8,
+              conflictingAxes: [],
+              conflictMagnitude: 0,
+            },
+            {
+              rank: 2,
+              prototypeId: 'melancholy',
+              gatePassRate: 0.85,
+              intensityDistribution: { pAboveThreshold: 0.75, p50: 0.5, p90: 0.8, p95: 0.9 },
+              conflictScore: 0.1,
+              compositeScore: 1.0, // 25% better than 0.8
+              conflictingAxes: [],
+              conflictMagnitude: 0,
+            },
+          ],
+        })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => null),
+      };
+      const generatorWithSubstitution = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [
+        { logic: { '>=': [{ var: 'moodAxes.valence' }, -0.3] } },
+      ];
+
+      const report = generatorWithSubstitution.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Should contain substitution suggestion
+      expect(report).toContain('💡 Suggestion');
+      expect(report).toContain('melancholy');
+      expect(report).toContain('instead');
+      expect(report).toContain('% better');
+    });
+  });
+
+  // ===========================================================================
+  // Gap Detection Section Tests
+  // ===========================================================================
+
+  describe('Gap Detection Section', () => {
+    it('should generate gap detection section when gap is detected', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => ({
+          gapDetected: true,
+          nearestDistance: 0.65,
+          distanceContext: 'Expression is far from known prototypes',
+          coverageWarning: 'Consider adding a new prototype',
+          kNearestNeighbors: [
+            {
+              prototypeId: 'joy',
+              type: 'emotion',
+              combinedDistance: 0.65,
+              weightDistance: 0.4,
+              gateDistance: 0.25,
+            },
+            {
+              prototypeId: 'arousal_high',
+              type: 'sexual',
+              combinedDistance: 0.72,
+              weightDistance: 0.5,
+              gateDistance: 0.22,
+            },
+          ],
+          suggestedPrototype: {
+            rationale: 'Fill coverage gap between joy and arousal',
+            weights: { valence: 0.6, arousal: 0.4 },
+            gates: ['moodAxes.valence >= 0.3', 'moodAxes.arousal >= 0.2'],
+          },
+        })),
+      };
+
+      const generatorWithGapDetection = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } }];
+
+      const report = generatorWithGapDetection.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Check header
+      expect(report).toContain('## 🔍 Prototype Gap Detection');
+      expect(report).toContain('Analysis of prototype coverage');
+
+      // Check gap detected status
+      expect(report).toContain('### ⚠️ Coverage Gap Detected');
+      expect(report).toContain('**Nearest Distance**: 0.65');
+      expect(report).toContain('threshold: 0.5');
+      expect(report).toContain('**Distance Context**: Expression is far from known prototypes');
+      expect(report).toContain('Consider adding a new prototype');
+
+      // Check k-Nearest table with mixed types (emotion and sexual)
+      expect(report).toContain('### k-Nearest Prototypes');
+      expect(report).toContain('| Rank | Prototype |');
+      expect(report).toContain('| Type |'); // Type column should be present
+      expect(report).toContain('**joy**');
+      expect(report).toContain('emotion');
+      expect(report).toContain('**arousal_high**');
+      expect(report).toContain('sexual');
+
+      // Check suggested prototype
+      expect(report).toContain('### 💡 Suggested New Prototype');
+      expect(report).toContain('Fill coverage gap between joy and arousal');
+      expect(report).toContain('**Suggested Weights**');
+      expect(report).toContain('| valence | 0.60 |');
+      expect(report).toContain('| arousal | 0.40 |');
+      expect(report).toContain('**Suggested Gates**');
+      expect(report).toContain('`moodAxes.valence >= 0.3`');
+      expect(report).toContain('`moodAxes.arousal >= 0.2`');
+    });
+
+    it('should generate gap detection section when no gap is detected (good coverage)', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => ({
+          gapDetected: false,
+          nearestDistance: 0.35,
+          distanceContext: 'Expression is well covered by existing prototypes',
+          kNearestNeighbors: [
+            {
+              prototypeId: 'contentment',
+              type: 'emotion',
+              combinedDistance: 0.35,
+              weightDistance: 0.2,
+              gateDistance: 0.15,
+            },
+          ],
+        })),
+      };
+
+      const generatorWithGapDetection = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } }];
+
+      const report = generatorWithGapDetection.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Check good coverage status
+      expect(report).toContain('### ✅ Good Coverage');
+      expect(report).toContain('**Nearest Distance**: 0.35');
+      expect(report).toContain('within acceptable range');
+      expect(report).toContain('**Distance Context**: Expression is well covered');
+
+      // Should NOT contain gap warning elements
+      expect(report).not.toContain('### ⚠️ Coverage Gap Detected');
+      expect(report).not.toContain('### 💡 Suggested New Prototype');
+    });
+
+    it('should generate gap detection section with k-Nearest neighbors without type column when all are emotion type', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => ({
+          gapDetected: true,
+          nearestDistance: 0.55,
+          kNearestNeighbors: [
+            {
+              prototypeId: 'joy',
+              type: 'emotion',
+              combinedDistance: 0.55,
+              weightDistance: 0.35,
+              gateDistance: 0.2,
+            },
+            {
+              prototypeId: 'sadness',
+              type: 'emotion',
+              combinedDistance: 0.6,
+              weightDistance: 0.4,
+              gateDistance: 0.2,
+            },
+          ],
+        })),
+      };
+
+      const generatorWithGapDetection = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } }];
+
+      const report = generatorWithGapDetection.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Check k-Nearest table without Type column (no sexual types)
+      expect(report).toContain('### k-Nearest Prototypes');
+      expect(report).toContain('| Rank | Prototype |');
+      // When all emotions, no Type column
+      expect(report).not.toMatch(/\| Rank \| Prototype \| Type \|/);
+      expect(report).toContain('**joy**');
+      expect(report).toContain('**sadness**');
+    });
+
+    it('should return empty string when gapResult is null', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => null),
+      };
+
+      const generatorWithGapDetection = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } }];
+
+      const report = generatorWithGapDetection.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Should NOT contain gap detection section
+      expect(report).not.toContain('## 🔍 Prototype Gap Detection');
+    });
+
+    it('should handle gap detection with empty k-Nearest neighbors array', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => ({
+          gapDetected: true,
+          nearestDistance: 0.8,
+          kNearestNeighbors: [],
+        })),
+      };
+
+      const generatorWithGapDetection = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } }];
+
+      const report = generatorWithGapDetection.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Should contain gap detection but no k-Nearest section
+      expect(report).toContain('## 🔍 Prototype Gap Detection');
+      expect(report).toContain('### ⚠️ Coverage Gap Detected');
+      expect(report).not.toContain('### k-Nearest Prototypes');
+    });
+
+    it('should handle suggested prototype without weights or gates', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => ({
+          gapDetected: true,
+          nearestDistance: 0.7,
+          kNearestNeighbors: [],
+          suggestedPrototype: {
+            rationale: 'A new prototype is needed',
+            weights: {},
+            gates: [],
+          },
+        })),
+      };
+
+      const generatorWithGapDetection = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } }];
+
+      const report = generatorWithGapDetection.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Should contain suggested prototype with rationale but not weights/gates sections
+      expect(report).toContain('### 💡 Suggested New Prototype');
+      expect(report).toContain('A new prototype is needed');
+      expect(report).not.toContain('**Suggested Weights**');
+      expect(report).not.toContain('**Suggested Gates**');
+    });
+
+    it('should handle suggested prototype without rationale', () => {
+      const prototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({ leaderboard: [] })),
+        computeImpliedPrototype: jest.fn(() => null),
+        detectPrototypeGaps: jest.fn(() => ({
+          gapDetected: true,
+          nearestDistance: 0.7,
+          kNearestNeighbors: [],
+          suggestedPrototype: {
+            weights: { valence: 0.5 },
+            gates: ['gate1'],
+          },
+        })),
+      };
+
+      const generatorWithGapDetection = new MonteCarloReportGenerator({
+        logger: mockLogger,
+        prototypeFitRankingService,
+      });
+
+      const prerequisites = [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } }];
+
+      const report = generatorWithGapDetection.generate({
+        expressionName: 'test_expression',
+        simulationResult: createMockSimulationResult({ storedContexts: [] }),
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Should contain suggested prototype without rationale
+      expect(report).toContain('### 💡 Suggested New Prototype');
+      expect(report).not.toContain('**Rationale**');
+      expect(report).toContain('**Suggested Weights**');
+      expect(report).toContain('**Suggested Gates**');
+    });
+  });
+
+  // ===========================================================================
+  // formatSignedPercentagePoints Tests (via Recommendations Section)
+  // ===========================================================================
+
+  describe('formatSignedPercentagePoints via Recommendations', () => {
+    /**
+     * Creates a simulationResult that enables recommendation generation.
+     * RecommendationEngine requires both clauses AND prototypes to generate recommendations.
+     * This helper creates the necessary data structure with prototype evaluation summary.
+     *
+     * @param {number|typeof NaN} impactValue - The impact value for ablationImpact
+     * @returns {object} simulationResult with proper structure
+     */
+    const createRecommendationEnabledSimulationResult = (impactValue) => ({
+      triggerRate: 0.15,
+      triggerCount: 1500,
+      sampleCount: 10000,
+      confidenceInterval: { low: 0.14, high: 0.16 },
+      distribution: 'uniform',
+      storedContexts: [],
+      // Required for RecommendationFactsBuilder to build clause facts
+      clauseFailures: [
+        {
+          clauseId: 'clause_joy_0',
+          clauseDescription: 'emotions.joy >= 0.5',
+          failureRate: 0.85,
+          hierarchicalBreakdown: {
+            id: '0',
+            nodeType: 'leaf',
+            clauseId: 'clause_joy_0',
+            description: 'emotions.joy >= 0.5',
+            variablePath: 'emotions.joy',
+            comparisonOperator: '>=',
+            thresholdValue: 0.5,
+            failureRate: 0.85,
+          },
+        },
+      ],
+      // Required for ablation impact to flow through to recommendations
+      ablationImpact: {
+        clauseImpacts: [{ clauseId: 'clause_joy_0', impact: impactValue }],
+      },
+      // Required for RecommendationFactsBuilder to build prototype facts
+      // Without this, RecommendationEngine returns [] due to empty prototypes
+      prototypeEvaluationSummary: {
+        emotions: {
+          joy: {
+            moodSampleCount: 10000,
+            gatePassCount: 8000,
+            gateFailCount: 2000,
+            valueSumGivenGate: 4000, // meanValueGivenGate = 0.5
+            failedGateCounts: {},
+          },
+        },
+        sexualStates: {},
+      },
+      // Required for prototype clause stats linking
+      prototypeClauseStats: new Map([
+        [
+          'emotions:joy',
+          [
+            {
+              clauseId: 'clause_joy_0',
+              gatePassAndClausePassInRegimeCount: 1000,
+            },
+          ],
+        ],
+      ]),
+      gateCompatibility: {
+        emotions: { joy: { compatibilityScore: 0.8 } },
+        sexualStates: {},
+      },
+    });
+
+    it('should format positive impact with + sign in recommendation card', () => {
+      const simulationResult = createRecommendationEnabledSimulationResult(0.15);
+      const prerequisites = [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult,
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Verify recommendation section is present with formatted impact
+      expect(report).toContain('## Recommendations');
+      expect(report).toContain('+15.00 pp');
+    });
+
+    it('should format negative impact with - sign in recommendation card', () => {
+      const simulationResult = createRecommendationEnabledSimulationResult(-0.08);
+      const prerequisites = [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult,
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Verify recommendation section is present with formatted impact
+      expect(report).toContain('## Recommendations');
+      expect(report).toContain('-8.00 pp');
+    });
+
+    it('should format zero impact with no sign in recommendation card', () => {
+      const simulationResult = createRecommendationEnabledSimulationResult(0);
+      const prerequisites = [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult,
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Verify recommendation section is present with formatted impact (no sign for 0)
+      expect(report).toContain('## Recommendations');
+      expect(report).toContain('0.00 pp');
+    });
+
+    it('should format NaN impact as N/A in recommendation card', () => {
+      const simulationResult = createRecommendationEnabledSimulationResult(NaN);
+      const prerequisites = [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }];
+
+      const report = generator.generate({
+        expressionName: 'test_expression',
+        simulationResult,
+        blockers: [createMockBlocker()],
+        summary: 'Test summary',
+        prerequisites,
+      });
+
+      // Verify recommendation section is present
+      // NaN impact should be formatted as 'N/A' by #formatSignedPercentagePoints
+      expect(report).toContain('## Recommendations');
+      expect(report).toContain('N/A');
     });
   });
 });
