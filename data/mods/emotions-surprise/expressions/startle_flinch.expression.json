@@ -92,6 +92,34 @@
             ]
           },
           {
+            "or": [
+              {
+                "<=": [
+                  {
+                    "var": "moodAxes.inhibitory_control"
+                  },
+                  35
+                ]
+              },
+              {
+                "<=": [
+                  {
+                    "var": "affectTraits.self_control"
+                  },
+                  45
+                ]
+              },
+              {
+                ">=": [
+                  {
+                    "var": "emotions.surprise_startle"
+                  },
+                  0.6
+                ]
+              }
+            ]
+          },
+          {
             "<=": [
               {
                 "var": "emotions.panic"
@@ -109,7 +137,7 @@
           }
         ]
       },
-      "failure_message": "Requires a noticeable startle rise (via surprise_startle spike or a sudden arousal/threat jump) with at least mild negative appraisal (alarm/fear or mild threat). Excludes high panic/freeze so a brief flinch doesn't mislabel a larger spiral or immobility response."
+      "failure_message": "Requires a noticeable startle rise (via surprise_startle spike or a sudden arousal/threat jump) with at least mild negative appraisal (alarm/fear or mild threat). Adds regulation realism: high inhibitory_control / high trait self_control can dampen a reflex flinch unless the startle intensity is strong. Excludes high panic/freeze so a brief flinch doesn't mislabel a larger spiral or immobility response."
     }
   ],
   "actor_description": "My body jolts before I can think—sharp inhale yanked through my teeth, shoulders wrenching up, hands snapping to cover or block. My heart slams once, twice, a hammer behind my ribs, and every muscle coils tight. Then it's over. The world clicks back into focus and I'm standing there, adrenaline fizzing under my skin, caught in the aftershock of a reaction I never chose to make.",

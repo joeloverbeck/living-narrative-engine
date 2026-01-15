@@ -75,6 +75,42 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            80
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    40
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    30
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.smoldering_anger"
@@ -196,7 +232,7 @@
                     }
                 ]
             },
-            "failure_message": "Principled heat only: requires strong protest anger (or hot anger with clear affiliative warmth), high engagement, and energizing arousal. Raises the affiliation floor and caps smoldering_anger so cold controlled hostility can’t masquerade as moral urgency. Still blocks rage/contempt/hatred drift. Triggers on a protest spike/crossing or engagement jump to avoid repeated sermons."
+            "failure_message": "Principled heat only: requires strong protest anger (or hot anger with clear affiliative warmth), high engagement, and energizing arousal. Adds a restraint floor: inhibitory_control must be at least moderate (or supported by trait self_control) so it reads as controlled moral urgency rather than disinhibited outburst. Still caps smoldering_anger and blocks rage/contempt/hatred drift. Triggers on a protest spike/crossing or engagement jump to avoid repeated sermons."
         }
     ],
     "alternate_descriptions": {

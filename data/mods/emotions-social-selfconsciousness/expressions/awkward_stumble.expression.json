@@ -138,6 +138,34 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.awkwardness"
+                                    },
+                                    0.62
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.hot_anger"
@@ -163,7 +191,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires awkwardness to be meaningfully present and newly rising (spike/crossing or a notable agency-control drop), with moderate social threat and low-mid arousal. Allows a touch of confusion or threat as the ‘what just happened?’ signature. Caps anger/panic so it doesn’t become confrontation or spiral, and caps numbness so the moment stays present and recoverable."
+            "failure_message": "Requires awkwardness to be meaningfully present and newly rising (spike/crossing or a notable agency-control shift), with moderate social threat and low-mid arousal. High inhibitory_control + high trait self_control reduces visible fumbling unless awkwardness is very strong. Caps anger/panic so it doesn’t become confrontation or spiral, and caps numbness so the moment stays present and recoverable."
         }
     ],
     "actor_description": "I trip over my own timing—words landing half a beat off, hands suddenly unsure where to go. Heat crawls up my neck as my attention snaps tight, replaying the last second like I can fix it by staring harder. I try to smooth it out, but the harder I push, the more aware I am of pushing. Then I force a tiny reset: breathe, soften, move on.",

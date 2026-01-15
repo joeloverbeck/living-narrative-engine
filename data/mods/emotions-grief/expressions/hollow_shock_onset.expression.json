@@ -86,6 +86,42 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    60
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.numbness"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -121,7 +157,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires moderate grief with a stunned/blanking signature (numbness present or sadness rising), grounded in negative valence and low-to-mid arousal (not shutdown-flat). Blocks dissociation so the actor remains present, and caps despair so it stays early-onset shock rather than hopeless collapse. Triggers only on a grief spike or a sharp valence drop to prevent spam."
+            "failure_message": "Requires moderate grief with a stunned/blanking signature (numbness present or sadness rising), grounded in negative valence and low-to-mid arousal. Blocks dissociation so the actor remains present, and caps despair so it stays early-onset shock. Adds regulation realism: hollow shock reads as braced intactness—moderate/high inhibitory_control or high trait self_control (or strong numbness) rather than loose disinhibition. Triggers only on a grief spike or sharp valence drop."
         }
     ],
     "alternate_descriptions": {

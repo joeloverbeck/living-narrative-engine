@@ -7,6 +7,7 @@
  */
 
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
+import { DEFAULT_AFFECT_TRAITS } from '../constants/moodAffectConstants.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
@@ -67,18 +68,6 @@ const EMOTION_PROTOTYPES_LOOKUP_ID = 'core:emotion_prototypes';
 const SEXUAL_PROTOTYPES_LOOKUP_ID = 'core:sexual_prototypes';
 /** Component ID for affect traits */
 const AFFECT_TRAITS_COMPONENT_ID = 'core:affect_traits';
-
-/**
- * Default affect trait values for entities without the affect_traits component.
- * Values of 50 represent "average human" baseline.
- *
- * @type {Readonly<{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}>}
- */
-const DEFAULT_AFFECT_TRAITS = Object.freeze({
-  affective_empathy: 50,
-  cognitive_empathy: 50,
-  harm_aversion: 50,
-});
 
 /**
  * Clamps a value to the range [0, 1]

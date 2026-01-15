@@ -74,6 +74,46 @@
                     {
                         "or": [
                             {
+                                "and": [
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            -20
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "affectTraits.self_control"
+                                            },
+                                            45
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    70
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.panic"
+                                    },
+                                    0.62
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -157,7 +197,7 @@
                     }
                 ]
             },
-            "failure_message": "Panic onset is a change-event: panic must be present and grounded in very high threat/arousal with felt loss of control (negative valence, attention online), while excluding freeze/shutdown branches. Fires only on real onset (panic spike/crossing, sharp agency drop, or abrupt threat/arousal surge)."
+            "failure_message": "Panic onset is a change-event: panic must be present and grounded in very high threat/arousal with felt loss of control (negative valence, attention online), while excluding freeze/shutdown branches. Adds regulation realism: moderate panic requires disinhibition + lower trait self-control; otherwise only extreme threat/panic intensity breaks through. Fires only on real onset (panic spike/crossing, sharp agency drop, or abrupt threat/arousal surge)."
         }
     ],
     "actor_description": "My heart slams into gear—no warning, just instant thunder in my chest. My breath goes shallow and rapid, pulling at air that won't fill my lungs. Everything sharpens into threats and exits. My thoughts fragment into one screaming loop: move move move—but my body can't parse which direction means safe. I'm wired to flee with nowhere to run.",

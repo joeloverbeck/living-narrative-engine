@@ -3,30 +3,15 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import {
+  MOOD_AXES,
+  AFFECT_TRAITS,
+} from '../../constants/moodAffectConstants.js';
 
 // Sigma values for Gaussian deltas
 const MOOD_DELTA_SIGMA = 15;
 const SEXUAL_DELTA_SIGMA = 12;
 const LIBIDO_DELTA_SIGMA = 8;
-
-// Axis definitions
-const MOOD_AXES = [
-  'valence',
-  'arousal',
-  'agency_control',
-  'threat',
-  'engagement',
-  'future_expectancy',
-  'self_evaluation',
-  'affiliation',
-  'inhibitory_control',
-];
-const AFFECT_TRAITS = [
-  'affective_empathy',
-  'cognitive_empathy',
-  'harm_aversion',
-  'self_control',
-];
 
 class RandomStateGenerator {
   /**

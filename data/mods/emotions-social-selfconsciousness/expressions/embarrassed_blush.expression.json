@@ -64,6 +64,46 @@
             ]
           },
           {
+            "or": [
+              {
+                "<=": [
+                  {
+                    "var": "moodAxes.inhibitory_control"
+                  },
+                  55
+                ]
+              },
+              {
+                "<=": [
+                  {
+                    "var": "affectTraits.self_control"
+                  },
+                  60
+                ]
+              },
+              {
+                "and": [
+                  {
+                    ">=": [
+                      {
+                        "var": "emotions.embarrassment"
+                      },
+                      0.62
+                    ]
+                  },
+                  {
+                    ">=": [
+                      {
+                        "var": "moodAxes.arousal"
+                      },
+                      20
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "<=": [
               {
                 "var": "emotions.shame"
@@ -136,7 +176,7 @@
           }
         ]
       },
-      "failure_message": "Requires embarrassment to cross/spike into a noticeable self-conscious flare, grounded by mildly negative self-evaluation with elevated arousal and moderate social threat. Caps shame/humiliation so it stays light and recoverable rather than identity-damaging. Blocks panic/dissociation so it doesn't misfire during overwhelm/shutdown."
+      "failure_message": "Requires embarrassment to cross/spike into a noticeable self-conscious flare, grounded by mildly negative self-evaluation with elevated arousal and moderate social threat. High inhibitory_control + high trait self_control dampens outward leakage unless embarrassment/arousal are strong enough to break through. Caps shame/humiliation so it stays light and recoverable. Blocks panic/dissociation so it doesn't misfire during overwhelm/shutdown."
     }
   ],
   "actor_description": "Heat rushes up my face before I can get ahead of it, like my skin is tattling on me. My thoughts stutter—too aware of my hands, my voice, the space I'm taking—and I want to shrink without actually disappearing. I try to smooth it over fast, but the more I try to look normal, the more obvious it feels. It's not crushing—just sharp, bright, and inconvenient.",

@@ -110,6 +110,54 @@
                     {
                         "or": [
                             {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.grief"
+                                            },
+                                            0.75
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.sadness"
+                                            },
+                                            0.5
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            60
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -163,7 +211,7 @@
                     }
                 ]
             },
-            "failure_message": "Strong grief with sadness, reduced agency, and attention stuck on the loss. Adds an attachment/connection signature (affiliation or bonding emotions) so ‘grief break’ reads as relational loss rather than generic low mood. Blocks shutdown/detachment and panic hijack. Triggers on spike or crossing."
+            "failure_message": "Strong grief with sadness, reduced agency, and attention stuck on the loss, with an attachment/connection signature. Blocks shutdown/detachment and panic hijack. Adds regulation realism: a full ‘break’ requires disinhibition (low inhibitory_control), low trait self_control, or extremely high grief that overwhelms even moderate restraint. Triggers on spike or crossing."
         }
     ],
     "actor_description": "It finally gets through the dam. My throat tightens and my chest caves like something heavy sat down on it. I try to breathe around it and can't. Tears spill before I've chosen them; my face is hot, my hands shake, and there's a raw, humiliating helplessness to it-like my body is grieving out loud without my permission.",

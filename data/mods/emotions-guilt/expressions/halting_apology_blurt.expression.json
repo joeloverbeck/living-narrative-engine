@@ -85,6 +85,26 @@
                     {
                         "or": [
                             {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -158,7 +178,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires remorse strong enough to drive repair (with guilt still meaningfully present), plus mild social anxiety. Grounds in lowered self-evaluation while affiliation stays positive (still caring about connection). Caps shame so it’s not identity-collapse, and caps threat/panic/dissociation so it stays a halting apology rather than panic-flight or shutdown. Triggers only on a remorse/guilt spike or crossing to prevent spam."
+            "failure_message": "Adds a 'blurt' gate: the apology outruns editing when inhibitory_control isn't high (or trait self_control is low). If inhibitory_control is very high and trait control is high, this would tend to present as a measured, rehearsed apology instead."
         }
     ],
     "alternate_descriptions": {

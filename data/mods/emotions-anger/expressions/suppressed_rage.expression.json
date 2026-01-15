@@ -161,6 +161,34 @@
                             },
                             0.3
                         ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    75
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
@@ -196,6 +224,41 @@
                                 ]
                             },
                             0.06
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.inhibitory_control"
+                                    }
+                                ]
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousMoodAxes.inhibitory_control"
+                                    },
+                                    55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    55
+                                ]
+                            }
                         ]
                     },
                     {

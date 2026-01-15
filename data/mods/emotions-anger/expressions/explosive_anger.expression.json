@@ -71,6 +71,53 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            25
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "affectTraits.self_control"
+                                            },
+                                            45
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    -35
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.sympathy"
@@ -194,12 +241,27 @@
                                     },
                                     20
                                 ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    -25
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Hot/eruptive only: requires very high hot_anger and rage with high arousal. Explicitly blocks cold controlled hostility by capping smoldering_anger and requiring hot_anger to dominate it. Keeps prosocial and harm-aware tones capped, and still requires a recent spike/jump so it reads as a sustained post-snap fury rather than baseline heat."
+            "failure_message": "Hot/eruptive only: requires very high hot_anger and rage with high arousal. Explicitly blocks cold controlled hostility by capping smoldering_anger and requiring hot_anger to dominate it. Adds restraint-loss: inhibitory_control must be low (or sharply dropping), with trait self_control making eruption harder unless disinhibition is stronger. Keeps prosocial and harm-aware tones capped, and still requires a recent spike/jump so it reads as a sustained post-snap fury rather than baseline heat."
         }
     ],
     "actor_description": "It tips. One more ounce and the lid is gone-heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can't seem to stop it. The anger isn't an opinion anymore; it's a physical force shoving outward, demanding release, turning everything I say into impact.",

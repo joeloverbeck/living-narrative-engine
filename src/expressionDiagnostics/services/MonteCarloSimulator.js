@@ -32,7 +32,8 @@ import AblationImpactCalculator from './AblationImpactCalculator.js';
 import {
   MOOD_AXES,
   AFFECT_TRAITS,
-} from './RandomStateGenerator.js';
+  MOOD_AXIS_RANGE,
+} from '../../constants/moodAffectConstants.js';
 
 const DEFAULT_SAMPLING_COVERAGE_CONFIG = {
   enabled: true,
@@ -42,7 +43,7 @@ const DEFAULT_SAMPLING_COVERAGE_CONFIG = {
 };
 
 const SAMPLING_COVERAGE_DOMAIN_RANGES = [
-  { pattern: /^previousMoodAxes\./, domain: 'previousMoodAxes', min: -100, max: 100 },
+  { pattern: /^previousMoodAxes\./, domain: 'previousMoodAxes', ...MOOD_AXIS_RANGE },
   { pattern: /^previousEmotions\./, domain: 'previousEmotions', min: 0, max: 1 },
   {
     pattern: /^previousSexualStates\./,
@@ -50,8 +51,8 @@ const SAMPLING_COVERAGE_DOMAIN_RANGES = [
     min: 0,
     max: 1,
   },
-  { pattern: /^moodAxes\./, domain: 'moodAxes', min: -100, max: 100 },
-  { pattern: /^mood\./, domain: 'moodAxes', min: -100, max: 100 },
+  { pattern: /^moodAxes\./, domain: 'moodAxes', ...MOOD_AXIS_RANGE },
+  { pattern: /^mood\./, domain: 'moodAxes', ...MOOD_AXIS_RANGE },
   { pattern: /^emotions\./, domain: 'emotions', min: 0, max: 1 },
   { pattern: /^sexualStates\./, domain: 'sexualStates', min: 0, max: 1 },
   { pattern: /^sexual\./, domain: 'sexualStates', min: 0, max: 1 },

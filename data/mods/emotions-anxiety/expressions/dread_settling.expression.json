@@ -56,6 +56,34 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            8
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    40
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    25
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
@@ -167,7 +195,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires dread as the primary signal with threat-axis grounding and negative valence; keeps arousal in the 'heavy bracing' band; keeps engagement from collapsing and explicitly excludes dissociation; stays below panic/terror extremes, excludes freeze, and fires only on dread crossing/spike or a sharp threat-axis jump."
+            "failure_message": "Requires dread as the primary signal with threat-axis grounding and negative valence; keeps arousal in the 'heavy bracing' band. Adds a minimum inhibitory-control clamp (state restraint), with trait self_control allowing 'held dread' at lower clamp while low-trait actors need stronger clamp to avoid tipping into panic patterns. Excludes dissociation/freeze and stays below panic/terror extremes; fires only on dread crossing/spike or a sharp threat-axis jump."
         }
     ],
     "actor_description": "The dread sits down inside me and unpacks. It's a cold, leaden thing that makes my stomach clench and my jaw ache from holding still. My mind won't stop rehearsing—running through every way this could go wrong, tasting copper and bile. I'm still here, still moving, but it's like I'm doing everything from underwater. Slow. Heavy. Braced. The bad thing hasn't happened yet, but my body knows it's coming and has already started the math of survival.",

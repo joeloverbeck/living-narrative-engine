@@ -2,12 +2,7 @@
  * @file axisNormalizationUtils - Shared axis normalization helpers for diagnostics.
  */
 
-const DEFAULT_AFFECT_TRAITS = Object.freeze({
-  affective_empathy: 50,
-  cognitive_empathy: 50,
-  harm_aversion: 50,
-  self_control: 50,
-});
+import { DEFAULT_AFFECT_TRAITS } from '../../constants/moodAffectConstants.js';
 
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 

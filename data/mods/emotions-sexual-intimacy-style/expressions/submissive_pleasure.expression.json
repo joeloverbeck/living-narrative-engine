@@ -32,6 +32,62 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.submissive_arousal"
+                                    },
+                                    0.85
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.trusting_surrender"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    75
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.submissive_arousal"
+                                    },
+                                    0.75
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.trusting_surrender"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.freeze"
@@ -152,7 +208,7 @@
                     }
                 ]
             },
-            "failure_message": "Chosen surrender supported by trust/affection and a non-hostile affiliative stance; caps freeze and caps panic hard so reduced agency reads as consented yielding, not threat paralysis."
+            "failure_message": "Chosen surrender supported by trust/affection and a non-hostile affiliative stance; caps freeze and caps panic hard so reduced agency reads as consented yielding, not threat paralysis. White-knuckling inhibitory_control blocks the ‘letting go’ signature unless surrender signals are very strong. Very high trait self_control likewise requires stronger surrender (or higher submissive arousal) before the body language reads as genuine yielding rather than controlled compliance."
         }
     ],
     "actor_description": "I stop bracing. Something in me loosens-jaw, shoulders, the constant urge to steer-and the relief is part of the pleasure. I can feel my breathing deepen, my body warmer and more responsive, like it's answering a pace I don't have to set. Being guided feels safe enough to enjoy.",
