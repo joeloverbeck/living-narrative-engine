@@ -92,6 +92,34 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    60
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    10
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.dissociation"
@@ -182,12 +210,27 @@
                                         ]
                                     }
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and engagement with threat in the stress band (and non-positive valence). Excludes dissociation and stays below panic/freeze/terror/hypervigilance. Gated by stress/arousal increase."
+            "failure_message": "Requires high stress plus urgency/friction, grounded by elevated arousal and engagement with threat in the stress band (and non-positive valence). Adds a ‘composure frays’ control signature: inhibitory_control must not be high, and high-trait self_control actors only show overload when inhibitory_control is genuinely low (or dropping sharply). Excludes dissociation and stays below panic/freeze/terror/hypervigilance; gated by stress/arousal increase or a control-drop event."
         }
     ],
     "actor_description": "My mind fills up faster than it can empty. Thoughts stack, priorities blur, and everything starts arriving with the same sharp insistence. I can feel my body trying to sprint while my attention keeps snagging—breath quick, shoulders tight, jaw set. I want to force the moment to behave, and the strain shows in how little room I have left for anything else.",

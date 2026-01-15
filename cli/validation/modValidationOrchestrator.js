@@ -8,14 +8,19 @@
 
 import { validateDependency } from '../../src/utils/dependencyUtils.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
-import ExpressionPrerequisiteValidator, {
-  DEFAULT_AFFECT_TRAITS,
-  DEFAULT_MOOD_AXES,
-} from '../../src/validation/expressionPrerequisiteValidator.js';
+import ExpressionPrerequisiteValidator from '../../src/validation/expressionPrerequisiteValidator.js';
+import {
+  MOOD_AXES,
+  AFFECT_TRAITS,
+} from '../../src/constants/moodAffectConstants.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
 import ManifestFileExistenceValidator from './manifestFileExistenceValidator.js';
 import path from 'path';
 import { promises as fs } from 'fs';
+
+// Re-assign for backward compatibility with existing code patterns
+const DEFAULT_MOOD_AXES = MOOD_AXES;
+const DEFAULT_AFFECT_TRAITS = AFFECT_TRAITS;
 
 /**
  * Comprehensive mod validation error that aggregates multiple validation failures

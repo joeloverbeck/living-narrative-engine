@@ -66,6 +66,42 @@
                     {
                         "or": [
                             {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    40
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    40
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -119,7 +155,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires tonic immobility with high threat and very low agency; keeps arousal in the freeze-capable band and awareness online; explicitly excludes dissociation; gated by freeze spike/crossing or a sharp agency drop."
+            "failure_message": "Requires tonic immobility with high threat and very low agency; keeps arousal in the freeze-capable band and awareness online; explicitly excludes dissociation. Adds regulation realism: freeze can occur under disinhibition (reactive lock-up) or high inhibitory overcontrol (white-knuckle 'don't move'), with trait low self-control increasing susceptibility unless threat is high. Gated by freeze spike/crossing or a sharp agency drop."
         }
     ],
     "actor_description": "I go still. Not calm-caught. My breath thins and my muscles forget how to follow instructions. I'm aware of everything at once-the room, the sounds, the space behind me-but I can't turn that awareness into movement. The only thing my body seems sure about is: don't be noticed, don't make a sound, don't give the threat a reason.",

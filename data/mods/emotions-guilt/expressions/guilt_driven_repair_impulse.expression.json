@@ -60,7 +60,7 @@
                             {
                                 "var": "emotions.numbness"
                             },
-                            0.70
+                            0.7
                         ]
                     },
                     {
@@ -170,7 +170,7 @@
                                     {
                                         "var": "emotions.sympathy"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             }
                         ]
@@ -189,7 +189,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -204,7 +204,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             }
                         ]
@@ -224,9 +224,54 @@
                             },
                             0.62
                         ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            10
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "affectTraits.self_control"
+                                            },
+                                            65
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.guilt"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.remorse"
+                                            },
+                                            0.62
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Models 'impulse' vs 'considered repair': if inhibitory_control is high AND trait self_control is high, moderate guilt/remorse should not produce urgent restless repair-chasing; it should look deliberate. The second branch preserves triggering for very high guilt/remorse where even controlled people feel compelled."
         }
     ],
     "actor_description": "The moment keeps replaying, sharp as a splinter under the skin. It isn't just bad-it feels mine. My chest tightens with a simple, relentless logic: do something. Fix what I can, admit what I did, offer whatever repairs are still possible. I catch myself scanning for an opening-an apology, a task, a gesture-anything that turns this weight into motion.",

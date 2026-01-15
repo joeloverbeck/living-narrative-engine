@@ -115,6 +115,73 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            10
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "affectTraits.self_control"
+                                            },
+                                            35
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    -40
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">": [
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            },
+                                            20
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            0
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "-": [
@@ -131,7 +198,7 @@
                     }
                 ]
             },
-            "failure_message": "Acute outburst crossing only: rage must cross threshold with hot_anger present and arousal clearly elevated. Explicitly caps smoldering_anger so cold controlled hostility can’t masquerade as a surge. Keeps harm-aware tones capped and still requires a large rage delta."
+            "failure_message": "Acute outburst crossing only: rage must cross threshold with hot_anger present and arousal clearly elevated. Explicitly caps smoldering_anger so cold controlled hostility can’t masquerade as a surge. Adds a disinhibition requirement (low or sharply dropping inhibitory_control, with low trait self_control making it easier). Keeps harm-aware tones capped and still requires a large rage delta."
         }
     ],
     "actor_description": "It comes up fast-heat in my face, pressure behind my eyes, my jaw clamping so hard my teeth ache. My hands curl without asking. The world simplifies into a single, furious shape: this is wrong, and I need it to stop. I can feel how narrow I'm getting-how every other thought is being shoved out to make room for the urge to hit back.",

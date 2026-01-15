@@ -62,6 +62,26 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    55
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.panic"
@@ -218,7 +238,7 @@
                     }
                 ]
             },
-            "failure_message": "Alarm is acute mobilization: it won’t fire during strong executive_focus unless executive_focus just collapsed. Also requires an alarm/threat jump (or fear/vigilance spike), keeping it distinct from steady pressured competence."
+            "failure_message": "Alarm is acute mobilization: it won’t fire during strong executive_focus unless executive_focus just collapsed. Also requires an alarm/threat jump (or fear/vigilance spike), keeping it distinct from steady pressured competence. Very low inhibitory_control (especially with low trait self_control) is treated as more likely to spill into panic/rashness than coordinated readiness."
         }
     ],
     "alternate_descriptions": {

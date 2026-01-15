@@ -75,6 +75,22 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            50
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "moodAxes.arousal"
@@ -95,7 +111,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -221,7 +237,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires jealous vigilance (jealousy + suspicion) plus a cold, controlled edge (smoldering anger) so it reads as measuring/monitoring with subtle control impulses rather than pure anxious suspicion. Anchors in engaged threat with negative affiliation and non-collapsed agency, while keeping arousal below ‘explosive’ territory. Caps panic/freeze for composure, and caps hot anger/rage so it stays quiet and watchful. Triggers only on suspicion jump, jealousy+affiliation drop, or smoldering rise to prevent spam."
+            "failure_message": "Requires jealous vigilance (jealousy + suspicion) plus a cold, controlled edge (smoldering anger) so it reads as measuring/monitoring with subtle control impulses rather than overt fluster or explosion. Anchors in engaged threat with negative affiliation and non-collapsed agency, while keeping arousal below ‘explosive’ territory. Adds a composure gate via inhibitory_control and baseline self_control so the jealousy stays quiet/managed. Caps panic/freeze for steadiness, and caps hot anger/rage so it remains watchful. Triggers only on suspicion jump, jealousy+affiliation drop, or smoldering rise to prevent spam."
         }
     ],
     "alternate_descriptions": {

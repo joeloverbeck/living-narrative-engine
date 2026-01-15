@@ -98,6 +98,81 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    20
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            },
+                                            35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            35
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    70
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.rage"
@@ -252,7 +327,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires smoldering anger as the post-heat landing state plus evidence it was hotter before. Anchors in low-to-mid arousal with engagement still online and either regained control or a clear control jump. Requires explicit cooling (hot anger/frustration/arousal dropping and/or release rising) to prevent baseline cold anger from spamming. Caps rage (still escalating) and contempt (drifts into cold fury/dismissal)."
+            "failure_message": "Requires smoldering anger as the post-heat landing state plus evidence it was hotter before. Anchors in low-to-mid arousal with engagement still online and either regained agency_control or a clear control jump. Adds regulatory return: inhibitory_control must be at least baseline and either high or clearly rising (with trait support or compensatory white-knuckling). Requires explicit cooling (hot anger/frustration/arousal dropping and/or release rising) to prevent baseline cold anger from spamming. Caps rage (still escalating) and contempt (drifts into cold fury/dismissal)."
         }
     ],
     "alternate_descriptions": {

@@ -112,6 +112,34 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    20
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    60
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -192,7 +220,7 @@
                     }
                 ]
             },
-            "failure_message": "Contained grief + sadness with low alarm/fear and low arousal. Adds a non-hostile affiliation floor and an optional affiliation-drop change gate so ‘withdrawal into mourning’ can trigger even when other bonding emotions are muted by low engagement."
+            "failure_message": "Contained grief + sadness with low alarm/fear and low arousal. Adds regulation realism: quiet grief requires at least moderate momentary inhibitory_control (not disinhibited) and is most plausible when restraint is actively high or when baseline trait self_control is high. Keeps dissociation low so it reads as present, held mourning rather than shutdown."
         }
     ],
     "actor_description": "The grief isn't sharp anymore. It's weight. It sits behind my sternum and in my throat, turning everything quieter. My thoughts move slowly, like they're wading. I don't even have the energy for drama. The loss is simply there-an ache that keeps its own hours. I notice myself handling the world more gently, as if one wrong touch could make something else break. Even breathing feels careful.",

@@ -63,6 +63,22 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            40
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.trusting_surrender"
@@ -134,7 +150,7 @@
                     }
                 ]
             },
-            "failure_message": "Needs a real submission stance (not just mild agreeableness), paired with unease/fear, grounded in low agency and moderate threat. Blocks warm/safe yielding (trusting_surrender) and 'too offline' detachment (dissociation). Fires only on a submission spike, an agency drop, or a crossing into the submission band."
+            "failure_message": "Needs a real submission stance (not just mild agreeableness), paired with unease/fear, grounded in low agency and moderate threat. Adds a restraint/regulation gate (inhibitory_control + baseline self_control) so it reads as measured, controlled compliance rather than chaotic appeasement or impulsive resistance. Blocks warm/safe yielding (trusting_surrender) and 'too offline' detachment (dissociation). Fires only on a submission spike, an agency drop, or a crossing into the submission band."
         }
     ],
     "alternate_descriptions": {

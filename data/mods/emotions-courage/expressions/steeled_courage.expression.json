@@ -64,6 +64,22 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            55
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -153,7 +169,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires courage + fear + determination with a real rise in resolve and credible threat signals; explicitly excludes panic (control collapse) via a low panic cap and an agency floor, excludes freeze, and avoids being flattened by numbness/fatigue."
+            "failure_message": "Requires courage + fear + determination with a real rise in resolve and credible threat signals; explicitly excludes panic (control collapse) via a low panic cap and an agency floor, excludes freeze. Adds regulation realism: steeling is an inhibitory act (holding fear in check), so it requires elevated inhibitory_control and solid trait self_control."
         }
     ],
     "actor_description": "The fear is still there-sharp, bright, insisting-but I stop negotiating with it. I draw one clean breath, set my jaw, and make my hands behave. My pulse bangs in my wrists. Fine. We're doing this scared.",

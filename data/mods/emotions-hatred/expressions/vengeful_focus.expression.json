@@ -41,7 +41,7 @@
                                     {
                                         "var": "emotions.resentment"
                                     },
-                                    0.50
+                                    0.5
                                 ]
                             },
                             {
@@ -49,7 +49,7 @@
                                     {
                                         "var": "emotions.contempt"
                                     },
-                                    0.30
+                                    0.3
                                 ]
                             }
                         ]
@@ -108,6 +108,34 @@
                                 "var": "moodAxes.threat"
                             },
                             60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    60
+                                ]
+                            }
                         ]
                     },
                     {
@@ -250,7 +278,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -281,6 +309,41 @@
                                         ]
                                     },
                                     0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            },
+                                            30
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            30
+                                        ]
+                                    }
                                 ]
                             }
                         ]

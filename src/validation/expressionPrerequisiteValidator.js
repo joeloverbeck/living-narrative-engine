@@ -2,6 +2,13 @@
  * @file Expression prerequisite validation for JSON Logic structure and var paths.
  */
 
+import {
+  MOOD_AXES,
+  AFFECT_TRAITS,
+  MOOD_AXIS_RANGE,
+  AFFECT_TRAIT_RANGE,
+} from '../constants/moodAffectConstants.js';
+
 const DEFAULT_ALLOWED_VAR_ROOTS = new Set([
   'actor',
   'emotions',
@@ -14,22 +21,9 @@ const DEFAULT_ALLOWED_VAR_ROOTS = new Set([
   'previousMoodAxes',
 ]);
 
-const DEFAULT_MOOD_AXES = [
-  'valence',
-  'arousal',
-  'agency_control',
-  'threat',
-  'engagement',
-  'future_expectancy',
-  'self_evaluation',
-  'affiliation',
-];
-
-const DEFAULT_AFFECT_TRAITS = [
-  'affective_empathy',
-  'cognitive_empathy',
-  'harm_aversion',
-];
+// Re-export for backward compatibility
+const DEFAULT_MOOD_AXES = MOOD_AXES;
+const DEFAULT_AFFECT_TRAITS = AFFECT_TRAITS;
 
 const COMPARISON_OPERATORS = new Set([
   '==',
@@ -85,11 +79,11 @@ const RANGE_BY_ROOT = new Map([
   ['emotions', { min: 0, max: 1 }],
   ['sexualStates', { min: 0, max: 1 }],
   ['sexualArousal', { min: 0, max: 1 }],
-  ['moodAxes', { min: -100, max: 100 }],
-  ['affectTraits', { min: 0, max: 100 }],
+  ['moodAxes', MOOD_AXIS_RANGE],
+  ['affectTraits', AFFECT_TRAIT_RANGE],
   ['previousEmotions', { min: 0, max: 1 }],
   ['previousSexualStates', { min: 0, max: 1 }],
-  ['previousMoodAxes', { min: -100, max: 100 }],
+  ['previousMoodAxes', MOOD_AXIS_RANGE],
 ]);
 
 class ExpressionPrerequisiteValidator {

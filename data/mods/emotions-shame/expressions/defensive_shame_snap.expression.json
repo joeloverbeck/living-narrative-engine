@@ -100,7 +100,7 @@
                             {
                                 "var": "emotions.guilt"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -108,12 +108,52 @@
                             {
                                 "var": "emotions.remorse"
                             },
-                            0.30
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            -15
+                                        ]
+                                    },
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "affectTraits.self_control"
+                                            },
+                                            60
+                                        ]
+                                    }
+                                ]
+                            }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires shame already elevated, then a noticeable anger spike (not just baseline irritability). Grounds it in negative self-evaluation plus elevated threat/arousal (social heat). Caps contempt/hatred so it stays defensive rather than coldly degrading, and caps agency so it doesn’t read as swaggering dominance. Also caps remorse so a strongly harm-aware state doesn’t unrealistically present as a snapping cover response."
+            "failure_message": "Adds disinhibition gating: a defensive snap is a response-inhibition failure under social heat. High inhibitory_control (white-knuckling) should block it unless disinhibition is present; low trait self_control makes the outburst more likely at these shame/anger levels."
         }
     ],
     "actor_description": "Heat crawls up my neck and I can feel myself shrinking inside my own skin\u2014like I'm being pinned by attention. Then the next thing out of me is sharp: a snap meant to make the moment back up. It\u2019s not courage; it\u2019s cover. I\u2019m trying to stop the looking before it gets under me.",

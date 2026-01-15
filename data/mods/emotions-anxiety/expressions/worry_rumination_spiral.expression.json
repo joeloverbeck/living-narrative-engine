@@ -65,6 +65,42 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            -30
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    70
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    15
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.panic"
                             },
                             0.28
@@ -182,12 +218,27 @@
                                     },
                                     0.18
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Rumination is ‘control slips into looping.’ Explicitly excludes strong executive_focus, unless executive_focus just dropped hard (a snap from organized grip into spiral)."
+            "failure_message": "Rumination is ‘control slips into looping’: requires anxiety + engagement with reduced agency control, excludes strong executive_focus, and keeps inhibitory_control in a taxed band (not tightly clamped, not wildly disinhibited). Trait self_control makes the spiral less likely unless inhibitory_control is genuinely low (or is actively dropping)."
         }
     ],
     "alternate_descriptions": {

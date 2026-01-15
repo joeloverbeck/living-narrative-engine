@@ -1,6 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import ExpressionPrerequisiteValidator, {
   DEFAULT_MOOD_AXES,
+  DEFAULT_AFFECT_TRAITS,
 } from '../../../src/validation/expressionPrerequisiteValidator.js';
 
 const allowedOperations = new Set([
@@ -619,6 +620,95 @@ describe('ExpressionPrerequisiteValidator', () => {
     expect(DEFAULT_MOOD_AXES).toContain('future_expectancy');
     expect(DEFAULT_MOOD_AXES).toContain('self_evaluation');
     expect(DEFAULT_MOOD_AXES).toContain('affiliation');
+  });
+
+  it('accepts inhibitory_control as a valid mood axis in both moodAxes and previousMoodAxes', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'test:inhibitory_control_mood_axis',
+      prerequisites: [
+        {
+          logic: {
+            and: [
+              { '>=': [{ var: 'moodAxes.inhibitory_control' }, 25] },
+              {
+                '>=': [
+                  {
+                    '-': [
+                      { var: 'previousMoodAxes.inhibitory_control' },
+                      { var: 'moodAxes.inhibitory_control' },
+                    ],
+                  },
+                  10,
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    // Use DEFAULT_MOOD_AXES (as modValidationOrchestrator does) to verify 'inhibitory_control' is included
+    const result = validator.validateExpression(expression, {
+      modId: 'test',
+      source: 'expressions/test.expression.json',
+      validKeysByRoot: {
+        moodAxes: new Set(DEFAULT_MOOD_AXES),
+      },
+    });
+
+    // If 'inhibitory_control' is NOT in DEFAULT_MOOD_AXES, we expect violations
+    // This test verifies that after the fix, there are no violations
+    const inhibitoryControlViolations = result.violations.filter(
+      (v) => v.issueType === 'unknown_var_key'
+    );
+    // Should be 0 after the fix - each reference to inhibitory_control would create a violation if not fixed
+    expect(inhibitoryControlViolations).toHaveLength(0);
+    expect(result.violations).toHaveLength(0);
+  });
+
+  it('includes inhibitory_control in DEFAULT_MOOD_AXES', () => {
+    // Sanity check that the exported constant includes inhibitory_control
+    expect(DEFAULT_MOOD_AXES).toContain('inhibitory_control');
+  });
+
+  it('accepts self_control as a valid affect trait', () => {
+    const validator = new ExpressionPrerequisiteValidator({
+      allowedOperations,
+    });
+    const expression = {
+      id: 'test:self_control_affect_trait',
+      prerequisites: [
+        { logic: { '>=': [{ var: 'affectTraits.self_control' }, 50] } },
+      ],
+    };
+
+    // Use DEFAULT_AFFECT_TRAITS (as modValidationOrchestrator does) to verify 'self_control' is included
+    const result = validator.validateExpression(expression, {
+      modId: 'test',
+      source: 'expressions/test.expression.json',
+      validKeysByRoot: {
+        affectTraits: new Set(DEFAULT_AFFECT_TRAITS),
+      },
+    });
+
+    // If 'self_control' is NOT in DEFAULT_AFFECT_TRAITS, we expect violations
+    // This test verifies that after the fix, there are no violations
+    const selfControlViolations = result.violations.filter(
+      (v) => v.issueType === 'unknown_var_key'
+    );
+    expect(selfControlViolations).toHaveLength(0);
+    expect(result.violations).toHaveLength(0);
+  });
+
+  it('includes self_control in DEFAULT_AFFECT_TRAITS', () => {
+    // Sanity check that the exported constant includes all expected affect traits
+    expect(DEFAULT_AFFECT_TRAITS).toContain('affective_empathy');
+    expect(DEFAULT_AFFECT_TRAITS).toContain('cognitive_empathy');
+    expect(DEFAULT_AFFECT_TRAITS).toContain('harm_aversion');
+    expect(DEFAULT_AFFECT_TRAITS).toContain('self_control');
   });
 
   // Test Group 1: Basic Input Validation

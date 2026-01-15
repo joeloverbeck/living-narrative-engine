@@ -37,6 +37,34 @@
                     {
                         ">=": [
                             {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    65
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.arousal"
                             },
                             15
@@ -231,12 +259,47 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            },
+                                            40
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            40
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires strong executive_focus (high engagement + high control under moderate threat) plus evidence of load (determination OR stress OR higher threat). Keeps it as pressured competence, not trance/flow or panic/terror. Triggers only on a fresh executive-focus spike/crossing, or a stress/determination/threat surge."
+            "failure_message": "Requires strong executive_focus under load *plus* a real restraint clamp (inhibitory_control) consistent with “white-knuckling.” Trait self_control supports sustained clamping; low-trait actors must be in a higher clamp band to qualify. Keeps it as pressured competence (not trance/flow, not panic/terror) and triggers only on fresh spikes/crossings in focus, load, threat, or inhibitory clamp."
         }
     ],
     "alternate_descriptions": {

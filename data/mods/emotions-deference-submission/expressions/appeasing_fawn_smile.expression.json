@@ -71,6 +71,22 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            45
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.trust"
@@ -154,7 +170,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires a fawn-shaped blend: submission plus anxiety/unease/stress, with elevated threat and low agency, but a deliberately high affiliation signal (outward placation). Blocks genuine bonding (trust/affection/attachment) and blocks fight/defiance (rage/protest_anger) and bold approach (courage). Triggers only on a threat jump or submission spike to keep it a reflex beat, not a constant personality."
+            "failure_message": "Requires a fawn-shaped blend: submission plus anxiety/unease/stress, with elevated threat and low agency, but a deliberately high affiliation signal (outward placation). Adds a regulation gate (inhibitory_control + baseline self_control) so the warmth reads as a managed safety strategy rather than a loose, disinhibited social grin or a panic collapse. Blocks genuine bonding (trust/affection/attachment) and blocks fight/defiance (rage/protest_anger) and bold approach (courage). Triggers only on a threat jump or submission spike to keep it a reflex beat, not a constant personality."
         }
     ],
     "alternate_descriptions": {

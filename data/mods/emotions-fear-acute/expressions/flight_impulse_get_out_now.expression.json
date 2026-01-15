@@ -71,6 +71,42 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    -15
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    40
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    70
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.terror"
+                                    },
+                                    0.72
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.freeze"
@@ -145,7 +181,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires high fear/terror with high threat and arousal, plus reduced-but-not-collapsed agency (mobile). Excludes freeze/dissociation and caps panic so this reads as 'run now' rather than shutdown or panic hijack. Triggers only on a fear/terror spike or a threat jump to prevent spam."
+            "failure_message": "Requires high fear/terror with high threat and arousal, plus reduced-but-not-collapsed agency (mobile). Adds a regulation gate: this beat is likelier under disinhibition/low trait self-control, unless threat/terror are extreme. Excludes freeze/dissociation and caps panic so this reads as 'run now' rather than shutdown or panic hijack. Triggers only on a fear/terror spike or a threat jump to prevent spam."
         }
     ],
     "alternate_descriptions": {

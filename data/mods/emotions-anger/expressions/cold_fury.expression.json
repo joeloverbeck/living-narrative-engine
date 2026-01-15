@@ -66,6 +66,34 @@
                     {
                         ">=": [
                             {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    50
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.arousal"
                             },
                             5
@@ -272,6 +300,21 @@
                                         ]
                                     },
                                     0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    15
                                 ]
                             },
                             {
