@@ -63,7 +63,8 @@
             "engagement": 77,
             "future_expectancy": 43,
             "self_evaluation": 77,
-            "affiliation": 35
+            "affiliation": 35,
+            "inhibitory_control": 45
         },
         "core:sexual_state": {
             "sex_excitation": 15,

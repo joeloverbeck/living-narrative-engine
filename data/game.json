@@ -81,7 +81,7 @@
     "writing",
     "ballet",
     "intoxicants",
-    "p_erotica_hawthorne",
+    "alicia",
     "comfort",
     "breaching",
     "drinking",
@@ -115,5 +115,5 @@
     "cosmetics",
     "movement"
   ],
-  "startWorld": "p_erotica_hawthorne:hawthorne"
+  "startWorld": "alicia:alicia"
 }

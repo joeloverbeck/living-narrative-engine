@@ -46,17 +46,20 @@ class MonteCarloReportGenerator {
   #logger;
   #prototypeConstraintAnalyzer;
   #prototypeFitRankingService;
+  #prototypeSynthesisService;
 
   /**
    * @param {object} deps
    * @param {import('../../interfaces/coreServices.js').ILogger} deps.logger
    * @param {import('./PrototypeConstraintAnalyzer.js').default} [deps.prototypeConstraintAnalyzer] - Optional analyzer for prototype math
    * @param {import('./PrototypeFitRankingService.js').default} [deps.prototypeFitRankingService] - Optional service for prototype fit analysis
+   * @param {import('./PrototypeSynthesisService.js').default} [deps.prototypeSynthesisService] - Optional service for prototype synthesis
    */
   constructor({
     logger,
     prototypeConstraintAnalyzer = null,
     prototypeFitRankingService = null,
+    prototypeSynthesisService = null,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -64,6 +67,7 @@ class MonteCarloReportGenerator {
     this.#logger = logger;
     this.#prototypeConstraintAnalyzer = prototypeConstraintAnalyzer;
     this.#prototypeFitRankingService = prototypeFitRankingService;
+    this.#prototypeSynthesisService = prototypeSynthesisService;
   }
 
   /**
@@ -2682,6 +2686,7 @@ ${this.#generateRecommendation(blocker)}
 
     const factsBuilder = new RecommendationFactsBuilder({
       prototypeConstraintAnalyzer: this.#prototypeConstraintAnalyzer,
+      prototypeFitRankingService: this.#prototypeFitRankingService,
       logger: this.#logger,
     });
     const diagnosticFacts = factsBuilder.build({
@@ -2705,7 +2710,9 @@ ${this.#generateRecommendation(blocker)}
 `;
     }
 
-    const engine = new RecommendationEngine();
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: this.#prototypeSynthesisService,
+    });
     const recommendations = engine.generate(diagnosticFacts);
     if (!Array.isArray(recommendations) || recommendations.length === 0) {
       return '';
@@ -6186,12 +6193,12 @@ ${populationLabel}
 
     const hasMcBlockers = blockers && blockers.length > 0;
 
-    if (totalStaticIssues > 0 && hasMcBlockers) {
+    // Note: totalStaticIssues is always > 0 here because the function returns early
+    // at lines 6124-6130 if both gateConflicts and unreachableThresholds are empty
+    if (hasMcBlockers) {
       lines.push('✅ **Confirmed**: Static analysis issues are corroborated by Monte Carlo simulation.');
-    } else if (totalStaticIssues > 0 && !hasMcBlockers) {
-      lines.push('⚠️ **Discrepancy**: Static analysis found issues but MC shows no blockers. May indicate path-sensitivity.');
     } else {
-      lines.push('✅ **Agreement**: Both analyses agree on the expression state.');
+      lines.push('⚠️ **Discrepancy**: Static analysis found issues but MC shows no blockers. May indicate path-sensitivity.');
     }
 
     lines.push('');
@@ -6306,16 +6313,17 @@ ${populationLabel}
       return `${pct.toFixed(4)}%`;
     }
 
-    // For values that would round to 0.00, show more precision
-    if (pct > 0 && pct < 0.005) {
-      return `${pct.toFixed(3)}%`;
-    }
+    // Note: The previous "pct < 0.005" branch was unreachable dead code.
+    // To reach this point, pct must be >= 0.01 (since pct < 0.01 returns above),
+    // so "pct < 0.005" can never be true here.
 
     return `${pct.toFixed(decimals)}%`;
   }
 
   #formatSignedPercentagePoints(value) {
-    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+    // Note: This function is only called when typeof value === 'number' (see line 2751),
+    // so null/undefined/non-number checks are unnecessary. Only NaN check is relevant.
+    if (isNaN(value)) {
       return 'N/A';
     }
     const points = value * 100;

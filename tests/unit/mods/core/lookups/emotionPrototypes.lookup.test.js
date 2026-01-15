@@ -104,10 +104,13 @@ describe('core:emotion_prototypes lookup', () => {
       'sex_excitation',
       'sex_inhibition',
       'sexual_inhibition',
+      // Mood axis (from core:mood component)
+      'inhibitory_control',
       // Affect trait axes (from core:affect_traits component)
       'affective_empathy',
       'cognitive_empathy',
       'harm_aversion',
+      'self_control',
     ];
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
@@ -136,7 +139,7 @@ describe('core:emotion_prototypes lookup', () => {
 
   describe('gate validation', () => {
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|affective_empathy|cognitive_empathy|affiliation|harm_aversion)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|inhibitory_control|affective_empathy|cognitive_empathy|affiliation|harm_aversion|self_control)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
       if (emotionData.gates) {

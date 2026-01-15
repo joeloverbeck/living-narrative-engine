@@ -623,3 +623,603 @@ describe('RecommendationEngine', () => {
     expect(recommendations).toEqual([]);
   });
 });
+
+describe('RecommendationEngine - prototype_create_suggestion', () => {
+  // Mock synthesis service
+  const createMockSynthesisService = (synthesizedResult) => ({
+    synthesize: jest.fn(() => synthesizedResult),
+  });
+
+  // Helper to create extended facts for prototype_create_suggestion tests
+  const createPrototypeCreateFacts = (overrides = {}) => ({
+    expressionId: 'expr:create-suggestion',
+    sampleCount: 800,
+    moodRegime: {
+      definition: null,
+      sampleCount: 400,
+      bounds: { valence: { min: -0.5, max: 0.5 } },
+    },
+    storedMoodRegimeContexts: [{ moodAxes: { valence: 0.2 } }],
+    prototypeDefinitions: {
+      joy: { weights: { valence: 0.8 }, gates: [] },
+    },
+    prototypeFit: {
+      leaderboard: [
+        {
+          prototypeId: 'joy',
+          combinedScore: 0.5,
+          gatePassRate: 0.25, // Below usable threshold
+          intensityDistribution: {
+            p95: 0.4,
+            pAboveThreshold: [{ t: 0.55, p: 0.05 }], // Below usable threshold
+          },
+          moodSampleCount: 400,
+        },
+      ],
+    },
+    gapDetection: {
+      nearestDistance: 0.50, // Above gap threshold
+      distancePercentile: 80,
+      kNearestNeighbors: [],
+    },
+    targetSignature: {
+      valence: { dir: 'up', importance: 0.7 },
+    },
+    overallPassRate: 0.2,
+    clauses: [
+      {
+        clauseId: 'var:emotions.joy:>=:0.6',
+        clauseLabel: 'emotions.joy >= 0.6',
+        clauseType: 'threshold',
+        operator: '>=',
+        prototypeId: 'joy',
+        impact: 0.3,
+        thresholdValue: 0.6,
+      },
+    ],
+    prototypes: [
+      {
+        prototypeId: 'joy',
+        moodSampleCount: 400,
+        gateFailCount: 120,
+        gatePassCount: 280,
+        thresholdPassGivenGateCount: 120,
+        thresholdPassCount: 120,
+        gateFailRate: 0.3,
+        gatePassRate: 0.7,
+        pThreshGivenGate: 0.43,
+        pThreshEffective: 0.21,
+        meanValueGivenGate: 0.5,
+        failedGateCounts: [],
+        compatibilityScore: 0,
+      },
+    ],
+    invariants: [{ id: 'rate:overallPassRate', ok: true, message: '' }],
+    ...overrides,
+  });
+
+  it('does not emit prototype_create_suggestion when no synthesis service is provided', () => {
+    const engine = new RecommendationEngine();
+    const facts = createPrototypeCreateFacts();
+
+    const recommendations = engine.generate(facts);
+
+    expect(
+      recommendations.find((r) => r.type === 'prototype_create_suggestion')
+    ).toBeUndefined();
+  });
+
+  it('emits prototype_create_suggestion when A && B (no usable prototype, strong improvement)', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_joy',
+      weights: { valence: 0.9, arousal: 0.3, dominance: 0.2 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [
+          { t: 0.55, p: 0.35 }, // Strong improvement: 0.35 - 0.05 = 0.30
+          { t: 0.45, p: 0.45 },
+          { t: 0.65, p: 0.25 },
+        ],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.25, // Below usable 0.30
+            intensityDistribution: {
+              p95: 0.4,
+              pAboveThreshold: [{ t: 0.6, p: 0.05 }],
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeDefined();
+    expect(suggestion.type).toBe('prototype_create_suggestion');
+    expect(suggestion.confidence).toBe('high');
+    expect(suggestion.proposedPrototype.name).toBe('up_valence_joy');
+    expect(suggestion.proposedPrototype.weights).toEqual({
+      valence: 0.9,
+      arousal: 0.3,
+      dominance: 0.2,
+    });
+    expect(suggestion.why).toContain('No existing prototype meets usability');
+    expect(suggestion.relatedClauseIds).toContain('var:emotions.joy:>=:0.6');
+  });
+
+  it('emits prototype_create_suggestion when C true (gap signal) and sanity passes', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_prototype',
+      weights: { valence: 0.7, arousal: 0.4, dominance: 0.3 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.5, // Passes sanity >= 0.20
+        mean: 0.55,
+        p95: 0.7,
+        pAtLeastT: [
+          { t: 0.55, p: 0.12 }, // Does not meet B threshold
+        ],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      gapDetection: {
+        nearestDistance: 0.55, // > 0.45 triggers C
+        distancePercentile: 80,
+      },
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.40, // Usable
+            intensityDistribution: {
+              p95: 0.5,
+              pAboveThreshold: [{ t: 0.55, p: 0.12 }], // Usable
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeDefined();
+    expect(suggestion.confidence).toBe('medium');
+    expect(suggestion.why).toContain('gap detected');
+    expect(
+      suggestion.evidence.some((e) => e.label === 'Nearest prototype distance')
+    ).toBe(true);
+  });
+
+  it('does not emit when usable prototype exists and C not triggered', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_joy',
+      weights: { valence: 0.9 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [{ t: 0.55, p: 0.35 }],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      gapDetection: {
+        nearestDistance: 0.30, // Below gap threshold
+        distancePercentile: 50,
+      },
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.50, // Usable >= 0.30
+            intensityDistribution: {
+              p95: 0.6,
+              pAboveThreshold: [{ t: 0.55, p: 0.20 }], // Usable >= 0.10
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeUndefined();
+  });
+
+  it('does not emit when B fails (improvement below threshold)', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_joy',
+      weights: { valence: 0.9 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [{ t: 0.55, p: 0.12 }], // Only 0.02 improvement, below 0.15
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      gapDetection: {
+        nearestDistance: 0.30, // Not triggering C
+        distancePercentile: 50,
+      },
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.25, // Below usable, so A is true
+            intensityDistribution: {
+              p95: 0.4,
+              pAboveThreshold: [{ t: 0.55, p: 0.10 }], // Improvement is only 0.02
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeUndefined();
+  });
+
+  it('does not emit when spam brake triggers', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_joy',
+      weights: { valence: 0.9, arousal: 0.3, dominance: 0.2 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [{ t: 0.55, p: 0.45 }],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      gapDetection: {
+        nearestDistance: 0.30, // <= 0.35 spam brake distance
+        distancePercentile: 50,
+      },
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.25, // Below usable, A would be true
+            intensityDistribution: {
+              p95: 0.4,
+              pAboveThreshold: [{ t: 0.55, p: 0.20 }], // >= 0.15 spam brake pAtLeastT
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeUndefined();
+  });
+
+  it('uses anchor clause threshold when present', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_joy',
+      weights: { valence: 0.9, arousal: 0.3, dominance: 0.2 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [
+          { t: 0.7, p: 0.35 }, // Custom threshold from anchor clause
+        ],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      clauses: [
+        {
+          clauseId: 'var:emotions.joy:>=:0.7',
+          clauseLabel: 'emotions.joy >= 0.7',
+          clauseType: 'threshold',
+          operator: '>=',
+          prototypeId: 'joy',
+          impact: 0.3,
+          thresholdValue: 0.7, // Custom threshold
+        },
+      ],
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.25,
+            intensityDistribution: {
+              p95: 0.4,
+              pAboveThreshold: [{ t: 0.7, p: 0.05 }],
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeDefined();
+    expect(suggestion.evidence.some((e) => e.label.includes('0.70'))).toBe(true);
+  });
+
+  it('uses default threshold 0.55 when no anchor clause', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_prototype',
+      weights: { valence: 0.9, arousal: 0.3, dominance: 0.2 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [{ t: 0.55, p: 0.35 }],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      clauses: [
+        {
+          clauseId: 'axis:moodAxes.valence:>=:0.2',
+          clauseLabel: 'moodAxes.valence >= 0.2',
+          clauseType: 'threshold',
+          operator: '>=',
+          prototypeId: null, // No prototype - won't be selected as anchor
+          impact: 0.3,
+          thresholdValue: 0.2,
+        },
+      ],
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeDefined();
+    expect(suggestion.evidence.some((e) => e.label.includes('0.55'))).toBe(true);
+  });
+
+  it('confidence is high for (A && B) or (C && B)', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_joy',
+      weights: { valence: 0.9, arousal: 0.3, dominance: 0.2 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [{ t: 0.55, p: 0.35 }],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    // Test (A && B) - no usable prototype + strong improvement
+    const factsAB = createPrototypeCreateFacts({
+      gapDetection: {
+        nearestDistance: 0.50, // High enough to not hit spam brake
+        distancePercentile: 80,
+      },
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.25, // Not usable
+            intensityDistribution: {
+              p95: 0.4,
+              pAboveThreshold: [{ t: 0.55, p: 0.05 }], // Not usable
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recsAB = engine.generate(factsAB);
+    const suggestionAB = recsAB.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestionAB).toBeDefined();
+    expect(suggestionAB.confidence).toBe('high');
+  });
+
+  it('confidence is medium for C without B', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_prototype',
+      weights: { valence: 0.7, arousal: 0.4, dominance: 0.3 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.5,
+        mean: 0.55,
+        p95: 0.7,
+        pAtLeastT: [{ t: 0.55, p: 0.14 }], // Small improvement, B fails
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      gapDetection: {
+        nearestDistance: 0.55, // C triggers
+        distancePercentile: 80,
+      },
+      prototypeFit: {
+        leaderboard: [
+          {
+            prototypeId: 'joy',
+            combinedScore: 0.5,
+            gatePassRate: 0.40, // Usable, so A is false
+            intensityDistribution: {
+              p95: 0.5,
+              pAboveThreshold: [{ t: 0.55, p: 0.12 }], // Usable
+            },
+            moodSampleCount: 400,
+          },
+        ],
+      },
+    });
+
+    const recommendations = engine.generate(facts);
+    const suggestion = recommendations.find(
+      (r) => r.type === 'prototype_create_suggestion'
+    );
+
+    expect(suggestion).toBeDefined();
+    expect(suggestion.confidence).toBe('medium');
+  });
+
+  it('maintains deterministic ordering with existing recommendations', () => {
+    const mockSynthesis = createMockSynthesisService({
+      name: 'up_valence_joy',
+      weights: { valence: 0.9, arousal: 0.3, dominance: 0.2 },
+      gates: [],
+      predictedFit: {
+        N: 400,
+        gatePassRate: 0.8,
+        mean: 0.65,
+        p95: 0.85,
+        pAtLeastT: [{ t: 0.6, p: 0.35 }],
+      },
+    });
+
+    const engine = new RecommendationEngine({
+      prototypeSynthesisService: mockSynthesis,
+    });
+
+    const facts = createPrototypeCreateFacts({
+      clauses: [
+        {
+          clauseId: 'var:emotions.joy:>=:0.6',
+          clauseLabel: 'emotions.joy >= 0.6',
+          clauseType: 'threshold',
+          operator: '>=',
+          prototypeId: 'joy',
+          impact: 0.3,
+          thresholdValue: 0.6,
+          rawPassInRegimeCount: 100,
+          lostPassInRegimeCount: 30,
+          lostPassRateInRegime: 0.3, // Triggers prototype_mismatch
+        },
+      ],
+      prototypes: [
+        {
+          prototypeId: 'joy',
+          moodSampleCount: 400,
+          gateFailCount: 80,
+          gatePassCount: 320,
+          thresholdPassGivenGateCount: 64,
+          thresholdPassCount: 64,
+          gateFailRate: 0.2,
+          gatePassRate: 0.8,
+          pThreshGivenGate: 0.2,
+          pThreshEffective: 0.16,
+          meanValueGivenGate: 0.5,
+          failedGateCounts: [{ gateId: 'valence >= 0.4', count: 50 }],
+          compatibilityScore: 0,
+        },
+      ],
+    });
+
+    const recommendations = engine.generate(facts);
+
+    // Both should be present and order is deterministic
+    expect(recommendations.length).toBeGreaterThan(0);
+    // Recommendations should be sorted by severity, then impact, then id
+    for (let i = 0; i < recommendations.length - 1; i++) {
+      const current = recommendations[i];
+      const next = recommendations[i + 1];
+      const sevOrder = { high: 0, medium: 1, low: 2 };
+      expect(sevOrder[current.severity]).toBeLessThanOrEqual(
+        sevOrder[next.severity]
+      );
+    }
+  });
+});

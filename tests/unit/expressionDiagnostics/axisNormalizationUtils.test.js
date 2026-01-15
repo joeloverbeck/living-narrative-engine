@@ -77,6 +77,21 @@ describe('axisNormalizationUtils', () => {
       expect(normalized.affective_empathy).toBeCloseTo(0.01, 6);
       expect(normalized.cognitive_empathy).toBeCloseTo(0.5, 6);
       expect(normalized.harm_aversion).toBeCloseTo(0.5, 6);
+      expect(normalized.self_control).toBeCloseTo(0.5, 6);
+    });
+
+    it('normalizes self_control trait from [0, 100] to [0, 1]', () => {
+      const normalized = normalizeAffectTraits({
+        self_control: 72,
+      });
+
+      expect(normalized.self_control).toBeCloseTo(0.72, 6);
+    });
+
+    it('defaults self_control to 0.5 when not provided', () => {
+      const normalized = normalizeAffectTraits({});
+
+      expect(normalized.self_control).toBeCloseTo(0.5, 6);
     });
   });
 });

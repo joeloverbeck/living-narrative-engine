@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:affect_traits",
-  "description": "Stable personality traits affecting empathy and moral emotion capacity. Unlike mood (transient states), these traits rarely change and represent enduring character attributes.",
+  "description": "Stable personality traits affecting empathy, moral emotion capacity, and regulatory capacity. Unlike mood (transient states), these traits rarely change and represent enduring character attributes.",
   "dataSchema": {
     "type": "object",
     "properties": {
@@ -25,9 +25,16 @@
         "maximum": 100,
         "default": 50,
         "description": "Aversion to causing harm to others. Modulates guilt and inhibits cruelty. (0=enjoys harm, 50=normal aversion, 100=extreme aversion)"
+      },
+      "self_control": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "Baseline impulse control / self-regulation capacity. Biases inhibitory_control and dampens disinhibition under arousal/threat. (0=highly impulsive, 50=average, 100=highly self-controlled)"
       }
     },
-    "required": ["affective_empathy", "cognitive_empathy", "harm_aversion"],
+    "required": ["affective_empathy", "cognitive_empathy", "harm_aversion", "self_control"],
     "additionalProperties": false
   }
 }

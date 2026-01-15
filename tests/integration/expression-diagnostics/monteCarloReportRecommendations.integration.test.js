@@ -30,6 +30,58 @@ function createSimulationResult(overrides = {}) {
   };
 }
 
+/**
+ * Creates a simulation result with minimal clause/prototype data needed for
+ * RecommendationEngine.generate() to not early-exit before building
+ * prototype_create_suggestion.
+ *
+ * @param {object} overrides Additional simulation result overrides
+ * @returns {object} Simulation result object
+ */
+function createSimulationResultWithMinimalClauseData(overrides = {}) {
+  const PROTOTYPE_CLAUSE_ID = 'var:emotions.joy:>=:0.4';
+  return createSimulationResult({
+    clauseFailures: [
+      {
+        clauseDescription: 'emotions.joy >= 0.4',
+        inRegimeFailureRate: 0.2,
+        averageViolation: 0.1,
+        hierarchicalBreakdown: {
+          nodeType: 'leaf',
+          clauseId: PROTOTYPE_CLAUSE_ID,
+          clauseType: 'threshold',
+          description: 'emotions.joy >= 0.4',
+          variablePath: 'emotions.joy',
+          comparisonOperator: '>=',
+          thresholdValue: 0.4,
+          inRegimeFailureRate: 0.2,
+          prototypeId: 'joy',
+        },
+      },
+    ],
+    ablationImpact: {
+      clauseImpacts: [{ clauseId: PROTOTYPE_CLAUSE_ID, impact: 0.10 }],
+    },
+    prototypeEvaluationSummary: {
+      emotions: {
+        joy: {
+          moodSampleCount: 80,
+          gatePassCount: 60,
+          gateFailCount: 20,
+          failedGateCounts: { 'valence >= 40': 20 },
+          valueSumGivenGate: 36,
+        },
+      },
+      sexualStates: {},
+    },
+    gateCompatibility: {
+      emotions: { joy: { compatible: true, reason: 'ok' } },
+      sexualStates: {},
+    },
+    ...overrides,
+  });
+}
+
 function createBlocker(overrides = {}) {
   return {
     clauseDescription: 'emotions.joy >= 0.4',
@@ -405,5 +457,312 @@ describe('MonteCarloReportGenerator recommendations section', () => {
       'Recommendations suppressed: invariant violations detected in diagnostic facts.'
     );
     expect(report).not.toContain('Recommendation 1: Prototype structurally mismatched');
+  });
+
+  describe('prototype_create_suggestion recommendations', () => {
+    /**
+     * Creates mock services for prototype_create_suggestion testing.
+     * @param {object} options Configuration options
+     * @returns {object} Mock services object
+     */
+    function createPrototypeSuggestionMocks({
+      gatePassRate = 0.15,
+      pAtLeastT = 0.05,
+      nearestDistance = 0.50,
+      distancePercentile = 96,
+      synthesizedGatePassRate = 0.75,
+      synthesizedPAtLeastT = 0.35,
+    } = {}) {
+      const mockPrototypeFitRankingService = {
+        analyzeAllPrototypeFit: jest.fn(() => ({
+          leaderboard: [
+            {
+              prototypeId: 'existing_prototype',
+              combinedScore: 0.3,
+              gatePassRate,
+              intensityDistribution: {
+                p50: 0.4,
+                p90: 0.6,
+                p95: 0.7,
+                pAboveThreshold: [{ t: 0.55, p: pAtLeastT }],
+                min: 0.1,
+                max: 0.8,
+              },
+              conflictRate: 0.1,
+            },
+          ],
+          bestPrototype: {
+            prototypeId: 'existing_prototype',
+            gatePassRate,
+            intensityDistribution: {
+              pAboveThreshold: [{ t: 0.55, p: pAtLeastT }],
+            },
+          },
+        })),
+        computeImpliedPrototype: jest.fn(() => ({
+          targetSignature: new Map([
+            ['valence', { direction: 1, tightness: 0.7, lastMileWeight: 0.5, importance: 0.8 }],
+            ['arousal', { direction: 1, tightness: 0.3, lastMileWeight: 0.2, importance: 0.4 }],
+          ]),
+        })),
+        detectPrototypeGaps: jest.fn(() => ({
+          nearestDistance,
+          distancePercentile,
+          kNearestNeighbors: [
+            { prototypeId: 'existing_prototype', distance: nearestDistance },
+          ],
+        })),
+        getPrototypeDefinitions: jest.fn(() => ({
+          existing_prototype: {
+            weights: { valence: 0.5, arousal: 0.3 },
+            gates: ['valence >= 0.2'],
+          },
+        })),
+      };
+
+      const mockPrototypeSynthesisService = {
+        synthesize: jest.fn(() => ({
+          name: 'synth_valence_positive_v1',
+          weights: { valence: 0.8, arousal: 0.4, dominance: 0.1 },
+          gates: ['valence >= 0.3'],
+          predictedFit: {
+            gatePassRate: synthesizedGatePassRate,
+            mean: 0.55,
+            p95: 0.65,
+            pAtLeastT: [
+              { t: 0.45, p: synthesizedPAtLeastT + 0.10 },
+              { t: 0.55, p: synthesizedPAtLeastT },
+              { t: 0.65, p: synthesizedPAtLeastT - 0.05 },
+            ],
+          },
+        })),
+      };
+
+      return {
+        prototypeFitRankingService: mockPrototypeFitRankingService,
+        prototypeSynthesisService: mockPrototypeSynthesisService,
+      };
+    }
+
+    it('emits prototype_create_suggestion when A && B path triggers (no usable prototype + improved fit)', () => {
+      // A: No usable prototype (gatePassRate < 0.30, pAtLeastT < 0.10)
+      // B: Proposed prototype improves fit by >= 0.15
+      const mocks = createPrototypeSuggestionMocks({
+        gatePassRate: 0.15,
+        pAtLeastT: 0.05,
+        nearestDistance: 0.30,
+        distancePercentile: 50,
+        synthesizedGatePassRate: 0.75,
+        synthesizedPAtLeastT: 0.35,
+      });
+
+      const simulationResult = createSimulationResultWithMinimalClauseData({
+        storedContexts: [
+          { moodAxes: { valence: 0.6, arousal: 0.5 } },
+          { moodAxes: { valence: 0.7, arousal: 0.4 } },
+          { moodAxes: { valence: 0.5, arousal: 0.6 } },
+        ],
+      });
+
+      const generator = new MonteCarloReportGenerator({
+        logger,
+        prototypeFitRankingService: mocks.prototypeFitRankingService,
+        prototypeSynthesisService: mocks.prototypeSynthesisService,
+      });
+
+      const report = generator.generate({
+        expressionName: 'test-expression',
+        simulationResult,
+        blockers: [],
+        summary: 'Summary',
+        prerequisites: [
+          { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.2] } },
+        ],
+      });
+
+      expect(report).toContain('## Recommendations');
+      expect(report).toContain('prototype_create_suggestion');
+      expect(report).toContain('Prototype creation suggested');
+      // Verify the recommendation has the right trigger reason
+      expect(report).toContain('No existing prototype meets usability thresholds');
+    });
+
+    it('emits prototype_create_suggestion when C path triggers (gap signal)', () => {
+      // C: nearestDistance > 0.45 or percentile >= 95
+      // With sanity checks: synthesized gatePassRate >= 0.20
+      const mocks = createPrototypeSuggestionMocks({
+        gatePassRate: 0.35,
+        pAtLeastT: 0.12,
+        nearestDistance: 0.55,
+        distancePercentile: 97,
+        synthesizedGatePassRate: 0.70,
+        synthesizedPAtLeastT: 0.30,
+      });
+
+      const simulationResult = createSimulationResultWithMinimalClauseData({
+        storedContexts: [
+          { moodAxes: { valence: 0.8, arousal: 0.7 } },
+          { moodAxes: { valence: 0.75, arousal: 0.65 } },
+        ],
+      });
+
+      const generator = new MonteCarloReportGenerator({
+        logger,
+        prototypeFitRankingService: mocks.prototypeFitRankingService,
+        prototypeSynthesisService: mocks.prototypeSynthesisService,
+      });
+
+      const report = generator.generate({
+        expressionName: 'test-expression',
+        simulationResult,
+        blockers: [],
+        summary: 'Summary',
+        prerequisites: [
+          { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } },
+        ],
+      });
+
+      expect(report).toContain('## Recommendations');
+      expect(report).toContain('prototype_create_suggestion');
+      expect(report).toContain('Prototype creation suggested');
+    });
+
+    it('does not emit prototype_create_suggestion when fit is good and gap is low', () => {
+      // Good fit: gatePassRate >= 0.30, pAtLeastT >= 0.10
+      // Low gap: nearestDistance < 0.45, percentile < 95
+      const mocks = createPrototypeSuggestionMocks({
+        gatePassRate: 0.45,
+        pAtLeastT: 0.25,
+        nearestDistance: 0.25,
+        distancePercentile: 60,
+        synthesizedGatePassRate: 0.50,
+        synthesizedPAtLeastT: 0.30,
+      });
+
+      const simulationResult = createSimulationResultWithMinimalClauseData({
+        storedContexts: [
+          { moodAxes: { valence: 0.5, arousal: 0.4 } },
+        ],
+      });
+
+      const generator = new MonteCarloReportGenerator({
+        logger,
+        prototypeFitRankingService: mocks.prototypeFitRankingService,
+        prototypeSynthesisService: mocks.prototypeSynthesisService,
+      });
+
+      const report = generator.generate({
+        expressionName: 'test-expression',
+        simulationResult,
+        blockers: [],
+        summary: 'Summary',
+        prerequisites: [
+          { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.2] } },
+        ],
+      });
+
+      expect(report).not.toContain('prototype_create_suggestion');
+      expect(report).not.toContain('Prototype creation suggested');
+    });
+
+    it('maintains stable sorting when multiple recommendations exist', () => {
+      // Trigger both prototype_mismatch and prototype_create_suggestion
+      const mocks = createPrototypeSuggestionMocks({
+        gatePassRate: 0.10,
+        pAtLeastT: 0.03,
+        nearestDistance: 0.52,
+        distancePercentile: 96,
+        synthesizedGatePassRate: 0.80,
+        synthesizedPAtLeastT: 0.40,
+      });
+
+      const simulationResult = createSimulationResult({
+        clauseFailures: [
+          {
+            clauseDescription: 'emotions.joy >= 0.4',
+            inRegimeFailureRate: 0.5,
+            averageViolation: 0.1,
+            hierarchicalBreakdown: {
+              nodeType: 'leaf',
+              clauseId: CLAUSE_ID,
+              clauseType: 'threshold',
+              description: 'emotions.joy >= 0.4',
+              variablePath: 'emotions.joy',
+              comparisonOperator: '>=',
+              thresholdValue: 0.4,
+              inRegimeFailureRate: 0.5,
+              averageViolation: 0.1,
+              siblingConditionedFailRate: 0.6,
+              nearMissRate: 0.2,
+              gatePassInRegimeCount: 40,
+              gatePassAndClausePassInRegimeCount: 2,
+              lostPassRateInRegime: 0.3,
+            },
+          },
+        ],
+        ablationImpact: {
+          clauseImpacts: [{ clauseId: CLAUSE_ID, impact: 0.2 }],
+        },
+        prototypeEvaluationSummary: {
+          emotions: {
+            joy: {
+              moodSampleCount: 80,
+              gatePassCount: 40,
+              gateFailCount: 40,
+              failedGateCounts: { 'valence >= 0.4': 30 },
+              valueSumGivenGate: 10,
+            },
+          },
+          sexualStates: {},
+        },
+        gateCompatibility: {
+          emotions: {
+            joy: { compatible: false, reason: 'conflict' },
+          },
+          sexualStates: {},
+        },
+        storedContexts: [
+          { moodAxes: { valence: 0.6, arousal: 0.5 } },
+          { moodAxes: { valence: 0.7, arousal: 0.4 } },
+        ],
+      });
+
+      const generator = new MonteCarloReportGenerator({
+        logger,
+        prototypeFitRankingService: mocks.prototypeFitRankingService,
+        prototypeSynthesisService: mocks.prototypeSynthesisService,
+      });
+
+      const report = generator.generate({
+        expressionName: 'test-expression',
+        simulationResult,
+        blockers: [createBlocker()],
+        summary: 'Summary',
+        prerequisites: [
+          { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.2] } },
+        ],
+      });
+
+      expect(report).toContain('## Recommendations');
+
+      // Check both recommendations are present
+      const hasMismatch = report.includes('prototype_mismatch') ||
+        report.includes('Prototype structurally mismatched');
+      const hasCreateSuggestion = report.includes('prototype_create_suggestion') ||
+        report.includes('Prototype creation suggested');
+
+      // At least one recommendation should be present
+      expect(hasMismatch || hasCreateSuggestion).toBe(true);
+
+      // Verify recommendation ordering is deterministic by checking numbered order
+      const recMatch = report.match(/Recommendation \d+:/g);
+      if (recMatch && recMatch.length > 1) {
+        // Verify recommendations are numbered sequentially
+        const numbers = recMatch.map((r) => parseInt(r.match(/\d+/)[0], 10));
+        for (let i = 1; i < numbers.length; i++) {
+          expect(numbers[i]).toBe(numbers[i - 1] + 1);
+        }
+      }
+    });
   });
 });

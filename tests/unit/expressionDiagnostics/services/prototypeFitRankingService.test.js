@@ -1167,4 +1167,110 @@ describe('PrototypeFitRankingService', () => {
       });
     });
   });
+
+  describe('getPrototypeDefinitions', () => {
+    const sampleSexualPrototypes = {
+      aroused: {
+        id: 'aroused',
+        weights: { sex_excitation: 0.7, sex_inhibition: -0.3 },
+        gates: ['sex_excitation >= 0.3'],
+      },
+    };
+
+    beforeEach(() => {
+      mockDataRegistry.getLookupData = jest.fn((lookupId) => {
+        if (lookupId === 'core:emotion_prototypes') {
+          return { entries: samplePrototypes };
+        }
+        if (lookupId === 'core:sexual_prototypes') {
+          return { entries: sampleSexualPrototypes };
+        }
+        return null;
+      });
+    });
+
+    it('should return empty object for non-array input', () => {
+      const result = service.getPrototypeDefinitions(null);
+      expect(result).toEqual({});
+
+      const result2 = service.getPrototypeDefinitions('invalid');
+      expect(result2).toEqual({});
+    });
+
+    it('should return empty object for empty array', () => {
+      const result = service.getPrototypeDefinitions([]);
+      expect(result).toEqual({});
+    });
+
+    it('should return definitions for emotion prototypes', () => {
+      const refs = [{ id: 'joy', type: 'emotion' }];
+      const result = service.getPrototypeDefinitions(refs);
+
+      expect(result).toEqual({
+        'emotions:joy': {
+          weights: { valence: 0.8, arousal: 0.3, dominance: 0.2 },
+          gates: ['valence >= 0.35'],
+        },
+      });
+    });
+
+    it('should return definitions for sexual prototypes', () => {
+      const refs = [{ id: 'aroused', type: 'sexual' }];
+      const result = service.getPrototypeDefinitions(refs);
+
+      expect(result).toEqual({
+        'sexualStates:aroused': {
+          weights: { sex_excitation: 0.7, sex_inhibition: -0.3 },
+          gates: ['sex_excitation >= 0.3'],
+        },
+      });
+    });
+
+    it('should return definitions for multiple prototypes', () => {
+      const refs = [
+        { id: 'joy', type: 'emotion' },
+        { id: 'anger', type: 'emotion' },
+        { id: 'aroused', type: 'sexual' },
+      ];
+      const result = service.getPrototypeDefinitions(refs);
+
+      expect(Object.keys(result)).toHaveLength(3);
+      expect(result['emotions:joy']).toBeDefined();
+      expect(result['emotions:anger']).toBeDefined();
+      expect(result['sexualStates:aroused']).toBeDefined();
+    });
+
+    it('should skip prototypes that do not exist', () => {
+      const refs = [
+        { id: 'joy', type: 'emotion' },
+        { id: 'nonexistent', type: 'emotion' },
+      ];
+      const result = service.getPrototypeDefinitions(refs);
+
+      expect(Object.keys(result)).toHaveLength(1);
+      expect(result['emotions:joy']).toBeDefined();
+      expect(result['emotions:nonexistent']).toBeUndefined();
+    });
+
+    it('should handle prototypes with empty weights and gates', () => {
+      mockDataRegistry.getLookupData = jest.fn((lookupId) => {
+        if (lookupId === 'core:emotion_prototypes') {
+          return {
+            entries: {
+              empty: { id: 'empty' }, // No weights or gates
+            },
+          };
+        }
+        return null;
+      });
+
+      const refs = [{ id: 'empty', type: 'emotion' }];
+      const result = service.getPrototypeDefinitions(refs);
+
+      expect(result['emotions:empty']).toEqual({
+        weights: {},
+        gates: [],
+      });
+    });
+  });
 });

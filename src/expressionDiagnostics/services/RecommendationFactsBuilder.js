@@ -2,24 +2,31 @@
  * @file RecommendationFactsBuilder - Builds DiagnosticFacts from Monte Carlo results.
  */
 
-import { extractMoodConstraints, evaluateConstraint } from '../utils/moodRegimeUtils.js';
+import {
+  extractMoodConstraints,
+  evaluateConstraint,
+  filterContextsByConstraints,
+} from '../utils/moodRegimeUtils.js';
 import AxisInterval from '../models/AxisInterval.js';
 import InvariantValidator from './InvariantValidator.js';
 
 class RecommendationFactsBuilder {
   #invariantValidator;
   #prototypeConstraintAnalyzer;
+  #prototypeFitRankingService;
   #logger;
   #gateClampConfig;
 
   constructor({
     invariantValidator = new InvariantValidator(),
     prototypeConstraintAnalyzer = null,
+    prototypeFitRankingService = null,
     logger = null,
     gateClampConfig = {},
   } = {}) {
     this.#invariantValidator = invariantValidator;
     this.#prototypeConstraintAnalyzer = prototypeConstraintAnalyzer;
+    this.#prototypeFitRankingService = prototypeFitRankingService;
     this.#logger = logger;
     this.#gateClampConfig = gateClampConfig;
   }
@@ -69,13 +76,33 @@ class RecommendationFactsBuilder {
       axisConstraints
     );
 
+    // Compute new fields for prototype creation recommendation support
+    const moodRegimeBounds = this.#computeBoundsFromConstraints(moodConstraints);
+    const storedMoodRegimeContexts = this.#buildStoredMoodRegimeContexts(
+      simulationResult,
+      moodConstraints
+    );
+    const prototypeDefinitions = this.#extractPrototypeDefinitions(simulationResult);
+    const fitAnalysis = this.#performPrototypeFitAnalysis(
+      expression,
+      storedMoodRegimeContexts.length > 0
+        ? storedMoodRegimeContexts
+        : simulationResult.storedContexts ?? []
+    );
+
     const diagnosticFacts = {
       expressionId: expression?.id ?? null,
       sampleCount,
       moodRegime: {
         definition: moodConstraints.length > 0 ? moodConstraints : null,
+        bounds: moodRegimeBounds,
         sampleCount: inRegimeSampleCount,
       },
+      storedMoodRegimeContexts,
+      prototypeDefinitions,
+      prototypeFit: fitAnalysis.prototypeFit,
+      gapDetection: fitAnalysis.gapDetection,
+      targetSignature: fitAnalysis.targetSignature,
       overallPassRate: simulationResult.triggerRate ?? 0,
       clauses: clauseFacts,
       prototypes: prototypeFacts,
@@ -1001,6 +1028,153 @@ class RecommendationFactsBuilder {
       }
     }
     return this.#getHistogramValue(histogram, bins.length - 1);
+  }
+
+
+  /**
+   * Compute normalized bounds from mood constraints.
+   * @param {Array} constraints - Mood constraints from extractMoodConstraints
+   * @returns {Record<string, {min?: number, max?: number}>} Bounds by axis
+   */
+  #computeBoundsFromConstraints(constraints) {
+    const bounds = {};
+    if (!Array.isArray(constraints)) {
+      return bounds;
+    }
+
+    for (const constraint of constraints) {
+      const varPath = constraint?.varPath;
+      if (typeof varPath !== 'string') {
+        continue;
+      }
+      // Extract axis name from varPath (e.g., "moodAxes.valence" -> "valence")
+      const axis = varPath.replace(/^(moodAxes\.|mood\.)/, '');
+      if (!axis) {
+        continue;
+      }
+      const threshold = constraint.threshold;
+      if (typeof threshold !== 'number') {
+        continue;
+      }
+      const operator = constraint.operator;
+
+      if (!bounds[axis]) {
+        bounds[axis] = {};
+      }
+
+      // Normalize threshold (divide by 100 to convert raw to normalized)
+      const normalized = threshold / 100;
+
+      // >= or > implies min
+      if (operator === '>=' || operator === '>') {
+        bounds[axis].min = normalized;
+      }
+      // <= or < implies max
+      if (operator === '<=' || operator === '<') {
+        bounds[axis].max = normalized;
+      }
+    }
+
+    return bounds;
+  }
+
+  /**
+   * Build stored mood regime contexts filtered by constraints.
+   * @param {object} simulationResult - Simulation result with storedContexts
+   * @param {Array} moodConstraints - Mood constraints to filter by
+   * @returns {Array} Filtered contexts
+   */
+  #buildStoredMoodRegimeContexts(simulationResult, moodConstraints) {
+    const storedContexts = simulationResult?.storedContexts ?? [];
+    if (!moodConstraints.length || !storedContexts.length) {
+      return [];
+    }
+    return filterContextsByConstraints(storedContexts, moodConstraints);
+  }
+
+  /**
+   * Extract prototype definitions (weights and gates) from simulation result.
+   * @param {object} simulationResult - Simulation result
+   * @returns {Record<string, {weights: object, gates: string[]}>} Definitions by qualified ID
+   */
+  #extractPrototypeDefinitions(simulationResult) {
+    if (!this.#prototypeFitRankingService) {
+      return {};
+    }
+
+    // Use prototype IDs from prototypeEvaluationSummary
+    const summary = simulationResult?.prototypeEvaluationSummary ?? {};
+    const prototypeRefs = [
+      ...Object.keys(summary.emotions ?? {}).map((id) => ({ id, type: 'emotion' })),
+      ...Object.keys(summary.sexualStates ?? {}).map((id) => ({ id, type: 'sexual' })),
+    ];
+
+    if (prototypeRefs.length === 0) {
+      return {};
+    }
+
+    return this.#prototypeFitRankingService.getPrototypeDefinitions(prototypeRefs);
+  }
+
+  /**
+   * Perform prototype fit analysis using PrototypeFitRankingService.
+   * @param {object} expression - Expression being analyzed
+   * @param {Array} storedContexts - Stored contexts to analyze against
+   * @returns {{prototypeFit: object|null, gapDetection: object|null, targetSignature: object|null}}
+   */
+  #performPrototypeFitAnalysis(expression, storedContexts) {
+    if (!this.#prototypeFitRankingService || !expression?.prerequisites) {
+      return { prototypeFit: null, gapDetection: null, targetSignature: null };
+    }
+
+    try {
+      const fitResults = this.#prototypeFitRankingService.analyzeAllPrototypeFit(
+        expression.prerequisites,
+        storedContexts
+      );
+      const implied = this.#prototypeFitRankingService.computeImpliedPrototype(
+        expression.prerequisites,
+        storedContexts
+      );
+      const gapDetection = this.#prototypeFitRankingService.detectPrototypeGaps(
+        expression.prerequisites,
+        storedContexts
+      );
+
+      return {
+        prototypeFit: fitResults ?? null,
+        gapDetection: gapDetection ?? null,
+        targetSignature: implied?.targetSignature
+          ? this.#serializeTargetSignature(implied.targetSignature)
+          : null,
+      };
+    } catch (err) {
+      if (this.#logger?.warn) {
+        this.#logger.warn('Prototype fit analysis failed', { error: err.message });
+      }
+      return { prototypeFit: null, gapDetection: null, targetSignature: null };
+    }
+  }
+
+  /**
+   * Convert targetSignature Map to plain object for JSON serialization.
+   * @param {Map<string, object>} signature - Target signature Map
+   * @returns {Record<string, object>|null} Serialized signature
+   */
+  #serializeTargetSignature(signature) {
+    if (!(signature instanceof Map)) {
+      return null;
+    }
+    const result = {};
+    for (const [axis, entry] of signature) {
+      result[axis] = {
+        direction: entry.direction,
+        tightness: entry.tightness,
+        lastMileWeight: entry.lastMileWeight,
+        importance: entry.importance,
+      };
+    }
+    return result;
   }
 }
 

@@ -74,12 +74,31 @@ describe('RandomStateGenerator', () => {
     }
   });
 
+  it('should include inhibitory_control in generated mood states', () => {
+    const state = generator.generate('uniform', 'static');
+
+    expect(state.current.mood).toHaveProperty('inhibitory_control');
+    expect(state.previous.mood).toHaveProperty('inhibitory_control');
+    expect(state.current.mood.inhibitory_control).toBeGreaterThanOrEqual(-100);
+    expect(state.current.mood.inhibitory_control).toBeLessThanOrEqual(100);
+    expect(Number.isInteger(state.current.mood.inhibitory_control)).toBe(true);
+  });
+
+  it('should include self_control in generated affect traits', () => {
+    const state = generator.generate('uniform', 'static');
+
+    expect(state.affectTraits).toHaveProperty('self_control');
+    expect(state.affectTraits.self_control).toBeGreaterThanOrEqual(0);
+    expect(state.affectTraits.self_control).toBeLessThanOrEqual(100);
+    expect(Number.isInteger(state.affectTraits.self_control)).toBe(true);
+  });
+
   it('should use one random sample per value for uniform static sampling', () => {
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
     generator.generate('uniform', 'static');
 
-    expect(randomSpy).toHaveBeenCalledTimes(25);
+    expect(randomSpy).toHaveBeenCalledTimes(28);
   });
 
   it('should use two random samples per value for gaussian static sampling', () => {
@@ -87,15 +106,15 @@ describe('RandomStateGenerator', () => {
 
     generator.generate('gaussian', 'static');
 
-    expect(randomSpy).toHaveBeenCalledTimes(50);
+    expect(randomSpy).toHaveBeenCalledTimes(56);
   });
 
   it('should derive current values from previous values in dynamic sampling', () => {
     const randomSequence = [
-      ...Array(28).fill(0.5),
+      ...Array(32).fill(0.5),
       0.25,
       0.5,
-      ...Array(20).fill(0.5),
+      ...Array(22).fill(0.5),
     ];
     const randomSpy = jest
       .spyOn(Math, 'random')

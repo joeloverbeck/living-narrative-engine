@@ -88,12 +88,15 @@
         "arousal": 0.3,
         "threat": -0.6,
         "self_evaluation": 0.2,
-        "engagement": 0.2
+        "engagement": 0.2,
+        "inhibitory_control": -0.5,
+        "self_control": -0.6
       },
       "gates": [
         "sexual_arousal >= 0.35",
         "threat <= 0.30",
-        "self_evaluation >= -0.40"
+        "self_evaluation >= -0.40",
+        "inhibitory_control <= 0.10"
       ]
     },
     "passion": {
@@ -103,13 +106,16 @@
         "engagement": 1.0,
         "arousal": 0.5,
         "agency_control": -0.2,
-        "threat": 0.2
+        "threat": 0.2,
+        "inhibitory_control": -0.4,
+        "self_control": -0.5
       },
       "gates": [
         "engagement >= 0.5",
         "sexual_arousal >= 0.3",
         "valence >= 0.4",
-        "agency_control <= 0.0"
+        "agency_control <= 0.0",
+        "inhibitory_control <= 0.10"
       ]
     },
     "sexual_sensual_pleasure": {
@@ -118,7 +124,9 @@
         "valence": 0.6,
         "arousal": 0.1,
         "threat": -0.6,
-        "self_evaluation": 0.2
+        "self_evaluation": 0.2,
+        "inhibitory_control": -0.4,
+        "self_control": -0.4
       },
       "gates": [
         "sexual_arousal >= 0.35",
@@ -133,7 +141,9 @@
         "valence": 0.4,
         "threat": -0.5,
         "self_evaluation": 0.1,
-        "engagement": 0.3
+        "engagement": 0.3,
+        "inhibitory_control": 0.4,
+        "self_control": -0.4
       },
       "gates": [
         "sexual_arousal >= 0.4",
@@ -148,7 +158,9 @@
         "arousal": 0.5,
         "engagement": 0.4,
         "threat": -0.4,
-        "self_evaluation": 0.2
+        "self_evaluation": 0.2,
+        "inhibitory_control": -0.4,
+        "self_control": -0.4
       },
       "gates": [
         "sexual_arousal >= 0.40",
@@ -163,7 +175,9 @@
         "future_expectancy": 0.5,
         "valence": 0.1,
         "arousal": 0.2,
-        "threat": -0.2
+        "threat": -0.2,
+        "self_control": -0.2,
+        "inhibitory_control": 0.0
       },
       "gates": [
         "engagement >= 0.10",
@@ -178,7 +192,9 @@
         "self_evaluation": 0.35,
         "threat": -0.25,
         "engagement": 0.15,
-        "valence": 0.05
+        "valence": 0.05,
+        "inhibitory_control": 0.3,
+        "self_control": 0.3
       },
       "gates": [
         "sexual_arousal >= 0.25",
@@ -194,7 +210,9 @@
         "valence": 0.4,
         "threat": -0.5,
         "self_evaluation": 0.3,
-        "engagement": 0.2
+        "engagement": 0.2,
+        "inhibitory_control": 0.3,
+        "self_control": 0.4
       },
       "gates": [
         "sexual_arousal >= 0.40",
@@ -209,7 +227,9 @@
         "valence": -0.3,
         "threat": 0.2,
         "agency_control": -0.2,
-        "arousal": 0.2
+        "arousal": 0.2,
+        "inhibitory_control": -0.4,
+        "self_control": -0.5
       },
       "gates": [
         "sexual_arousal >= 0.35",
@@ -222,7 +242,9 @@
         "threat": 0.9,
         "arousal": 0.6,
         "valence": -0.4,
-        "agency_control": -0.3
+        "agency_control": -0.3,
+        "inhibitory_control": -0.3,
+        "self_control": -0.3
       },
       "gates": [
         "sexual_arousal >= 0.35",
@@ -238,7 +260,9 @@
         "valence": -0.35,
         "agency_control": -0.25,
         "threat": 0.15,
-        "self_evaluation": -0.10
+        "self_evaluation": -0.10,
+        "inhibitory_control": -0.5,
+        "self_control": -0.6
       },
       "gates": [
         "sexual_arousal >= 0.40",
@@ -255,7 +279,9 @@
         "valence": 0.2,
         "arousal": 0.5,
         "agency_control": -0.1,
-        "engagement": 0.4
+        "engagement": 0.4,
+        "inhibitory_control": -0.5,
+        "self_control": -0.5
       },
       "gates": [
         "sexual_arousal >= 0.5",
@@ -270,7 +296,9 @@
         "self_evaluation": -0.5,
         "agency_control": -0.5,
         "arousal": 0.5,
-        "valence": -0.3
+        "valence": -0.3,
+        "inhibitory_control": -0.3,
+        "self_control": -0.4
       },
       "gates": [
         "sexual_arousal >= 0.35",
@@ -286,7 +314,9 @@
         "arousal": 0.4,
         "engagement": 0.4,
         "agency_control": -0.4,
-        "threat": 0.2
+        "threat": 0.2,
+        "inhibitory_control": -0.4,
+        "self_control": -0.4
       },
       "gates": [
         "sexual_arousal >= 0.30",
@@ -299,7 +329,9 @@
         "valence": -0.8,
         "self_evaluation": -0.3,
         "threat": 0.2,
-        "arousal": 0.3
+        "arousal": 0.3,
+        "inhibitory_control": -0.4,
+        "self_control": -0.4
       },
       "gates": [
         "sexual_arousal >= 0.30",
@@ -312,7 +344,9 @@
         "engagement": -0.7,
         "arousal": -0.5,
         "threat": -0.2,
-        "valence": 0.1
+        "valence": 0.1,
+        "inhibitory_control": 0.5,
+        "self_control": 0.5
       },
       "gates": [
         "sexual_arousal <= 0.12",
@@ -330,7 +364,9 @@
         "threat": 0.5,
         "engagement": 0.3,
         "self_evaluation": -0.2,
-        "arousal": 0.2
+        "arousal": 0.2,
+        "inhibitory_control": 0.5,
+        "self_control": 0.5
       },
       "gates": [
         "sexual_arousal <= 0.20",

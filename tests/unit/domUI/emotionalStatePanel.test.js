@@ -79,6 +79,7 @@ const createDefaultMoodData = () => ({
   future_expectancy: 0,
   self_evaluation: 0,
   affiliation: 0,
+  inhibitory_control: 0,
 });
 
 const createMoodData = (overrides = {}) => ({
@@ -458,7 +459,7 @@ describe('EmotionalStatePanel', () => {
   });
 
   describe('bar rendering', () => {
-    it('renders all 8 mood axes', () => {
+    it('renders all 9 mood axes', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -467,7 +468,7 @@ describe('EmotionalStatePanel', () => {
       handler({ payload: { entityId: 'test-entity' } });
 
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(8);
+      expect(axes.length).toBe(9);
     });
 
     it('renders positive value bars extending right from center', () => {
@@ -713,7 +714,7 @@ describe('EmotionalStatePanel', () => {
 
       // Should still render all axes, with missing values treated as 0
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(8);
+      expect(axes.length).toBe(9);
     });
 
     it('renders affiliation axis with correct labels', () => {
@@ -773,9 +774,71 @@ describe('EmotionalStatePanel', () => {
       handler({ payload: { entityId: 'test-entity' } });
 
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
+      const eighthAxis = axes[7]; // 0-indexed, so index 7 is 8th axis
+
+      expect(eighthAxis.getAttribute('data-axis')).toBe('affiliation');
+    });
+
+    it('renders inhibitory_control axis with correct labels', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const inhibitoryControlAxis = panelElement.querySelector('[data-axis="inhibitory_control"]');
+      expect(inhibitoryControlAxis).not.toBeNull();
+
+      const leftLabel = inhibitoryControlAxis.querySelector('.emotional-state-panel__label--left');
+      const rightLabel = inhibitoryControlAxis.querySelector('.emotional-state-panel__label--right');
+
+      expect(leftLabel.textContent).toBe('Impulsive');
+      expect(rightLabel.textContent).toBe('Restrained');
+    });
+
+    it('renders inhibitory_control positive value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ inhibitory_control: 75 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const inhibitoryControlAxis = panelElement.querySelector('[data-axis="inhibitory_control"]');
+      const barFill = inhibitoryControlAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--positive')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(126, 87, 194)'); // #7E57C2
+    });
+
+    it('renders inhibitory_control negative value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ inhibitory_control: -60 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const inhibitoryControlAxis = panelElement.querySelector('[data-axis="inhibitory_control"]');
+      const barFill = inhibitoryControlAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--negative')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(255, 112, 67)'); // #FF7043
+    });
+
+    it('renders inhibitory_control axis in correct position (9th/last)', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
       const lastAxis = axes[axes.length - 1];
 
-      expect(lastAxis.getAttribute('data-axis')).toBe('affiliation');
+      expect(lastAxis.getAttribute('data-axis')).toBe('inhibitory_control');
     });
   });
 
