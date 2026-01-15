@@ -193,6 +193,12 @@ describe('ExpressionDiagnosticsController', () => {
           <p class="placeholder-text">Loading...</p>
         </div>
       </section>
+      <!-- Low Trigger Rate Expressions Panel -->
+      <section class="panel low-trigger-rate-panel">
+        <div id="low-trigger-rate-pills-container" class="pills-container">
+          <p class="placeholder-text">Loading...</p>
+        </div>
+      </section>
       <!-- Monte Carlo Section -->
       <section id="monte-carlo-section">
         <select id="sample-count">
@@ -354,6 +360,13 @@ describe('ExpressionDiagnosticsController', () => {
       }),
       updateStatus: jest.fn().mockResolvedValue({ success: true }),
       getProblematicExpressions: jest.fn().mockReturnValue([]),
+      getLowTriggerRateExpressions: jest.fn().mockReturnValue([]),
+      formatTriggerRatePercent: jest.fn().mockImplementation((rate) => {
+        if (rate === null || rate === undefined || typeof rate !== 'number' || Number.isNaN(rate)) {
+          return 'N/A';
+        }
+        return `${(rate * 100).toFixed(1)}%`;
+      }),
     };
 
     mockPathSensitiveAnalyzer = {
@@ -2861,7 +2874,7 @@ describe('ExpressionDiagnosticsController', () => {
       expect(indicator.classList.contains('rarity-normal')).toBe(true);
     });
 
-    it('applies impossible rarity class for 0% rate', async () => {
+    it('applies unobserved rarity class for 0% rate (not logically impossible)', async () => {
       mockMonteCarloSimulator.simulate.mockResolvedValue({
         triggerRate: 0,
         triggerCount: 0,
@@ -2897,7 +2910,7 @@ describe('ExpressionDiagnosticsController', () => {
       await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
 
       const indicator = document.getElementById('mc-rarity-indicator');
-      expect(indicator.classList.contains('rarity-impossible')).toBe(true);
+      expect(indicator.classList.contains('rarity-unobserved')).toBe(true);
     });
 
     it('applies frequent rarity class for high rate', async () => {
@@ -3538,7 +3551,7 @@ describe('ExpressionDiagnosticsController', () => {
       expect(label.textContent).toBe('Frequent');
     });
 
-    it('updates Status Summary to show impossible when Monte Carlo rate is 0%', async () => {
+    it('updates Status Summary to show unobserved when Monte Carlo rate is 0%', async () => {
       mockMonteCarloSimulator.simulate.mockResolvedValue({
         triggerRate: 0,
         triggerCount: 0,
@@ -3578,13 +3591,13 @@ describe('ExpressionDiagnosticsController', () => {
       // Wait for async simulation to complete
       await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
 
-      // Verify Status Summary updated to impossible
+      // Verify Status Summary updated to unobserved (not logically impossible, just 0% sampled)
       const statusIndicator = document.getElementById('status-indicator');
-      expect(statusIndicator.classList.contains('status-impossible')).toBe(true);
+      expect(statusIndicator.classList.contains('status-unobserved')).toBe(true);
       const circle = statusIndicator.querySelector('.status-circle-large');
-      expect(circle.classList.contains('status-impossible')).toBe(true);
+      expect(circle.classList.contains('status-unobserved')).toBe(true);
       const label = statusIndicator.querySelector('.status-label');
-      expect(label.textContent).toBe('Impossible');
+      expect(label.textContent).toBe('Unobserved');
     });
 
     it('updates Status Summary even without prior static analysis', async () => {
@@ -4733,6 +4746,333 @@ describe('ExpressionDiagnosticsController', () => {
     });
   });
 
+  describe('Low Trigger Rate Expressions Panel', () => {
+    it('loads low trigger rate expressions on initialize', async () => {
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'expr:test1', diagnosticStatus: 'extremely_rare', triggerRate: 0.00001 },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      expect(mockExpressionStatusService.getLowTriggerRateExpressions).toHaveBeenCalledWith(
+        expect.any(Array),
+        10
+      );
+    });
+
+    it('renders pills for low trigger rate expressions with percentage badges', async () => {
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'expr:test1', diagnosticStatus: 'extremely_rare', triggerRate: 0.00001 },
+        { id: 'expr:test2', diagnosticStatus: 'rare', triggerRate: 0.0003 },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      const pillsContainer = document.getElementById('low-trigger-rate-pills-container');
+      const pills = pillsContainer.querySelectorAll('.expression-pill');
+      expect(pills.length).toBe(2);
+
+      // Verify trigger rate badges are present
+      const badges = pillsContainer.querySelectorAll('.trigger-rate-badge');
+      expect(badges.length).toBe(2);
+      expect(badges[0].textContent).toBe('0.0%');
+      expect(badges[1].textContent).toBe('0.0%');
+    });
+
+    it('shows no-data message when no low trigger rate expressions exist', async () => {
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      const pillsContainer = document.getElementById('low-trigger-rate-pills-container');
+      const noDataMessage = pillsContainer.querySelector('.no-data-message');
+      expect(noDataMessage).toBeTruthy();
+      expect(noDataMessage.textContent).toContain('No trigger rate data available');
+      expect(noDataMessage.textContent).toContain('Monte Carlo');
+    });
+
+    it('applies correct status CSS class to trigger rate badge', async () => {
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'expr:test1', diagnosticStatus: 'extremely_rare', triggerRate: 0.00001 },
+        { id: 'expr:test2', diagnosticStatus: 'uncommon', triggerRate: 0.003 },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      const pillsContainer = document.getElementById('low-trigger-rate-pills-container');
+      const badges = pillsContainer.querySelectorAll('.trigger-rate-badge');
+
+      // extremely_rare converts to status-extremely-rare
+      expect(badges[0].classList.contains('status-extremely-rare')).toBe(true);
+      // uncommon converts to status-uncommon
+      expect(badges[1].classList.contains('status-uncommon')).toBe(true);
+    });
+
+    it('selects expression in dropdown when low trigger rate pill is clicked', async () => {
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'expr:test1', diagnosticStatus: 'rare', triggerRate: 0.0003 },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      const pillsContainer = document.getElementById('low-trigger-rate-pills-container');
+      const pill = pillsContainer.querySelector('.expression-pill');
+      expect(pill).toBeTruthy();
+
+      pill.click();
+
+      expect(getDropdownValue()).toBe('expr:test1');
+    });
+
+    it('displays expression name without namespace prefix in low trigger rate pill', async () => {
+      mockExpressionRegistry.getAllExpressions.mockReturnValue([
+        { id: 'emotions:calm_focus', description: 'Calm focus' },
+      ]);
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'emotions:calm_focus', filePath: 'data/mods/emotions/calm_focus.expression.json', diagnosticStatus: 'rare', triggerRate: 0.0004 },
+        ],
+      });
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'emotions:calm_focus', diagnosticStatus: 'rare', triggerRate: 0.0004 },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      const pillsContainer = document.getElementById('low-trigger-rate-pills-container');
+      const pillName = pillsContainer.querySelector('.pill-name');
+      expect(pillName).toBeTruthy();
+      expect(pillName.textContent).toBe('calm_focus');
+      expect(pillName.title).toBe('emotions:calm_focus');
+    });
+
+    it('refreshes low trigger rate pills when cache is updated', async () => {
+      // Provide filePath to enable persistence (required for #persistExpressionStatus)
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'expr:test1', filePath: 'data/mods/test/expressions/test1.expression.json', diagnosticStatus: 'rare', triggerRate: 0.0003 },
+          { id: 'expr:test2', filePath: 'data/mods/test/expressions/test2.expression.json', diagnosticStatus: 'normal', triggerRate: 0.015 },
+        ],
+      });
+      mockExpressionStatusService.getProblematicExpressions.mockReturnValue([]);
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'expr:test1', diagnosticStatus: 'rare', triggerRate: 0.0003 },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      // Verify initial call
+      expect(mockExpressionStatusService.getLowTriggerRateExpressions).toHaveBeenCalledTimes(1);
+
+      // Now update mock to return different data
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'expr:test1', diagnosticStatus: 'uncommon', triggerRate: 0.003 },
+        { id: 'expr:test2', diagnosticStatus: 'normal', triggerRate: 0.015 },
+      ]);
+
+      // Select an expression and trigger static analysis which updates cache
+      selectDropdownValue('expr:test1');
+      const runStaticBtn = document.getElementById('run-static-btn');
+      runStaticBtn.click();
+
+      // Wait for path-sensitive analysis to complete
+      await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
+      // Wait for status persistence to complete (called after path-sensitive analysis)
+      await mockExpressionStatusService.updateStatus.mock.results[0]?.value;
+      // Allow microtask queue to process
+      await Promise.resolve();
+
+      // The refresh should have been called during #refreshProblematicPillsFromCache
+      expect(mockExpressionStatusService.getLowTriggerRateExpressions.mock.calls.length).toBeGreaterThan(1);
+    });
+
+    it('displays full expression name for reasonably long names', async () => {
+      const longName = 'emotions-acceptance:quiet_acceptance_after_loss';
+      mockExpressionRegistry.getAllExpressions.mockReturnValue([
+        { id: longName, description: 'Test expression with long name' },
+      ]);
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: longName, filePath: 'data/mods/emotions-acceptance/expressions/quiet_acceptance_after_loss.expression.json', diagnosticStatus: 'rare', triggerRate: 0.001 },
+        ],
+      });
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: longName, diagnosticStatus: 'rare', triggerRate: 0.001 },
+      ]);
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      const pillsContainer = document.getElementById('low-trigger-rate-pills-container');
+      const pillName = pillsContainer.querySelector('.pill-name');
+      // Name should be extracted as last segment and displayed in full
+      expect(pillName.textContent).toBe('quiet_acceptance_after_loss');
+      // Title should show full ID for tooltip
+      expect(pillName.title).toBe(longName);
+    });
+
+    it('formats very small trigger rate percentages with sufficient precision', async () => {
+      mockExpressionRegistry.getAllExpressions.mockReturnValue([
+        { id: 'test:expr', description: 'Test' },
+      ]);
+      mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
+        success: true,
+        expressions: [
+          { id: 'test:expr', filePath: 'data/mods/test/expr.expression.json', diagnosticStatus: 'extremely_rare', triggerRate: 0.00040 },
+        ],
+      });
+      mockExpressionStatusService.getLowTriggerRateExpressions.mockReturnValue([
+        { id: 'test:expr', diagnosticStatus: 'extremely_rare', triggerRate: 0.00040 },
+      ]);
+      // The actual formatting is now done by the service with tiered precision
+      mockExpressionStatusService.formatTriggerRatePercent.mockReturnValue('0.04%');
+
+      const controller = new ExpressionDiagnosticsController({
+        logger: mockLogger,
+        expressionRegistry: mockExpressionRegistry,
+        gateAnalyzer: mockGateAnalyzer,
+        boundsCalculator: mockBoundsCalculator,
+        monteCarloSimulator: mockMonteCarloSimulator,
+        failureExplainer: mockFailureExplainer,
+        expressionStatusService: mockExpressionStatusService,
+        pathSensitiveAnalyzer: mockPathSensitiveAnalyzer,
+        reportGenerator: mockReportGenerator,
+        reportModal: mockReportModal,
+        sensitivityAnalyzer: mockSensitivityAnalyzer,
+        dataRegistry: mockDataRegistry,
+      });
+
+      await controller.initialize();
+
+      const pillsContainer = document.getElementById('low-trigger-rate-pills-container');
+      const badge = pillsContainer.querySelector('.trigger-rate-badge');
+      // Previously this would show "0.0%" - now it should show "0.04%"
+      expect(badge.textContent).toBe('0.04%');
+    });
+  });
+
   describe('Status persistence', () => {
     it('shows error banner when persistence response fails', async () => {
       mockExpressionStatusService.scanAllStatuses.mockResolvedValue({
@@ -4817,9 +5157,11 @@ describe('ExpressionDiagnosticsController', () => {
       await mockPathSensitiveAnalyzer.analyze.mock.results[0]?.value;
       await Promise.resolve();
 
+      // Static analysis doesn't calculate triggerRate, so it passes null
       expect(mockExpressionStatusService.updateStatus).toHaveBeenCalledWith(
         'data/mods/test/test1.expression.json',
-        expect.any(String)
+        expect.any(String),
+        null
       );
     });
 
@@ -4858,9 +5200,11 @@ describe('ExpressionDiagnosticsController', () => {
       await mockMonteCarloSimulator.simulate.mock.results[0]?.value;
       await Promise.resolve();
 
+      // Monte Carlo passes the calculated triggerRate (0.05 from default mock)
       expect(mockExpressionStatusService.updateStatus).toHaveBeenCalledWith(
         'data/mods/test/test1.expression.json',
-        expect.any(String)
+        expect.any(String),
+        0.05
       );
     });
 
@@ -5091,9 +5435,11 @@ describe('ExpressionDiagnosticsController', () => {
       await Promise.resolve();
 
       // Should construct path from metadata and call updateStatus
+      // Static analysis doesn't calculate triggerRate, so it passes null
       expect(mockExpressionStatusService.updateStatus).toHaveBeenCalledWith(
         'data/mods/positioning/expressions/sit_down.expression.json',
-        expect.any(String)
+        expect.any(String),
+        null
       );
       // Should NOT log the "no file path" warning
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
@@ -5286,9 +5632,11 @@ describe('ExpressionDiagnosticsController', () => {
       await Promise.resolve();
 
       // Verify the status was persisted as 'rare' (not stale 'impossible')
+      // Monte Carlo passes triggerRate: 0.0001 from the mock
       expect(mockExpressionStatusService.updateStatus).toHaveBeenLastCalledWith(
         expect.stringContaining('test1.expression.json'),
-        'rare'
+        'rare',
+        0.0001
       );
 
       // The key assertion: scanAllStatuses should NOT be called after persist

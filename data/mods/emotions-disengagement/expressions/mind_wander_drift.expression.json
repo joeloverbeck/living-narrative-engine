@@ -93,7 +93,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.stress"
+                                "var": "emotions.strain_chronic"
                             },
                             0.35
                         ]

@@ -1,0 +1,130 @@
+{
+  "_comment": "Deterministic simulation result fixture for snapshot testing. DO NOT MODIFY without updating snapshots.",
+  "triggerRate": 0.15,
+  "triggerCount": 1500,
+  "sampleCount": 10000,
+  "confidenceInterval": {
+    "low": 0.14,
+    "high": 0.16
+  },
+  "distribution": "uniform",
+  "clauseFailures": [
+    {
+      "clauseDescription": "emotions.joy >= 0.5",
+      "failureCount": 7500,
+      "sampleCount": 10000
+    },
+    {
+      "clauseDescription": "emotions.fear <= 0.3",
+      "failureCount": 4000,
+      "sampleCount": 10000
+    }
+  ],
+  "storedContexts": [
+    {
+      "moodAxes": {
+        "valence": 0.65,
+        "arousal": 0.5,
+        "threat": 0.1
+      },
+      "emotions": {
+        "joy": 0.6,
+        "fear": 0.2,
+        "curiosity": 0.4
+      }
+    },
+    {
+      "moodAxes": {
+        "valence": 0.7,
+        "arousal": 0.6,
+        "threat": 0.25
+      },
+      "emotions": {
+        "joy": 0.7,
+        "fear": 0.15,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "moodAxes": {
+        "valence": 0.8,
+        "arousal": 0.7,
+        "threat": 0.4
+      },
+      "emotions": {
+        "joy": 0.8,
+        "fear": 0.3,
+        "curiosity": 0.6
+      }
+    },
+    {
+      "moodAxes": {
+        "valence": -0.5,
+        "arousal": 0.6,
+        "threat": 0.6
+      },
+      "emotions": {
+        "joy": 0.2,
+        "fear": 0.7,
+        "curiosity": 0.3
+      }
+    }
+  ],
+  "samplingMode": "static",
+  "samplingCoverage": {
+    "summaryByDomain": [
+      {
+        "domain": "emotions",
+        "variableCount": 3,
+        "rangeCoverageAvg": 0.75,
+        "binCoverageAvg": 0.7,
+        "tailCoverageAvg": {
+          "low": 0.05,
+          "high": 0.04
+        },
+        "rating": "good"
+      },
+      {
+        "domain": "moodAxes",
+        "variableCount": 3,
+        "rangeCoverageAvg": 0.8,
+        "binCoverageAvg": 0.75,
+        "tailCoverageAvg": {
+          "low": 0.06,
+          "high": 0.05
+        },
+        "rating": "good"
+      }
+    ],
+    "variables": [
+      {
+        "variablePath": "emotions.joy",
+        "domain": "emotions",
+        "rangeCoverage": 0.8,
+        "binCoverage": 0.75,
+        "tailCoverage": {
+          "low": 0.05,
+          "high": 0.04
+        },
+        "rating": "good",
+        "sampleCount": 10000
+      },
+      {
+        "variablePath": "emotions.fear",
+        "domain": "emotions",
+        "rangeCoverage": 0.7,
+        "binCoverage": 0.65,
+        "tailCoverage": {
+          "low": 0.04,
+          "high": 0.03
+        },
+        "rating": "moderate",
+        "sampleCount": 10000
+      }
+    ],
+    "config": {
+      "binCount": 10,
+      "tailPercent": 0.1
+    }
+  }
+}

@@ -99,16 +99,27 @@ describe('Emotions anger expressions', () => {
     const logic = expression.prerequisites[0].logic;
 
     // Passing context: satisfies all condition groups + worsening detection
+    // Expression requires:
+    // - frustration >= 0.55
+    // - freeze < 0.25
+    // - dissociation < 0.35
+    // - engagement >= 5
+    // - agency_control <= -40
+    // - OR: future_expectancy <= -25 | despair >= 0.35 | hope <= 0.1
+    // - OR: stress_acute >= 0.35 | rage >= 0.35 | arousal >= 15
+    // - numbness <= 0.5
+    // - OR: affiliation <= 25 | (previousAffiliation - affiliation >= 10)
+    // - OR: (frustration - prev.frustration >= 0.1) | (agency - prev.agency <= -10) | (prev.affiliation - affiliation >= 10)
     const passingContext = {
       emotions: {
         frustration: 0.6, // >= 0.55
-        hope: 0.05, // <= 0.10 (one of the OR conditions)
+        hope: 0.05, // <= 0.10 (one of the OR conditions for bleak signals)
         despair: 0.1,
-        stress: 0.4, // >= 0.35 (activation driver)
+        stress_acute: 0.4, // >= 0.35 (activation driver OR condition)
+        rage: 0.1,
         numbness: 0.3, // <= 0.50
         dissociation: 0.2, // < 0.35
         freeze: 0.1, // < 0.25
-        anger: 0.2,
       },
       previousEmotions: { frustration: 0.45 }, // For worsening detection (spike >= 0.10)
       moodAxes: {
@@ -116,8 +127,12 @@ describe('Emotions anger expressions', () => {
         future_expectancy: -30, // <= -25 (one of the OR conditions)
         engagement: 10, // >= 5
         arousal: 10,
+        affiliation: 20, // <= 25 (satisfies affiliation OR condition)
       },
-      previousMoodAxes: { agency_control: -35 }, // For agency drop detection
+      previousMoodAxes: {
+        agency_control: -35, // For agency drop detection
+        affiliation: 25,
+      },
     };
 
     // Failing context: hope too high (no bleak signals)
@@ -126,20 +141,24 @@ describe('Emotions anger expressions', () => {
         frustration: 0.6,
         hope: 0.6, // > 0.10 - fails that OR branch
         despair: 0.1, // < 0.35 - fails that OR branch
-        stress: 0.4,
+        stress_acute: 0.4,
+        rage: 0.1,
         numbness: 0.3,
         dissociation: 0.2,
         freeze: 0.1,
-        anger: 0.2,
       },
       previousEmotions: { frustration: 0.45 },
       moodAxes: {
         agency_control: -50,
-        future_expectancy: -10, // > -25 - fails that OR branch (all OR conditions fail)
+        future_expectancy: -10, // > -25 - fails that OR branch (all bleak signal OR conditions fail)
         engagement: 10,
         arousal: 10,
+        affiliation: 20,
       },
-      previousMoodAxes: { agency_control: -35 },
+      previousMoodAxes: {
+        agency_control: -35,
+        affiliation: 25,
+      },
     };
 
     expect(jsonLogicService.evaluate(logic, passingContext)).toBe(true);

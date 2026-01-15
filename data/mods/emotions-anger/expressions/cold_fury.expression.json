@@ -18,17 +18,17 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.hot_anger"
+                                "var": "emotions.rage"
                             },
-                            0.55
+                            0.28
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.rage"
+                                "var": "emotions.wrath"
                             },
-                            0.28
+                            0.25
                         ]
                     },
                     {
@@ -359,5 +359,5 @@
         "tactile": "The air feels tight; a body held in restraint, tension coiled rather than spilled."
     },
     "category": "anger",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare"
 }

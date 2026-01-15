@@ -107,7 +107,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.stress"
+                                        "var": "emotions.stress_acute"
                                     },
                                     0.42
                                 ]
@@ -220,10 +220,10 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.stress"
+                                                "var": "emotions.stress_acute"
                                             },
                                             {
-                                                "var": "previousEmotions.stress"
+                                                "var": "previousEmotions.stress_acute"
                                             }
                                         ]
                                     },

@@ -16,37 +16,20 @@
             ]
           },
           {
-            "and": [
+            "<=": [
               {
-                "<=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.shame"
-                      },
-                      {
-                        "var": "previousEmotions.shame"
-                      }
-                    ]
-                  },
-                  0.08
-                ]
+                "abs": {
+                  "-": [
+                    {
+                      "var": "emotions.shame"
+                    },
+                    {
+                      "var": "previousEmotions.shame"
+                    }
+                  ]
+                }
               },
-              {
-                "<=": [
-                  {
-                    "-": [
-                      {
-                        "var": "previousEmotions.shame"
-                      },
-                      {
-                        "var": "emotions.shame"
-                      }
-                    ]
-                  },
-                  0.08
-                ]
-              }
+              0.08
             ]
           },
           {
@@ -71,14 +54,6 @@
                 "var": "emotions.rage"
               },
               0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.hot_anger"
-              },
-              0.45
             ]
           },
           {

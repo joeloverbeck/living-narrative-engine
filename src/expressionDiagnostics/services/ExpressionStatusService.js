@@ -5,13 +5,18 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { getStatusFillColor } from '../statusTheme.js';
+import {
+  getStatusFillColor,
+  STATUS_PRIORITY,
+  NON_PROBLEMATIC_STATUSES,
+} from '../statusTheme.js';
 
 /**
  * @typedef {object} ExpressionStatusInfo
  * @property {string} id - Expression ID (e.g., 'emotions-attention:flow_absorption')
  * @property {string} filePath - Relative path to expression file from project root
  * @property {string|null} diagnosticStatus - Current status or null if not set
+ * @property {number|null} triggerRate - Trigger rate as probability (0.0-1.0) or null if not set
  */
 
 /**
@@ -37,28 +42,6 @@ import { getStatusFillColor } from '../statusTheme.js';
  * @property {string} [message] - Human-readable error message on failure
  */
 
-/**
- * Priority levels for diagnostic statuses (lower = higher priority)
- * Used to sort problematic expressions for display
- *
- * @type {Record<string, number>}
- */
-const STATUS_PRIORITY = Object.freeze({
-  impossible: 0,
-  unknown: 1,
-  extremely_rare: 2,
-  rare: 3,
-  normal: 4,
-  frequent: 5,
-});
-
-/**
- * Statuses that should NOT be displayed in the problematic expressions panel
- *
- * @type {Set<string>}
- */
-const NON_PROBLEMATIC_STATUSES = new Set(['normal', 'frequent']);
-
 const ERROR_TYPES = Object.freeze({
   CONNECTION_REFUSED: 'connection_refused',
   CORS_BLOCKED: 'cors_blocked',
@@ -70,6 +53,15 @@ const ERROR_TYPES = Object.freeze({
 
 const HEALTH_CHECK_TIMEOUT_MS = 2000;
 const HEALTH_CHECK_CACHE_TTL_MS = 60000;
+
+/**
+ * Statuses that have calculated trigger rates from Monte Carlo simulation.
+ * These are statuses where we have a meaningful probability value.
+ * @type {Readonly<Set<string>>}
+ */
+const STATUSES_WITH_TRIGGER_RATES = Object.freeze(
+  new Set(['extremely_rare', 'rare', 'uncommon', 'normal', 'frequent'])
+);
 
 /**
  * Service for managing expression diagnostic status persistence.
@@ -273,9 +265,10 @@ class ExpressionStatusService {
    *
    * @param {string} filePath - Relative path to expression file
    * @param {string} status - New diagnostic status value
+   * @param {number|null} [triggerRate=null] - Optional trigger rate (0.0-1.0)
    * @returns {Promise<UpdateStatusResult>}
    */
-  async updateStatus(filePath, status) {
+  async updateStatus(filePath, status, triggerRate = null) {
     const healthCheck = await this.checkServerHealth();
     if (!healthCheck.success) {
       this.#logger.warn('ExpressionStatusService: Health check failed', {
@@ -298,7 +291,11 @@ class ExpressionStatusService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filePath, status }),
+        body: JSON.stringify({
+          filePath,
+          status,
+          ...(typeof triggerRate === 'number' && { triggerRate }),
+        }),
         signal: controller.signal,
       });
 
@@ -502,6 +499,80 @@ class ExpressionStatusService {
    */
   isProblematicStatus(status) {
     return !NON_PROBLEMATIC_STATUSES.has(status || 'unknown');
+  }
+
+  /**
+   * Get expressions with calculable trigger rates, sorted by trigger rate ascending.
+   * Filters to statuses that have meaningful trigger rates (extremely_rare, rare, uncommon, normal, frequent).
+   *
+   * @param {ExpressionStatusInfo[]} expressions - All expression status info
+   * @param {number} [maxCount=10] - Maximum number to return
+   * @returns {ExpressionStatusInfo[]} Expressions sorted by trigger rate (lowest first)
+   */
+  getLowTriggerRateExpressions(expressions, maxCount = 10) {
+    // Filter to expressions that have:
+    // 1. A status that has calculable trigger rates
+    // 2. A numeric trigger rate value
+    const withTriggerRates = expressions.filter((expr) => {
+      const status = expr.diagnosticStatus || 'unknown';
+      return (
+        STATUSES_WITH_TRIGGER_RATES.has(status) &&
+        typeof expr.triggerRate === 'number' &&
+        !Number.isNaN(expr.triggerRate)
+      );
+    });
+
+    // Sort by trigger rate ascending (lowest first)
+    withTriggerRates.sort((a, b) => a.triggerRate - b.triggerRate);
+
+    return withTriggerRates.slice(0, maxCount);
+  }
+
+  /**
+   * Format a trigger rate as a percentage string with appropriate precision.
+   *
+   * Uses tiered precision to ensure small percentages remain meaningful:
+   * - Exact zero: "0%"
+   * - Very small (< 0.01%): "<0.01%"
+   * - Small (0.01% - 0.1%): 2 decimal places (e.g., "0.04%")
+   * - Normal (>= 0.1%): 1 decimal place (e.g., "12.5%")
+   *
+   * @param {number|null|undefined} triggerRate - Trigger rate as probability (0.0-1.0)
+   * @returns {string} Formatted percentage or "N/A" for invalid values
+   */
+  formatTriggerRatePercent(triggerRate) {
+    if (
+      triggerRate === null ||
+      triggerRate === undefined ||
+      typeof triggerRate !== 'number' ||
+      Number.isNaN(triggerRate)
+    ) {
+      return 'N/A';
+    }
+
+    const percentage = triggerRate * 100;
+
+    // Exact zero
+    if (percentage === 0) return '0%';
+
+    // Very small values (< 0.01%) - show indicator
+    if (percentage < 0.01) return '<0.01%';
+
+    // Small values (0.01% - 0.1%) - show 2 decimal places for precision
+    if (percentage < 0.1) return `${percentage.toFixed(2)}%`;
+
+    // Normal values (>= 0.1%) - show 1 decimal place
+    return `${percentage.toFixed(1)}%`;
+  }
+
+  /**
+   * Check if a status has a calculable trigger rate
+   *
+   * @param {string|null} status - Diagnostic status
+   * @returns {boolean}
+   */
+  hasCalculableTriggerRate(status) {
+    return STATUSES_WITH_TRIGGER_RATES.has(status || 'unknown');
   }
 }
 

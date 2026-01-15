@@ -25,9 +25,9 @@
                                     {
                                         ">=": [
                                             {
-                                                "var": "emotions.hot_anger"
+                                                "var": "emotions.rage"
                                             },
-                                            0.6
+                                            0.45
                                         ]
                                     },
                                     {
@@ -40,6 +40,14 @@
                                     }
                                 ]
                             }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.35
                         ]
                     },
                     {
@@ -56,6 +64,14 @@
                                 "var": "moodAxes.arousal"
                             },
                             12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
                         ]
                     },
                     {
@@ -79,7 +95,7 @@
                             {
                                 "var": "moodAxes.inhibitory_control"
                             },
-                            10
+                            20
                         ]
                     },
                     {
@@ -140,7 +156,7 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.hot_anger"
+                                                "var": "emotions.rage"
                                             },
                                             {
                                                 "var": "emotions.smoldering_anger"
@@ -232,7 +248,7 @@
                     }
                 ]
             },
-            "failure_message": "Principled heat only: requires strong protest anger (or hot anger with clear affiliative warmth), high engagement, and energizing arousal. Adds a restraint floor: inhibitory_control must be at least moderate (or supported by trait self_control) so it reads as controlled moral urgency rather than disinhibited outburst. Still caps smoldering_anger and blocks rage/contempt/hatred drift. Triggers on a protest spike/crossing or engagement jump to avoid repeated sermons."
+            "failure_message": "Principled heat only: strong protest anger (or moderate rage with affiliative warmth) plus high engagement. Adds regulation: wrath must stay low and inhibitory_control must stay above a floor;I; caps arousal so it doesn’t tip into eruption. Blocks smoldering, hatred, contempt drift and triggers on protest/engagement change gates."
         }
     ],
     "alternate_descriptions": {
@@ -240,5 +256,5 @@
         "tactile": "The air feels charged and tight; there’s a contained tremor in stillness, like the body is holding back a bigger motion on purpose.",
         "limited": "{actor} looks intensely engaged and visibly irritated, as if ready to challenge something they find unacceptable."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved"
 }

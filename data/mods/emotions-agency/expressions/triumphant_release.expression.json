@@ -151,7 +151,7 @@
                                             {
                                                 ">=": [
                                                     {
-                                                        "var": "previousEmotions.stress"
+                                                        "var": "previousEmotions.stress_acute"
                                                     },
                                                     0.5
                                                 ]
@@ -161,10 +161,10 @@
                                                     {
                                                         "-": [
                                                             {
-                                                                "var": "previousEmotions.stress"
+                                                                "var": "previousEmotions.stress_acute"
                                                             },
                                                             {
-                                                                "var": "emotions.stress"
+                                                                "var": "emotions.stress_acute"
                                                             }
                                                         ]
                                                     },
@@ -174,7 +174,7 @@
                                             {
                                                 "<=": [
                                                     {
-                                                        "var": "emotions.stress"
+                                                        "var": "emotions.stress_acute"
                                                     },
                                                     0.38
                                                 ]
@@ -232,5 +232,6 @@
         "olfactory": "The sharp, metallic edge in the air softens—still the salt of exertion, still warm breath, but the tight, sour note of stress-sweat is fading. What's left smells more like effort that paid off than fear that didn't."
     },
     "category": "agency",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0001
 }

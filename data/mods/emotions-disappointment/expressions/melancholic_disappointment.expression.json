@@ -26,14 +26,6 @@
                     {
                         "<": [
                             {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
                                 "var": "emotions.rage"
                             },
                             0.2

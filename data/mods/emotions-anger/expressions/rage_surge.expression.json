@@ -10,7 +10,7 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.rage"
+                                "var": "emotions.wrath"
                             },
                             0.6
                         ]
@@ -18,17 +18,9 @@
                     {
                         "<": [
                             {
-                                "var": "previousEmotions.rage"
+                                "var": "previousEmotions.wrath"
                             },
                             0.6
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.5
                         ]
                     },
                     {
@@ -37,6 +29,22 @@
                                 "var": "moodAxes.arousal"
                             },
                             22
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
                         ]
                     },
                     {
@@ -52,7 +60,7 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            0
+                            -5
                         ]
                     },
                     {
@@ -104,14 +112,6 @@
                                     15
                                 ]
                             }
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.75
                         ]
                     },
                     {
@@ -186,10 +186,10 @@
                             {
                                 "-": [
                                     {
-                                        "var": "emotions.rage"
+                                        "var": "emotions.wrath"
                                     },
                                     {
-                                        "var": "previousEmotions.rage"
+                                        "var": "previousEmotions.wrath"
                                     }
                                 ]
                             },
@@ -198,7 +198,7 @@
                     }
                 ]
             },
-            "failure_message": "Acute outburst crossing only: rage must cross threshold with hot_anger present and arousal clearly elevated. Explicitly caps smoldering_anger so cold controlled hostility can’t masquerade as a surge. Adds a disinhibition requirement (low or sharply dropping inhibitory_control, with low trait self_control making it easier). Keeps harm-aware tones capped and still requires a large rage delta."
+            "failure_message": "Acute wrath-crossing only: wrath must cross threshold with arousal clearly elevated, negative valence, and threat not dominating. Smoldering anger is capped so controlled hostility can’t masquerade as a surge. Requires restraint collapse (low or sharply dropping inhibitory_control, with low trait self_control making it easier). Still demands a large wrath delta so it reads as a true surge, not drift."
         }
     ],
     "actor_description": "It comes up fast-heat in my face, pressure behind my eyes, my jaw clamping so hard my teeth ache. My hands curl without asking. The world simplifies into a single, furious shape: this is wrong, and I need it to stop. I can feel how narrow I'm getting-how every other thought is being shoved out to make room for the urge to hit back.",

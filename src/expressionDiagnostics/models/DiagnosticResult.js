@@ -6,10 +6,10 @@
  * @see specs/expression-diagnostics.md
  */
 
-import { STATUS_THEME } from '../statusTheme.js';
+import { STATUS_THEME, STATUS_KEYS } from '../statusTheme.js';
 
 /**
- * @typedef {'impossible' | 'extremely_rare' | 'rare' | 'normal' | 'frequent'} RarityCategory
+ * @typedef {'unknown' | 'impossible' | 'unobserved' | 'extremely_rare' | 'rare' | 'uncommon' | 'normal' | 'frequent'} RarityCategory
  */
 
 /**
@@ -56,28 +56,25 @@ import { STATUS_THEME } from '../statusTheme.js';
  * Threshold values for rarity categorization.
  * Values represent rates as decimals (0.00001 = 0.001%).
  *
- * @type {Readonly<{IMPOSSIBLE: number, EXTREMELY_RARE: number, RARE: number, NORMAL: number}>}
+ * @type {Readonly<{IMPOSSIBLE: number, EXTREMELY_RARE: number, RARE: number, UNCOMMON: number, NORMAL: number}>}
  */
 const RARITY_THRESHOLDS = Object.freeze({
   IMPOSSIBLE: 0,
   EXTREMELY_RARE: 0.00001, // 0.001%
   RARE: 0.0005, // 0.05%
+  UNCOMMON: 0.005, // 0.5%
   NORMAL: 0.02, // 2%
 });
 
 /**
  * Rarity category string constants.
+ * Derived from STATUS_KEYS to maintain consistency with statusTheme.js.
  *
- * @type {Readonly<{UNKNOWN: string, IMPOSSIBLE: string, EXTREMELY_RARE: string, RARE: string, NORMAL: string, FREQUENT: string}>}
+ * @type {Readonly<{UNKNOWN: string, IMPOSSIBLE: string, UNOBSERVED: string, EXTREMELY_RARE: string, RARE: string, UNCOMMON: string, NORMAL: string, FREQUENT: string}>}
  */
-const RARITY_CATEGORIES = Object.freeze({
-  UNKNOWN: 'unknown',
-  IMPOSSIBLE: 'impossible',
-  EXTREMELY_RARE: 'extremely_rare',
-  RARE: 'rare',
-  NORMAL: 'normal',
-  FREQUENT: 'frequent',
-});
+const RARITY_CATEGORIES = Object.freeze(
+  Object.fromEntries(STATUS_KEYS.map((key) => [key.toUpperCase(), key]))
+);
 
 /**
  * UI status indicators for each rarity category.
@@ -336,7 +333,9 @@ class DiagnosticResult {
     }
 
     if (this.#triggerRate === 0) {
-      return RARITY_CATEGORIES.IMPOSSIBLE;
+      // Sampling found no triggers, but not logically impossible
+      // Distinct from IMPOSSIBLE which is based on static analysis
+      return RARITY_CATEGORIES.UNOBSERVED;
     }
 
     if (this.#triggerRate < RARITY_THRESHOLDS.EXTREMELY_RARE) {
@@ -345,6 +344,10 @@ class DiagnosticResult {
 
     if (this.#triggerRate < RARITY_THRESHOLDS.RARE) {
       return RARITY_CATEGORIES.RARE;
+    }
+
+    if (this.#triggerRate < RARITY_THRESHOLDS.UNCOMMON) {
+      return RARITY_CATEGORIES.UNCOMMON;
     }
 
     if (this.#triggerRate < RARITY_THRESHOLDS.NORMAL) {
@@ -544,15 +547,18 @@ DiagnosticResult.STATUS_INDICATORS = STATUS_INDICATORS;
 /**
  * Get rarity category for a given trigger rate.
  * This static helper can be used without creating a DiagnosticResult instance.
+ * Note: Returns UNOBSERVED for rate === 0 since this method lacks static analysis context.
+ * Use the instance getter `rarityCategory` when you have impossibility information.
  *
  * @param {number} rate - Trigger rate as decimal (0.02 = 2%)
  * @returns {string} Rarity category string from RARITY_CATEGORIES
  */
 DiagnosticResult.getRarityCategoryForRate = function (rate) {
-  if (rate === 0) return RARITY_CATEGORIES.IMPOSSIBLE;
+  if (rate === 0) return RARITY_CATEGORIES.UNOBSERVED;
   if (rate < RARITY_THRESHOLDS.EXTREMELY_RARE)
     return RARITY_CATEGORIES.EXTREMELY_RARE;
   if (rate < RARITY_THRESHOLDS.RARE) return RARITY_CATEGORIES.RARE;
+  if (rate < RARITY_THRESHOLDS.UNCOMMON) return RARITY_CATEGORIES.UNCOMMON;
   if (rate < RARITY_THRESHOLDS.NORMAL) return RARITY_CATEGORIES.NORMAL;
   return RARITY_CATEGORIES.FREQUENT;
 };

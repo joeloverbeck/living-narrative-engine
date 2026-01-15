@@ -20,6 +20,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.wrath"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.future_expectancy"
                             },
                             -20
@@ -50,6 +58,30 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -75,14 +107,6 @@
                                     0.45
                                 ]
                             }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.55
                         ]
                     },
                     {
@@ -192,7 +216,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             }
                         ]

@@ -288,6 +288,78 @@ describe('ExpressionStatusService', () => {
         })
       );
     });
+
+    it('sends triggerRate in request body when provided', async () => {
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              success: true,
+              message: 'Status and trigger rate updated',
+              expressionId: 'expr:test',
+            }),
+        });
+
+      const service = new ExpressionStatusService({ logger: mockLogger });
+      await service.updateStatus('data/mods/test/expr.json', 'normal', 0.045);
+
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        'http://localhost:3001/api/expressions/update-status',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filePath: 'data/mods/test/expr.json',
+            status: 'normal',
+            triggerRate: 0.045,
+          }),
+          signal: expect.any(AbortSignal),
+        }
+      );
+    });
+
+    it('omits triggerRate from request body when null', async () => {
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ success: true, message: 'Updated' }),
+        });
+
+      const service = new ExpressionStatusService({ logger: mockLogger });
+      await service.updateStatus('path/to/file.json', 'rare', null);
+
+      const requestBody = JSON.parse(global.fetch.mock.calls[1][1].body);
+      expect(requestBody).toEqual({
+        filePath: 'path/to/file.json',
+        status: 'rare',
+      });
+      expect(requestBody.triggerRate).toBeUndefined();
+    });
+
+    it('omits triggerRate from request body when undefined (no third arg)', async () => {
+      global.fetch
+        .mockResolvedValueOnce({ ok: true })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ success: true, message: 'Updated' }),
+        });
+
+      const service = new ExpressionStatusService({ logger: mockLogger });
+      await service.updateStatus('path/to/file.json', 'rare');
+
+      const requestBody = JSON.parse(global.fetch.mock.calls[1][1].body);
+      expect(requestBody).toEqual({
+        filePath: 'path/to/file.json',
+        status: 'rare',
+      });
+      expect(requestBody.triggerRate).toBeUndefined();
+    });
   });
 
   describe('scanAllStatuses()', () => {
@@ -702,20 +774,28 @@ describe('ExpressionStatusService', () => {
       expect(service.getStatusPriority('unknown')).toBe(1);
     });
 
-    it('returns 2 for extremely_rare', () => {
-      expect(service.getStatusPriority('extremely_rare')).toBe(2);
+    it('returns 2 for unobserved', () => {
+      expect(service.getStatusPriority('unobserved')).toBe(2);
     });
 
-    it('returns 3 for rare', () => {
-      expect(service.getStatusPriority('rare')).toBe(3);
+    it('returns 3 for extremely_rare', () => {
+      expect(service.getStatusPriority('extremely_rare')).toBe(3);
     });
 
-    it('returns 4 for normal', () => {
-      expect(service.getStatusPriority('normal')).toBe(4);
+    it('returns 4 for rare', () => {
+      expect(service.getStatusPriority('rare')).toBe(4);
     });
 
-    it('returns 5 for frequent', () => {
-      expect(service.getStatusPriority('frequent')).toBe(5);
+    it('returns 5 for uncommon', () => {
+      expect(service.getStatusPriority('uncommon')).toBe(5);
+    });
+
+    it('returns 6 for normal', () => {
+      expect(service.getStatusPriority('normal')).toBe(6);
+    });
+
+    it('returns 7 for frequent', () => {
+      expect(service.getStatusPriority('frequent')).toBe(7);
     });
 
     it('returns 1 (unknown) for null status', () => {
@@ -742,12 +822,20 @@ describe('ExpressionStatusService', () => {
       expect(service.isProblematicStatus('unknown')).toBe(true);
     });
 
+    it('returns true for unobserved', () => {
+      expect(service.isProblematicStatus('unobserved')).toBe(true);
+    });
+
     it('returns true for extremely_rare', () => {
       expect(service.isProblematicStatus('extremely_rare')).toBe(true);
     });
 
     it('returns true for rare', () => {
       expect(service.isProblematicStatus('rare')).toBe(true);
+    });
+
+    it('returns false for uncommon (non-problematic)', () => {
+      expect(service.isProblematicStatus('uncommon')).toBe(false);
     });
 
     it('returns false for normal', () => {
@@ -764,6 +852,250 @@ describe('ExpressionStatusService', () => {
 
     it('returns true for undefined (treated as unknown)', () => {
       expect(service.isProblematicStatus(undefined)).toBe(true);
+    });
+  });
+
+  describe('getLowTriggerRateExpressions()', () => {
+    let service;
+
+    beforeEach(() => {
+      service = new ExpressionStatusService({ logger: mockLogger });
+    });
+
+    it('filters to expressions with calculable trigger rates', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'extremely_rare', triggerRate: 0.0001 },
+        { id: 'b', diagnosticStatus: 'impossible', triggerRate: 0 }, // not calculable status
+        { id: 'c', diagnosticStatus: 'rare', triggerRate: 0.001 },
+        { id: 'd', diagnosticStatus: 'unknown', triggerRate: 0.05 }, // not calculable status
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.map((e) => e.id)).toEqual(['a', 'c']);
+    });
+
+    it('filters out expressions without trigger rates', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'rare', triggerRate: 0.001 },
+        { id: 'b', diagnosticStatus: 'rare', triggerRate: null },
+        { id: 'c', diagnosticStatus: 'rare' }, // undefined triggerRate
+        { id: 'd', diagnosticStatus: 'normal', triggerRate: 0.05 },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.map((e) => e.id)).toEqual(['a', 'd']);
+    });
+
+    it('sorts by trigger rate ascending (lowest first)', () => {
+      const expressions = [
+        { id: 'high', diagnosticStatus: 'frequent', triggerRate: 0.5 },
+        { id: 'low', diagnosticStatus: 'extremely_rare', triggerRate: 0.0001 },
+        { id: 'mid', diagnosticStatus: 'uncommon', triggerRate: 0.01 },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.map((e) => e.id)).toEqual(['low', 'mid', 'high']);
+    });
+
+    it('limits results to maxCount', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'rare', triggerRate: 0.001 },
+        { id: 'b', diagnosticStatus: 'rare', triggerRate: 0.002 },
+        { id: 'c', diagnosticStatus: 'rare', triggerRate: 0.003 },
+        { id: 'd', diagnosticStatus: 'rare', triggerRate: 0.004 },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions, 2);
+
+      expect(result.length).toBe(2);
+      expect(result.map((e) => e.id)).toEqual(['a', 'b']);
+    });
+
+    it('uses default maxCount of 10', () => {
+      const expressions = Array.from({ length: 15 }, (_, i) => ({
+        id: `expr${i}`,
+        diagnosticStatus: 'normal',
+        triggerRate: i * 0.01,
+      }));
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.length).toBe(10);
+    });
+
+    it('returns empty array when no expressions have trigger rates', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'rare' },
+        { id: 'b', diagnosticStatus: 'normal', triggerRate: null },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array for empty input', () => {
+      const result = service.getLowTriggerRateExpressions([]);
+      expect(result).toEqual([]);
+    });
+
+    it('filters out NaN trigger rates', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'rare', triggerRate: Number.NaN },
+        { id: 'b', diagnosticStatus: 'rare', triggerRate: 0.001 },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.map((e) => e.id)).toEqual(['b']);
+    });
+
+    it('includes all calculable status types', () => {
+      const expressions = [
+        { id: 'ext_rare', diagnosticStatus: 'extremely_rare', triggerRate: 0.00001 },
+        { id: 'rare', diagnosticStatus: 'rare', triggerRate: 0.0003 },
+        { id: 'uncommon', diagnosticStatus: 'uncommon', triggerRate: 0.003 },
+        { id: 'normal', diagnosticStatus: 'normal', triggerRate: 0.01 },
+        { id: 'frequent', diagnosticStatus: 'frequent', triggerRate: 0.05 },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.map((e) => e.id)).toEqual([
+        'ext_rare',
+        'rare',
+        'uncommon',
+        'normal',
+        'frequent',
+      ]);
+    });
+
+    it('handles zero trigger rate', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'extremely_rare', triggerRate: 0 },
+        { id: 'b', diagnosticStatus: 'rare', triggerRate: 0.001 },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.map((e) => e.id)).toEqual(['a', 'b']);
+    });
+
+    it('handles trigger rate of 1.0', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'frequent', triggerRate: 1.0 },
+        { id: 'b', diagnosticStatus: 'rare', triggerRate: 0.001 },
+      ];
+
+      const result = service.getLowTriggerRateExpressions(expressions);
+
+      expect(result.map((e) => e.triggerRate)).toEqual([0.001, 1.0]);
+    });
+  });
+
+  describe('formatTriggerRatePercent()', () => {
+    let service;
+
+    beforeEach(() => {
+      service = new ExpressionStatusService({ logger: mockLogger });
+    });
+
+    it('formats decimal as percentage with one decimal place', () => {
+      expect(service.formatTriggerRatePercent(0.125)).toBe('12.5%');
+    });
+
+    it('formats 1.0 as 100.0%', () => {
+      expect(service.formatTriggerRatePercent(1.0)).toBe('100.0%');
+    });
+
+    it('formats small rates correctly with appropriate precision', () => {
+      // Very small values (< 0.01%) should show indicator
+      expect(service.formatTriggerRatePercent(0.00001)).toBe('<0.01%');
+      expect(service.formatTriggerRatePercent(0.00005)).toBe('<0.01%');
+      // Small values (0.01% - 0.1%) should show 2 decimal places
+      expect(service.formatTriggerRatePercent(0.0001)).toBe('0.01%');
+      expect(service.formatTriggerRatePercent(0.00040)).toBe('0.04%'); // Previously showed as 0.0%
+      expect(service.formatTriggerRatePercent(0.0005)).toBe('0.05%');
+      // Values >= 0.1% should show 1 decimal place
+      expect(service.formatTriggerRatePercent(0.001)).toBe('0.1%');
+      expect(service.formatTriggerRatePercent(0.005)).toBe('0.5%');
+    });
+
+    it('formats zero as 0% without decimals', () => {
+      expect(service.formatTriggerRatePercent(0)).toBe('0%');
+    });
+
+    it('returns N/A for null', () => {
+      expect(service.formatTriggerRatePercent(null)).toBe('N/A');
+    });
+
+    it('returns N/A for undefined', () => {
+      expect(service.formatTriggerRatePercent(undefined)).toBe('N/A');
+    });
+
+    it('returns N/A for NaN', () => {
+      expect(service.formatTriggerRatePercent(Number.NaN)).toBe('N/A');
+    });
+
+    it('returns N/A for non-number types', () => {
+      expect(service.formatTriggerRatePercent('0.5')).toBe('N/A');
+      expect(service.formatTriggerRatePercent({ value: 0.5 })).toBe('N/A');
+    });
+
+    it('rounds correctly', () => {
+      expect(service.formatTriggerRatePercent(0.12345)).toBe('12.3%');
+      expect(service.formatTriggerRatePercent(0.12355)).toBe('12.4%');
+    });
+  });
+
+  describe('hasCalculableTriggerRate()', () => {
+    let service;
+
+    beforeEach(() => {
+      service = new ExpressionStatusService({ logger: mockLogger });
+    });
+
+    it('returns true for extremely_rare', () => {
+      expect(service.hasCalculableTriggerRate('extremely_rare')).toBe(true);
+    });
+
+    it('returns true for rare', () => {
+      expect(service.hasCalculableTriggerRate('rare')).toBe(true);
+    });
+
+    it('returns true for uncommon', () => {
+      expect(service.hasCalculableTriggerRate('uncommon')).toBe(true);
+    });
+
+    it('returns true for normal', () => {
+      expect(service.hasCalculableTriggerRate('normal')).toBe(true);
+    });
+
+    it('returns true for frequent', () => {
+      expect(service.hasCalculableTriggerRate('frequent')).toBe(true);
+    });
+
+    it('returns false for unknown', () => {
+      expect(service.hasCalculableTriggerRate('unknown')).toBe(false);
+    });
+
+    it('returns false for impossible', () => {
+      expect(service.hasCalculableTriggerRate('impossible')).toBe(false);
+    });
+
+    it('returns false for unobserved', () => {
+      expect(service.hasCalculableTriggerRate('unobserved')).toBe(false);
+    });
+
+    it('returns false for null (treated as unknown)', () => {
+      expect(service.hasCalculableTriggerRate(null)).toBe(false);
+    });
+
+    it('returns false for undefined (treated as unknown)', () => {
+      expect(service.hasCalculableTriggerRate(undefined)).toBe(false);
     });
   });
 });

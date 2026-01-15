@@ -12,8 +12,10 @@
 const VALID_STATUSES = Object.freeze([
   'unknown',
   'impossible',
+  'unobserved',
   'extremely_rare',
   'rare',
+  'uncommon',
   'normal',
   'frequent',
 ]);
@@ -44,17 +46,17 @@ export class ExpressionStatusController {
   }
 
   /**
-   * Handles POST requests to update an expression's diagnostic status.
+   * Handles POST requests to update an expression's diagnostic status and optional trigger rate.
    * @param {object} req - Express request object
    * @param {object} res - Express response object
    * @returns {Promise<void>}
    */
   async handleUpdateStatus(req, res) {
     try {
-      const { filePath, status } = req.body;
+      const { filePath, status, triggerRate } = req.body;
 
       // Validate required fields
-      const validationError = this.#validateUpdatePayload(filePath, status);
+      const validationError = this.#validateUpdatePayload(filePath, status, triggerRate);
       if (validationError) {
         return res.status(400).json({
           error: true,
@@ -76,15 +78,38 @@ export class ExpressionStatusController {
         });
       }
 
+      // Update trigger rate if provided
+      let triggerRateResult = null;
+      if (typeof triggerRate === 'number') {
+        triggerRateResult =
+          await this.#expressionFileService.updateExpressionTriggerRate(filePath, triggerRate);
+
+        if (!triggerRateResult.success) {
+          this.#logger.warn('ExpressionStatusController: Trigger rate update failed', {
+            filePath,
+            triggerRate,
+            message: triggerRateResult.message,
+          });
+          // Return partial success - status was updated but trigger rate failed
+          return res.status(200).json({
+            success: true,
+            message: result.message,
+            expressionId: result.expressionId,
+            triggerRateError: triggerRateResult.message,
+          });
+        }
+      }
+
       this.#logger.info('ExpressionStatusController: Status updated', {
         filePath,
         expressionId: result.expressionId,
         status,
+        triggerRate: triggerRate ?? null,
       });
 
       return res.status(200).json({
         success: true,
-        message: result.message,
+        message: triggerRateResult ? 'Status and trigger rate updated successfully' : result.message,
         expressionId: result.expressionId,
       });
     } catch (error) {
@@ -129,10 +154,11 @@ export class ExpressionStatusController {
    * Validates the update status payload for required fields and types.
    * @param {unknown} filePath - The filePath field from request body
    * @param {unknown} status - The status field from request body
+   * @param {unknown} [triggerRate] - Optional triggerRate field from request body
    * @returns {string|null} Error message or null if valid
    * @private
    */
-  #validateUpdatePayload(filePath, status) {
+  #validateUpdatePayload(filePath, status, triggerRate) {
     if (!filePath) {
       return 'Missing required field: filePath';
     }
@@ -150,6 +176,15 @@ export class ExpressionStatusController {
     }
     if (!VALID_STATUSES.includes(status)) {
       return `Invalid status: ${status}. Valid values: ${VALID_STATUSES.join(', ')}`;
+    }
+    // Validate optional triggerRate if provided
+    if (triggerRate !== undefined && triggerRate !== null) {
+      if (typeof triggerRate !== 'number' || Number.isNaN(triggerRate)) {
+        return 'Field triggerRate must be a number';
+      }
+      if (triggerRate < 0.0 || triggerRate > 1.0) {
+        return 'Field triggerRate must be between 0.0 and 1.0';
+      }
     }
     return null;
   }

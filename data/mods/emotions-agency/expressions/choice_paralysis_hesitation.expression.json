@@ -196,5 +196,6 @@
         "auditory": "I hear small, repeated catches in breathing—half-inhales that almost become words, then don't. A faint click of tongue or teeth, once, then again. It's the sound of someone starting a sentence and swallowing it back, trying to commit and finding the words stick. The pattern loops: breath, click, silence. Breath, click, silence.",
         "tactile": "Someone's muscles bunch and release in waves—shoulders tightening, fingers curling into readiness, then letting go without completing the gesture. It's a restless stillness: the body coils to move, then unspools without launching. Tension pools in the hands, the jaw, flickering on and off like an engine that won't turn over. Each almost-movement leaves a faint ache from"
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0016
 }

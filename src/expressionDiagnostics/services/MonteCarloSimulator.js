@@ -2871,17 +2871,8 @@ class MonteCarloSimulator {
     // Keys that are scalar (cannot have nested properties)
     const scalarKeys = new Set(['sexualArousal', 'previousSexualArousal']);
 
-    // All 8 mood axes (affiliation added for AFFTRAANDAFFAXI spec)
-    const moodAxisSet = new Set([
-      'valence',
-      'arousal',
-      'agency_control',
-      'threat',
-      'engagement',
-      'future_expectancy',
-      'self_evaluation',
-      'affiliation',
-    ]);
+    // All mood axes from centralized constants (single source of truth)
+    const moodAxisSet = new Set(MOOD_AXES);
 
     // Nested keys for each category (from prototypes + hardcoded mood axes)
     const nestedKeys = {
@@ -2890,12 +2881,8 @@ class MonteCarloSimulator {
       previousMoodAxes: new Set(moodAxisSet),
     };
 
-    // Affect traits nested keys
-    nestedKeys.affectTraits = new Set([
-      'affective_empathy',
-      'cognitive_empathy',
-      'harm_aversion',
-    ]);
+    // Affect traits from centralized constants
+    nestedKeys.affectTraits = new Set(AFFECT_TRAITS);
 
     // Get dynamic keys from emotion prototypes
     const emotionLookup = this.#dataRegistry.get(

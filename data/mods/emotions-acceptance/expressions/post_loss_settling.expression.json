@@ -210,5 +210,6 @@
         "auditory": "A slow, controlled exhale leaves {actor}, followed by a brief silence where their voice, if it comes, sounds lower and steadier—less strained, more settled.",
         "tactile": "{actor}'s tension shifts: not gone, but redistributed—hands unclench slightly, shoulders drop a fraction, and the air around them feels less braced."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0037
 }

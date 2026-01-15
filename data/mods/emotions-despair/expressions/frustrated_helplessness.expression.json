@@ -80,7 +80,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.stress"
+                                        "var": "emotions.stress_acute"
                                     },
                                     0.35
                                 ]
@@ -88,7 +88,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.hot_anger"
+                                        "var": "emotions.rage"
                                     },
                                     0.35
                                 ]

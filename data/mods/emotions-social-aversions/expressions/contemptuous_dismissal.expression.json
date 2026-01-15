@@ -16,6 +16,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 "and": [
@@ -103,6 +111,26 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    20
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.compassion"
@@ -160,7 +188,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires contempt to cross/spike into a clear dominant state, grounded in low affiliation and high agency (upper-hand posture) with mildly elevated self-evaluation. Caps warm/prosocial tones and empathic distress so it reads as dismissal, not care or shared pain. Also caps guilt/remorse so high harm-awareness doesn’t make the superior coolness unrealistic. Arousal stays low-to-mid to keep it cool rather than explosive."
+            "failure_message": "Cool superiority only: contempt must cross/spike while wrath stays low. Enforces low-to-mid arousal and a control floor (trait or inhibitory) so it doesn’t drift into eruption. Keeps affiliation low and agency/self-evaluation high (upper-hand posture), while capping warm/prosocial and guilt/remorse."
         }
     ],
     "actor_description": "I feel a cold clarity: this doesn’t deserve my effort. My thoughts narrow into a neat little verdict, and my face goes still, almost bored. There’s a faint lift in my chest—like I’m stepping over something on the floor and refusing to even look down.",

@@ -64,6 +64,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.spellbound_absorption"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.affiliation"

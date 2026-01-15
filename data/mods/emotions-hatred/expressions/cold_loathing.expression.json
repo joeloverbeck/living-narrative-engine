@@ -49,6 +49,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.wrath"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.valence"
                             },
                             -35
@@ -120,14 +128,6 @@
                                     55
                                 ]
                             }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.hot_anger"
-                            },
-                            0.55
                         ]
                     },
                     {

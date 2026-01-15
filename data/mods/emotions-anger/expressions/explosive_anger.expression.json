@@ -10,17 +10,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.hot_anger"
+                                "var": "emotions.wrath"
                             },
-                            0.7
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "emotions.rage"
-                            },
-                            0.55
+                            0.75
                         ]
                     },
                     {
@@ -29,6 +21,22 @@
                                 "var": "moodAxes.arousal"
                             },
                             30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
                         ]
                     },
                     {
@@ -44,14 +52,14 @@
                             {
                                 "-": [
                                     {
-                                        "var": "emotions.hot_anger"
+                                        "var": "emotions.wrath"
                                     },
                                     {
                                         "var": "emotions.smoldering_anger"
                                     }
                                 ]
                             },
-                            0.2
+                            0.22
                         ]
                     },
                     {
@@ -59,7 +67,7 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            10
+                            -5
                         ]
                     },
                     {
@@ -172,25 +180,10 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.hot_anger"
+                                                "var": "emotions.wrath"
                                             },
                                             {
-                                                "var": "previousEmotions.hot_anger"
-                                            }
-                                        ]
-                                    },
-                                    0.15
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "emotions.rage"
-                                            },
-                                            {
-                                                "var": "previousEmotions.rage"
+                                                "var": "previousEmotions.wrath"
                                             }
                                         ]
                                     },
@@ -261,7 +254,7 @@
                     }
                 ]
             },
-            "failure_message": "Hot/eruptive only: requires very high hot_anger and rage with high arousal. Explicitly blocks cold controlled hostility by capping smoldering_anger and requiring hot_anger to dominate it. Adds restraint-loss: inhibitory_control must be low (or sharply dropping), with trait self_control making eruption harder unless disinhibition is stronger. Keeps prosocial and harm-aware tones capped, and still requires a recent spike/jump so it reads as a sustained post-snap fury rather than baseline heat."
+            "failure_message": "Wrath-driven eruption only: requires very high wrath with high arousal and negative valence. Blocks cold/contained hostility by capping smoldering_anger and requiring wrath to dominate it. Enforces restraint-loss via low (or sharply dropping) inhibitory_control, with trait self_control making eruption harder unless disinhibition is stronger. Prosocial/harm-aware tones remain capped, and a recent spike/jump is required so it reads as a post-snap blowout rather than baseline heat."
         }
     ],
     "actor_description": "It tips. One more ounce and the lid is gone-heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can't seem to stop it. The anger isn't an opinion anymore; it's a physical force shoving outward, demanding release, turning everything I say into impact.",

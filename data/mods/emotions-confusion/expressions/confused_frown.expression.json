@@ -69,6 +69,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.spellbound_absorption"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
                         "<": [
                             {
                                 "var": "emotions.surprise_startle"

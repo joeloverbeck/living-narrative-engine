@@ -195,5 +195,6 @@
         "auditory": "A long, even exhale leaves them—less like surrender, more like permission to stop bracing.",
         "tactile": "The tension in the room seems to ease; movements get slower and more deliberate, like their body has unhooked from a constant flinch."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0007
 }

@@ -141,5 +141,6 @@
         "limited": "I sense a brief pause—then a clean, focused regard settling in."
     },
     "category": "affection",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0025
 }

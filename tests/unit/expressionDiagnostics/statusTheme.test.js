@@ -7,6 +7,9 @@ import { describe, it, expect, jest } from '@jest/globals';
 import {
   STATUS_THEME,
   STATUS_KEYS,
+  STATUS_PRIORITY,
+  NON_PROBLEMATIC_STATUSES,
+  RARITY_CATEGORIES,
   getStatusFillColor,
   getStatusBackgroundColor,
   getStatusTextColor,
@@ -18,16 +21,14 @@ import {
 
 /**
  * Mapping of colorName to expected emoji for visual consistency.
- * This ensures that the emoji matches the stated color family.
+ * Derived from STATUS_THEME to ensure the emoji matches the stated color family.
+ * This eliminates duplication by using the single source of truth.
  */
-const EXPECTED_EMOJI_FOR_COLOR = Object.freeze({
-  gray: '⚪',
-  red: '🔴',
-  orange: '🟠',
-  magenta: '🟣', // Purple is closest available circle emoji to magenta
-  teal: '🟢', // Green is closest available circle emoji to teal
-  indigo: '🔵', // Blue is closest available circle emoji to indigo
-});
+const EXPECTED_EMOJI_FOR_COLOR = Object.freeze(
+  Object.fromEntries(
+    Object.values(STATUS_THEME).map((entry) => [entry.colorName, entry.emoji])
+  )
+);
 
 describe('statusTheme.js', () => {
   describe('STATUS_THEME structure', () => {
@@ -35,8 +36,10 @@ describe('statusTheme.js', () => {
       const expectedKeys = [
         'unknown',
         'impossible',
+        'unobserved',
         'extremely_rare',
         'rare',
+        'uncommon',
         'normal',
         'frequent',
       ];
@@ -93,8 +96,10 @@ describe('statusTheme.js', () => {
       // This test documents the expected mapping
       expect(STATUS_THEME.unknown.emoji).toBe('⚪'); // gray
       expect(STATUS_THEME.impossible.emoji).toBe('🔴'); // red
+      expect(STATUS_THEME.unobserved.emoji).toBe('🟡'); // amber → yellow
       expect(STATUS_THEME.extremely_rare.emoji).toBe('🟠'); // orange
       expect(STATUS_THEME.rare.emoji).toBe('🟣'); // magenta → purple
+      expect(STATUS_THEME.uncommon.emoji).toBe('🩵'); // cyan → light blue heart
       expect(STATUS_THEME.normal.emoji).toBe('🟢'); // teal → green
       expect(STATUS_THEME.frequent.emoji).toBe('🔵'); // indigo → blue
     });
@@ -263,10 +268,77 @@ describe('statusTheme.js', () => {
       const warningMessage = mockLogger.warn.mock.calls[0][0];
       expect(warningMessage).toContain('unknown');
       expect(warningMessage).toContain('impossible');
+      expect(warningMessage).toContain('unobserved');
       expect(warningMessage).toContain('extremely_rare');
       expect(warningMessage).toContain('rare');
+      expect(warningMessage).toContain('uncommon');
       expect(warningMessage).toContain('normal');
       expect(warningMessage).toContain('frequent');
+    });
+  });
+
+  describe('STATUS_PRIORITY', () => {
+    it('should have all status keys with numeric priority values', () => {
+      for (const key of STATUS_KEYS) {
+        expect(STATUS_PRIORITY).toHaveProperty(key);
+        expect(typeof STATUS_PRIORITY[key]).toBe('number');
+      }
+    });
+
+    it('should have impossible as highest priority (0)', () => {
+      expect(STATUS_PRIORITY.impossible).toBe(0);
+    });
+
+    it('should have frequent as lowest priority (7)', () => {
+      expect(STATUS_PRIORITY.frequent).toBe(7);
+    });
+
+    it('should be frozen', () => {
+      expect(Object.isFrozen(STATUS_PRIORITY)).toBe(true);
+    });
+
+    it('should have unobserved and uncommon in correct positions', () => {
+      expect(STATUS_PRIORITY.unobserved).toBe(2);
+      expect(STATUS_PRIORITY.uncommon).toBe(5);
+    });
+  });
+
+  describe('NON_PROBLEMATIC_STATUSES', () => {
+    it('should be a frozen Set', () => {
+      expect(NON_PROBLEMATIC_STATUSES).toBeInstanceOf(Set);
+      expect(Object.isFrozen(NON_PROBLEMATIC_STATUSES)).toBe(true);
+    });
+
+    it('should contain normal, frequent, and uncommon', () => {
+      expect(NON_PROBLEMATIC_STATUSES.has('normal')).toBe(true);
+      expect(NON_PROBLEMATIC_STATUSES.has('frequent')).toBe(true);
+      expect(NON_PROBLEMATIC_STATUSES.has('uncommon')).toBe(true);
+    });
+
+    it('should not contain problematic statuses', () => {
+      expect(NON_PROBLEMATIC_STATUSES.has('impossible')).toBe(false);
+      expect(NON_PROBLEMATIC_STATUSES.has('unknown')).toBe(false);
+      expect(NON_PROBLEMATIC_STATUSES.has('unobserved')).toBe(false);
+      expect(NON_PROBLEMATIC_STATUSES.has('extremely_rare')).toBe(false);
+      expect(NON_PROBLEMATIC_STATUSES.has('rare')).toBe(false);
+    });
+  });
+
+  describe('RARITY_CATEGORIES', () => {
+    it('should have uppercase keys mapping to lowercase values', () => {
+      for (const key of STATUS_KEYS) {
+        const upperKey = key.toUpperCase();
+        expect(RARITY_CATEGORIES).toHaveProperty(upperKey);
+        expect(RARITY_CATEGORIES[upperKey]).toBe(key);
+      }
+    });
+
+    it('should be frozen', () => {
+      expect(Object.isFrozen(RARITY_CATEGORIES)).toBe(true);
+    });
+
+    it('should have EXTREMELY_RARE mapping to extremely_rare', () => {
+      expect(RARITY_CATEGORIES.EXTREMELY_RARE).toBe('extremely_rare');
     });
   });
 });

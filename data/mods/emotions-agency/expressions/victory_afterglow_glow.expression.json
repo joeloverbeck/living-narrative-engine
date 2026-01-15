@@ -4,7 +4,7 @@
     "description": "Victory afterglow: the win stays in the system as a warm, capable glow—confidence spreads, breathing steadies, and the body keeps the uplift without the explosive release.",
     "priority": 75,
     "category": "agency",
-    "diagnosticStatus": "unknown",
+    "diagnosticStatus": "rare",
     "prerequisites": [
         {
             "logic": {
@@ -217,7 +217,7 @@
                                     {
                                         ">=": [
                                             {
-                                                "var": "previousEmotions.stress"
+                                                "var": "previousEmotions.stress_acute"
                                             },
                                             0.35
                                         ]
@@ -227,10 +227,10 @@
                                             {
                                                 "-": [
                                                     {
-                                                        "var": "previousEmotions.stress"
+                                                        "var": "previousEmotions.stress_acute"
                                                     },
                                                     {
-                                                        "var": "emotions.stress"
+                                                        "var": "emotions.stress_acute"
                                                     }
                                                 ]
                                             },
@@ -246,5 +246,6 @@
         }
     ],
     "actor_description": "The rush doesn’t vanish—it spreads. My breathing finds a steadier rhythm and the victory settles into my limbs like warmth. I feel taller without forcing it, like my body finally believes I can handle what I just handled. The grin lingers, quieter now; the energy is still there, but it’s usable—confidence instead of a burst.",
-    "description_text": "{actor} carries the win as a warm, capable glow—posture easy, eyes bright, movements looser but controlled. The intensity has settled into steady confidence: a lingering smile, a calmer breath, and the sense they’re inhabiting their own competence."
+    "description_text": "{actor} carries the win as a warm, capable glow—posture easy, eyes bright, movements looser but controlled. The intensity has settled into steady confidence: a lingering smile, a calmer breath, and the sense they’re inhabiting their own competence.",
+    "triggerRate": 0.0004
 }

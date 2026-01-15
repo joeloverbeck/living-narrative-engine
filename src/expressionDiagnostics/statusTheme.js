@@ -41,6 +41,14 @@ export const STATUS_THEME = Object.freeze({
     label: 'Impossible',
     colorName: 'red',
   }),
+  unobserved: Object.freeze({
+    fill: '#DDAA33',
+    background: '#FDF5E6',
+    text: '#6B5317',
+    emoji: '🟡',
+    label: 'Unobserved',
+    colorName: 'amber',
+  }),
   extremely_rare: Object.freeze({
     fill: '#EE7733',
     background: '#FDEFE7',
@@ -56,6 +64,14 @@ export const STATUS_THEME = Object.freeze({
     emoji: '🟣',
     label: 'Rare',
     colorName: 'magenta',
+  }),
+  uncommon: Object.freeze({
+    fill: '#33BBEE',
+    background: '#E8F8FD',
+    text: '#175E6B',
+    emoji: '🩵',
+    label: 'Uncommon',
+    colorName: 'cyan',
   }),
   normal: Object.freeze({
     fill: '#009988',
@@ -80,6 +96,45 @@ export const STATUS_THEME = Object.freeze({
  * @type {readonly string[]}
  */
 export const STATUS_KEYS = Object.freeze(Object.keys(STATUS_THEME));
+
+/**
+ * Priority ordering for diagnostic statuses (lower = higher priority).
+ * Used for sorting problematic expressions by severity.
+ * Order: impossible (most severe) → frequent (least severe)
+ *
+ * @type {Readonly<Record<string, number>>}
+ */
+export const STATUS_PRIORITY = Object.freeze({
+  impossible: 0,
+  unknown: 1,
+  unobserved: 2,
+  extremely_rare: 3,
+  rare: 4,
+  uncommon: 5,
+  normal: 6,
+  frequent: 7,
+});
+
+/**
+ * Statuses that should NOT be displayed in the problematic expressions panel.
+ * These represent healthy or acceptable expression trigger rates.
+ *
+ * @type {Readonly<Set<string>>}
+ */
+export const NON_PROBLEMATIC_STATUSES = Object.freeze(
+  new Set(['normal', 'frequent', 'uncommon'])
+);
+
+/**
+ * Rarity category constants derived from STATUS_KEYS.
+ * Provides uppercase constant names for programmatic access.
+ * Example: RARITY_CATEGORIES.EXTREMELY_RARE === 'extremely_rare'
+ *
+ * @type {Readonly<Record<string, string>>}
+ */
+export const RARITY_CATEGORIES = Object.freeze(
+  Object.fromEntries(STATUS_KEYS.map((key) => [key.toUpperCase(), key]))
+);
 
 /**
  * Gets the fill/primary color for a status.

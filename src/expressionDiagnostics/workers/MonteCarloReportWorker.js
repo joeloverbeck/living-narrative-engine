@@ -3,11 +3,11 @@
  */
 
 import jsonLogic from 'json-logic-js';
-import MonteCarloReportGenerator from '../services/MonteCarloReportGenerator.js';
 import PrototypeConstraintAnalyzer from '../services/PrototypeConstraintAnalyzer.js';
 import PrototypeFitRankingService from '../services/PrototypeFitRankingService.js';
 import ReportOrchestrator from '../services/ReportOrchestrator.js';
 import SensitivityAnalyzer from '../services/SensitivityAnalyzer.js';
+import { createReportGenerator } from '../services/reportGeneratorFactory.js';
 
 class WorkerLogger {
   debug() {}
@@ -251,7 +251,7 @@ function buildReport(payload) {
     logger,
     prototypeConstraintAnalyzer,
   });
-  const reportGenerator = new MonteCarloReportGenerator({
+  const reportGenerator = createReportGenerator({
     logger,
     prototypeConstraintAnalyzer,
     prototypeFitRankingService,

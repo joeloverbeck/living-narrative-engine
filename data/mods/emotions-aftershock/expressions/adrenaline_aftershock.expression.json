@@ -12,7 +12,7 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "previousEmotions.stress"
+                                        "var": "previousEmotions.stress_acute"
                                     },
                                     0.6
                                 ]
@@ -180,5 +180,6 @@
         "limited": "{actor} visibly shakes as they try to steady themselves, letting out a thin laugh or a choked breath."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.005
 }
