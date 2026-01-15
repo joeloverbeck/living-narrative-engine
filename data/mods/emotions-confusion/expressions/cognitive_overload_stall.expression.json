@@ -155,7 +155,7 @@
                             {
                                 "var": "emotions.executive_focus"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -197,7 +197,7 @@
                                             {
                                                 "var": "previousEmotions.executive_focus"
                                             },
-                                            0.60
+                                            0.6
                                         ]
                                     },
                                     {
@@ -205,7 +205,7 @@
                                             {
                                                 "var": "emotions.executive_focus"
                                             },
-                                            0.40
+                                            0.4
                                         ]
                                     }
                                 ]
@@ -237,5 +237,5 @@
         "tactile": "There’s a tightness behind my eyes and a faint buzzing restlessness in my hands—energy present, but no clean channel for it.",
         "limited": "My attention stays on it, but the next step won’t resolve; I keep pausing and trying again."
     },
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

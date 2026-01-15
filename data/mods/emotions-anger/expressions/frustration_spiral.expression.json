@@ -50,6 +50,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.rage"
                             },
                             0.55
@@ -153,5 +161,5 @@
         "tactile": "The space beside jitters-sudden movements, heat, a bristling energy that makes stillness feel unsafe."
     },
     "category": "anger",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

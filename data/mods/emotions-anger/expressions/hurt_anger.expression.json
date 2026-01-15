@@ -104,6 +104,29 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.protest_anger"
+                                    },
+                                    {
+                                        "var": "emotions.smoldering_anger"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
@@ -220,5 +243,5 @@
         "tactile": "The air feels raw—like there's exposed nerve in the room. It's anger with tenderness still attached, making every word feel more personal and more risky."
     },
     "category": "anger",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -11,35 +11,11 @@
             "logic": {
                 "and": [
                     {
-                        "or": [
+                        ">=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "emotions.hatred"
-                                    },
-                                    0.6
-                                ]
+                                "var": "emotions.smoldering_anger"
                             },
-                            {
-                                "and": [
-                                    {
-                                        ">=": [
-                                            {
-                                                "var": "emotions.anger"
-                                            },
-                                            0.55
-                                        ]
-                                    },
-                                    {
-                                        ">=": [
-                                            {
-                                                "var": "emotions.resentment"
-                                            },
-                                            0.5
-                                        ]
-                                    }
-                                ]
-                            }
+                            0.55
                         ]
                     },
                     {
@@ -48,6 +24,34 @@
                                 "var": "emotions.executive_focus"
                             },
                             0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.hatred"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.resentment"
+                                    },
+                                    0.50
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.contempt"
+                                    },
+                                    0.30
+                                ]
+                            }
                         ]
                     },
                     {
@@ -87,7 +91,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            45
+                            40
                         ]
                     },
                     {
@@ -109,9 +113,17 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.rage"
                             },
-                            0.5
+                            0.45
                         ]
                     },
                     {
@@ -156,6 +168,41 @@
                     },
                     {
                         "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
                             {
                                 ">=": [
                                     {
@@ -203,7 +250,7 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
                                 ]
                             },
                             {
@@ -220,12 +267,26 @@
                                     },
                                     0.08
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.resentment"
+                                            },
+                                            {
+                                                "var": "previousEmotions.resentment"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
                             }
                         ]
                     }
                 ]
-            },
-            "failure_message": "Requires a vengeful signal (hatred high OR anger+resentment high) PLUS executive_focus (anger turns into organized intention). Anchors the state in high control/engagement with negative valence and moderate arousal/threat. Blocks rage/panic and caps warmth/guilt/remorse so it reads as consequence-seeking. Triggers on an executive-focus spike/crossing or a decisive agency jump."
+            }
         }
     ],
     "alternate_descriptions": {

@@ -128,7 +128,7 @@
                             {
                                 "var": "emotions.release"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -208,5 +208,5 @@
         "tactile": "Someone's presence vibrates with contained tension-micro-movements, a restless shifting that you can feel through the air and proximity."
     },
     "category": "threat",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

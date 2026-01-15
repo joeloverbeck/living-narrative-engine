@@ -10,9 +10,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.hot_anger"
                             },
-                            0.6
+                            0.62
                         ]
                     },
                     {
@@ -22,7 +22,7 @@
                                     {
                                         "var": "emotions.rage"
                                     },
-                                    0.35
+                                    0.38
                                 ]
                             },
                             {
@@ -48,7 +48,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            5
+                            15
                         ]
                     },
                     {
@@ -60,43 +60,34 @@
                         ]
                     },
                     {
-                        "or": [
+                        "<=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "moodAxes.agency_control"
-                                    },
-                                    10
-                                ]
+                                "var": "emotions.smoldering_anger"
                             },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "moodAxes.threat"
-                                    },
-                                    20
-                                ]
-                            }
+                            0.5
                         ]
                     },
                     {
-                        "or": [
+                        ">=": [
                             {
-                                ">=": [
+                                "-": [
                                     {
-                                        "var": "emotions.calm"
+                                        "var": "emotions.hot_anger"
                                     },
-                                    0.2
+                                    {
+                                        "var": "emotions.smoldering_anger"
+                                    }
                                 ]
                             },
+                            0.12
+                        ]
+                    },
+                    {
+                        "<=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "emotions.confidence"
-                                    },
-                                    0.2
-                                ]
-                            }
+                                "var": "moodAxes.future_expectancy"
+                            },
+                            40
                         ]
                     },
                     {
@@ -118,19 +109,39 @@
                     {
                         "or": [
                             {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    20
+                                ]
+                            },
+                            {
                                 "<=": [
                                     {
                                         "var": "moodAxes.affiliation"
                                     },
                                     10
                                 ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.calm"
+                                    },
+                                    0.2
+                                ]
                             },
                             {
-                                "<=": [
+                                ">=": [
                                     {
-                                        "var": "emotions.sympathy"
+                                        "var": "emotions.confidence"
                                     },
-                                    0.32
+                                    0.2
                                 ]
                             }
                         ]
@@ -162,10 +173,10 @@
                             {
                                 "-": [
                                     {
-                                        "var": "emotions.anger"
+                                        "var": "emotions.hot_anger"
                                     },
                                     {
-                                        "var": "previousEmotions.anger"
+                                        "var": "previousEmotions.hot_anger"
                                     }
                                 ]
                             },
@@ -188,11 +199,23 @@
                         ]
                     },
                     {
-                        ">=": [
+                        "and": [
                             {
-                                "var": "emotions.anger"
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.hot_anger"
+                                    },
+                                    0.62
+                                ]
                             },
-                            0.65
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.hot_anger"
+                                    },
+                                    0.62
+                                ]
+                            }
                         ]
                     }
                 ]
@@ -206,5 +229,5 @@
         "tactile": "The air feels charged. A body is rigid with restraint-heat, tension, and tiny tremors contained under stillness."
     },
     "category": "anger",
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "impossible"
 }

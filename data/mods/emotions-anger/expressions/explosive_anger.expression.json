@@ -10,7 +10,7 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.hot_anger"
                             },
                             0.7
                         ]
@@ -28,7 +28,30 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            25
+                            30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.hot_anger"
+                                    },
+                                    {
+                                        "var": "emotions.smoldering_anger"
+                                    }
+                                ]
+                            },
+                            0.2
                         ]
                     },
                     {
@@ -102,10 +125,10 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.anger"
+                                                "var": "emotions.hot_anger"
                                             },
                                             {
-                                                "var": "previousEmotions.anger"
+                                                "var": "previousEmotions.hot_anger"
                                             }
                                         ]
                                     },
@@ -176,7 +199,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires high anger+rage with high arousal and assertive agency, low-to-neutral affiliation, and a recent spike (anger/rage/arousal) or a notable control/affiliation drop. Caps sympathy/compassion and also caps guilt/remorse so the outburst doesn’t misfire during harm-aware self-reproach."
+            "failure_message": "Hot/eruptive only: requires very high hot_anger and rage with high arousal. Explicitly blocks cold controlled hostility by capping smoldering_anger and requiring hot_anger to dominate it. Keeps prosocial and harm-aware tones capped, and still requires a recent spike/jump so it reads as a sustained post-snap fury rather than baseline heat."
         }
     ],
     "actor_description": "It tips. One more ounce and the lid is gone-heat rushes up my neck, my vision tightens, and my mouth opens on its own. I can hear my voice getting louder and can't seem to stop it. The anger isn't an opinion anymore; it's a physical force shoving outward, demanding release, turning everything I say into impact.",
@@ -186,5 +209,5 @@
         "tactile": "I sense a tense, vibrating stillness in someone's posture-like a coiled spring you can feel in the air."
     },
     "category": "anger",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

@@ -83,7 +83,7 @@
                             {
                                 "var": "emotions.executive_focus"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -155,7 +155,7 @@
                                             {
                                                 "var": "previousEmotions.executive_focus"
                                             },
-                                            0.60
+                                            0.6
                                         ]
                                     },
                                     {
@@ -163,7 +163,7 @@
                                             {
                                                 "var": "emotions.executive_focus"
                                             },
-                                            0.40
+                                            0.4
                                         ]
                                     }
                                 ]
@@ -195,5 +195,5 @@
         "tactile": "The air around {actor} feels restless—small shifts, foot tapping, fingers worrying at a seam, tension that never quite discharges.",
         "limited": "{actor} looks preoccupied and tense, attention snagging on something they can’t seem to put down."
     },
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

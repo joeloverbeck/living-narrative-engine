@@ -19,7 +19,7 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.hot_anger"
                             },
                             0.45
                         ]
@@ -29,10 +29,10 @@
                             {
                                 "-": [
                                     {
-                                        "var": "emotions.anger"
+                                        "var": "emotions.hot_anger"
                                     },
                                     {
-                                        "var": "previousEmotions.anger"
+                                        "var": "previousEmotions.hot_anger"
                                     }
                                 ]
                             },

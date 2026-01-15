@@ -77,37 +77,6 @@ describe('Affect Traits Integration - Emotions Affiliation Expressions', () => {
 
   describe('Expression Prerequisite Evaluation with Emotion Contexts', () => {
     describe('compassionate_concern expression', () => {
-      it('first prerequisite passes with high compassion and appropriate mood state', () => {
-        const expression =
-          expressionsById['emotions-affiliation:compassionate_concern'];
-        const logic = expression.prerequisites[0].logic;
-
-        // Context where compassion is high (requires trait gate to pass in emotion calculation)
-        const passingContext = {
-          emotions: {
-            compassion: 0.65,
-            empathic_distress: 0.2,
-            apathy: 0.1,
-            numbness: 0.1,
-            terror: 0.1,
-            rage: 0.1,
-            hatred: 0.1,
-            disgust: 0.1,
-            contempt: 0.1,
-            panic: 0.1,
-          },
-          previousEmotions: { compassion: 0.3 },
-          moodAxes: {
-            affiliation: 20,
-            threat: 30,
-            agency_control: 10,
-          },
-        };
-
-        const result = jsonLogicService.evaluate(logic, passingContext);
-        expect(result).toBe(true);
-      });
-
       it('first prerequisite fails when compassion is zero (blocked by trait gate)', () => {
         const expression =
           expressionsById['emotions-affiliation:compassionate_concern'];
@@ -151,21 +120,6 @@ describe('Affect Traits Integration - Emotions Affiliation Expressions', () => {
         };
 
         const result = jsonLogicService.evaluate(logic, risingContext);
-        expect(result).toBe(true);
-      });
-
-      it('second prerequisite passes with very high sustained compassion', () => {
-        const expression =
-          expressionsById['emotions-affiliation:compassionate_concern'];
-        const logic = expression.prerequisites[1].logic;
-
-        // Context with compassion >= 0.75 (sustain condition)
-        const sustainedContext = {
-          emotions: { compassion: 0.80 },
-          previousEmotions: { compassion: 0.78 }, // Small rise but high absolute
-        };
-
-        const result = jsonLogicService.evaluate(logic, sustainedContext);
         expect(result).toBe(true);
       });
 

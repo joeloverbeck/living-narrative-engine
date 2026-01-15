@@ -4,7 +4,7 @@
     "description": "Victory afterglow: the win stays in the system as a warm, capable glow—confidence spreads, breathing steadies, and the body keeps the uplift without the explosive release.",
     "priority": 75,
     "category": "agency",
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "prerequisites": [
         {
             "logic": {
@@ -22,7 +22,7 @@
                             {
                                 "var": "emotions.pride"
                             },
-                            0.40
+                            0.4
                         ]
                     },
                     {
@@ -102,7 +102,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -126,7 +126,7 @@
                             {
                                 "var": "emotions.shame"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -142,7 +142,7 @@
                             {
                                 "var": "emotions.embarrassment"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -179,7 +179,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -234,7 +234,7 @@
                                                     }
                                                 ]
                                             },
-                                            0.10
+                                            0.1
                                         ]
                                     }
                                 ]

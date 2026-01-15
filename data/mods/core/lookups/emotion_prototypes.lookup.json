@@ -791,9 +791,9 @@
     "irritation": {
       "weights": {
         "valence": -0.6,
-        "arousal": 0.4,
-        "agency_control": 0.2,
-        "threat": 0.2
+        "arousal": 0.25,
+        "agency_control": 0.15,
+        "threat": 0.05
       },
       "gates": [
         "valence <= -0.10"
@@ -812,7 +812,7 @@
         "valence <= -0.10"
       ]
     },
-    "anger": {
+    "hot_anger": {
       "weights": {
         "valence": -0.8,
         "arousal": 0.8,
@@ -823,6 +823,23 @@
       "gates": [
         "valence <= -0.15",
         "arousal >= 0.10"
+      ]
+    },
+    "smoldering_anger": {
+      "weights": {
+        "valence": -0.85,
+        "agency_control": 0.85,
+        "arousal": -0.20,
+        "engagement": 0.35,
+        "threat": 0.20,
+        "affiliation": -0.20
+      },
+      "gates": [
+        "valence <= -0.15",
+        "agency_control >= 0.25",
+        "arousal <= 0.35",
+        "arousal >= -0.40",
+        "engagement >= 0.05"
       ]
     },
     "protest_anger": {
@@ -1259,15 +1276,22 @@
     },
     "hatred": {
       "weights": {
-        "valence": -0.9,
-        "arousal": 0.6,
-        "agency_control": 0.6,
-        "engagement": 0.3,
-        "threat": 0.3
+        "valence": -0.95,
+        "engagement": 0.55,
+        "agency_control": 0.55,
+        "threat": 0.25,
+        "arousal": 0.20,
+        "affiliation": -0.85,
+        "harm_aversion": -0.65,
+        "affective_empathy": -0.55,
+        "cognitive_empathy": -0.20
       },
       "gates": [
         "valence <= -0.25",
-        "arousal >= 0.10"
+        "engagement >= 0.10",
+        "affiliation <= 0.05",
+        "harm_aversion <= 0.20",
+        "affective_empathy <= 0.25"
       ]
     },
     "surprise_startle": {

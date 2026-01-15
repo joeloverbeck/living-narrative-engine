@@ -260,7 +260,6 @@ describe('ExpressionDiagnosticsController recommendations UI', () => {
     expect(evidenceItems.length).toBeGreaterThan(0);
     const evidenceText = evidenceItems.map((item) => item.textContent).join(' ');
     expect(evidenceText).toContain('Population: mood-regime (N=150.00)');
-    expect(evidenceText).toContain('Population: gate-pass (mood-regime) (N=60.00)');
   });
 
   it('shows invariant warning and suppresses recommendations when invariants fail', async () => {

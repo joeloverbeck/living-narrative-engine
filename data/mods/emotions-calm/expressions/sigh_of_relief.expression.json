@@ -117,7 +117,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -194,5 +194,5 @@
         "tactile": "The tension of someone eases abruptly, as if a coiled spring just let go."
     },
     "category": "calm",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }
