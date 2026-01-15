@@ -11,11 +11,19 @@
             "logic": {
                 "and": [
                     {
+                        ">=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.anger"
+                                        "var": "previousEmotions.hot_anger"
                                     },
                                     0.45
                                 ]
@@ -23,9 +31,17 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.frustration"
+                                        "var": "previousEmotions.frustration"
                                     },
-                                    0.5
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousMoodAxes.arousal"
+                                    },
+                                    35
                                 ]
                             }
                         ]
@@ -35,7 +51,7 @@
                             {
                                 "var": "emotions.release"
                             },
-                            0.28
+                            0.25
                         ]
                     },
                     {
@@ -43,15 +59,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            20
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            0
+                            35
                         ]
                     },
                     {
@@ -63,11 +71,38 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.agency_control"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.rage"
                             },
-                            0.35
+                            0.3
                         ]
                     },
                     {
@@ -75,7 +110,7 @@
                             {
                                 "var": "emotions.contempt"
                             },
-                            0.35
+                            0.4
                         ]
                     },
                     {
@@ -85,14 +120,14 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.anger"
+                                                "var": "emotions.hot_anger"
                                             },
                                             {
-                                                "var": "previousEmotions.anger"
+                                                "var": "previousEmotions.hot_anger"
                                             }
                                         ]
                                     },
-                                    -0.1
+                                    -0.08
                                 ]
                             },
                             {
@@ -107,7 +142,7 @@
                                             }
                                         ]
                                     },
-                                    -0.1
+                                    -0.08
                                 ]
                             },
                             {
@@ -122,27 +157,7 @@
                                             }
                                         ]
                                     },
-                                    -12
-                                ]
-                            },
-                            {
-                                "and": [
-                                    {
-                                        "<": [
-                                            {
-                                                "var": "previousEmotions.release"
-                                            },
-                                            0.28
-                                        ]
-                                    },
-                                    {
-                                        ">=": [
-                                            {
-                                                "var": "emotions.release"
-                                            },
-                                            0.28
-                                        ]
-                                    }
+                                    -10
                                 ]
                             },
                             {
@@ -157,7 +172,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.08
                                 ]
                             },
                             {
@@ -167,14 +182,14 @@
                                             {
                                                 "-": [
                                                     {
-                                                        "var": "emotions.remorse"
+                                                        "var": "emotions.smoldering_anger"
                                                     },
                                                     {
-                                                        "var": "previousEmotions.remorse"
+                                                        "var": "previousEmotions.smoldering_anger"
                                                     }
                                                 ]
                                             },
-                                            0.1
+                                            0.08
                                         ]
                                     },
                                     {
@@ -184,10 +199,10 @@
                                                     {
                                                         "-": [
                                                             {
-                                                                "var": "emotions.anger"
+                                                                "var": "emotions.hot_anger"
                                                             },
                                                             {
-                                                                "var": "previousEmotions.anger"
+                                                                "var": "previousEmotions.hot_anger"
                                                             }
                                                         ]
                                                     },
@@ -212,12 +227,32 @@
                                         ]
                                     }
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires anger or frustration still meaningfully present, but de-escalating (negative delta) or accompanied by a notable arousal drop, with release present as the unbracing/composure-return signal. Remorse-rise can also qualify if it coincides with de-escalation. Blocks high rage (too late—already a snap) and high contempt (cooling calcifies into dismissal instead of composure)."
+            "failure_message": "Requires smoldering anger as the post-heat landing state plus evidence it was hotter before. Anchors in low-to-mid arousal with engagement still online and either regained control or a clear control jump. Requires explicit cooling (hot anger/frustration/arousal dropping and/or release rising) to prevent baseline cold anger from spamming. Caps rage (still escalating) and contempt (drifts into cold fury/dismissal)."
         }
     ],
     "alternate_descriptions": {
@@ -225,5 +260,5 @@
         "tactile": "The air feels less tight around them, like tension is bleeding out through their shoulders and hands. The heat is still there, but it’s contained—no longer spilling over.",
         "limited": "Something in {actor} settles: the agitation eases, and their control becomes visible again."
     },
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "unknown"
 }

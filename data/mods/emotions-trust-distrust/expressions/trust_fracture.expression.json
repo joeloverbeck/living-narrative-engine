@@ -51,11 +51,31 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.smoldering_anger"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.valence"
+                                    },
+                                    -10
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.rage"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -64,6 +84,14 @@
                                 "var": "emotions.hatred"
                             },
                             0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.55
                         ]
                     },
                     {
@@ -79,7 +107,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -128,12 +156,47 @@
                                     },
                                     14
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            0.35
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires an alert, engaged threat appraisal where suspicion clears its gate (arousal >= 0, engagement high) and affiliation turns negative (warmth withdraws). Excludes rage/hatred so it reads as cold realization, and caps panic/freeze so it doesn’t collide with overwhelm or immobility. Triggers only on a suspicion spike, threat jump, or sharp affiliation drop to prevent spam."
+            "failure_message": "Requires engaged threat appraisal with suspicion clearing its gate and affiliation turning negative (warmth withdrawn). Adds a cold-edge co-driver: smoldering anger (or sufficiently negative valence) so the beat reads as chilling appraisal rather than pure anxious suspicion. Blocks rage/hatred and caps hot anger so it doesn’t become an anger outburst; caps panic/freeze so it stays decisive and interpretive. Triggers on suspicion/threat/affiliation change or a smoldering rise to prevent spam."
         }
     ],
     "alternate_descriptions": {

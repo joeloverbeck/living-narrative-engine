@@ -10,17 +10,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.protest_anger"
                             },
                             0.45
-                        ]
-                    },
-                    {
-                        "<": [
-                            {
-                                "var": "emotions.rage"
-                            },
-                            0.55
                         ]
                     },
                     {
@@ -34,9 +26,17 @@
                     {
                         ">=": [
                             {
-                                "var": "moodAxes.agency_control"
+                                "var": "affectTraits.harm_aversion"
                             },
                             15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
                         ]
                     },
                     {
@@ -50,25 +50,9 @@
                     {
                         ">=": [
                             {
-                                "var": "moodAxes.arousal"
-                            },
-                            10
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            60
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
                                 "var": "moodAxes.threat"
                             },
-                            10
+                            15
                         ]
                     },
                     {
@@ -76,107 +60,15 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            70
+                            55
                         ]
                     },
                     {
                         "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.sympathy"
-                                    },
-                                    0.28
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.compassion"
-                                    },
-                                    0.3
-                                ]
-                            },
                             {
                                 ">=": [
                                     {
                                         "var": "emotions.love_attachment"
-                                    },
-                                    0.2
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.affection"
-                                    },
-                                    0.25
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.contempt"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.disgust"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.hatred"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.panic"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.terror"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.freeze"
-                            },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.dissociation"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.determination"
                                     },
                                     0.22
                                 ]
@@ -184,90 +76,97 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.courage"
+                                        "var": "emotions.compassion"
                                     },
-                                    0.25
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.trust"
-                                    },
-                                    0.2
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.love_attachment"
-                                    },
-                                    0.18
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "var": "emotions.sympathy"
-                                    },
-                                    0.4
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "emotions.anger"
-                                            },
-                                            {
-                                                "var": "previousEmotions.anger"
-                                            }
-                                        ]
-                                    },
-                                    0.1
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "moodAxes.threat"
-                                            },
-                                            {
-                                                "var": "previousMoodAxes.threat"
-                                            }
-                                        ]
-                                    },
-                                    12
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "moodAxes.agency_control"
-                                            },
-                                            {
-                                                "var": "previousMoodAxes.agency_control"
-                                            }
-                                        ]
-                                    },
-                                    10
+                                    0.28
                                 ]
                             },
                             {
                                 "and": [
                                     {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            40
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "affectTraits.harm_aversion"
+                                            },
+                                            20
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.7
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
                                         "<": [
                                             {
-                                                "var": "previousEmotions.anger"
+                                                "var": "previousEmotions.protest_anger"
                                             },
                                             0.45
                                         ]
@@ -275,11 +174,26 @@
                                     {
                                         ">=": [
                                             {
-                                                "var": "emotions.anger"
+                                                "var": "emotions.protest_anger"
                                             },
                                             0.45
                                         ]
                                     }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.protest_anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.protest_anger"
+                                            }
+                                        ]
+                                    },
+                                    0.1
                                 ]
                             }
                         ]
@@ -295,5 +209,5 @@
         "tactile": "The space feels bracketed, as if someone just put their body between harm and what matters. The air gets dense with focus—protective pressure rather than chaos."
     },
     "category": "anger",
-    "diagnosticStatus": "impossible"
+    "diagnosticStatus": "normal"
 }

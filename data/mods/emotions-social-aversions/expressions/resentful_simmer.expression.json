@@ -10,9 +10,17 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "emotions.resentment"
                             },
-                            0.58
+                            0.52
                         ]
                     },
                     {
@@ -32,11 +40,19 @@
                         ]
                     },
                     {
-                        "<=": [
+                        ">=": [
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            -10
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
                         ]
                     },
                     {
@@ -74,9 +90,9 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.hot_anger"
                             },
-                            0.65
+                            0.55
                         ]
                     },
                     {
@@ -109,7 +125,27 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            },
+                                            0.50
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            0.50
+                                        ]
+                                    }
                                 ]
                             },
                             {
@@ -117,21 +153,50 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "previousMoodAxes.agency_control"
+                                                "var": "emotions.smoldering_anger"
                                             },
                                             {
-                                                "var": "moodAxes.agency_control"
+                                                "var": "previousEmotions.smoldering_anger"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
                                             }
                                         ]
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    10
+                                ]
                             }
                         ]
                     }
                 ]
-            },
-            "failure_message": "Needs a meaningful resentment level grounded in negative valence and reduced agency (feeling stuck), with arousal kept below hot anger. Engagement stays mid so it’s narrative-sticky, not checked-out. Blocks rage/explosive tone and major panic/grief takeover. Triggers on a resentment rise or a notable agency drop to prevent spam."
+            }
         }
     ],
     "actor_description": "It sits in me like a cold stone I keep turning over. My jaw stays tight, my thoughts loop on the same sharp ledger of wrongs, and everything feels slightly rigged against me. I’m not exploding—I’m collecting. The irritation isn’t loud; it’s persistent, and it makes every next step feel heavier than it should.",

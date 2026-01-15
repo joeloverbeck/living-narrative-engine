@@ -102,7 +102,7 @@
                                             {
                                                 "var": "previousEmotions.executive_focus"
                                             },
-                                            0.60
+                                            0.6
                                         ]
                                     },
                                     {
@@ -196,7 +196,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -211,7 +211,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             }
                         ]
@@ -226,5 +226,5 @@
         "tactile": "The air feels tight and charged; there's a restless micro-tremor in their stillness, like a coiled spring held in place."
     },
     "category": "threat",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

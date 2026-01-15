@@ -19,7 +19,7 @@
                         ]
                     },
                     {
-                        ">= ": [
+                        ">=": [
                             {
                                 "var": "moodAxes.engagement"
                             },
@@ -27,7 +27,7 @@
                         ]
                     },
                     {
-                        ">= ": [
+                        ">=": [
                             {
                                 "var": "moodAxes.agency_control"
                             },
@@ -35,7 +35,7 @@
                         ]
                     },
                     {
-                        ">= ": [
+                        ">=": [
                             {
                                 "var": "moodAxes.arousal"
                             },
@@ -51,7 +51,7 @@
                         ]
                     },
                     {
-                        ">= ": [
+                        ">=": [
                             {
                                 "var": "moodAxes.threat"
                             },

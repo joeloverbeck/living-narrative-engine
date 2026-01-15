@@ -66,7 +66,7 @@ describe('core:emotion_prototypes lookup', () => {
       'Anger Family': [
         'irritation',
         'frustration',
-        'anger',
+        'hot_anger',
         'rage',
         'resentment',
         'contempt',
@@ -177,9 +177,9 @@ describe('core:emotion_prototypes lookup', () => {
       expect(lookupData.entries.calm.weights.arousal).toBeLessThan(0);
     });
 
-    it('anger should have high arousal and negative valence', () => {
-      expect(lookupData.entries.anger.weights.arousal).toBeGreaterThan(0.5);
-      expect(lookupData.entries.anger.weights.valence).toBeLessThan(0);
+    it('hot_anger should have high arousal and negative valence', () => {
+      expect(lookupData.entries.hot_anger.weights.arousal).toBeGreaterThan(0.5);
+      expect(lookupData.entries.hot_anger.weights.valence).toBeLessThan(0);
     });
 
     it('shame should have strongly negative self_evaluation', () => {

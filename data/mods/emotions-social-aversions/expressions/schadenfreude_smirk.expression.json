@@ -127,6 +127,30 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "-": [
@@ -143,7 +167,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires an active social-aversive stance (contempt/envy/resentment) plus a noticeable amusement spike (the ‘smirk moment’). Grounded in slight positive valence, low threat, negative affiliation, and boosted self-evaluation (superiority). Strongly caps guilt/remorse so it doesn’t fire when the actor is harm-aware or self-reproaching. Caps compassion/empathic distress and rage/panic to avoid tonal theft."
+            "failure_message": "Smirk moment only: requires a social-aversive stance plus a clear amusement spike, with slight positive valence and low threat. Explicitly caps smoldering_anger and other heavy hostilities so it stays a quick, petty reward-jolt rather than cold punitive satisfaction."
         }
     ],
     "alternate_descriptions": {

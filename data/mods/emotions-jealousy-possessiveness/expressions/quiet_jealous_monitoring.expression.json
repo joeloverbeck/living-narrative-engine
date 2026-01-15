@@ -29,6 +29,14 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "moodAxes.engagement"
                             },
                             25
@@ -56,6 +64,38 @@
                                 "var": "moodAxes.affiliation"
                             },
                             -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.30
                         ]
                     },
                     {
@@ -141,12 +181,47 @@
                                         ]
                                     }
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            0.35
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires jealousy with a suspicious, watchful edge plus high engagement (attention locked). Grounds the tone in moderate threat and strained affiliation. Excludes panic/freeze (controlled, not overwhelmed) and caps joy/relief to prevent tonal drift. Triggers only on a suspicion jump or a jealousy crossing paired with a notable affiliation drop."
+            "failure_message": "Requires jealous vigilance (jealousy + suspicion) plus a cold, controlled edge (smoldering anger) so it reads as measuring/monitoring with subtle control impulses rather than pure anxious suspicion. Anchors in engaged threat with negative affiliation and non-collapsed agency, while keeping arousal below ‘explosive’ territory. Caps panic/freeze for composure, and caps hot anger/rage so it stays quiet and watchful. Triggers only on suspicion jump, jealousy+affiliation drop, or smoldering rise to prevent spam."
         }
     ],
     "alternate_descriptions": {

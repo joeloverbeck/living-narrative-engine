@@ -90,7 +90,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.hot_anger"
                             },
                             0.45
                         ]
@@ -255,5 +255,5 @@
         "olfactory": "I smell little sign of stress-sweat; mostly steady breath and warmed skin, the air feeling \"ready\" rather than strained."
     },
     "category": "agency",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

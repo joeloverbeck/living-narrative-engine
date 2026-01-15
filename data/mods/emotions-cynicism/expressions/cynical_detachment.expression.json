@@ -50,6 +50,50 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.smoldering_anger"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.contempt"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.resentment"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.despair"
@@ -120,12 +164,41 @@
                                     },
                                     12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            }
+                                        ]
+                                    },
+                                    0.07
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.contempt"
+                                            },
+                                            {
+                                                "var": "previousEmotions.contempt"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
                             }
                         ]
                     }
                 ]
-            },
-            "failure_message": "Requires a strong cynical lens plus negative valence and lowered future expectancy, while remaining engaged enough to judge (not blank). Caps despair so it stays ‘armored disbelief’ rather than collapse, and caps apathy/numbness so it stays sharp rather than checked out. Also caps guilt/remorse so the beat doesn’t mislabel an active moral reckoning as bitterness-detachment. Triggers on a cynicism spike or a notable drop in future expectancy."
+            }
         }
     ],
     "alternate_descriptions": {

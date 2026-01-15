@@ -34,9 +34,9 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.focused_absorption"
+                                "var": "emotions.confusion"
                             },
-                            0.3
+                            0.5
                         ]
                     },
                     {
@@ -80,42 +80,11 @@
                         ]
                     },
                     {
-                        "<=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            {
-                                "+": [
-                                    {
-                                        "var": "moodAxes.engagement"
-                                    },
-                                    -25
-                                ]
-                            }
-                        ]
-                    },
-                    {
                         ">=": [
                             {
                                 "var": "moodAxes.valence"
                             },
                             0
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.boredom"
-                            },
-                            0.25
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.confusion"
-                            },
-                            0.45
                         ]
                     },
                     {
@@ -140,68 +109,6 @@
                                 "var": "emotions.release"
                             },
                             0.55
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "emotions.release"
-                                    },
-                                    {
-                                        "var": "previousEmotions.release"
-                                    }
-                                ]
-                            },
-                            0.08
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
-                                "<=": [
-                                    {
-                                        "var": "emotions.executive_focus"
-                                    },
-                                    0.35
-                                ]
-                            },
-                            {
-                                "and": [
-                                    {
-                                        ">=": [
-                                            {
-                                                "var": "previousEmotions.executive_focus"
-                                            },
-                                            0.6
-                                        ]
-                                    },
-                                    {
-                                        "<=": [
-                                            {
-                                                "var": "emotions.executive_focus"
-                                            },
-                                            0.42
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "previousEmotions.executive_focus"
-                                            },
-                                            {
-                                                "var": "emotions.executive_focus"
-                                            }
-                                        ]
-                                    },
-                                    0.18
-                                ]
-                            }
                         ]
                     },
                     {

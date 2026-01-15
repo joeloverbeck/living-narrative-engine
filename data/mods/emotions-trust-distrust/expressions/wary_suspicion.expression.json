@@ -36,6 +36,14 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "moodAxes.valence"
                             },
                             20
@@ -76,9 +84,49 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.panic"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -86,7 +134,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -94,7 +142,7 @@
                             {
                                 "var": "emotions.hypervigilance"
                             },
-                            0.7
+                            0.70
                         ]
                     },
                     {
@@ -110,7 +158,7 @@
                             {
                                 "var": "emotions.dread"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -175,53 +223,6 @@
                     {
                         "or": [
                             {
-                                "<=": [
-                                    {
-                                        "var": "emotions.executive_focus"
-                                    },
-                                    0.45
-                                ]
-                            },
-                            {
-                                "and": [
-                                    {
-                                        "<=": [
-                                            {
-                                                "var": "moodAxes.affiliation"
-                                            },
-                                            0
-                                        ]
-                                    },
-                                    {
-                                        "<=": [
-                                            {
-                                                "var": "moodAxes.arousal"
-                                            },
-                                            45
-                                        ]
-                                    },
-                                    {
-                                        ">=": [
-                                            {
-                                                "-": [
-                                                    {
-                                                        "var": "emotions.suspicion"
-                                                    },
-                                                    {
-                                                        "var": "previousEmotions.suspicion"
-                                                    }
-                                                ]
-                                            },
-                                            0.12
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "or": [
-                            {
                                 ">=": [
                                     {
                                         "-": [
@@ -243,7 +244,7 @@
                                             {
                                                 "var": "previousEmotions.suspicion"
                                             },
-                                            0.4
+                                            0.40
                                         ]
                                     },
                                     {
@@ -287,7 +288,7 @@
                     }
                 ]
             },
-            "failure_message": "Wary suspicion is incompatible with a strong or rising ‘unbrace’ signal. Adds a strict low+stable release guard (and keeps the controlled-threat band) so high release routes to release/settling beats instead."
+            "failure_message": "Wary suspicion must stay threat-toned, not hostile: caps smoldering_anger and other anger drivers so the beat remains interpretive vigilance. Keeps panic/terror low and enforces the strict low+stable release guard. Fires on suspicion/threat deltas so it reads as a sharpening of attention, not a sustained mood."
         }
     ],
     "alternate_descriptions": {

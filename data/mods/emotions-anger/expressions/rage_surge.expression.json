@@ -26,9 +26,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.hot_anger"
                             },
-                            0.45
+                            0.5
                         ]
                     },
                     {
@@ -36,7 +36,15 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            15
+                            22
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
                         ]
                     },
                     {
@@ -101,7 +109,7 @@
                     {
                         "<": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.hot_anger"
                             },
                             0.75
                         ]
@@ -123,7 +131,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires crossing into rage with anger present, arousal up, low sympathy, and either low affiliation or a sharp affiliation drop; not already at sustained explosive levels. Caps guilt/remorse so the spike can’t read as harm-aware conflict instead of an outburst threshold-crossing."
+            "failure_message": "Acute outburst crossing only: rage must cross threshold with hot_anger present and arousal clearly elevated. Explicitly caps smoldering_anger so cold controlled hostility can’t masquerade as a surge. Keeps harm-aware tones capped and still requires a large rage delta."
         }
     ],
     "actor_description": "It comes up fast-heat in my face, pressure behind my eyes, my jaw clamping so hard my teeth ache. My hands curl without asking. The world simplifies into a single, furious shape: this is wrong, and I need it to stop. I can feel how narrow I'm getting-how every other thought is being shoved out to make room for the urge to hit back.",
@@ -132,5 +140,5 @@
         "auditory": "I hear teeth grind and a breath pulled in like a hiss. If they speak, it's low and tight-words forced through a clenched throat."
     },
     "category": "anger",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

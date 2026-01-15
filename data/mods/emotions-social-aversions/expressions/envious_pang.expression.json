@@ -9,7 +9,9 @@
         "and": [
           {
             ">=": [
-              { "var": "emotions.envy" },
+              {
+                "var": "emotions.envy"
+              },
               0.45
             ]
           },
@@ -17,16 +19,34 @@
             "or": [
               {
                 "and": [
-                  { "<": [ { "var": "previousEmotions.envy" }, 0.45 ] },
-                  { ">=": [ { "var": "emotions.envy" }, 0.45 ] }
+                  {
+                    "<": [
+                      {
+                        "var": "previousEmotions.envy"
+                      },
+                      0.45
+                    ]
+                  },
+                  {
+                    ">=": [
+                      {
+                        "var": "emotions.envy"
+                      },
+                      0.45
+                    ]
+                  }
                 ]
               },
               {
                 ">=": [
                   {
                     "-": [
-                      { "var": "emotions.envy" },
-                      { "var": "previousEmotions.envy" }
+                      {
+                        "var": "emotions.envy"
+                      },
+                      {
+                        "var": "previousEmotions.envy"
+                      }
                     ]
                   },
                   0.12
@@ -40,8 +60,12 @@
                 "<=": [
                   {
                     "-": [
-                      { "var": "moodAxes.self_evaluation" },
-                      { "var": "previousMoodAxes.self_evaluation" }
+                      {
+                        "var": "moodAxes.self_evaluation"
+                      },
+                      {
+                        "var": "previousMoodAxes.self_evaluation"
+                      }
                     ]
                   },
                   -10
@@ -49,7 +73,9 @@
               },
               {
                 "<=": [
-                  { "var": "moodAxes.self_evaluation" },
+                  {
+                    "var": "moodAxes.self_evaluation"
+                  },
                   -10
                 ]
               }
@@ -57,61 +83,111 @@
           },
           {
             "<=": [
-              { "var": "moodAxes.valence" },
+              {
+                "var": "moodAxes.valence"
+              },
               -10
             ]
           },
           {
             ">=": [
-              { "var": "moodAxes.engagement" },
+              {
+                "var": "moodAxes.engagement"
+              },
               10
             ]
           },
           {
             "<=": [
-              { "var": "moodAxes.affiliation" },
+              {
+                "var": "moodAxes.affiliation"
+              },
               10
             ]
           },
           {
             ">=": [
-              { "var": "moodAxes.affiliation" },
+              {
+                "var": "moodAxes.affiliation"
+              },
               -35
             ]
           },
           {
             "<=": [
-              { "var": "emotions.jealousy" },
+              {
+                "var": "emotions.jealousy"
+              },
               0.35
             ]
           },
           {
             "<=": [
-              { "var": "sexualStates.romantic_yearning" },
+              {
+                "var": "sexualStates.romantic_yearning"
+              },
               0.25
             ]
           },
           {
             "<=": [
-              { "var": "sexualStates.sexual_craving" },
+              {
+                "var": "sexualStates.sexual_craving"
+              },
               0.25
             ]
           },
           {
             "<=": [
-              { "var": "sexualStates.sexual_lust" },
+              {
+                "var": "sexualStates.sexual_lust"
+              },
               0.25
             ]
           },
           {
             "<=": [
-              { "var": "emotions.love_attachment" },
+              {
+                "var": "emotions.love_attachment"
+              },
+              0.35
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.smoldering_anger"
+              },
+              0.30
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.hot_anger"
+              },
+              0.45
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.hatred"
+              },
+              0.25
+            ]
+          },
+          {
+            "<=": [
+              {
+                "var": "emotions.contempt"
+              },
               0.35
             ]
           }
         ]
       },
-      "failure_message": "Needs an envy rise (crossing or spike) plus a self-worth sting, grounded in negative valence and elevated engagement (fixated comparison). Keeps affiliation slightly cool but not fully detached. Caps jealousy/romantic/sexual pathways so it reads as status-based envy rather than possessiveness or erotic pull."
+      "failure_message": "Quick envy pang only: requires envy crossing/spike plus a self-evaluation sting, grounded in negative valence and engaged comparison. Explicitly caps smoldering_anger (sustained cold hostility) and other heavy hostilities so this stays a brief pang rather than a bitter simmer."
     }
   ],
   "actor_description": "Something pinches behind my ribs—small but sharp—and my thoughts tilt into measuring. I feel my face tighten as if I've been caught lacking, even if no one said a word. My attention locks in on what I don't have, and it takes a second to unclench my jaw and breathe past the sting.",

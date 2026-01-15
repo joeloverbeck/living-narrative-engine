@@ -10,17 +10,25 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.flow"
+                                "var": "emotions.focused_absorption"
                             },
-                            0.65
+                            0.55
                         ]
                     },
                     {
                         ">=": [
                             {
-                                "var": "emotions.focused_absorption"
+                                "var": "emotions.flow"
                             },
-                            0.55
+                            0.58
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.22
                         ]
                     },
                     {
@@ -52,7 +60,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            35
+                            40
                         ]
                     },
                     {
@@ -102,15 +110,15 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.stress"
+                                "var": "emotions.executive_focus"
                             },
-                            0.35
+                            0.55
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "emotions.anxiety"
+                                "var": "emotions.stress"
                             },
                             0.3
                         ]
@@ -118,32 +126,9 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.executive_focus"
+                                "var": "emotions.anxiety"
                             },
-                            0.45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.release"
-                            },
-                            0.40
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "emotions.release"
-                                    },
-                                    {
-                                        "var": "previousEmotions.release"
-                                    }
-                                ]
-                            },
-                            0.06
+                            0.28
                         ]
                     }
                 ]
@@ -159,7 +144,7 @@
                                     {
                                         "var": "previousEmotions.flow"
                                     },
-                                    0.65
+                                    0.58
                                 ]
                             },
                             {
@@ -167,7 +152,47 @@
                                     {
                                         "var": "emotions.flow"
                                     },
-                                    0.65
+                                    0.58
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.focused_absorption"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.focused_absorption"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.release"
+                                    },
+                                    0.22
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    0.22
                                 ]
                             }
                         ]
@@ -200,6 +225,21 @@
                                 ]
                             },
                             0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.07
                         ]
                     },
                     {

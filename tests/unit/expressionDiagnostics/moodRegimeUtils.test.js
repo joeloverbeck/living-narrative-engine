@@ -142,7 +142,7 @@ describe('moodRegimeUtils', () => {
       ];
 
       expect(formatConstraints(constraints)).toBe(
-        '`moodAxes.valence >= 0.2`, `mood.threat <= 0.4`'
+        '`moodAxes.valence >= 0.2 (normalized >= 0.00)`, `mood.threat <= 0.4 (normalized <= 0.00)`'
       );
     });
   });

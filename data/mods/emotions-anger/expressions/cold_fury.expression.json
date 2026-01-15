@@ -10,9 +10,17 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.anger"
+                                "var": "emotions.smoldering_anger"
                             },
-                            0.35
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hot_anger"
+                            },
+                            0.55
                         ]
                     },
                     {
@@ -60,7 +68,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            10
+                            5
                         ]
                     },
                     {
@@ -182,18 +190,38 @@
                     {
                         "or": [
                             {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
                                 ">=": [
                                     {
                                         "-": [
                                             {
-                                                "var": "emotions.anger"
+                                                "var": "emotions.smoldering_anger"
                                             },
                                             {
-                                                "var": "previousEmotions.anger"
+                                                "var": "previousEmotions.smoldering_anger"
                                             }
                                         ]
                                     },
-                                    0.06
+                                    0.08
                                 ]
                             },
                             {
@@ -288,5 +316,5 @@
         "tactile": "The air feels tight; a body held in restraint, tension coiled rather than spilled."
     },
     "category": "anger",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }

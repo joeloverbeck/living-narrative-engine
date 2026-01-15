@@ -105,7 +105,7 @@
                                     {
                                         "var": "previousEmotions.release"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             },
                             {
@@ -113,7 +113,7 @@
                                     {
                                         "var": "emotions.release"
                                     },
-                                    0.40
+                                    0.4
                                 ]
                             }
                         ]
@@ -180,5 +180,5 @@
         "limited": "{actor} visibly shakes as they try to steady themselves, letting out a thin laugh or a choked breath."
     },
     "category": "threat",
-    "diagnosticStatus": "normal"
+    "diagnosticStatus": "unknown"
 }
