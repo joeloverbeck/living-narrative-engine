@@ -27,9 +27,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       error: jest.fn(),
     };
 
-    // DataRegistry uses get(type, id) method
+    // DataRegistry uses get(type, id) and getLookupData methods
     mockDataRegistry = {
       get: jest.fn().mockReturnValue({ entries: {} }),
+      getLookupData: jest.fn().mockReturnValue({ entries: {} }),
     };
 
     mockContainer = {
@@ -68,10 +69,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 18 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeFitRankingService + PrototypeSynthesisService + SensitivityAnalyzer + ExpressionEvaluator + FailureExplainer + GateEvaluator + PrototypeEvaluator + ViolationEstimator + VariablePathValidator)', () => {
+    it('should register exactly 25 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeRegistryService + PrototypeTypeDetector + ContextAxisNormalizer + PrototypeGateChecker + PrototypeIntensityCalculator + PrototypeSimilarityMetrics + PrototypeGapAnalyzer + PrototypeFitRankingService + PrototypeSynthesisService + SensitivityAnalyzer + ExpressionEvaluator + FailureExplainer + GateEvaluator + PrototypeEvaluator + ViolationEstimator + VariablePathValidator)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(18);
+      expect(mockContainer.register).toHaveBeenCalledTimes(25);
     });
 
     it('should register ViolationEstimator', () => {
@@ -89,6 +90,26 @@ describe('expressionDiagnosticsRegistrations', () => {
 
       expect(mockContainer.register).toHaveBeenCalledWith(
         diagnosticsTokens.IPrototypeFitRankingService,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register PrototypeRegistryService', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IPrototypeRegistryService,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register PrototypeTypeDetector', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IPrototypeTypeDetector,
         expect.any(Function),
         expect.any(Object)
       );
@@ -175,7 +196,7 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(18);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(25);
     });
   });
 

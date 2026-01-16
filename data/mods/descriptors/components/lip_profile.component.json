@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:lip_profile",
+  "description": "Describes the fullness and distinctive shape characteristics of lips",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "profile": {
+        "type": "string",
+        "description": "The lip profile type combining fullness and shape",
+        "enum": [
+          "thin",
+          "average",
+          "full",
+          "pouty",
+          "bee-stung",
+          "cupids-bow",
+          "crooked",
+          "asymmetric",
+          "downturned",
+          "upturned",
+          "split",
+          "scarred"
+        ],
+        "default": "average"
+      }
+    },
+    "required": ["profile"],
+    "additionalProperties": false
+  },
+  "validationRules": {
+    "generateValidator": true,
+    "errorMessages": {
+      "invalidEnum": "Invalid lip profile: {{value}}. Valid options: {{validValues}}",
+      "missingRequired": "Lip profile is required",
+      "invalidType": "Invalid type for lip profile: expected {{expected}}, got {{actual}}"
+    },
+    "suggestions": {
+      "enableSimilarity": true,
+      "maxDistance": 3,
+      "maxSuggestions": 3
+    }
+  }
+}

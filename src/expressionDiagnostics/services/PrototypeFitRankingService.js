@@ -9,14 +9,14 @@
  * @see MonteCarloReportGenerator.js - Consumes analysis results for reports
  */
 
-import GateConstraint from '../models/GateConstraint.js';
-import {
-  normalizeAffectTraits,
-  normalizeMoodAxes,
-  normalizeSexualAxes,
-  resolveAxisValue,
-} from '../utils/axisNormalizationUtils.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import ContextAxisNormalizer from './ContextAxisNormalizer.js';
+import PrototypeGateChecker from './PrototypeGateChecker.js';
+import PrototypeRegistryService from './PrototypeRegistryService.js';
+import PrototypeIntensityCalculator from './PrototypeIntensityCalculator.js';
+import PrototypeSimilarityMetrics from './PrototypeSimilarityMetrics.js';
+import PrototypeGapAnalyzer from './PrototypeGapAnalyzer.js';
+import PrototypeTypeDetector from './PrototypeTypeDetector.js';
 
 /**
  * @typedef {object} PrototypeFitResult
@@ -83,40 +83,61 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @property {'emotion'|'sexual'} type - Prototype type
  */
 
-// Composite score weights
-const WEIGHT_GATE_PASS = 0.30;
-const WEIGHT_INTENSITY = 0.35;
-const WEIGHT_CONFLICT = 0.20;
-const WEIGHT_EXCLUSION = 0.15;
-
-// Gap detection thresholds
-const GAP_DISTANCE_THRESHOLD = 0.5;
-const GAP_INTENSITY_THRESHOLD = 0.3;
-const K_NEIGHBORS = 5;
+// Gap detection thresholds now managed by PrototypeGapAnalyzer
 
 /**
  * Analyzes all emotion prototypes to rank them by fit to an expression's mood regime.
  */
 class PrototypeFitRankingService {
   /** @type {object} */
-  #dataRegistry;
-
-  /** @type {object} */
   #logger;
 
-  /** @type {object|null} */
-  #prototypeConstraintAnalyzer;
+  /** @type {object} */
+  #prototypeRegistryService;
 
-  /** @type {Map<string, {mean: number, std: number, sortedDistances: number[]}>} */
-  #distanceDistributionCache;
+  /** @type {object} */
+  #prototypeTypeDetector;
+
+  /** @type {object} */
+  #contextAxisNormalizer;
+
+  /** @type {object} */
+  #prototypeGateChecker;
+
+  /** @type {object} */
+  #prototypeIntensityCalculator;
+
+  /** @type {object} */
+  #prototypeSimilarityMetrics;
+
+  /** @type {object} */
+  #prototypeGapAnalyzer;
 
   /**
    * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry for prototype lookups
    * @param {object} deps.logger - ILogger
    * @param {object} [deps.prototypeConstraintAnalyzer] - Optional IPrototypeConstraintAnalyzer for extracting axis constraints
+   * @param {object} [deps.prototypeRegistryService] - Optional IPrototypeRegistryService for prototype lookups
+   * @param {object} [deps.prototypeTypeDetector] - Optional IPrototypeTypeDetector for type detection
+   * @param {object} [deps.contextAxisNormalizer] - Optional IContextAxisNormalizer for axis normalization
+   * @param {object} [deps.prototypeGateChecker] - Optional IPrototypeGateChecker for gate evaluation
+   * @param {object} [deps.prototypeIntensityCalculator] - Optional IPrototypeIntensityCalculator for intensity calculations
+   * @param {object} [deps.prototypeSimilarityMetrics] - Optional IPrototypeSimilarityMetrics for similarity/distance computations
+   * @param {object} [deps.prototypeGapAnalyzer] - Optional IPrototypeGapAnalyzer for gap detection and synthesis
    */
-  constructor({ dataRegistry, logger, prototypeConstraintAnalyzer = null }) {
+  constructor({
+    dataRegistry,
+    logger,
+    prototypeConstraintAnalyzer = null,
+    prototypeRegistryService = null,
+    prototypeTypeDetector = null,
+    contextAxisNormalizer = null,
+    prototypeGateChecker = null,
+    prototypeIntensityCalculator = null,
+    prototypeSimilarityMetrics = null,
+    prototypeGapAnalyzer = null,
+  }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['get', 'getLookupData'],
     });
@@ -124,36 +145,132 @@ class PrototypeFitRankingService {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
 
-    this.#dataRegistry = dataRegistry;
     this.#logger = logger;
-    this.#prototypeConstraintAnalyzer = prototypeConstraintAnalyzer;
-    this.#distanceDistributionCache = new Map();
-  }
-
-  /**
-   * Extract or normalize axis constraints from prerequisites or pre-extracted constraints.
-   * @private
-   * @param {Array|Map|null} constraintsOrPrerequisites - Prerequisites array or pre-extracted Map
-   * @returns {Map<string, {min: number, max: number}>} Axis constraints as Map
-   */
-  #normalizeAxisConstraints(constraintsOrPrerequisites) {
-    // Already a Map - return as-is
-    if (constraintsOrPrerequisites instanceof Map) {
-      return constraintsOrPrerequisites;
-    }
-
-    // Array of prerequisites - extract using analyzer
-    if (Array.isArray(constraintsOrPrerequisites) && this.#prototypeConstraintAnalyzer) {
-      try {
-        return this.#prototypeConstraintAnalyzer.extractAxisConstraints(constraintsOrPrerequisites);
-      } catch (err) {
-        this.#logger.warn('Failed to extract axis constraints from prerequisites:', err.message);
-        return new Map();
+    this.#prototypeRegistryService =
+      prototypeRegistryService ||
+      new PrototypeRegistryService({ dataRegistry, logger });
+    validateDependency(
+      this.#prototypeRegistryService,
+      'IPrototypeRegistryService',
+      logger,
+      {
+        requiredMethods: [
+          'getPrototypesByType',
+          'getAllPrototypes',
+          'getPrototypeDefinitions',
+          'getPrototype',
+        ],
       }
-    }
-
-    // Null, undefined, or no analyzer available
-    return new Map();
+    );
+    this.#prototypeTypeDetector =
+      prototypeTypeDetector || new PrototypeTypeDetector({ logger });
+    validateDependency(
+      this.#prototypeTypeDetector,
+      'IPrototypeTypeDetector',
+      logger,
+      {
+        requiredMethods: ['detectReferencedTypes', 'extractCurrentPrototype'],
+      }
+    );
+    this.#contextAxisNormalizer =
+      contextAxisNormalizer ||
+      new ContextAxisNormalizer({
+        logger,
+        prototypeConstraintAnalyzer,
+      });
+    validateDependency(
+      this.#contextAxisNormalizer,
+      'IContextAxisNormalizer',
+      logger,
+      {
+        requiredMethods: ['filterToMoodRegime', 'normalizeConstraints', 'getNormalizedAxes'],
+      }
+    );
+    this.#prototypeGateChecker =
+      prototypeGateChecker ||
+      new PrototypeGateChecker({
+        logger,
+        contextAxisNormalizer: this.#contextAxisNormalizer,
+        prototypeConstraintAnalyzer,
+      });
+    validateDependency(this.#prototypeGateChecker, 'IPrototypeGateChecker', logger, {
+      requiredMethods: [
+        'checkAllGatesPass',
+        'computeGatePassRate',
+        'getGateCompatibility',
+        'inferGatesFromConstraints',
+        'computeGateDistance',
+        'buildGateConstraints',
+      ],
+    });
+    this.#prototypeIntensityCalculator =
+      prototypeIntensityCalculator ||
+      new PrototypeIntensityCalculator({
+        logger,
+        contextAxisNormalizer: this.#contextAxisNormalizer,
+        prototypeGateChecker: this.#prototypeGateChecker,
+      });
+    validateDependency(
+      this.#prototypeIntensityCalculator,
+      'IPrototypeIntensityCalculator',
+      logger,
+      {
+        requiredMethods: [
+          'computeDistribution',
+          'computeIntensity',
+          'percentile',
+          'analyzeConflicts',
+          'computeCompositeScore',
+          'getScoringWeights',
+        ],
+      }
+    );
+    this.#prototypeSimilarityMetrics =
+      prototypeSimilarityMetrics ||
+      new PrototypeSimilarityMetrics({
+        logger,
+        prototypeGateChecker: this.#prototypeGateChecker,
+      });
+    validateDependency(
+      this.#prototypeSimilarityMetrics,
+      'IPrototypeSimilarityMetrics',
+      logger,
+      {
+        requiredMethods: [
+          'computeCosineSimilarity',
+          'computeWeightDistance',
+          'computeCombinedDistance',
+          'getDistanceDistribution',
+          'buildDistanceStatsCacheKey',
+          'computeDistancePercentile',
+          'computeDistanceZScore',
+          'buildDistanceContext',
+        ],
+      }
+    );
+    this.#prototypeGapAnalyzer =
+      prototypeGapAnalyzer ||
+      new PrototypeGapAnalyzer({
+        logger,
+        prototypeSimilarityMetrics: this.#prototypeSimilarityMetrics,
+        prototypeGateChecker: this.#prototypeGateChecker,
+        prototypeRegistryService: this.#prototypeRegistryService,
+      });
+    validateDependency(
+      this.#prototypeGapAnalyzer,
+      'IPrototypeGapAnalyzer',
+      logger,
+      {
+        requiredMethods: [
+          'buildTargetSignature',
+          'targetSignatureToWeights',
+          'detectGap',
+          'synthesizePrototype',
+          'getThresholds',
+          'getKNeighbors',
+        ],
+      }
+    );
   }
 
   // ============================================================================
@@ -176,7 +293,7 @@ class PrototypeFitRankingService {
     }
 
     // Detect which prototype types are referenced in expression
-    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrExpression);
+    const typesToFetch = this.#prototypeTypeDetector.detectReferencedTypes(prerequisitesOrExpression);
     const expression = Array.isArray(prerequisitesOrExpression) ? null : prerequisitesOrExpression;
 
     // Early return if no prototype references found
@@ -185,7 +302,7 @@ class PrototypeFitRankingService {
       typesToFetch.hasEmotions = true;
     }
 
-    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    const allPrototypes = this.#prototypeRegistryService.getAllPrototypes(typesToFetch);
     if (allPrototypes.length === 0) {
       this.#logger.warn('PrototypeFitRankingService: No prototypes found');
       return { leaderboard: [], currentPrototype: null, bestAlternative: null, improvementFactor: null };
@@ -194,26 +311,29 @@ class PrototypeFitRankingService {
     // Normalize axis constraints - handle both prerequisites array and pre-extracted Map
     const axisConstraints = axisConstraintsParam instanceof Map
       ? axisConstraintsParam
-      : this.#normalizeAxisConstraints(prerequisitesOrExpression);
+      : this.#contextAxisNormalizer.normalizeConstraints(prerequisitesOrExpression);
 
     // Filter contexts to mood regime
-    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const regimeContexts = this.#contextAxisNormalizer.filterToMoodRegime(
+      storedContexts,
+      axisConstraints
+    );
     this.#logger.debug(
       `PrototypeFitRankingService: ${regimeContexts.length}/${storedContexts.length} contexts in regime`
     );
 
     // Extract current prototype from expression (if any)
-    const currentProtoRef = this.#extractExpressionPrototype(expression);
+    const currentProtoRef = this.#prototypeTypeDetector.extractCurrentPrototype(expression);
 
     // Analyze each prototype
     const results = allPrototypes.map((proto) => {
-      const gatePassRate = this.#computeGatePassRate(proto, regimeContexts);
+      const gatePassRate = this.#prototypeGateChecker.computeGatePassRate(proto, regimeContexts);
       const intensityDist = this.#computeIntensityDistribution(
         proto,
         regimeContexts,
         threshold
       );
-      const gateCompatibility = this.#getGateCompatibility(
+      const gateCompatibility = this.#prototypeGateChecker.getGateCompatibility(
         proto,
         axisConstraints,
         threshold
@@ -300,14 +420,14 @@ class PrototypeFitRankingService {
     }
 
     const maxChunkMs = Number.isFinite(options.maxChunkMs) ? options.maxChunkMs : 12;
-    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrExpression);
+    const typesToFetch = this.#prototypeTypeDetector.detectReferencedTypes(prerequisitesOrExpression);
     const expression = Array.isArray(prerequisitesOrExpression) ? null : prerequisitesOrExpression;
 
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
       typesToFetch.hasEmotions = true;
     }
 
-    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    const allPrototypes = this.#prototypeRegistryService.getAllPrototypes(typesToFetch);
     if (allPrototypes.length === 0) {
       this.#logger.warn('PrototypeFitRankingService: No prototypes found');
       return { leaderboard: [], currentPrototype: null, bestAlternative: null, improvementFactor: null };
@@ -315,25 +435,28 @@ class PrototypeFitRankingService {
 
     const axisConstraints = axisConstraintsParam instanceof Map
       ? axisConstraintsParam
-      : this.#normalizeAxisConstraints(prerequisitesOrExpression);
+      : this.#contextAxisNormalizer.normalizeConstraints(prerequisitesOrExpression);
 
-    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const regimeContexts = this.#contextAxisNormalizer.filterToMoodRegime(
+      storedContexts,
+      axisConstraints
+    );
     this.#logger.debug(
       `PrototypeFitRankingService: ${regimeContexts.length}/${storedContexts.length} contexts in regime`
     );
 
-    const currentProtoRef = this.#extractExpressionPrototype(expression);
+    const currentProtoRef = this.#prototypeTypeDetector.extractCurrentPrototype(expression);
     const results = [];
     let chunkStart = this.#now();
 
     for (const proto of allPrototypes) {
-      const gatePassRate = this.#computeGatePassRate(proto, regimeContexts);
+      const gatePassRate = this.#prototypeGateChecker.computeGatePassRate(proto, regimeContexts);
       const intensityDist = this.#computeIntensityDistribution(
         proto,
         regimeContexts,
         threshold
       );
-      const gateCompatibility = this.#getGateCompatibility(
+      const gateCompatibility = this.#prototypeGateChecker.getGateCompatibility(
         proto,
         axisConstraints,
         threshold
@@ -409,23 +532,27 @@ class PrototypeFitRankingService {
    */
   computeImpliedPrototype(prerequisitesOrAxisConstraintsOrExpression, storedContexts, clauseFailuresParam) {
     // Normalize axis constraints - handle both prerequisites array and pre-extracted Map
-    const axisConstraints = this.#normalizeAxisConstraints(prerequisitesOrAxisConstraintsOrExpression);
+    const axisConstraints = this.#contextAxisNormalizer.normalizeConstraints(
+      prerequisitesOrAxisConstraintsOrExpression
+    );
 
     // Get clauseFailures - may be passed as storedContexts if caller used old signature
     const clauseFailures = clauseFailuresParam || [];
 
     // Build target signature from constraints
-    const targetSignature = this.#buildTargetSignature(axisConstraints, clauseFailures);
+    const targetSignature = this.#prototypeGapAnalyzer.buildTargetSignature(axisConstraints, clauseFailures);
 
     // Detect which prototype types to fetch (if expression provided)
-    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrAxisConstraintsOrExpression);
+    const typesToFetch = this.#prototypeTypeDetector.detectReferencedTypes(
+      prerequisitesOrAxisConstraintsOrExpression
+    );
 
     // Fall back to emotion prototypes for backward compatibility
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
       typesToFetch.hasEmotions = true;
     }
 
-    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    const allPrototypes = this.#prototypeRegistryService.getAllPrototypes(typesToFetch);
     if (allPrototypes.length === 0) {
       return {
         targetSignature,
@@ -435,12 +562,15 @@ class PrototypeFitRankingService {
       };
     }
 
-    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const regimeContexts = this.#contextAxisNormalizer.filterToMoodRegime(
+      storedContexts,
+      axisConstraints
+    );
 
     // Compute similarity for each prototype
     const similarities = allPrototypes.map((proto) => {
-      const cosineSim = this.#computeCosineSimilarity(targetSignature, proto.weights);
-      const gatePassRate = this.#computeGatePassRate(proto, regimeContexts);
+      const cosineSim = this.#prototypeSimilarityMetrics.computeCosineSimilarity(targetSignature, proto.weights);
+      const gatePassRate = this.#prototypeGateChecker.computeGatePassRate(proto, regimeContexts);
       const combinedScore = 0.6 * cosineSim + 0.4 * gatePassRate;
 
       return {
@@ -483,16 +613,20 @@ class PrototypeFitRankingService {
     clauseFailuresParam,
     options = {}
   ) {
-    const axisConstraints = this.#normalizeAxisConstraints(prerequisitesOrAxisConstraintsOrExpression);
+    const axisConstraints = this.#contextAxisNormalizer.normalizeConstraints(
+      prerequisitesOrAxisConstraintsOrExpression
+    );
     const clauseFailures = clauseFailuresParam || [];
-    const targetSignature = this.#buildTargetSignature(axisConstraints, clauseFailures);
-    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrAxisConstraintsOrExpression);
+    const targetSignature = this.#prototypeGapAnalyzer.buildTargetSignature(axisConstraints, clauseFailures);
+    const typesToFetch = this.#prototypeTypeDetector.detectReferencedTypes(
+      prerequisitesOrAxisConstraintsOrExpression
+    );
 
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
       typesToFetch.hasEmotions = true;
     }
 
-    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    const allPrototypes = this.#prototypeRegistryService.getAllPrototypes(typesToFetch);
     if (allPrototypes.length === 0) {
       return {
         targetSignature,
@@ -502,14 +636,17 @@ class PrototypeFitRankingService {
       };
     }
 
-    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const regimeContexts = this.#contextAxisNormalizer.filterToMoodRegime(
+      storedContexts,
+      axisConstraints
+    );
     const similarities = [];
     const maxChunkMs = Number.isFinite(options.maxChunkMs) ? options.maxChunkMs : 12;
     let chunkStart = this.#now();
 
     for (const proto of allPrototypes) {
-      const cosineSim = this.#computeCosineSimilarity(targetSignature, proto.weights);
-      const gatePassRate = this.#computeGatePassRate(proto, regimeContexts);
+      const cosineSim = this.#prototypeSimilarityMetrics.computeCosineSimilarity(targetSignature, proto.weights);
+      const gatePassRate = this.#prototypeGateChecker.computeGatePassRate(proto, regimeContexts);
       const combinedScore = 0.6 * cosineSim + 0.4 * gatePassRate;
 
       similarities.push({
@@ -556,14 +693,19 @@ class PrototypeFitRankingService {
    */
   detectPrototypeGaps(prerequisitesOrTargetSignatureOrExpression, storedContexts, axisConstraintsParam, threshold = 0.3) {
     // Detect which prototype types to fetch (if expression provided)
-    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrTargetSignatureOrExpression);
+    const typesToFetch = this.#prototypeTypeDetector.detectReferencedTypes(
+      prerequisitesOrTargetSignatureOrExpression
+    );
 
     // Fall back to emotion prototypes for backward compatibility
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
       typesToFetch.hasEmotions = true;
     }
 
-    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    const thresholds = this.#prototypeGapAnalyzer.getThresholds();
+    const kNeighborsCount = this.#prototypeGapAnalyzer.getKNeighbors();
+
+    const allPrototypes = this.#prototypeRegistryService.getAllPrototypes(typesToFetch);
     if (allPrototypes.length === 0) {
       return {
         gapDetected: false,
@@ -571,14 +713,16 @@ class PrototypeFitRankingService {
         kNearestNeighbors: [],
         coverageWarning: null,
         suggestedPrototype: null,
-        gapThreshold: GAP_DISTANCE_THRESHOLD,
+        gapThreshold: thresholds.distance,
       };
     }
 
     // Normalize axis constraints - handle both prerequisites array and pre-extracted Map
     const axisConstraints = axisConstraintsParam instanceof Map
       ? axisConstraintsParam
-      : this.#normalizeAxisConstraints(prerequisitesOrTargetSignatureOrExpression);
+      : this.#contextAxisNormalizer.normalizeConstraints(
+        prerequisitesOrTargetSignatureOrExpression
+      );
 
     // Get or compute target signature
     let targetSignature;
@@ -589,23 +733,26 @@ class PrototypeFitRankingService {
         targetSignature = prerequisitesOrTargetSignatureOrExpression;
       } else {
         // It's an axisConstraints map, build target signature from it
-        targetSignature = this.#buildTargetSignature(prerequisitesOrTargetSignatureOrExpression, []);
+        targetSignature = this.#prototypeGapAnalyzer.buildTargetSignature(prerequisitesOrTargetSignatureOrExpression, []);
       }
     } else {
       // Passed prerequisites array or expression, compute target signature
-      targetSignature = this.#buildTargetSignature(axisConstraints, []);
+      targetSignature = this.#prototypeGapAnalyzer.buildTargetSignature(axisConstraints, []);
     }
 
     // Build desired point from target signature
-    const desiredWeights = this.#targetSignatureToWeights(targetSignature);
-    const desiredGates = this.#inferGatesFromConstraints(axisConstraints);
+    const desiredWeights = this.#prototypeGapAnalyzer.targetSignatureToWeights(targetSignature);
+    const desiredGates = this.#prototypeGateChecker.inferGatesFromConstraints(axisConstraints);
 
-    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const regimeContexts = this.#contextAxisNormalizer.filterToMoodRegime(
+      storedContexts,
+      axisConstraints
+    );
 
     // Compute distance to each prototype
     const distances = allPrototypes.map((proto) => {
-      const weightDist = this.#computeWeightDistance(desiredWeights, proto.weights);
-      const gateDist = this.#computeGateDistance(desiredGates, proto.gates);
+      const weightDist = this.#prototypeSimilarityMetrics.computeWeightDistance(desiredWeights, proto.weights);
+      const gateDist = this.#prototypeGateChecker.computeGateDistance(desiredGates, proto.gates);
       const combinedDist = 0.7 * weightDist + 0.3 * gateDist;
 
       const intensityDist = this.#computeIntensityDistribution(
@@ -626,23 +773,23 @@ class PrototypeFitRankingService {
 
     // Sort by combined distance, get k-nearest
     distances.sort((a, b) => a.combinedDistance - b.combinedDistance);
-    const kNearest = distances.slice(0, K_NEIGHBORS);
+    const kNearest = distances.slice(0, kNeighborsCount);
 
     const nearestDist = kNearest[0]?.combinedDistance ?? Infinity;
     const bestIntensity = Math.max(...kNearest.map((d) => d.pIntensityAbove));
 
-    const gapDetected = nearestDist > GAP_DISTANCE_THRESHOLD && bestIntensity < GAP_INTENSITY_THRESHOLD;
+    const gapDetected = this.#prototypeGapAnalyzer.detectGap(nearestDist, bestIntensity);
 
-    const distanceStatsKey = this.#buildDistanceStatsCacheKey(typesToFetch);
-    const distanceStats = this.#getDistanceDistribution(distanceStatsKey, allPrototypes);
+    const distanceStatsKey = this.#prototypeSimilarityMetrics.buildDistanceStatsCacheKey(typesToFetch);
+    const distanceStats = this.#prototypeSimilarityMetrics.getDistanceDistribution(distanceStatsKey, allPrototypes);
     const distancePercentile = distanceStats
-      ? this.#computeDistancePercentile(distanceStats.sortedDistances, nearestDist)
+      ? this.#prototypeSimilarityMetrics.computeDistancePercentile(distanceStats.sortedDistances, nearestDist)
       : null;
     const distanceZScore = distanceStats
-      ? this.#computeDistanceZScore(distanceStats.mean, distanceStats.std, nearestDist)
+      ? this.#prototypeSimilarityMetrics.computeDistanceZScore(distanceStats.mean, distanceStats.std, nearestDist)
       : null;
     const distanceContext = distanceStats
-      ? this.#buildDistanceContext(nearestDist, distancePercentile, distanceZScore)
+      ? this.#prototypeSimilarityMetrics.buildDistanceContext(nearestDist, distancePercentile, distanceZScore)
       : null;
 
     let coverageWarning = null;
@@ -650,9 +797,9 @@ class PrototypeFitRankingService {
 
     if (gapDetected) {
       coverageWarning =
-        `No prototype within distance ${GAP_DISTANCE_THRESHOLD.toFixed(2)}. ` +
+        `No prototype within distance ${thresholds.distance.toFixed(2)}. ` +
         `Best achieves only ${(bestIntensity * 100).toFixed(1)}% intensity rate.`;
-      suggestedPrototype = this.#synthesizePrototype(kNearest, desiredWeights, axisConstraints);
+      suggestedPrototype = this.#prototypeGapAnalyzer.synthesizePrototype(kNearest, desiredWeights, axisConstraints);
     }
 
     return {
@@ -661,7 +808,7 @@ class PrototypeFitRankingService {
       kNearestNeighbors: kNearest,
       coverageWarning,
       suggestedPrototype,
-      gapThreshold: GAP_DISTANCE_THRESHOLD,
+      gapThreshold: thresholds.distance,
       distanceZScore,
       distancePercentile,
       distanceContext,
@@ -685,13 +832,18 @@ class PrototypeFitRankingService {
     threshold = 0.3,
     options = {}
   ) {
-    const typesToFetch = this.#detectReferencedPrototypeTypes(prerequisitesOrTargetSignatureOrExpression);
+    const typesToFetch = this.#prototypeTypeDetector.detectReferencedTypes(
+      prerequisitesOrTargetSignatureOrExpression
+    );
 
     if (!typesToFetch.hasEmotions && !typesToFetch.hasSexualStates) {
       typesToFetch.hasEmotions = true;
     }
 
-    const allPrototypes = this.#getAllPrototypes(typesToFetch);
+    const thresholds = this.#prototypeGapAnalyzer.getThresholds();
+    const kNeighborsCount = this.#prototypeGapAnalyzer.getKNeighbors();
+
+    const allPrototypes = this.#prototypeRegistryService.getAllPrototypes(typesToFetch);
     if (allPrototypes.length === 0) {
       return {
         gapDetected: false,
@@ -699,7 +851,7 @@ class PrototypeFitRankingService {
         kNearestNeighbors: [],
         coverageWarning: null,
         suggestedPrototype: null,
-        gapThreshold: GAP_DISTANCE_THRESHOLD,
+        gapThreshold: thresholds.distance,
         distanceZScore: null,
         distancePercentile: null,
         distanceContext: null,
@@ -708,7 +860,9 @@ class PrototypeFitRankingService {
 
     const axisConstraints = axisConstraintsParam instanceof Map
       ? axisConstraintsParam
-      : this.#normalizeAxisConstraints(prerequisitesOrTargetSignatureOrExpression);
+      : this.#contextAxisNormalizer.normalizeConstraints(
+        prerequisitesOrTargetSignatureOrExpression
+      );
 
     let targetSignature;
     if (prerequisitesOrTargetSignatureOrExpression instanceof Map && !Array.isArray(prerequisitesOrTargetSignatureOrExpression)) {
@@ -716,22 +870,25 @@ class PrototypeFitRankingService {
       if (firstVal && 'direction' in firstVal && 'importance' in firstVal) {
         targetSignature = prerequisitesOrTargetSignatureOrExpression;
       } else {
-        targetSignature = this.#buildTargetSignature(prerequisitesOrTargetSignatureOrExpression, []);
+        targetSignature = this.#prototypeGapAnalyzer.buildTargetSignature(prerequisitesOrTargetSignatureOrExpression, []);
       }
     } else {
-      targetSignature = this.#buildTargetSignature(axisConstraints, []);
+      targetSignature = this.#prototypeGapAnalyzer.buildTargetSignature(axisConstraints, []);
     }
 
-    const desiredWeights = this.#targetSignatureToWeights(targetSignature);
-    const desiredGates = this.#inferGatesFromConstraints(axisConstraints);
-    const regimeContexts = this.#filterToMoodRegime(storedContexts, axisConstraints);
+    const desiredWeights = this.#prototypeGapAnalyzer.targetSignatureToWeights(targetSignature);
+    const desiredGates = this.#prototypeGateChecker.inferGatesFromConstraints(axisConstraints);
+    const regimeContexts = this.#contextAxisNormalizer.filterToMoodRegime(
+      storedContexts,
+      axisConstraints
+    );
     const distances = [];
     const maxChunkMs = Number.isFinite(options.maxChunkMs) ? options.maxChunkMs : 12;
     let chunkStart = this.#now();
 
     for (const proto of allPrototypes) {
-      const weightDist = this.#computeWeightDistance(desiredWeights, proto.weights);
-      const gateDist = this.#computeGateDistance(desiredGates, proto.gates);
+      const weightDist = this.#prototypeSimilarityMetrics.computeWeightDistance(desiredWeights, proto.weights);
+      const gateDist = this.#prototypeGateChecker.computeGateDistance(desiredGates, proto.gates);
       const combinedDist = 0.7 * weightDist + 0.3 * gateDist;
 
       const intensityDist = this.#computeIntensityDistribution(
@@ -756,22 +913,22 @@ class PrototypeFitRankingService {
     }
 
     distances.sort((a, b) => a.combinedDistance - b.combinedDistance);
-    const kNearest = distances.slice(0, K_NEIGHBORS);
+    const kNearest = distances.slice(0, kNeighborsCount);
 
     const nearestDist = kNearest[0]?.combinedDistance ?? Infinity;
     const bestIntensity = Math.max(...kNearest.map((d) => d.pIntensityAbove));
-    const gapDetected = nearestDist > GAP_DISTANCE_THRESHOLD && bestIntensity < GAP_INTENSITY_THRESHOLD;
+    const gapDetected = this.#prototypeGapAnalyzer.detectGap(nearestDist, bestIntensity);
 
-    const distanceStatsKey = this.#buildDistanceStatsCacheKey(typesToFetch);
-    const distanceStats = this.#getDistanceDistribution(distanceStatsKey, allPrototypes);
+    const distanceStatsKey = this.#prototypeSimilarityMetrics.buildDistanceStatsCacheKey(typesToFetch);
+    const distanceStats = this.#prototypeSimilarityMetrics.getDistanceDistribution(distanceStatsKey, allPrototypes);
     const distancePercentile = distanceStats
-      ? this.#computeDistancePercentile(distanceStats.sortedDistances, nearestDist)
+      ? this.#prototypeSimilarityMetrics.computeDistancePercentile(distanceStats.sortedDistances, nearestDist)
       : null;
     const distanceZScore = distanceStats
-      ? this.#computeDistanceZScore(distanceStats.mean, distanceStats.std, nearestDist)
+      ? this.#prototypeSimilarityMetrics.computeDistanceZScore(distanceStats.mean, distanceStats.std, nearestDist)
       : null;
     const distanceContext = distanceStats
-      ? this.#buildDistanceContext(nearestDist, distancePercentile, distanceZScore)
+      ? this.#prototypeSimilarityMetrics.buildDistanceContext(nearestDist, distancePercentile, distanceZScore)
       : null;
 
     let coverageWarning = null;
@@ -779,9 +936,9 @@ class PrototypeFitRankingService {
 
     if (gapDetected) {
       coverageWarning =
-        `No prototype within distance ${GAP_DISTANCE_THRESHOLD.toFixed(2)}. ` +
+        `No prototype within distance ${thresholds.distance.toFixed(2)}. ` +
         `Best achieves only ${(bestIntensity * 100).toFixed(1)}% intensity rate.`;
-      suggestedPrototype = this.#synthesizePrototype(kNearest, desiredWeights, axisConstraints);
+      suggestedPrototype = this.#prototypeGapAnalyzer.synthesizePrototype(kNearest, desiredWeights, axisConstraints);
     }
 
     return {
@@ -790,7 +947,7 @@ class PrototypeFitRankingService {
       kNearestNeighbors: kNearest,
       coverageWarning,
       suggestedPrototype,
-      gapThreshold: GAP_DISTANCE_THRESHOLD,
+      gapThreshold: thresholds.distance,
       distanceZScore,
       distancePercentile,
       distanceContext,
@@ -806,26 +963,7 @@ class PrototypeFitRankingService {
    * @returns {Record<string, {weights: Record<string, number>, gates: string[]}>} Definitions keyed by qualified ID
    */
   getPrototypeDefinitions(prototypeRefs) {
-    const definitions = {};
-    if (!Array.isArray(prototypeRefs)) {
-      return definitions;
-    }
-
-    for (const ref of prototypeRefs) {
-      const prototypes = this.#getPrototypesByType(ref.type);
-      const proto = prototypes.find((p) => p.id === ref.id);
-      if (proto) {
-        const key =
-          ref.type === 'emotion'
-            ? `emotions:${ref.id}`
-            : `sexualStates:${ref.id}`;
-        definitions[key] = {
-          weights: proto.weights ?? {},
-          gates: proto.gates ?? [],
-        };
-      }
-    }
-    return definitions;
+    return this.#prototypeRegistryService.getPrototypeDefinitions(prototypeRefs);
   }
 
   async #yieldToBrowser() {
@@ -846,265 +984,6 @@ class PrototypeFitRankingService {
   // Private Helper Methods
   // ============================================================================
 
-  /**
-   * Detect which prototype types are referenced in expression prerequisites.
-   * Scans JSON Logic for emotions.* and sexualStates.* variable paths.
-   * @private
-   * @param {object|null} expression - Expression with prerequisites
-   * @returns {PrototypeTypeDetection}
-   */
-  #detectReferencedPrototypeTypes(expressionOrPrerequisites) {
-    const result = { hasEmotions: false, hasSexualStates: false };
-    const prerequisites = Array.isArray(expressionOrPrerequisites)
-      ? expressionOrPrerequisites
-      : expressionOrPrerequisites?.prerequisites;
-
-    if (!prerequisites || prerequisites.length === 0) return result;
-
-    for (const prereq of prerequisites) {
-      this.#scanLogicForPrototypeTypes(prereq.logic, result);
-      // Early exit if both found
-      if (result.hasEmotions && result.hasSexualStates) break;
-    }
-
-    return result;
-  }
-
-  /**
-   * Recursively scan JSON Logic for prototype type references.
-   * @private
-   * @param {*} logic - JSON Logic node
-   * @param {PrototypeTypeDetection} result - Mutated detection result
-   */
-  #scanLogicForPrototypeTypes(logic, result) {
-    if (!logic || typeof logic !== 'object') return;
-
-    // Check var nodes
-    if (logic.var && typeof logic.var === 'string') {
-      if (logic.var.startsWith('emotions.')) {
-        result.hasEmotions = true;
-      } else if (logic.var.startsWith('sexualStates.')) {
-        result.hasSexualStates = true;
-      }
-      return;
-    }
-
-    // Check comparison operators
-    for (const op of ['>=', '>', '<=', '<', '==', '!=']) {
-      if (logic[op] && Array.isArray(logic[op])) {
-        for (const operand of logic[op]) {
-          this.#scanLogicForPrototypeTypes(operand, result);
-        }
-      }
-    }
-
-    // Recurse into nested logic
-    if (logic.and || logic.or) {
-      const clauses = logic.and || logic.or;
-      for (const clause of clauses) {
-        this.#scanLogicForPrototypeTypes(clause, result);
-      }
-    }
-  }
-
-  /**
-   * Get prototypes by type from registry.
-   * @private
-   * @param {'emotion'|'sexual'} type - Prototype type
-   * @returns {Array<{id: string, type: 'emotion'|'sexual', weights: object, gates: string[]}>}
-   */
-  #getPrototypesByType(type) {
-    const lookupKey = type === 'emotion' ? 'core:emotion_prototypes' : 'core:sexual_prototypes';
-    const lookup = this.#dataRegistry.getLookupData(lookupKey);
-
-    if (!lookup?.entries) {
-      return [];
-    }
-
-    return Object.entries(lookup.entries).map(([id, proto]) => ({
-      id,
-      type,
-      weights: proto.weights || {},
-      gates: proto.gates || [],
-    }));
-  }
-
-  /**
-   * Get all prototypes from registry, filtered by types to fetch.
-   * @private
-   * @param {PrototypeTypeDetection} [typesToFetch] - Which types to fetch
-   * @returns {Array<{id: string, type: 'emotion'|'sexual', weights: object, gates: string[]}>}
-   */
-  #getAllPrototypes(typesToFetch) {
-    const result = [];
-
-    // Default to fetching emotions only (backward compatibility)
-    const fetchEmotions = !typesToFetch || typesToFetch.hasEmotions !== false;
-    const fetchSexual = typesToFetch?.hasSexualStates === true;
-
-    if (fetchEmotions) {
-      result.push(...this.#getPrototypesByType('emotion'));
-    }
-
-    if (fetchSexual) {
-      result.push(...this.#getPrototypesByType('sexual'));
-    }
-
-    return result;
-  }
-
-  /**
-   * Extract the prototype reference from expression prerequisites.
-   * Returns the first prototype reference found (for determining "current" prototype).
-   * @private
-   * @param {object} expression
-   * @returns {PrototypeRef|null}
-   */
-  #extractExpressionPrototype(expression) {
-    if (!expression?.prerequisites) return null;
-
-    // Look for emotion/sexual conditions in prerequisites
-    for (const prereq of expression.prerequisites) {
-      const protoRef = this.#findPrototypeRefInLogic(prereq.logic);
-      if (protoRef) return protoRef;
-    }
-
-    return null;
-  }
-
-  /**
-   * Recursively find prototype reference in JSON Logic.
-   * Searches for emotions.* and sexualStates.* variable paths.
-   * @private
-   * @param {object} logic
-   * @returns {PrototypeRef|null}
-   */
-  #findPrototypeRefInLogic(logic) {
-    if (!logic || typeof logic !== 'object') return null;
-
-    // Check comparison operators
-    for (const op of ['>=', '>', '<=', '<']) {
-      if (logic[op]) {
-        const [left] = logic[op];
-        if (typeof left === 'object' && left.var) {
-          const varPath = left.var;
-          if (varPath.startsWith('emotions.')) {
-            return { id: varPath.replace('emotions.', ''), type: 'emotion' };
-          }
-          if (varPath.startsWith('sexualStates.')) {
-            return { id: varPath.replace('sexualStates.', ''), type: 'sexual' };
-          }
-        }
-      }
-    }
-
-    // Recurse into nested logic
-    if (logic.and || logic.or) {
-      const clauses = logic.and || logic.or;
-      for (const clause of clauses) {
-        const found = this.#findPrototypeRefInLogic(clause);
-        if (found) return found;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Filter contexts to those within the mood regime
-   * @param {Array<object>} contexts
-   * @param {Map<string, {min: number, max: number}>} constraints
-   * @returns {Array<object>}
-   */
-  #filterToMoodRegime(contexts, constraints) {
-    if (!constraints || constraints.size === 0) {
-      return contexts;
-    }
-
-    return contexts.filter((ctx) => {
-      const normalized = this.#getNormalizedAxes(ctx);
-      for (const [axis, constraint] of constraints) {
-        const value = resolveAxisValue(
-          axis,
-          normalized.moodAxes,
-          normalized.sexualAxes,
-          normalized.traitAxes
-        );
-        if (value < constraint.min || value > constraint.max) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }
-
-  /**
-   * Get axis value from context, normalizing to [-1, 1] or [0, 1] range.
-   * Monte Carlo contexts store raw values (mood: [-100, 100], sexual: [0, 100])
-   * but prototype gates and weights expect normalized ranges.
-   * @param {object} ctx
-   * @param {string} axis
-   * @returns {number} Normalized value in [-1, 1] for mood axes or [0, 1] for sexual axes
-   */
-  #getNormalizedAxes(ctx) {
-    const moodSource = ctx?.moodAxes ?? ctx?.mood ?? null;
-    const sexualSource = ctx?.sexualAxes ?? ctx?.sexual ?? null;
-
-    return {
-      moodAxes: normalizeMoodAxes(moodSource),
-      sexualAxes: normalizeSexualAxes(sexualSource, ctx?.sexualArousal ?? null),
-      traitAxes: normalizeAffectTraits(ctx?.affectTraits ?? null),
-    };
-  }
-
-  /**
-   * Compute gate pass rate for a prototype
-   * @param {{gates: string[]}} proto
-   * @param {Array<object>} contexts
-   * @returns {number}
-   */
-  #computeGatePassRate(proto, contexts) {
-    if (!contexts || contexts.length === 0) return 0;
-    if (!proto.gates || proto.gates.length === 0) return 1;
-
-    let passCount = 0;
-    for (const ctx of contexts) {
-      if (this.#checkAllGatesPass(proto.gates, ctx)) {
-        passCount++;
-      }
-    }
-
-    return passCount / contexts.length;
-  }
-
-  /**
-   * Check if all gates pass for a context
-   * @param {string[]} gates
-   * @param {object} ctx
-   * @returns {boolean}
-   */
-  #checkAllGatesPass(gates, ctx) {
-    const normalized = this.#getNormalizedAxes(ctx);
-    for (const gateStr of gates) {
-      let parsed;
-      try {
-        parsed = GateConstraint.parse(gateStr);
-      } catch (err) {
-        continue;
-      }
-
-      const value = resolveAxisValue(
-        parsed.axis,
-        normalized.moodAxes,
-        normalized.sexualAxes,
-        normalized.traitAxes
-      );
-      if (!parsed.isSatisfiedBy(value)) {
-        return false;
-      }
-    }
-    return true;
-  }
 
   /**
    * Compute intensity distribution for a prototype
@@ -1114,124 +993,7 @@ class PrototypeFitRankingService {
    * @returns {{p50: number, p90: number, p95: number, pAboveThreshold: number, min: number|null, max: number|null}}
    */
   #computeIntensityDistribution(proto, contexts, threshold) {
-    if (!contexts || contexts.length === 0) {
-      return {
-        p50: 0,
-        p90: 0,
-        p95: 0,
-        pAboveThreshold: 0,
-        min: null,
-        max: null,
-      };
-    }
-
-    // Filter to contexts where gates pass
-    const gatePassContexts = contexts.filter((ctx) =>
-      this.#checkAllGatesPass(proto.gates || [], ctx)
-    );
-
-    if (gatePassContexts.length === 0) {
-      return {
-        p50: 0,
-        p90: 0,
-        p95: 0,
-        pAboveThreshold: 0,
-        min: null,
-        max: null,
-      };
-    }
-
-    // Compute intensity for each context
-    const intensities = gatePassContexts.map((ctx) =>
-      this.#computeIntensity(proto.weights, ctx)
-    );
-
-    intensities.sort((a, b) => a - b);
-
-    const p50 = this.#percentile(intensities, 0.5);
-    const p90 = this.#percentile(intensities, 0.9);
-    const p95 = this.#percentile(intensities, 0.95);
-    const min = intensities[0];
-    const max = intensities[intensities.length - 1];
-
-    const aboveCount = intensities.filter((i) => i >= threshold).length;
-    const pAboveThreshold = aboveCount / intensities.length;
-
-    return { p50, p90, p95, pAboveThreshold, min, max };
-  }
-
-  /**
-   * Check if prototype gates are compatible with the mood regime constraints.
-   *
-   * @private
-   * @param {object} proto
-   * @param {Map<string, {min: number, max: number}>} axisConstraints
-   * @param {number} threshold
-   * @returns {{compatible: boolean, reason: string|null}|null}
-   */
-  #getGateCompatibility(proto, axisConstraints, threshold) {
-    if (!this.#prototypeConstraintAnalyzer) {
-      return null;
-    }
-
-    try {
-      const analysis =
-        this.#prototypeConstraintAnalyzer.analyzeEmotionThreshold(
-          proto.id,
-          proto.type,
-          threshold,
-          axisConstraints,
-          '>='
-        );
-      const blocking = analysis.gateStatus?.blockingGates ?? [];
-      return {
-        compatible: analysis.gateStatus?.allSatisfiable ?? true,
-        reason: blocking.length > 0 ? blocking[0].reason : null,
-      };
-    } catch (err) {
-      this.#logger.warn(
-        `PrototypeFitRankingService: Gate compatibility check failed for ${proto.id}: ${err.message}`
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Compute emotion intensity from weights and context
-   * @param {object} weights
-   * @param {object} ctx
-   * @returns {number}
-   */
-  #computeIntensity(weights, ctx) {
-    const normalized = this.#getNormalizedAxes(ctx);
-    let rawSum = 0;
-    let sumAbsWeights = 0;
-
-    for (const [axis, weight] of Object.entries(weights)) {
-      const value = resolveAxisValue(
-        axis,
-        normalized.moodAxes,
-        normalized.sexualAxes,
-        normalized.traitAxes
-      );
-      rawSum += weight * value;
-      sumAbsWeights += Math.abs(weight);
-    }
-
-    if (sumAbsWeights === 0) return 0;
-    return Math.max(0, Math.min(1, rawSum / sumAbsWeights));
-  }
-
-  /**
-   * Compute percentile from sorted array
-   * @param {number[]} sortedArr
-   * @param {number} p
-   * @returns {number}
-   */
-  #percentile(sortedArr, p) {
-    if (sortedArr.length === 0) return 0;
-    const idx = Math.floor(p * (sortedArr.length - 1));
-    return sortedArr[idx];
+    return this.#prototypeIntensityCalculator.computeDistribution(proto, contexts, threshold);
   }
 
   /**
@@ -1241,37 +1003,7 @@ class PrototypeFitRankingService {
    * @returns {{score: number, magnitude: number, axes: Array}}
    */
   #analyzeConflicts(weights, constraints) {
-    if (!constraints || constraints.size === 0) {
-      return { score: 0, magnitude: 0, axes: [] };
-    }
-
-    const conflictingAxes = [];
-    let conflictMagnitude = 0;
-
-    for (const [axis, constraint] of constraints) {
-      const weight = weights[axis];
-      if (weight === undefined || weight === 0) continue;
-
-      // Determine constraint direction
-      const constraintMidpoint = (constraint.min + constraint.max) / 2;
-      const constraintDirection = constraintMidpoint >= 0 ? 1 : -1;
-
-      // Check for conflict
-      const weightDirection = weight > 0 ? 1 : -1;
-      if (weightDirection !== constraintDirection) {
-        conflictingAxes.push({
-          axis,
-          weight,
-          direction: weightDirection > 0 ? 'positive' : 'negative',
-        });
-        conflictMagnitude += Math.abs(weight);
-      }
-    }
-
-    const constrainedCount = constraints.size;
-    const score = constrainedCount > 0 ? conflictingAxes.length / constrainedCount : 0;
-
-    return { score, magnitude: conflictMagnitude, axes: conflictingAxes };
+    return this.#prototypeIntensityCalculator.analyzeConflicts(weights, constraints);
   }
 
   /**
@@ -1280,411 +1012,12 @@ class PrototypeFitRankingService {
    * @returns {number}
    */
   #computeCompositeScore({ gatePassRate, pIntensityAbove, conflictScore, exclusionCompatibility }) {
-    return (
-      WEIGHT_GATE_PASS * gatePassRate +
-      WEIGHT_INTENSITY * pIntensityAbove +
-      WEIGHT_CONFLICT * (1 - conflictScore) +
-      WEIGHT_EXCLUSION * exclusionCompatibility
-    );
-  }
-
-  /**
-   * Build target signature from axis constraints
-   * @param {Map<string, {min: number, max: number}>} constraints
-   * @param {Array<object>} clauseFailures
-   * @returns {Map<string, TargetSignatureEntry>}
-   */
-  #buildTargetSignature(constraints, clauseFailures) {
-    const signature = new Map();
-
-    if (!constraints || constraints.size === 0) {
-      return signature;
-    }
-
-    for (const [axis, constraint] of constraints) {
-      const direction = this.#inferDirection(constraint);
-      const tightness = this.#computeTightness(constraint);
-      const lastMileWeight = this.#getLastMileWeightForAxis(axis, clauseFailures);
-      const importance = 0.5 * tightness + 0.5 * lastMileWeight;
-
-      signature.set(axis, { direction, tightness, lastMileWeight, importance });
-    }
-
-    return signature;
-  }
-
-  /**
-   * Infer direction from constraint
-   * @param {{min: number, max: number}} constraint
-   * @returns {number}
-   */
-  #inferDirection(constraint) {
-    const mid = (constraint.min + constraint.max) / 2;
-    if (mid > 0.1) return 1;
-    if (mid < -0.1) return -1;
-    return 0;
-  }
-
-  /**
-   * Compute constraint tightness (narrower = tighter)
-   * @param {{min: number, max: number}} constraint
-   * @returns {number}
-   */
-  #computeTightness(constraint) {
-    const range = constraint.max - constraint.min;
-    // Full range is 2 (-1 to 1), so normalize
-    return Math.max(0, 1 - range / 2);
-  }
-
-  /**
-   * Get last-mile failure weight for axis
-   * @param {string} axis
-   * @param {Array<object>} clauseFailures
-   * @returns {number}
-   */
-  #getLastMileWeightForAxis(axis, clauseFailures) {
-    if (!clauseFailures || clauseFailures.length === 0) return 0.5;
-
-    // Find failures mentioning this axis
-    for (const failure of clauseFailures) {
-      if (failure.clauseDescription && failure.clauseDescription.includes(axis)) {
-        return failure.lastMileFailRate || 0.5;
-      }
-    }
-
-    return 0.5;
-  }
-
-  /**
-   * Compute cosine similarity between target signature and prototype weights
-   * @param {Map<string, TargetSignatureEntry>} targetSignature
-   * @param {object} protoWeights
-   * @returns {number}
-   */
-  #computeCosineSimilarity(targetSignature, protoWeights) {
-    const allAxes = new Set([...targetSignature.keys(), ...Object.keys(protoWeights)]);
-
-    let dot = 0;
-    let targetMag = 0;
-    let protoMag = 0;
-
-    for (const axis of allAxes) {
-      const entry = targetSignature.get(axis);
-      const t = entry ? entry.direction * entry.importance : 0;
-      const p = protoWeights[axis] || 0;
-
-      dot += t * p;
-      targetMag += t * t;
-      protoMag += p * p;
-    }
-
-    const mag = Math.sqrt(targetMag) * Math.sqrt(protoMag);
-    return mag === 0 ? 0 : dot / mag;
-  }
-
-  /**
-   * Convert target signature to weights map
-   * @param {Map<string, TargetSignatureEntry>} targetSignature
-   * @returns {object}
-   */
-  #targetSignatureToWeights(targetSignature) {
-    const weights = {};
-    for (const [axis, entry] of targetSignature) {
-      weights[axis] = entry.direction * entry.importance;
-    }
-    return weights;
-  }
-
-  /**
-   * Infer gates from constraints
-   * @param {Map<string, {min: number, max: number}>} constraints
-   * @returns {object}
-   */
-  #inferGatesFromConstraints(constraints) {
-    const gates = {};
-    for (const [axis, constraint] of constraints) {
-      gates[axis] = {
-        min: constraint.min,
-        max: constraint.max,
-      };
-    }
-    return gates;
-  }
-
-  /**
-   * Compute Euclidean weight distance
-   * @param {object} desiredWeights
-   * @param {object} protoWeights
-   * @returns {number}
-   */
-  #computeWeightDistance(desiredWeights, protoWeights) {
-    const allAxes = new Set([...Object.keys(desiredWeights), ...Object.keys(protoWeights)]);
-
-    let sumSquares = 0;
-    for (const axis of allAxes) {
-      const desired = desiredWeights[axis] || 0;
-      const proto = protoWeights[axis] || 0;
-      sumSquares += Math.pow(desired - proto, 2);
-    }
-
-    // Normalize by number of axes
-    return allAxes.size > 0 ? Math.sqrt(sumSquares / allAxes.size) : 0;
-  }
-
-  /**
-   * Compute gate compatibility distance
-   * @param {object} desiredGates
-   * @param {string[]} protoGates
-   * @returns {number}
-   */
-  #computeGateDistance(desiredGates, protoGates) {
-    if (!protoGates || protoGates.length === 0) return 0;
-
-    let conflicts = 0;
-    let total = Object.keys(desiredGates).length;
-
-    for (const [axis, desired] of Object.entries(desiredGates)) {
-      for (const gateStr of protoGates) {
-        let parsed;
-        try {
-          parsed = GateConstraint.parse(gateStr);
-        } catch (err) {
-          continue;
-        }
-        if (parsed.axis === axis) {
-          // Check if proto gate conflicts with desired range
-          if (parsed.operator === '>=' && desired.max < parsed.value) {
-            conflicts++;
-          } else if (parsed.operator === '<=' && desired.min > parsed.value) {
-            conflicts++;
-          } else if (parsed.operator === '>' && desired.max <= parsed.value) {
-            conflicts++;
-          } else if (parsed.operator === '<' && desired.min >= parsed.value) {
-            conflicts++;
-          } else if (
-            parsed.operator === '==' &&
-            (parsed.value < desired.min || parsed.value > desired.max)
-          ) {
-            conflicts++;
-          }
-        }
-      }
-    }
-
-    return total > 0 ? conflicts / total : 0;
-  }
-
-  /**
-   * Build gate constraint ranges from prototype gate strings.
-   * @param {string[]} protoGates
-   * @returns {object}
-   */
-  #buildGateConstraints(protoGates) {
-    const constraints = {};
-    if (!protoGates || protoGates.length === 0) {
-      return constraints;
-    }
-
-    for (const gateStr of protoGates) {
-      let parsed;
-      try {
-        parsed = GateConstraint.parse(gateStr);
-      } catch (err) {
-        continue;
-      }
-
-      const axis = parsed.axis;
-      if (!constraints[axis]) {
-        constraints[axis] = { min: -1, max: 1 };
-      }
-
-      if (parsed.operator === '>=' || parsed.operator === '>') {
-        constraints[axis].min = Math.max(constraints[axis].min, parsed.value);
-      } else if (parsed.operator === '<=' || parsed.operator === '<') {
-        constraints[axis].max = Math.min(constraints[axis].max, parsed.value);
-      } else if (parsed.operator === '==') {
-        constraints[axis].min = parsed.value;
-        constraints[axis].max = parsed.value;
-      }
-    }
-
-    return constraints;
-  }
-
-  /**
-   * Compute combined distance between two prototypes for calibration.
-   * @param {object} protoA
-   * @param {object} protoB
-   * @returns {number}
-   */
-  #computePrototypeCombinedDistance(protoA, protoB) {
-    const weightDist = this.#computeWeightDistance(protoA.weights || {}, protoB.weights || {});
-    const gatesA = this.#buildGateConstraints(protoA.gates);
-    const gatesB = this.#buildGateConstraints(protoB.gates);
-    const gateDistAB = this.#computeGateDistance(gatesA, protoB.gates);
-    const gateDistBA = this.#computeGateDistance(gatesB, protoA.gates);
-    const gateDist = (gateDistAB + gateDistBA) / 2;
-
-    return 0.7 * weightDist + 0.3 * gateDist;
-  }
-
-  /**
-   * Compute nearest-neighbor distance distribution for prototypes.
-   * @param {string} cacheKey
-   * @param {Array<object>} prototypes
-   * @returns {{mean: number, std: number, sortedDistances: number[]} | null}
-   */
-  #getDistanceDistribution(cacheKey, prototypes) {
-    if (this.#distanceDistributionCache.has(cacheKey)) {
-      return this.#distanceDistributionCache.get(cacheKey);
-    }
-
-    if (!prototypes || prototypes.length < 2) {
-      this.#distanceDistributionCache.set(cacheKey, null);
-      return null;
-    }
-
-    const nearestDistances = [];
-
-    for (let i = 0; i < prototypes.length; i++) {
-      let nearest = Infinity;
-      for (let j = 0; j < prototypes.length; j++) {
-        if (i === j) continue;
-        const dist = this.#computePrototypeCombinedDistance(prototypes[i], prototypes[j]);
-        if (dist < nearest) {
-          nearest = dist;
-        }
-      }
-      nearestDistances.push(nearest);
-    }
-
-    const sortedDistances = [...nearestDistances].sort((a, b) => a - b);
-    const mean = sortedDistances.reduce((sum, value) => sum + value, 0) / sortedDistances.length;
-    const variance = sortedDistances.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0)
-      / sortedDistances.length;
-    const std = Math.sqrt(variance);
-
-    const stats = { mean, std, sortedDistances };
-    this.#distanceDistributionCache.set(cacheKey, stats);
-    return stats;
-  }
-
-  /**
-   * Build cache key for distance stats based on prototype types.
-   * @param {PrototypeTypeDetection} typesToFetch
-   * @returns {string}
-   */
-  #buildDistanceStatsCacheKey(typesToFetch) {
-    const emotions = typesToFetch?.hasEmotions ? 'emotion' : 'no-emotion';
-    const sexual = typesToFetch?.hasSexualStates ? 'sexual' : 'no-sexual';
-    return `${emotions}|${sexual}`;
-  }
-
-  /**
-   * Compute percentile for distance value against sorted distances.
-   * @param {number[]} sortedDistances
-   * @param {number} value
-   * @returns {number}
-   */
-  #computeDistancePercentile(sortedDistances, value) {
-    if (!sortedDistances || sortedDistances.length === 0) {
-      return 0;
-    }
-
-    let count = 0;
-    for (const dist of sortedDistances) {
-      if (value >= dist) {
-        count++;
-      } else {
-        break;
-      }
-    }
-
-    return count / sortedDistances.length;
-  }
-
-  /**
-   * Compute z-score for distance value.
-   * @param {number} mean
-   * @param {number} std
-   * @param {number} value
-   * @returns {number}
-   */
-  #computeDistanceZScore(mean, std, value) {
-    if (std <= 0) {
-      return 0;
-    }
-
-    return (value - mean) / std;
-  }
-
-  /**
-   * Build human-readable context string for distance calibration.
-   * @param {number} distance
-   * @param {number|null} percentile
-   * @param {number|null} zScore
-   * @returns {string|null}
-   */
-  #buildDistanceContext(distance, percentile, zScore) {
-    if (percentile === null || percentile === undefined) {
-      return null;
-    }
-
-    const percentileLabel = Math.round(percentile * 100);
-    let context = `Distance ${distance.toFixed(2)} is farther than ${percentileLabel}% of prototype nearest-neighbor distances`;
-
-    if (typeof zScore === 'number') {
-      context += ` (z=${zScore.toFixed(2)})`;
-    }
-
-    return `${context}.`;
-  }
-
-  /**
-   * Synthesize a prototype from nearest neighbors
-   * @param {Array<{prototypeId: string, combinedDistance: number}>} kNearest
-   * @param {object} desiredWeights
-   * @param {Map<string, {min: number, max: number}>} constraints
-   * @returns {object}
-   */
-  #synthesizePrototype(kNearest, desiredWeights, constraints) {
-    const weights = {};
-    let totalWeight = 0;
-
-    // Distance-weighted average of neighbors
-    for (const neighbor of kNearest) {
-      const w = 1 / (neighbor.combinedDistance + 0.01);
-      totalWeight += w;
-
-      const proto = this.#getAllPrototypes().find((p) => p.id === neighbor.prototypeId);
-      if (proto) {
-        for (const [axis, value] of Object.entries(proto.weights)) {
-          weights[axis] = (weights[axis] || 0) + value * w;
-        }
-      }
-    }
-
-    // Normalize
-    for (const axis of Object.keys(weights)) {
-      weights[axis] /= totalWeight;
-    }
-
-    // Derive gates from constraints
-    const gates = [];
-    for (const [axis, constraint] of constraints) {
-      if (constraint.min > -1) {
-        gates.push(`${axis} >= ${constraint.min.toFixed(2)}`);
-      }
-      if (constraint.max < 1) {
-        gates.push(`${axis} <= ${constraint.max.toFixed(2)}`);
-      }
-    }
-
-    return {
-      weights,
-      gates,
-      rationale: `Synthesized from ${kNearest.length} nearest neighbors using distance-weighted averaging`,
-    };
+    return this.#prototypeIntensityCalculator.computeCompositeScore({
+      gatePassRate,
+      pIntensityAbove,
+      conflictScore,
+      exclusionCompatibility,
+    });
   }
 }
 

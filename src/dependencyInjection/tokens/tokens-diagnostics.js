@@ -36,6 +36,13 @@ export const diagnosticsTokens = freeze({
   IPrototypeConstraintAnalyzer: 'IPrototypeConstraintAnalyzer',
 
   // Prototype Fit Ranking (Monte Carlo prototype fit analysis)
+  IPrototypeRegistryService: 'IPrototypeRegistryService',
+  IPrototypeTypeDetector: 'IPrototypeTypeDetector',
+  IContextAxisNormalizer: 'IContextAxisNormalizer',
+  IPrototypeGateChecker: 'IPrototypeGateChecker',
+  IPrototypeIntensityCalculator: 'IPrototypeIntensityCalculator',
+  IPrototypeSimilarityMetrics: 'IPrototypeSimilarityMetrics',
+  IPrototypeGapAnalyzer: 'IPrototypeGapAnalyzer',
   IPrototypeFitRankingService: 'IPrototypeFitRankingService',
 
   // Prototype Synthesis (PROCRESUGREC-002)
