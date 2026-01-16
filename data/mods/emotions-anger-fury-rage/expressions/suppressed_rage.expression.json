@@ -330,5 +330,6 @@
         "tactile": "The air feels charged. A body is rigid with restraint-heat, tension, and tiny tremors contained under stillness."
     },
     "category": "anger",
-    "diagnosticStatus": "unobserved"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

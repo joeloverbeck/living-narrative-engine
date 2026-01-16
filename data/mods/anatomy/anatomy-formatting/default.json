@@ -137,6 +137,7 @@
     "descriptors:color_basic",
     "descriptors:color_extended",
     "descriptors:shape_general",
+    "descriptors:lip_profile",
     "descriptors:shape_eye",
     "descriptors:hair_style",
     "descriptors:texture",
@@ -194,7 +195,8 @@
     "profession",
     "cleanliness",
     "condition",
-    "demeanor"
+    "demeanor",
+    "profile"
   ],
   "equipmentIntegration": {
     "enabled": true,

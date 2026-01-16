@@ -29,6 +29,7 @@
       "height.component.json",
       "length_category.component.json",
       "length_hair.component.json",
+      "lip_profile.component.json",
       "luminosity.component.json",
       "nail_condition.component.json",
       "neckline.component.json",

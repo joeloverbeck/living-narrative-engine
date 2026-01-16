@@ -21,6 +21,13 @@ import ExpressionStatusService from '../../expressionDiagnostics/services/Expres
 import PathSensitiveAnalyzer from '../../expressionDiagnostics/services/PathSensitiveAnalyzer.js';
 import PrototypeConstraintAnalyzer from '../../expressionDiagnostics/services/PrototypeConstraintAnalyzer.js';
 import PrototypeFitRankingService from '../../expressionDiagnostics/services/PrototypeFitRankingService.js';
+import ContextAxisNormalizer from '../../expressionDiagnostics/services/ContextAxisNormalizer.js';
+import PrototypeGateChecker from '../../expressionDiagnostics/services/PrototypeGateChecker.js';
+import PrototypeIntensityCalculator from '../../expressionDiagnostics/services/PrototypeIntensityCalculator.js';
+import PrototypeRegistryService from '../../expressionDiagnostics/services/PrototypeRegistryService.js';
+import PrototypeSimilarityMetrics from '../../expressionDiagnostics/services/PrototypeSimilarityMetrics.js';
+import PrototypeGapAnalyzer from '../../expressionDiagnostics/services/PrototypeGapAnalyzer.js';
+import PrototypeTypeDetector from '../../expressionDiagnostics/services/PrototypeTypeDetector.js';
 import EmotionCalculatorAdapter from '../../expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import SensitivityAnalyzer from '../../expressionDiagnostics/services/SensitivityAnalyzer.js';
 import PrototypeSynthesisService from '../../expressionDiagnostics/services/PrototypeSynthesisService.js';
@@ -219,6 +226,87 @@ export function registerExpressionDiagnosticsServices(container) {
   );
   safeDebug(`Registered ${diagnosticsTokens.IPrototypeConstraintAnalyzer}`);
 
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeRegistryService,
+    (c) =>
+      new PrototypeRegistryService({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeRegistryService}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeTypeDetector,
+    (c) =>
+      new PrototypeTypeDetector({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeTypeDetector}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IContextAxisNormalizer,
+    (c) =>
+      new ContextAxisNormalizer({
+        logger: c.resolve(tokens.ILogger),
+        prototypeConstraintAnalyzer: c.resolve(
+          diagnosticsTokens.IPrototypeConstraintAnalyzer
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IContextAxisNormalizer}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeGateChecker,
+    (c) =>
+      new PrototypeGateChecker({
+        logger: c.resolve(tokens.ILogger),
+        contextAxisNormalizer: c.resolve(diagnosticsTokens.IContextAxisNormalizer),
+        prototypeConstraintAnalyzer: c.resolve(
+          diagnosticsTokens.IPrototypeConstraintAnalyzer
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeGateChecker}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeIntensityCalculator,
+    (c) =>
+      new PrototypeIntensityCalculator({
+        logger: c.resolve(tokens.ILogger),
+        contextAxisNormalizer: c.resolve(diagnosticsTokens.IContextAxisNormalizer),
+        prototypeGateChecker: c.resolve(diagnosticsTokens.IPrototypeGateChecker),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeIntensityCalculator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeSimilarityMetrics,
+    (c) =>
+      new PrototypeSimilarityMetrics({
+        logger: c.resolve(tokens.ILogger),
+        prototypeGateChecker: c.resolve(diagnosticsTokens.IPrototypeGateChecker),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeSimilarityMetrics}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeGapAnalyzer,
+    (c) =>
+      new PrototypeGapAnalyzer({
+        logger: c.resolve(tokens.ILogger),
+        prototypeSimilarityMetrics: c.resolve(
+          diagnosticsTokens.IPrototypeSimilarityMetrics
+        ),
+        prototypeGateChecker: c.resolve(diagnosticsTokens.IPrototypeGateChecker),
+        prototypeRegistryService: c.resolve(
+          diagnosticsTokens.IPrototypeRegistryService
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeGapAnalyzer}`);
+
   // Prototype Fit Ranking Service (Monte Carlo prototype fit analysis)
   registrar.singletonFactory(
     diagnosticsTokens.IPrototypeFitRankingService,
@@ -228,6 +316,22 @@ export function registerExpressionDiagnosticsServices(container) {
         logger: c.resolve(tokens.ILogger),
         prototypeConstraintAnalyzer: c.resolve(
           diagnosticsTokens.IPrototypeConstraintAnalyzer
+        ),
+        prototypeRegistryService: c.resolve(
+          diagnosticsTokens.IPrototypeRegistryService
+        ),
+        prototypeTypeDetector: c.resolve(
+          diagnosticsTokens.IPrototypeTypeDetector
+        ),
+        contextAxisNormalizer: c.resolve(
+          diagnosticsTokens.IContextAxisNormalizer
+        ),
+        prototypeGateChecker: c.resolve(diagnosticsTokens.IPrototypeGateChecker),
+        prototypeIntensityCalculator: c.resolve(
+          diagnosticsTokens.IPrototypeIntensityCalculator
+        ),
+        prototypeSimilarityMetrics: c.resolve(
+          diagnosticsTokens.IPrototypeSimilarityMetrics
         ),
       })
   );
