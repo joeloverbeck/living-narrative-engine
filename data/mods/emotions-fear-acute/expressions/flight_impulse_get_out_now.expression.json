@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-fear-acute:flight_impulse_get_out_now",
-    "description": "Escape-mobilization beat: fear/terror peaks into movement-readiness\u2014an urgent, single-track impulse to create distance. Distinct from freeze (immobility) and panic (loss-of-control).",
+    "description": "Escape-mobilization beat: fear/terror peaks into movement-readiness—an urgent, single-track impulse to create distance. Distinct from freeze (immobility) and panic (loss-of-control).",
     "category": "threat",
-    "actor_description": "I need out. My thoughts collapse into one clean command\u2014move, now\u2014and my body answers before I finish the sentence. My breath goes sharp and my muscles load like springs, eyes hunting the fastest line away.",
-    "description_text": "{actor} snaps into motion-readiness\u2014weight shifting, shoulders tight, gaze darting for an exit like the room just turned hostile. Their breathing goes quick and clipped, movements decisive and angled away.",
+    "actor_description": "I need out. My thoughts collapse into one clean command—move, now—and my body answers before I finish the sentence. My breath goes sharp and my muscles load like springs, eyes hunting the fastest line away.",
+    "description_text": "{actor} snaps into motion-readiness—weight shifting, shoulders tight, gaze darting for an exit like the room just turned hostile. Their breathing goes quick and clipped, movements decisive and angled away.",
     "priority": 82,
     "prerequisites": [
         {
@@ -185,9 +185,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a quick, sharp inhale and a burst of hurried movement\u2014feet scuffing, fabric shifting, breath coming too fast to stay quiet.",
-        "tactile": "The air feels tense around them\u2014muscles coiled, hands restless, a jittery readiness like they might bolt if anything shifts wrong.",
+        "auditory": "I hear a quick, sharp inhale and a burst of hurried movement—feet scuffing, fabric shifting, breath coming too fast to stay quiet.",
+        "tactile": "The air feels tense around them—muscles coiled, hands restless, a jittery readiness like they might bolt if anything shifts wrong.",
         "limited": "{actor} looks suddenly urgent and keyed-up, attention locked on getting away."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

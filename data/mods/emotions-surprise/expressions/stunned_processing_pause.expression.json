@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-surprise:stunned_processing_pause",
-    "description": "Cognitive shock without panic\u2014attention locks hard while the mind stalls to re-parse what it just took in. The body isn\u2019t fleeing; it\u2019s buffering.",
+    "description": "Cognitive shock without panic—attention locks hard while the mind stalls to re-parse what it just took in. The body isn’t fleeing; it’s buffering.",
     "category": "attention",
-    "actor_description": "For a second my brain just... stops. I can feel my attention clamp down like a vise, but the meaning won\u2019t load\u2014thoughts queue up and then jam. My posture holds mid-motion, breath shallow, eyes fixed like I\u2019m re-reading reality. It isn\u2019t terror; it\u2019s the lag between hearing it and understanding it.",
-    "description_text": "{actor} goes still in a focused, baffled pause\u2014gaze locked, mouth slightly parted, as if replaying something internally. Their movements resume a beat late, careful and recalibrated rather than panicked.",
+    "actor_description": "For a second my brain just... stops. I can feel my attention clamp down like a vise, but the meaning won’t load—thoughts queue up and then jam. My posture holds mid-motion, breath shallow, eyes fixed like I’m re-reading reality. It isn’t terror; it’s the lag between hearing it and understanding it.",
+    "description_text": "{actor} goes still in a focused, baffled pause—gaze locked, mouth slightly parted, as if replaying something internally. Their movements resume a beat late, careful and recalibrated rather than panicked.",
     "priority": 72,
     "prerequisites": [
         {
@@ -192,7 +192,7 @@
                                             }
                                         ]
                                     },
-                                    0.20
+                                    0.2
                                 ]
                             }
                         ]
@@ -287,8 +287,9 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a sharp intake that doesn\u2019t become a scream\u2014more like someone swallowed their next sentence. A beat of silence follows, then a careful, delayed \"...wait.\"",
-        "tactile": "The air feels suddenly tight, like the room is holding its breath. There\u2019s a tiny tremor in still hands\u2014muscles braced to move, waiting for the brain to decide how."
+        "auditory": "I hear a sharp intake that doesn’t become a scream—more like someone swallowed their next sentence. A beat of silence follows, then a careful, delayed \"...wait.\"",
+        "tactile": "The air feels suddenly tight, like the room is holding its breath. There’s a tiny tremor in still hands—muscles braced to move, waiting for the brain to decide how."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0002
 }

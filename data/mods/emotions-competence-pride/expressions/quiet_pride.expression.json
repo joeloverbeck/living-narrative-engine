@@ -1,0 +1,204 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-competence-pride:quiet_pride",
+    "description": "Subtle, self-assured satisfaction-an internal 'I did that' settling into confident posture.",
+    "priority": 61,
+    "prerequisites": [
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.pride"
+                                    },
+                                    {
+                                        "var": "previousEmotions.pride"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.small_victory"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.small_victory"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.small_victory"
+                                    },
+                                    {
+                                        "var": "previousEmotions.small_victory"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a change signal: pride rises meaningfully, or small_victory crosses/rises into an earned-win band—so this doesn't spam as a static personality trait."
+        },
+        {
+            "logic": {
+                "and": [
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.pride"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.small_victory"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.envy"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.triumph"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.euphoria"
+                            },
+                            0.45
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a genuine self-regard/earned-win posture (pride or small_victory high) with positive self-evaluation and agency, low shame contamination, and without tipping into big-win fireworks (triumph/euphoria)."
+        }
+    ],
+    "actor_description": "It lands in me like a click-quiet, mechanical certainty. My body believes it before my mind tries to argue it down: shoulders set, spine lengthening, breath deeper. I don't feel the need to announce anything. I just know, cleanly, that I did what I said I would do. The satisfaction isn't loud-it's steady, like weight finally balanced where it belongs.",
+    "description_text": "{actor} straightens almost imperceptibly, as if a string has been drawn through their posture. The expression that follows is small-corner of the mouth, a brief lift of the chin-but it holds. They look less scattered, more centered, like a person who has confirmed something about themselves.",
+    "alternate_descriptions": {
+        "auditory": "I hear a slow exhale that sounds earned, followed by a quiet, involuntary sound-half hum, half laugh-kept deliberately small."
+    },
+    "category": "affection",
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0066
+}

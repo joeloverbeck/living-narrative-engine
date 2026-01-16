@@ -1,0 +1,233 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-executive-control:determined_focus",
+    "description": "Goal-directed determination: engaged resolve with forward pressure-friction acknowledged, not feared.",
+    "priority": 76,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.determination"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.executive_focus"
+                            },
+                            0.52
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.interest"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            75
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.flow"
+                            },
+                            0.8
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.determination"
+                                    },
+                                    {
+                                        "var": "emotions.enthusiasm"
+                                    }
+                                ]
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.enthusiasm"
+                            },
+                            0.7
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.release"
+                                    },
+                                    {
+                                        "var": "previousEmotions.release"
+                                    }
+                                ]
+                            },
+                            0.15
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.executive_focus"
+                                    },
+                                    0.52
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    0.52
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.executive_focus"
+                                    },
+                                    {
+                                        "var": "previousEmotions.executive_focus"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.determination"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.determination"
+                                    },
+                                    0.55
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.determination"
+                                    },
+                                    {
+                                        "var": "previousEmotions.determination"
+                                    }
+                                ]
+                            },
+                            0.06
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.agency_control"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.agency_control"
+                                    }
+                                ]
+                            },
+                            10
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "I stop negotiating with myself. The noise falls back and the next step comes forward-simple, doable. My attention narrows until it has edges; everything irrelevant goes slightly dim. Breath steadies. Jaw tightens once, then settles. I can feel my body choosing efficiency: smaller movements, cleaner timing, no wasted gestures. The fear doesn't have to be gone; it just doesn't get a vote. I pick the line I'm going to walk and start walking it.",
+    "description_text": "{actor} becomes precise. Their gaze fixes and stops wandering. Movements shorten-hands doing only what they need to, nothing ornamental. The set of their mouth hardens into intent, and they start acting in a straight line, as if they've already decided what matters and everything else can wait.",
+    "alternate_descriptions": {
+        "auditory": "I hear speech flatten into clarity-fewer words, more certainty, like someone cutting straight to instructions.",
+        "tactile": "Someone's presence turns \"solid\"-movements deliberate, weight planted, no fidgeting.",
+        "olfactory": "There's warm effort in the air-work-breath, not panic-breath."
+    },
+    "category": "agency",
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0009
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-gratitude",
+  "version": "1.0.0",
+  "name": "Emotions - Gratitude",
+  "description": "Gratitude expressions including clean thankfulness and costly/indebted gratitude variants.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "awkward_indebted_gratitude.expression.json",
+      "quiet_gratitude.expression.json",
+      "tearful_gratitude.expression.json"
+    ]
+  }
+}

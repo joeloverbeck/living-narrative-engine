@@ -68,10 +68,20 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 12 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeFitRankingService + PrototypeSynthesisService + SensitivityAnalyzer)', () => {
+    it('should register exactly 18 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeFitRankingService + PrototypeSynthesisService + SensitivityAnalyzer + ExpressionEvaluator + FailureExplainer + GateEvaluator + PrototypeEvaluator + ViolationEstimator + VariablePathValidator)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(12);
+      expect(mockContainer.register).toHaveBeenCalledTimes(18);
+    });
+
+    it('should register ViolationEstimator', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IMonteCarloViolationEstimator,
+        expect.any(Function),
+        expect.any(Object)
+      );
     });
 
     it('should register PrototypeFitRankingService', () => {
@@ -89,6 +99,16 @@ describe('expressionDiagnosticsRegistrations', () => {
 
       expect(mockContainer.register).toHaveBeenCalledWith(
         diagnosticsTokens.IExpressionStatusService,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register ExpressionEvaluator', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IMonteCarloExpressionEvaluator,
         expect.any(Function),
         expect.any(Object)
       );
@@ -155,7 +175,7 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(12);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(18);
     });
   });
 

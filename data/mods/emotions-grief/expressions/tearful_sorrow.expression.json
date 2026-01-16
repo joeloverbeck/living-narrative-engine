@@ -265,5 +265,6 @@
         "tactile": "Someone is trembling-small, involuntary shakes that travel through their posture as if they're trying to hold themselves together from the inside."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0013
 }

@@ -1,0 +1,241 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-trust-repair:repair_warmth_return",
+    "description": "Interpersonal repair warmth: the body unbraces and the connection feels usable again. Relief comes first, then a quiet warmth that says: we're okay, we can move forward.",
+    "category": "affection",
+    "actor_description": "Something in me lets go—like I'd been holding my breath and only now notice it. The tight, suspicious edge drains away, replaced by a soft warmth that makes closeness feel safe again. I feel a small tug toward kindness—an urge to meet them gently, to rejoin the same side. It isn't euphoric; it's steadier than that, like the ground coming back under my feet.",
+    "description_text": "{actor} visibly unbraces—shoulders easing, breath deepening, gaze less guarded. Their posture turns warmer and more open, as if the distance between them has become safe to cross again.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.gratitude"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    0.25
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            0
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.suspicion"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.resentment"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.trust"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.trust"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.guilt"
+                                            },
+                                            {
+                                                "var": "emotions.guilt"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "previousMoodAxes.threat"
+                                                    },
+                                                    {
+                                                        "var": "moodAxes.threat"
+                                                    }
+                                                ]
+                                            },
+                                            12
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.affiliation"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.affiliation"
+                                                    }
+                                                ]
+                                            },
+                                            10
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.35
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires trust restoration with a repair signature (affection/gratitude or modest relief) and a clear unbracing signal (release), grounded in low threat and positive affiliation. Caps suspicion and hot anger (rage/resentment) so it doesn't misfire during active conflict. Triggers only on a trust crossing, a sharp guilt drop, a threat+affiliation shift, or a release crossing/spike."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear the tension leave in a long exhale; when words come, they sound quieter—less edged, more careful to land softly.",
+        "tactile": "The air feels less tight. Movements stop being braced; there's a subtle loosening in the shoulders and hands, like the body has decided it can unclench.",
+        "limited": "Something settles between us. The guardedness eases and a warmer, steadier connection returns."
+    },
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0053
+}

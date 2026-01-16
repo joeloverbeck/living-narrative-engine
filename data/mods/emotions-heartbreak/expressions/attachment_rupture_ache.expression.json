@@ -3,8 +3,8 @@
     "id": "emotions-heartbreak:attachment_rupture_ache",
     "description": "Heartbreak: an attachment injury where love stays online while the bond feels torn. Attention narrows and circles back; hope dims; the body keeps reaching for closeness that no longer feels secure.",
     "category": "loss",
-    "actor_description": "Love is still there, embarrassingly alive, and that\u2019s what makes it hurt. My mind keeps snapping back to them like a tongue to a broken tooth\u2014testing the gap, flinching, returning anyway. My chest feels hollow and hot at once, and the future suddenly looks thinner, like it lost a room I was counting on. I can\u2019t quite stop reaching, even if it\u2019s only with my attention.",
-    "description_text": "{actor} looks caught on something they can't set down\u2014their gaze lingering, attention looping back, breath coming a little shallow. Their expression carries a tender ache that doesn\u2019t harden into anger, more like a quiet wound staying open while they try to stand upright.",
+    "actor_description": "Love is still there, embarrassingly alive, and that’s what makes it hurt. My mind keeps snapping back to them like a tongue to a broken tooth—testing the gap, flinching, returning anyway. My chest feels hollow and hot at once, and the future suddenly looks thinner, like it lost a room I was counting on. I can’t quite stop reaching, even if it’s only with my attention.",
+    "description_text": "{actor} looks caught on something they can't set down—their gaze lingering, attention looping back, breath coming a little shallow. Their expression carries a tender ache that doesn’t harden into anger, more like a quiet wound staying open while they try to stand upright.",
     "priority": 82,
     "prerequisites": [
         {
@@ -150,9 +150,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "My voice goes careful and thin, as if I have to measure every word to keep it from breaking. There\u2019s a long swallow between sentences, and my breathing keeps hitching like it forgot the rhythm.",
-        "tactile": "It feels like pressure under my ribs\u2014tight, tender, persistent\u2014paired with restless hands that keep opening and closing with nothing to hold.",
-        "limited": "{actor} seems strained with a quiet, lingering ache\u2014present, attentive, but wounded in a way that doesn\u2019t turn sharp."
+        "auditory": "My voice goes careful and thin, as if I have to measure every word to keep it from breaking. There’s a long swallow between sentences, and my breathing keeps hitching like it forgot the rhythm.",
+        "tactile": "It feels like pressure under my ribs—tight, tender, persistent—paired with restless hands that keep opening and closing with nothing to hold.",
+        "limited": "{actor} seems strained with a quiet, lingering ache—present, attentive, but wounded in a way that doesn’t turn sharp."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

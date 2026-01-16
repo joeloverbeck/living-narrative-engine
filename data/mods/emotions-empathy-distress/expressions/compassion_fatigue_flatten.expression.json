@@ -158,5 +158,6 @@
         "tactile": "The air around them feels heavy and still, like a room after the last guest leaves—no edge, no spark, just a tired pressure settling into everything.",
         "limited": "{actor} seems emotionally depleted—still attentive in principle, but flattened and slower, as if their capacity has run out."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

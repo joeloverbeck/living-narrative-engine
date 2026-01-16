@@ -178,5 +178,6 @@
         "tactile": "The air feels tight against the skin; someone’s shoulders hold a careful tension even while their face stays pleasantly open, like the body is braced under the smile.",
         "limited": "I catch a too-bright smile and unusually accommodating body language—pleasant on the surface, but edged with caution."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

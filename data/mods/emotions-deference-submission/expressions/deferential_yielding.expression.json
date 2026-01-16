@@ -158,5 +158,6 @@
         "tactile": "Their movements shrink: shoulders draw in, hands stay close, weight shifting as if making room for someone else to take the space.",
         "limited": "{actor} becomes noticeably compliant, giving ground quickly with a guarded, uneasy restraint."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0004
 }

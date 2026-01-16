@@ -16,20 +16,29 @@
             ]
           },
           {
-            "<=": [
+            "and": [
               {
-                "abs": {
-                  "-": [
-                    {
-                      "var": "emotions.shame"
-                    },
-                    {
-                      "var": "previousEmotions.shame"
-                    }
-                  ]
-                }
+                "<=": [
+                  {
+                    "-": [
+                      { "var": "emotions.shame" },
+                      { "var": "previousEmotions.shame" }
+                    ]
+                  },
+                  0.08
+                ]
               },
-              0.08
+              {
+                ">=": [
+                  {
+                    "-": [
+                      { "var": "emotions.shame" },
+                      { "var": "previousEmotions.shame" }
+                    ]
+                  },
+                  -0.08
+                ]
+              }
             ]
           },
           {

@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-competence-pride",
+  "version": "1.0.0",
+  "name": "Emotions - Competence/Pride",
+  "description": "Earned reward and success state expressions - quiet pride, satisfaction, victory afterglow, and triumphant release.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "earned_satisfaction_settle.expression.json",
+      "quiet_pride.expression.json",
+      "triumphant_release.expression.json",
+      "victory_afterglow_glow.expression.json"
+    ]
+  }
+}

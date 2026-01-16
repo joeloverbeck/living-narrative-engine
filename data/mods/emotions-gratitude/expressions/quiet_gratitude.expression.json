@@ -1,0 +1,210 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-gratitude:quiet_gratitude",
+    "description": "Quiet gratitude—an everyday, softened 'thank you' feeling that settles in without turning tearful or dramatic. Warmth spreads through attention and posture; the body eases as appreciation becomes present and steady rather than urgent.",
+    "category": "affection",
+    "actor_description": "It lands softly in my chest, like warmth spreading under the ribs. My thoughts stop reaching for the next thing and just rest on what's here, simple and real. I feel my jaw unclench and my breath slow down, and the urge is just to acknowledge it—no performance, just sincerity.",
+    "description_text": "{actor} softens in a small, unmistakable way—shoulders lowering, gaze warmer, mouth easing into a faint, genuine smile. They seem briefly steadier and more present, as if appreciation has quieted the noise.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.gratitude"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.sadness"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.grief"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.withdrawn_isolation"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.gratitude"
+                                            },
+                                            {
+                                                "var": "previousEmotions.gratitude"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.relief"
+                                            },
+                                            {
+                                                "var": "previousEmotions.relief"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.gratitude"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.gratitude"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            },
+                                            25
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "previousMoodAxes.threat"
+                                                    },
+                                                    {
+                                                        "var": "moodAxes.threat"
+                                                    }
+                                                ]
+                                            },
+                                            12
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires moderate-high gratitude with warm affiliation and positive valence, under low (or falling) threat and moderate-low arousal. Blocks tearful loss beats (sadness/grief/despair), cynicism drift, and needy hijack (lonely_yearning/withdrawn_isolation). Triggers only on a gratitude/relief rise or a clear threat drop/crossing to avoid spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear the softness in it—voice quieter, steadier, words landing with careful emphasis instead of speed or bravado.",
+        "tactile": "The air around them feels less sharp; there's a subtle ease, like tension leaving the shoulders and hands at the same time.",
+        "limited": "{actor} pauses, then gives a small, genuine sign of appreciation—calmer eyes, softened posture, and a restrained warmth."
+    },
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0188
+}

@@ -206,5 +206,6 @@
         "auditory": "I hear breathing fractures into rapid, shallow pulls—air sucked in hard but never finishing the exhale. There's a choked, high sound caught in the throat, almost a whimper swallowed back. Movement sounds jerky, abrupt: fabric rustling in stops and starts, feet shifting without going anywhere, maybe a hand slapping or scraping against a surface searching for something solid."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0019
 }

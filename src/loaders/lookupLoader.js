@@ -3,6 +3,8 @@
  */
 
 import { SimpleItemLoader } from './simpleItemLoader.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
+import GateConstraint from '../expressionDiagnostics/models/GateConstraint.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -51,10 +53,90 @@ class LookupLoader extends SimpleItemLoader {
   }
 
   /**
-   * Optional: Add custom validation to ensure each entry conforms to dataSchema.
-   * Can override _processFetchedItem if needed, but SimpleItemLoader's default
-   * implementation should suffice for basic use cases.
+   * Validates gate threshold values in prototype entries.
+   * Emits warnings for invalid gate values that would always fail or produce
+   * unexpected results due to being outside the valid range for their axis type.
+   *
+   * @param {string} lookupId - The lookup ID (e.g., 'core:emotion_prototypes').
+   * @param {object} entries - The entries object from the lookup.
+   * @private
    */
+  #validatePrototypeGates(lookupId, entries) {
+    if (!entries || typeof entries !== 'object') {
+      return;
+    }
+
+    for (const [entryName, entryData] of Object.entries(entries)) {
+      if (!entryData || !Array.isArray(entryData.gates)) {
+        continue;
+      }
+
+      for (const gateString of entryData.gates) {
+        if (typeof gateString !== 'string') {
+          continue;
+        }
+
+        try {
+          const { validation } = GateConstraint.parseAndValidate(gateString);
+          if (!validation.valid) {
+            this._logger.warn(
+              `Invalid gate threshold in ${lookupId} entry "${entryName}": ` +
+                `Gate "${gateString}" - ${validation.issue}`
+            );
+          }
+        } catch (parseError) {
+          // Malformed gate syntax - schema validation should catch this,
+          // but log a warning just in case
+          this._logger.warn(
+            `Malformed gate in ${lookupId} entry "${entryName}": ` +
+              `"${gateString}" - ${parseError.message}`
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Determines if a lookup is a prototype lookup that should have gates validated.
+   *
+   * @param {string} lookupId - The lookup ID.
+   * @returns {boolean} True if gates should be validated.
+   * @private
+   */
+  #isPrototypeLookup(lookupId) {
+    return (
+      lookupId.endsWith('emotion_prototypes') ||
+      lookupId.endsWith('sexual_prototypes')
+    );
+  }
+
+  /**
+   * Processes a fetched lookup item, storing it in the registry and
+   * validating gates for prototype lookups.
+   *
+   * @param {string} modId - The mod ID.
+   * @param {string} filename - The filename of the lookup.
+   * @param {string} resolvedPath - The resolved file path.
+   * @param {object} data - The parsed lookup data.
+   * @param {string} registryKey - The registry category key.
+   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} Processing result.
+   */
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
+      data,
+      idProp: 'id',
+      category: registryKey,
+      modId,
+      filename,
+    });
+
+    // Validate gates in prototype lookups after successful loading
+    if (this.#isPrototypeLookup(qualifiedId) && data.entries) {
+      this.#validatePrototypeGates(qualifiedId, data.entries);
+    }
+
+    return { qualifiedId, didOverride };
+  }
 }
 
 export default LookupLoader;

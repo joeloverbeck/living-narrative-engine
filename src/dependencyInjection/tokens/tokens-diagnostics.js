@@ -19,6 +19,12 @@ export const diagnosticsTokens = freeze({
   IFailureExplainer: 'IFailureExplainer',
   IEmotionCalculatorAdapter: 'IEmotionCalculatorAdapter',
   IRandomStateGenerator: 'IRandomStateGenerator',
+  IMonteCarloContextBuilder: 'IMonteCarloContextBuilder',
+  IMonteCarloExpressionEvaluator: 'IMonteCarloExpressionEvaluator',
+  IMonteCarloGateEvaluator: 'IMonteCarloGateEvaluator',
+  IMonteCarloPrototypeEvaluator: 'IMonteCarloPrototypeEvaluator',
+  IMonteCarloViolationEstimator: 'IMonteCarloViolationEstimator',
+  IMonteCarloVariablePathValidator: 'IMonteCarloVariablePathValidator',
 
   // Status Persistence
   IExpressionStatusService: 'IExpressionStatusService',

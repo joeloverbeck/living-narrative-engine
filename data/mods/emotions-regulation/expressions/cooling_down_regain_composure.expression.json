@@ -1,0 +1,339 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-regulation:cooling_down_regain_composure",
+    "description": "Anger de-escalation—heat still in the system, but control returns. The edge dulls, breathing steadies, and the urge to lash out gets replaced by a quieter, more deliberate stance.",
+    "category": "agency",
+    "actor_description": "I'm still angry, but it's no longer driving with both hands on the wheel. My chest loosens a notch and the noise in my head drops from a roar to a rough, manageable hum. I can feel myself choosing my next move instead of being dragged into it. The fight is still there—just no longer climbing.",
+    "description_text": "{actor}'s posture eases from rigid to controlled—jaw unclenching, shoulders lowering, movements less sharp. The irritation remains, but it's tempered by a returning steadiness, like they're re-taking the reins.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.rage"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.frustration"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousMoodAxes.arousal"
+                                    },
+                                    35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.agency_control"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.agency_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.agency_control"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    20
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            },
+                                            35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            35
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    70
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.rage"
+                                            },
+                                            {
+                                                "var": "previousEmotions.rage"
+                                            }
+                                        ]
+                                    },
+                                    -0.08
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.frustration"
+                                            },
+                                            {
+                                                "var": "previousEmotions.frustration"
+                                            }
+                                        ]
+                                    },
+                                    -0.08
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.smoldering_anger"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.smoldering_anger"
+                                                    }
+                                                ]
+                                            },
+                                            0.08
+                                        ]
+                                    },
+                                    {
+                                        "or": [
+                                            {
+                                                "<=": [
+                                                    {
+                                                        "-": [
+                                                            {
+                                                                "var": "emotions.rage"
+                                                            },
+                                                            {
+                                                                "var": "previousEmotions.rage"
+                                                            }
+                                                        ]
+                                                    },
+                                                    -0.05
+                                                ]
+                                            },
+                                            {
+                                                "<=": [
+                                                    {
+                                                        "-": [
+                                                            {
+                                                                "var": "emotions.frustration"
+                                                            },
+                                                            {
+                                                                "var": "previousEmotions.frustration"
+                                                            }
+                                                        ]
+                                                    },
+                                                    -0.05
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.smoldering_anger"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.smoldering_anger"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires smoldering anger as the post-heat landing state plus evidence it was hotter before (rage/frustration/arousal). Anchors in low-to-mid arousal with engagement still online and either regained agency_control or a clear control jump. Adds regulatory return: inhibitory_control must be at least baseline and either high or clearly rising (with trait support or compensatory white-knuckling). Requires explicit cooling (rage/frustration/arousal dropping and/or release rising) to prevent baseline cold anger from spamming. Caps current rage (still escalating) and contempt (drifts into cold fury/dismissal)."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear the breath slow and deepen—less hissing through teeth, more controlled exhale. If words come, they're lower and more measured, the sharpness sanded down.",
+        "tactile": "The air feels less tight around them, like tension is bleeding out through their shoulders and hands. The heat is still there, but it's contained—no longer spilling over.",
+        "limited": "Something in {actor} settles: the agitation eases, and their control becomes visible again."
+    },
+    "diagnosticStatus": "rare"
+}

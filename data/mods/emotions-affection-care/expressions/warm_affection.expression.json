@@ -1,0 +1,197 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-affection-care:warm_affection",
+    "description": "Tender feelings of love and care toward others.",
+    "priority": 55,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.affection"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    0.3
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.trust"
+                                    },
+                                    0.4
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.6
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    {
+                                        "var": "previousEmotions.affection"
+                                    }
+                                ]
+                            },
+                            0.07
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    {
+                                        "var": "previousEmotions.love_attachment"
+                                    }
+                                ]
+                            },
+                            0.05
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    {
+                                        "var": "previousMoodAxes.affiliation"
+                                    }
+                                ]
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.love_attachment"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.45
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "Warmth moves through me the moment I register them-simple, physical, unmistakable. My face softens without permission. My breathing drops lower in my chest. It isn't a rush, and it isn't need. It's steadier than that: the quiet sense that I want to be near, that I'm better oriented when they're in the room. If I reach out, it's not to take-it's to make contact and stay there for a second.",
+    "description_text": "{actor}'s features ease as if a tension they didn't notice has let go. Their attention opens-less guarded, more generous. They angle their body toward the person they care about, leaving space closer than necessity requires. When they smile, it arrives slowly and stays.",
+    "alternate_descriptions": {
+        "auditory": "I hear a voice go gentler at the edges-same words, different temperature. Even mundane phrases sound like they're meant for someone specific."
+    },
+    "category": "affection",
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0161
+}

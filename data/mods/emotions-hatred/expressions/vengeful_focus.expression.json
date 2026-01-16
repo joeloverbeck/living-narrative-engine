@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-hatred:vengeful_focus",
-    "description": "Cold, organized intent to punish\u2014emotion congeals into strategy. Attention narrows, feelings go flat-edged, and the body moves with controlled purpose rather than heat.",
+    "description": "Cold, organized intent to punish—emotion congeals into strategy. Attention narrows, feelings go flat-edged, and the body moves with controlled purpose rather than heat.",
     "category": "anger",
-    "actor_description": "The heat drains out of it and leaves something sharp and clean: a need for vengeance. My mind starts sorting options like tools\u2014steps, timing, leverage\u2014while my face stays still. I can feel my focus tighten into a straight line: not a shout, a plan. I don\u2019t want comfort; I want consequences.",
-    "description_text": "{actor} goes unnervingly calm and intent\u2014jaw set, eyes steady, movements economical. Their attention locks in with a deliberate, controlled edge, like they\u2019re quietly arranging the next move.",
+    "actor_description": "The heat drains out of it and leaves something sharp and clean: a need for vengeance. My mind starts sorting options like tools—steps, timing, leverage—while my face stays still. I can feel my focus tighten into a straight line: not a shout, a plan. I don’t want comfort; I want consequences.",
+    "description_text": "{actor} goes unnervingly calm and intent—jaw set, eyes steady, movements economical. Their attention locks in with a deliberate, controlled edge, like they’re quietly arranging the next move.",
     "priority": 76,
     "prerequisites": [
         {
@@ -353,9 +353,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "The voice goes low and measured\u2014fewer words, cleaner edges. There\u2019s a quiet pause before each sentence, like choices are being weighed.",
-        "tactile": "The air feels tight around them, controlled\u2014stillness with tension underneath, like a coiled spring that isn\u2019t shaking.",
+        "auditory": "The voice goes low and measured—fewer words, cleaner edges. There’s a quiet pause before each sentence, like choices are being weighed.",
+        "tactile": "The air feels tight around them, controlled—stillness with tension underneath, like a coiled spring that isn’t shaking.",
         "limited": "{actor} becomes intensely deliberate, as if anger has turned into planning."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

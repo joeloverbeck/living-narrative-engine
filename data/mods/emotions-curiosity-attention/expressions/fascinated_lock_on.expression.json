@@ -247,5 +247,6 @@
         "olfactory": "The air carries warm skin and faint, dry adrenaline-awake energy without the sour bite of panic."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0002
 }

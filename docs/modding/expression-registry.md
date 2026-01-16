@@ -145,34 +145,63 @@ Expressions of acceptance and post-loss settling.
 | 67 | `emotions-acceptance:quiet_acceptance_after_loss` | calm | Acceptance after loss: pain remains but stops escalating as relief/calm rises |
 | 68 | `emotions-acceptance:post_loss_settling` | calm | Acceptance / letting go: grief stays present while the mind stops wrestling it for a moment |
 
-### emotions-regulation (1 expression)
+### emotions-regulation (2 expressions)
 
 Expressions of self-regulation and grounding that restore composure.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
 | 68 | `emotions-regulation:purposeful_grounding` | calm | Deliberate grounding that eases anxiety into steadier composure |
+| 72 | `emotions-regulation:cooling_down_regain_composure` | agency | Anger de-escalation—heat still in the system, but control returns. The edge dulls, breathing steadies, and the urge to lash out gets replaced by a quieter, more deliberate stance. |
 
-### emotions-affiliation (14 expressions)
+### emotions-affiliation (1 expression)
 
-Expressions of social connection, bonding, and interpersonal feelings.
+Expressions of attachment and bonding intensity.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
-| 55 | `emotions-affiliation:warm_affection` | affection | Tender caring feelings toward another |
-| 60 | `emotions-affiliation:compassionate_concern` | affection | Empathetic worry for another's wellbeing |
-| 62 | `emotions-affiliation:lonely_isolation` | affection | Painful sense of disconnection and solitude |
-| 66 | `emotions-affiliation:quiet_gratitude` | affection | Quiet gratitude—an everyday, softened thank you feeling that settles in without turning tearful or dramatic |
-| 68 | `emotions-affiliation:camaraderie_click` | affection | Belonging glow—an easy, mutual-fit warmth where closeness feels obvious and uncomplicated |
-| 68 | `emotions-affiliation:shared_laughter_bond` | affection | Playful social bonding—shared laughter that lands as synchrony. The moment feels easy and mutual, like a quiet agreement to be on the same side of the world for a beat. |
-| 68 | `emotions-affiliation:steady_sympathy` | affection | Sympathetic steadiness—care that stays regulated. Compassion is present, but empathic distress is kept low so it reads as supportive presence rather than emotional flooding. |
-| 72 | `emotions-affiliation:awkward_indebted_gratitude` | shame | Gratitude that lands with a hitch—warmth tangled with social awkwardness and a sudden sense of obligation. The thank-you arrives, but it comes out careful, as if it costs something to accept help cleanly. |
-| 72 | `emotions-affiliation:comforted_vulnerability` | affection | Comforted vulnerability—being cared for finally lands, and the body stops fighting it. Trust and affection open a soft seam where guardedness loosens into relief without collapsing into shutdown. |
-| 72 | `emotions-affiliation:lonely_yearning_reach` | affection | Lonely yearning reach—an aching pull toward connection that stays outward-facing rather than withdrawing |
-| 72 | `emotions-affiliation:tearful_gratitude` | affection | Overwhelming thankfulness bringing tears |
-| 72 | `emotions-affiliation:vicarious_pride_warm_glow` | affection | Vicarious pride—warm, relational uplift that reads as “I’m proud of you,” with a reflected glow of admiration and affection |
-| 74 | `emotions-affiliation:lonely_reach_out` | affection | Connection-seeking loneliness—an aching pull toward contact rather than retreat. The feeling is tender and exposed, but oriented outward: a small decision to bridge the distance. |
 | 74 | `emotions-affiliation:attachment_swell` | affection | Surge of bonding feelings intensifying connection |
+
+### emotions-bonding-synchrony (3 expressions)
+
+Expressions of mutual-fit warmth, shared uplift, and "same side" social bonding.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 68 | `emotions-bonding-synchrony:camaraderie_click` | affection | Belonging glow—an easy, mutual-fit warmth where closeness feels obvious and uncomplicated |
+| 68 | `emotions-bonding-synchrony:shared_laughter_bond` | affection | Playful social bonding—shared laughter that lands as synchrony. The moment feels easy and mutual, like a quiet agreement to be on the same side of the world for a beat. |
+| 72 | `emotions-bonding-synchrony:vicarious_pride_warm_glow` | affection | Vicarious pride—warm, relational uplift that reads as "I'm proud of you," with a reflected glow of admiration and affection |
+
+### emotions-loneliness-connection (3 expressions)
+
+Loneliness expressions covering disconnection variants and connection-seeking states.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 62 | `emotions-loneliness-connection:lonely_isolation` | affection | Profound sense of isolation and disconnection from others |
+| 72 | `emotions-loneliness-connection:lonely_yearning_reach` | affection | Lonely yearning reach—an aching pull toward connection that stays outward-facing rather than withdrawing |
+| 74 | `emotions-loneliness-connection:lonely_reach_out` | affection | Connection-seeking loneliness—an aching pull toward contact rather than retreat. The feeling is tender and exposed, but oriented outward: a small decision to bridge the distance. |
+
+### emotions-gratitude (3 expressions)
+
+Gratitude expressions including clean thankfulness and costly/indebted gratitude variants.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 66 | `emotions-gratitude:quiet_gratitude` | affection | Quiet gratitude—an everyday, softened thank you feeling that settles in without turning tearful or dramatic |
+| 72 | `emotions-gratitude:awkward_indebted_gratitude` | shame | Gratitude that lands with a hitch—warmth tangled with social awkwardness and a sudden sense of obligation. The thank-you arrives, but it comes out careful, as if it costs something to accept help cleanly. |
+| 72 | `emotions-gratitude:tearful_gratitude` | affection | Overwhelming thankfulness bringing tears |
+
+### emotions-affection-care (4 expressions)
+
+Expressions for warmth, care, sympathy, and compassionate concern.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 55 | `emotions-affection-care:warm_affection` | affection | Tender caring feelings toward another |
+| 60 | `emotions-affection-care:compassionate_concern` | affection | Empathetic worry for another's wellbeing |
+| 68 | `emotions-affection-care:steady_sympathy` | affection | Sympathetic steadiness—care that stays regulated. Compassion is present, but empathic distress is kept low so it reads as supportive presence rather than emotional flooding. |
+| 72 | `emotions-affection-care:comforted_vulnerability` | affection | Comforted vulnerability—being cared for finally lands, and the body stops fighting it. Trust and affection open a soft seam where guardedness loosens into relief without collapsing into shutdown. |
 
 ### emotions-love-attachment (1 expression)
 
@@ -182,37 +211,64 @@ Expressions of love, attachment, and tender bonding.
 |----------|----|----|-------------|
 | 72 | `emotions-love-attachment:adoring_tenderness` | affection | A soft, reverent warmth—attention settles into quiet appreciation, protective fondness, and the feeling that simply being near is enough. |
 
-### emotions-agency (7 expressions)
+### emotions-competence-pride (4 expressions)
 
-Expressions related to personal power, competence, and self-determination.
-
-| Priority | ID | Category | Description |
-|----------|----|----|-------------|
-| 61 | `emotions-agency:quiet_pride` | affection | Humble satisfaction in one's own accomplishment |
-| 66 | `emotions-agency:earned_satisfaction_settle` | calm | Completion satisfaction—the quiet, earned “done” that settles in after effort |
-| 70 | `emotions-agency:confident_composure` | agency | Assured self-possession and poise |
-| 72 | `emotions-agency:choice_paralysis_hesitation` | agency | Everyday indecision: movement stalls without panic—options feel equally weighted or equally wrong, and the mind keeps looping for a clean answer that won’t arrive |
-| 74 | `emotions-agency:assertive_boundary_no` | agency | A clean, self-protective boundary—an unmistakable “No” delivered with steadiness rather than heat. The body stays upright and deliberate; the mind feels organized, not escalated. This is refusal without contempt: firm limits, minimal drama. |
-| 75 | `emotions-agency:victory_afterglow_glow` | agency | Te win stays in the system as a warm, capable glow—confidence spreads, breathing steadies |
-| 76 | `emotions-agency:determined_focus` | agency | Resolute commitment to achieving a goal |
-| 82 | `emotions-agency:triumphant_release` | agency | Victorious exultation after overcoming challenge |
-
-### emotions-anger (10 expressions)
-
-Expressions of frustration, irritation, and rage across intensity levels.
+Earned reward and success state expressions - quiet pride, satisfaction, victory afterglow, and triumphant release.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
-| 36 | `emotions-anger:mild_irritation` | anger | Low-level annoyance that hasn't escalated |
-| 72 | `emotions-anger:cooling_down_regain_composure` | agency | Anger de-escalation—heat still in the system, but control returns. The edge dulls, breathing steadies, and the urge to lash out gets replaced by a quieter, more deliberate stance. |
-| 76 | `emotions-anger:frustration_spiral` | anger | Mounting irritation as obstacles persist |
-| 76 | `emotions-anger:righteous_indignation` | anger | Principled anger that sharpens into moral urgency without tipping into contempt or rage |
-| 78 | `emotions-anger:hurt_anger` | anger | Affiliative anger with pain underneath—betrayal, rejection, or grief-adjacent hurt |
-| 79 | `emotions-anger:protective_anger` | anger | Warm, connected hostility aimed outward to defend someone valued |
-| 80 | `emotions-anger:cold_fury` | anger | Controlled, icy anger beneath the surface |
-| 84 | `emotions-anger:suppressed_rage` | anger | Intense anger being forcibly contained |
-| 85 | `emotions-anger:explosive_anger` | anger | Sudden violent outburst of rage |
-| 90 | `emotions-anger:rage_surge` | anger | Overwhelming fury consuming rational thought |
+| 61 | `emotions-competence-pride:quiet_pride` | affection | Subtle, self-assured satisfaction-an internal 'I did that' settling into confident posture |
+| 66 | `emotions-competence-pride:earned_satisfaction_settle` | calm | Completion satisfaction—the quiet, earned "done" that settles in after effort |
+| 75 | `emotions-competence-pride:victory_afterglow_glow` | agency | The win stays in the system as a warm, capable glow—confidence spreads, breathing steadies |
+| 82 | `emotions-competence-pride:triumphant_release` | agency | Turning-point victory discharge: triumph crests and the body unbraces—pressure vents into a raw, outward release |
+
+### emotions-executive-control (2 expressions)
+
+Goal-lock versus indecision stall expressions - determined focus and choice paralysis.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 72 | `emotions-executive-control:choice_paralysis_hesitation` | agency | Everyday indecision: movement stalls without panic—options feel equally weighted or equally wrong, and the mind keeps looping for a clean answer that won't arrive |
+| 76 | `emotions-executive-control:determined_focus` | agency | Goal-directed determination: engaged resolve with forward pressure-friction acknowledged, not feared |
+
+### emotions-assertiveness-boundaries (2 expressions)
+
+Social self-possession and refusal expressions—steady confidence and boundary-setting without escalation.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 70 | `emotions-assertiveness-boundaries:confident_composure` | agency | Steady confidence: calm control and readiness without brashness—grounded, capable, and unhurried |
+| 74 | `emotions-assertiveness-boundaries:assertive_boundary_no` | agency | A clean, self-protective boundary—an unmistakable "No" delivered with steadiness rather than heat. The body stays upright and deliberate; the mind feels organized, not escalated. This is refusal without contempt: firm limits, minimal drama. |
+
+### emotions-anger-fury-rage (4 expressions)
+
+Cold fury to loss of containment intensity spectrum: suppressed rage escalating to explosive outbursts.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 80 | `emotions-anger-fury-rage:cold_fury` | anger | Controlled, icy anger beneath the surface |
+| 84 | `emotions-anger-fury-rage:suppressed_rage` | anger | Intense anger being forcibly contained |
+| 85 | `emotions-anger-fury-rage:explosive_anger` | anger | Sudden violent outburst of rage |
+| 90 | `emotions-anger-fury-rage:rage_surge` | anger | Overwhelming fury consuming rational thought |
+
+### emotions-anger-irritation (2 expressions)
+
+Low to mid escalation anger expressions covering obstacles and friction.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 36 | `emotions-anger-irritation:mild_irritation` | anger | Low-level annoyance that hasn't escalated |
+| 76 | `emotions-anger-irritation:frustration_spiral` | anger | Mounting irritation as obstacles persist |
+
+### emotions-anger-principled-protective (3 expressions)
+
+Connected anger expressions combining values, defense, and hurt—anger that maintains affiliation rather than detached rage.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 76 | `emotions-anger-principled-protective:righteous_indignation` | anger | Principled anger that sharpens into moral urgency without tipping into contempt or rage |
+| 78 | `emotions-anger-principled-protective:hurt_anger` | anger | Affiliative anger with pain underneath—betrayal, rejection, or grief-adjacent hurt |
+| 79 | `emotions-anger-principled-protective:protective_anger` | anger | Warm, connected hostility aimed outward to defend someone valued |
 
 ### emotions-hatred (2 expressions)
 
@@ -251,20 +307,27 @@ Expressions related to adrenaline comedown and aftershock release.
 |----------|----|----|-------------|
 | 79 | `emotions-aftershock:adrenaline_aftershock` | threat | Adrenaline aftershock as threat drops while arousal lingers |
 
-### emotions-trust-distrust (8 expressions)
+### emotions-distrust-vigilance (2 expressions)
 
-Expressions related to trust, distrust, suspicion, and interpersonal vigilance states.
+Expressions related to threat appraisal of reliability, including wary suspicion and trust fracture states.
 
 | Priority | ID | Category | Description |
 |----------|----|----|-------------|
-| 66 | `emotions-trust-distrust:forgiving_softening` | affection | Deliberate softening toward reconciliation as trust returns |
-| 66 | `emotions-trust-distrust:tentative_trust_reach` | affection | A small, deliberate reach toward trust while the guard is still half up |
-| 72 | `emotions-trust-distrust:repair_warmth_return` | affection | Interpersonal repair warmth: the body unbraces and the connection feels usable again |
-| 72 | `emotions-trust-distrust:guard_lowering` | affection | Guard lowering—trust takes the wheel and the body stops bracing, softening into openness |
-| 73 | `emotions-trust-distrust:wary_suspicion` | threat | Wary suspicion with interpretive vigilance—reading tone, timing, and inconsistencies |
-| 74 | `emotions-trust-distrust:forgiven_exhale_release` | affection | Repair received: the moment forgiveness lands as relief rises, trust returns, and the body stops bracing |
-| 77 | `emotions-trust-distrust:trust_fracture` | threat | A sharp trust fracture—suspicion rises into a chilling appraisal that someone or something is not safe to rely on |
-| 78 | `emotions-trust-distrust:trusting_surrender` | affection | Deliberately yielding control into perceived safety, softening while choosing to be carried |
+| 73 | `emotions-distrust-vigilance:wary_suspicion` | threat | Wary suspicion with interpretive vigilance—reading tone, timing, and inconsistencies |
+| 77 | `emotions-distrust-vigilance:trust_fracture` | threat | A sharp trust fracture—suspicion rises into a chilling appraisal that someone or something is not safe to rely on |
+
+### emotions-trust-repair (6 expressions)
+
+Expressions related to trust repair, reconciliation, and restoring safety in relationships.
+
+| Priority | ID | Category | Description |
+|----------|----|----|-------------|
+| 66 | `emotions-trust-repair:forgiving_softening` | affection | Deliberate softening toward reconciliation as trust returns |
+| 66 | `emotions-trust-repair:tentative_trust_reach` | affection | A small, deliberate reach toward trust while the guard is still half up |
+| 72 | `emotions-trust-repair:guard_lowering` | affection | Guard lowering—trust takes the wheel and the body stops bracing, softening into openness |
+| 72 | `emotions-trust-repair:repair_warmth_return` | affection | Interpersonal repair warmth: the body unbraces and the connection feels usable again |
+| 74 | `emotions-trust-repair:forgiven_exhale_release` | affection | Repair received: the moment forgiveness lands as relief rises, trust returns, and the body stops bracing |
+| 78 | `emotions-trust-repair:trusting_surrender` | affection | Deliberately yielding control into perceived safety, softening while choosing to be carried |
 
 ### emotions-cynicism (1 expression)
 
@@ -637,9 +700,9 @@ Create a new mod when:
 ## Statistics
 
 - **Total expressions**: 158
-- **Number of mods**: 61
+- **Number of mods**: 71
 - **Priority range**: 32-95
-- **Average expressions per mod**: 2.59
+- **Average expressions per mod**: 2.23
 
 ---
 

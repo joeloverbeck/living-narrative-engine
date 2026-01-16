@@ -23,7 +23,7 @@ const HURT_ANGER_EXPRESSION_PATH = path.join(
   process.cwd(),
   'data',
   'mods',
-  'emotions-anger',
+  'emotions-anger-principled-protective',
   'expressions',
   'hurt_anger.expression.json'
 );

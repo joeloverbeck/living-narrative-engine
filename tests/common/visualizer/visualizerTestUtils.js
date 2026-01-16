@@ -34,9 +34,12 @@ export async function waitForCondition(
 /**
  * Creates a fetch mock that resolves relative URLs to files inside the repository.
  *
+ * @param {string[]|null} [explicitMods=null] - Optional list of mod IDs to use.
+ *   If not provided, uses a sensible default list for anatomy visualizer tests.
+ *   This makes tests independent of the actual game.json configuration.
  * @returns {jest.Mock} Fetch mock that serves repository files without hitting the network.
  */
-export function createFileFetchMock() {
+export function createFileFetchMock(explicitMods = null) {
   const responseCache = new Map();
 
   return jest.fn(async (resource) => {
@@ -65,24 +68,17 @@ export function createFileFetchMock() {
     let fileBuffer;
 
     try {
-    if (relativePath === 'data/game.json') {
-        const rawText = await fs.readFile(absolutePath, 'utf-8');
-        const parsed = JSON.parse(rawText);
-
-        // Preserve the configured mods (used by mod loader to pull dependencies)
-        // but filter out any that aren't present in the repo to avoid filesystem
-        // errors in tests.
+      if (relativePath === 'data/game.json') {
+        // Filter mods to only those that exist in the repo
         const availableMods = new Set(
           await fs.readdir(path.resolve(REPO_ROOT, 'data/mods'))
         );
 
-        const configuredMods = (parsed.mods || []).filter((modId) =>
-          availableMods.has(modId)
-        );
-
-        // Fallback minimal set for cases where the config is empty; keep anatomy
-        // and clothing-capable mods so the visualizer has real data to render.
-        const fallbackMods = [
+        // Use explicit mods if provided, otherwise use sensible defaults
+        // for anatomy visualizer tests. This makes tests independent of
+        // whatever game.json may contain, preventing test failures when
+        // game.json is modified by other tests or users.
+        const defaultTestMods = [
           'core',
           'anatomy',
           'clothing',
@@ -90,11 +86,14 @@ export function createFileFetchMock() {
           'outer-clothing',
           'underwear',
           'items',
-        ].filter((modId) => availableMods.has(modId));
+          'alicia', // Required for test entities
+        ];
 
-        const selectedMods = configuredMods.length > 0 ? configuredMods : fallbackMods;
+        const testMods = (explicitMods || defaultTestMods).filter((modId) =>
+          availableMods.has(modId)
+        );
 
-        fileText = JSON.stringify({ ...parsed, mods: selectedMods });
+        fileText = JSON.stringify({ mods: testMods });
         fileBuffer = Buffer.from(fileText, 'utf-8');
       } else {
         fileBuffer = await fs.readFile(absolutePath);
@@ -173,10 +172,12 @@ export const TEST_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;
  * Call this in beforeAll() to avoid repeated expensive initialization.
  * Uses the same configuration as the anatomy-visualizer entry point.
  *
+ * @param {string[]|null} [mods=null] - Optional list of mod IDs to load.
+ *   If not provided, uses the default anatomy visualizer mods.
  * @returns {Promise<SharedBootstrapContext>} Shared services for the test suite
  */
-export async function performSharedBootstrap() {
-  const fetchMock = createFileFetchMock();
+export async function performSharedBootstrap(mods = null) {
+  const fetchMock = createFileFetchMock(mods);
   global.fetch = fetchMock;
   window.fetch = fetchMock;
 

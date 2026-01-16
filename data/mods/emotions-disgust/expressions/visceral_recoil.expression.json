@@ -139,5 +139,6 @@
         "limited": "I notice a quick flinch away and a tightened expression—contact avoided, posture turning out and back."
     },
     "category": "anger",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0002
 }

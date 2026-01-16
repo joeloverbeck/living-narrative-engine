@@ -180,5 +180,6 @@
         "tactile": "Someone's body goes rigid for a beat, then steadies-tension reorganizing into readiness instead of panic."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

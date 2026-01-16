@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-assertiveness-boundaries",
+  "version": "1.0.0",
+  "name": "Emotions - Assertiveness & Boundaries",
+  "description": "Social self-possession and refusal expressions - steady confidence and boundary-setting without escalation.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "assertive_boundary_no.expression.json",
+      "confident_composure.expression.json"
+    ]
+  }
+}

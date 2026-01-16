@@ -8,6 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
+      "cooling_down_regain_composure.expression.json",
       "purposeful_grounding.expression.json"
     ]
   }

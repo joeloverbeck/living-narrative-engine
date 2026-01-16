@@ -245,5 +245,6 @@
         "olfactory": "I sense mild warmth-skin, fabric, clean air-the faint comfort-smell of someone settling."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0004
 }
