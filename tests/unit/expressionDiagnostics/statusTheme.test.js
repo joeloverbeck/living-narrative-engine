@@ -297,8 +297,12 @@ describe('statusTheme.js', () => {
       expect(Object.isFrozen(STATUS_PRIORITY)).toBe(true);
     });
 
-    it('should have unobserved and uncommon in correct positions', () => {
-      expect(STATUS_PRIORITY.unobserved).toBe(2);
+    it('should have unobserved before unknown in priority', () => {
+      expect(STATUS_PRIORITY.unobserved).toBe(1);
+      expect(STATUS_PRIORITY.unknown).toBe(2);
+    });
+
+    it('should have uncommon in correct position', () => {
       expect(STATUS_PRIORITY.uncommon).toBe(5);
     });
   });

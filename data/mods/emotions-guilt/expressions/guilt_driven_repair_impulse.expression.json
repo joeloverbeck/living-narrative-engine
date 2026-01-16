@@ -280,5 +280,6 @@
         "auditory": "I hear a rush of words-apologies, clarifications, offers-stacked on top of each other like someone can't bear a gap in the air."
     },
     "category": "shame",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0016
 }

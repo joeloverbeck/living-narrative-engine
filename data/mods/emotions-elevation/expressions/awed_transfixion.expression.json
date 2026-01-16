@@ -155,7 +155,7 @@
                                             {
                                                 "var": "previousEmotions.executive_focus"
                                             },
-                                            0.60
+                                            0.6
                                         ]
                                     },
                                     {
@@ -280,5 +280,6 @@
         "tactile": "I sense someone becoming unnaturally still. The air feels steadier, as if their movement has stopped so completely it changes the texture of the space."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

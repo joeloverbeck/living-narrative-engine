@@ -380,4 +380,249 @@ describe('LookupLoader integration', () => {
 
     expect(schemaValidator.validate).toHaveBeenCalledTimes(2);
   });
+
+  describe('prototype gate validation', () => {
+    it('validates gates in emotion_prototypes and warns on invalid thresholds', async () => {
+      const fileMap = new Map([
+        [
+          '/virtual-mods/test_mod/lookups/emotion_prototypes.lookup.json',
+          {
+            $schema: LOOKUP_SCHEMA_ID,
+            id: 'test_mod:emotion_prototypes',
+            description: 'Test emotion prototypes with invalid gates',
+            dataSchema: {
+              type: 'object',
+              properties: {
+                weights: { type: 'object' },
+                gates: { type: 'array', items: { type: 'string' } },
+              },
+            },
+            entries: {
+              valid_emotion: {
+                weights: { valence: 0.5 },
+                gates: ['valence >= 0.20', 'self_control >= 0.25'],
+              },
+              invalid_negative_affect: {
+                weights: { valence: 0.3 },
+                gates: ['self_control <= -0.10'],
+              },
+              invalid_exceeds_max: {
+                weights: { arousal: 0.8 },
+                gates: ['affective_empathy >= 1.5'],
+              },
+            },
+          },
+        ],
+      ]);
+
+      const { loader, registry, logger } = createLookupLoader(fileMap);
+
+      const manifest = {
+        content: {
+          lookups: ['emotion_prototypes.lookup.json'],
+        },
+      };
+
+      const result = await loader.loadItemsForMod(
+        'test_mod',
+        manifest,
+        'lookups',
+        'lookups',
+        'lookups'
+      );
+
+      // Lookup should still load successfully (graceful degradation)
+      expect(result).toEqual({
+        count: 1,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      });
+
+      // Verify the lookup was stored
+      const stored = registry.get('lookups', 'test_mod:emotion_prototypes');
+      expect(stored).toBeDefined();
+      expect(stored.entries.valid_emotion).toBeDefined();
+      expect(stored.entries.invalid_negative_affect).toBeDefined();
+      expect(stored.entries.invalid_exceeds_max).toBeDefined();
+
+      // Verify warnings were emitted for invalid gates
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('invalid_negative_affect')
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('self_control <= -0.10')
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('below minimum 0')
+      );
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('invalid_exceeds_max')
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('affective_empathy >= 1.5')
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('exceeds maximum 1')
+      );
+    });
+
+    it('validates gates in sexual_prototypes lookups', async () => {
+      const fileMap = new Map([
+        [
+          '/virtual-mods/adult_mod/lookups/sexual_prototypes.lookup.json',
+          {
+            $schema: LOOKUP_SCHEMA_ID,
+            id: 'adult_mod:sexual_prototypes',
+            description: 'Test sexual prototypes with invalid gates',
+            dataSchema: {
+              type: 'object',
+              properties: {
+                weights: { type: 'object' },
+                gates: { type: 'array', items: { type: 'string' } },
+              },
+            },
+            entries: {
+              valid_prototype: {
+                weights: { sexual_arousal: 0.7 },
+                gates: ['sexual_arousal >= 0.30'],
+              },
+              invalid_negative_sexual: {
+                weights: { sex_excitation: 0.5 },
+                gates: ['sexual_arousal >= -0.20'],
+              },
+            },
+          },
+        ],
+      ]);
+
+      const { loader, logger } = createLookupLoader(fileMap);
+
+      const manifest = {
+        content: {
+          lookups: ['sexual_prototypes.lookup.json'],
+        },
+      };
+
+      await loader.loadItemsForMod(
+        'adult_mod',
+        manifest,
+        'lookups',
+        'lookups',
+        'lookups'
+      );
+
+      // Should warn about invalid sexual axis gate
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('invalid_negative_sexual')
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('sexual_arousal >= -0.20')
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('below minimum 0')
+      );
+    });
+
+    it('does not warn for valid mood axis gates with negative values', async () => {
+      const fileMap = new Map([
+        [
+          '/virtual-mods/emotions/lookups/emotion_prototypes.lookup.json',
+          {
+            $schema: LOOKUP_SCHEMA_ID,
+            id: 'emotions:emotion_prototypes',
+            description: 'Emotion prototypes with valid negative mood gates',
+            dataSchema: {
+              type: 'object',
+              properties: {
+                weights: { type: 'object' },
+                gates: { type: 'array', items: { type: 'string' } },
+              },
+            },
+            entries: {
+              sad_emotion: {
+                weights: { valence: -0.8 },
+                gates: ['valence <= -0.30', 'threat <= 0.50'],
+              },
+              anxious_emotion: {
+                weights: { threat: 0.9 },
+                gates: ['threat >= 0.40', 'self_evaluation <= -0.20'],
+              },
+            },
+          },
+        ],
+      ]);
+
+      const { loader, logger } = createLookupLoader(fileMap);
+
+      const manifest = {
+        content: {
+          lookups: ['emotion_prototypes.lookup.json'],
+        },
+      };
+
+      await loader.loadItemsForMod(
+        'emotions',
+        manifest,
+        'lookups',
+        'lookups',
+        'lookups'
+      );
+
+      // Should NOT warn about valid mood gates with negative values
+      // Only check warn calls that match gate validation patterns
+      const gateWarnings = logger.warn.mock.calls.filter(
+        (call) =>
+          call[0] &&
+          typeof call[0] === 'string' &&
+          call[0].includes('Invalid gate threshold')
+      );
+      expect(gateWarnings).toHaveLength(0);
+    });
+
+    it('does not validate gates for non-prototype lookups', async () => {
+      const fileMap = new Map([
+        [
+          '/virtual-mods/other/lookups/regular_lookup.lookup.json',
+          {
+            $schema: LOOKUP_SCHEMA_ID,
+            id: 'other:regular_lookup',
+            description: 'Regular lookup without gate validation',
+            dataSchema: { type: 'object' },
+            entries: {
+              some_entry: {
+                gates: ['self_control <= -0.10'],
+              },
+            },
+          },
+        ],
+      ]);
+
+      const { loader, logger } = createLookupLoader(fileMap);
+
+      const manifest = {
+        content: {
+          lookups: ['regular_lookup.lookup.json'],
+        },
+      };
+
+      await loader.loadItemsForMod(
+        'other',
+        manifest,
+        'lookups',
+        'lookups',
+        'lookups'
+      );
+
+      // Should NOT warn - this is not a prototype lookup
+      const gateWarnings = logger.warn.mock.calls.filter(
+        (call) =>
+          call[0] &&
+          typeof call[0] === 'string' &&
+          call[0].includes('Invalid gate threshold')
+      );
+      expect(gateWarnings).toHaveLength(0);
+    });
+  });
 });

@@ -199,5 +199,6 @@
         "tactile": "I sense someone's tension spiking and circling with no release-like someone revving an engine in neutral."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0013
 }

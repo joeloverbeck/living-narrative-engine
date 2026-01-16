@@ -15,8 +15,8 @@ import SchemaLoader from '../../../../../src/loaders/schemaLoader.js';
 const JOY_PLAY_DIR = path.resolve(
   'data/mods/emotions-joy-play/expressions'
 );
-const AFFILIATION_DIR = path.resolve(
-  'data/mods/emotions-affiliation/expressions'
+const AFFECTION_CARE_DIR = path.resolve(
+  'data/mods/emotions-affection-care/expressions'
 );
 const SEXUAL_DESIRE_DIR = path.resolve(
   'data/mods/emotions-sexual-desire/expressions'
@@ -34,7 +34,7 @@ const EXPRESSION_FILES = [
     file: 'quiet_contentment.expression.json',
   },
   {
-    dir: AFFILIATION_DIR,
+    dir: AFFECTION_CARE_DIR,
     file: 'warm_affection.expression.json',
   },
   {

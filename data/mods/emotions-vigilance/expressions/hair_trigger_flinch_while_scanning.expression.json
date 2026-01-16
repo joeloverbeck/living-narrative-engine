@@ -96,7 +96,7 @@
                                             {
                                                 "var": "emotions.executive_focus"
                                             },
-                                            0.30
+                                            0.3
                                         ]
                                     },
                                     {
@@ -124,7 +124,7 @@
                                             {
                                                 "var": "emotions.executive_focus"
                                             },
-                                            0.40
+                                            0.4
                                         ]
                                     }
                                 ]
@@ -207,5 +207,6 @@
         "tactile": "A jolt of tension ripples through them—an involuntary jump—followed immediately by a sustained, vibrating readiness, like a spring that refuses to settle."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0003
 }

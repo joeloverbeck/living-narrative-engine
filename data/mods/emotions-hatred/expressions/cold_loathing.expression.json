@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-hatred:cold_loathing",
-    "description": "Enduring loathing: a steady, deliberate refusal of goodwill. The feeling isn\u2019t a flare-up\u2014it\u2019s a settled stance, attention held on what disgusts or threatens the self, with a quiet certainty that the other should be kept out, diminished, or gone.",
+    "description": "Enduring loathing: a steady, deliberate refusal of goodwill. The feeling isn’t a flare-up—it’s a settled stance, attention held on what disgusts or threatens the self, with a quiet certainty that the other should be kept out, diminished, or gone.",
     "category": "anger",
-    "actor_description": "It isn\u2019t heat\u2014it\u2019s clarity. My jaw sets and my mind goes still, like something in me has closed a door and thrown the bolt. I can think calmly about how to cut them out, how to deny them space, how to make sure they don\u2019t touch my life again. There\u2019s no grief in it, no softness\u2014just a clean, cold no that keeps repeating.",
-    "description_text": "{actor} goes unnervingly composed\u2014eyes narrowed, mouth flat, movements economical. Their attention stays locked with a quiet, deliberate hostility, as if any warmth has been professionally withdrawn.",
+    "actor_description": "It isn’t heat—it’s clarity. My jaw sets and my mind goes still, like something in me has closed a door and thrown the bolt. I can think calmly about how to cut them out, how to deny them space, how to make sure they don’t touch my life again. There’s no grief in it, no softness—just a clean, cold no that keeps repeating.",
+    "description_text": "{actor} goes unnervingly composed—eyes narrowed, mouth flat, movements economical. Their attention stays locked with a quiet, deliberate hostility, as if any warmth has been professionally withdrawn.",
     "priority": 79,
     "prerequisites": [
         {
@@ -315,9 +315,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "My voice goes flat and precise, like every syllable has been sanded down to remove warmth. I stop wasting words\u2014short answers, clean edges, no invitations.",
+        "auditory": "My voice goes flat and precise, like every syllable has been sanded down to remove warmth. I stop wasting words—short answers, clean edges, no invitations.",
         "tactile": "The air feels colder around my skin; my hands stay steady, grip firm, as if my body has decided to conserve heat and mercy at the same time.",
-        "limited": "I withdraw whatever openness I had\u2014expression set, attention narrowed, patience gone."
+        "limited": "I withdraw whatever openness I had—expression set, attention narrowed, patience gone."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

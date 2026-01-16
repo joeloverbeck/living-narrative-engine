@@ -1,0 +1,162 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-loneliness-connection:lonely_reach_out",
+    "description": "Connection-seeking loneliness—an aching pull toward contact rather than retreat. The feeling is tender and exposed, but oriented outward: a small decision to bridge the distance.",
+    "category": "affection",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.lonely_yearning"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.hope"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.trust"
+                                    },
+                                    0.22
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.withdrawn_isolation"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            {
+                                                "var": "previousEmotions.lonely_yearning"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.lonely_yearning"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            0.62
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires lonely_yearning with a reach-out signature (some hope OR notably low trust), plus enough affiliation/engagement to seek contact. Blocks shutdown tones (apathy/numbness/withdrawn_isolation) and caps threat so it's 'safe enough' to approach. Triggers only on a lonely_yearning spike, an affiliation jump, or a clear crossing into the reach-out zone."
+        }
+    ],
+    "actor_description": "I don't want to disappear into myself—I want a handhold. The ache turns directional, like my attention keeps finding the edge of other people and leaning toward it. My throat feels tight with the risk of being seen, but my body still angles forward, rehearsing a small ask. Even if it comes out clumsy, I need to try.",
+    "description_text": "{actor} hesitates, then orients outward—glances lingering, posture subtly open, as if weighing whether to speak. Their movements carry a careful vulnerability, the kind that says they're reaching for connection instead of retreating from it.",
+    "alternate_descriptions": {
+        "auditory": "A quiet inhale like someone gathering nerve, followed by a small, tentative sound—throat cleared, a half-start of words, a voice softened before it fully arrives.",
+        "tactile": "There's a faint tremor in the stillness—hands hovering, shoulders held as if bracing for rejection while still edging closer."
+    },
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0012
+}

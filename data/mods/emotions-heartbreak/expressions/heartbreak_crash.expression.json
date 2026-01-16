@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-heartbreak:heartbreak_crash",
-    "description": "Heartbreak crash: attachment stays alive even as loss hits\u2014love still pulling forward while grief and loneliness slam in at once. Attention narrows around the missing bond, hope sours, and the body feels too awake to hide from it. Style note: consider adding category 'heartbreak' for blended attachment+loss beats that aren\u2019t cleanly grief-only or shame-only.",
+    "description": "Heartbreak crash: attachment stays alive even as loss hits—love still pulling forward while grief and loneliness slam in at once. Attention narrows around the missing bond, hope sours, and the body feels too awake to hide from it. Style note: consider adding category 'heartbreak' for blended attachment+loss beats that aren’t cleanly grief-only or shame-only.",
     "category": "loss",
-    "actor_description": "Love is still there\u2014bright and stubborn\u2014and that\u2019s what makes it hurt so cleanly. My chest tightens like I\u2019m bracing for impact, and my thoughts keep snapping back to the same person, the same shape of them, like a tongue worrying a sore spot. I feel small and exposed, like I\u2019m failing at being okay, and the future suddenly tastes flat and doubtful. I can\u2019t numb it out; it\u2019s raw, loud, and close.",
-    "description_text": "{actor} goes hollow-eyed and tight-chested all at once, as if something inside them dropped hard. Their focus keeps drifting back to one point, jaw clenched, breath uneven\u2014present, but caught on someone they can\u2019t quite let go of.",
+    "actor_description": "Love is still there—bright and stubborn—and that’s what makes it hurt so cleanly. My chest tightens like I’m bracing for impact, and my thoughts keep snapping back to the same person, the same shape of them, like a tongue worrying a sore spot. I feel small and exposed, like I’m failing at being okay, and the future suddenly tastes flat and doubtful. I can’t numb it out; it’s raw, loud, and close.",
+    "description_text": "{actor} goes hollow-eyed and tight-chested all at once, as if something inside them dropped hard. Their focus keeps drifting back to one point, jaw clenched, breath uneven—present, but caught on someone they can’t quite let go of.",
     "priority": 82,
     "prerequisites": [
         {
@@ -177,9 +177,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear their breath go thin and uneven, like each inhale catches on something. If they speak, the words come careful\u2014too controlled to be calm, too fragile to be steady.",
-        "tactile": "The air around them feels tight, like static on skin. Their posture holds tension in the shoulders and throat, as if the body is trying not to buckle and can\u2019t decide where to put the hurt.",
-        "limited": "Their expression falters\u2014present, but struck through with quiet pain that won\u2019t let go."
+        "auditory": "I hear their breath go thin and uneven, like each inhale catches on something. If they speak, the words come careful—too controlled to be calm, too fragile to be steady.",
+        "tactile": "The air around them feels tight, like static on skin. Their posture holds tension in the shoulders and throat, as if the body is trying not to buckle and can’t decide where to put the hurt.",
+        "limited": "Their expression falters—present, but struck through with quiet pain that won’t let go."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

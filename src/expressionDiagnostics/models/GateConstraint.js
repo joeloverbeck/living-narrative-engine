@@ -5,6 +5,10 @@
  */
 
 import AxisInterval from './AxisInterval.js';
+import {
+  isAffectTrait,
+  isMoodAxis,
+} from '../../constants/moodAffectConstants.js';
 
 /**
  * Valid comparison operators for gate constraints.
@@ -230,6 +234,122 @@ class GateConstraint {
       operator: this.#operator,
       value: this.#value,
     };
+  }
+
+  /**
+   * Determine the axis type for this constraint's axis.
+   * Used to validate that gate threshold values are within valid ranges.
+   *
+   * @returns {'affect_trait' | 'mood' | 'sexual' | 'intensity'} The axis type.
+   */
+  getAxisType() {
+    if (isAffectTrait(this.#axis)) {
+      return 'affect_trait';
+    }
+
+    if (isMoodAxis(this.#axis)) {
+      return 'mood';
+    }
+
+    // Sexual axes that normalize to [0..1]
+    const sexualAxes = new Set([
+      'sexual_arousal',
+      'sex_excitation',
+      'sex_inhibition',
+      'sexual_inhibition',
+      'baseline_libido',
+    ]);
+
+    if (sexualAxes.has(this.#axis)) {
+      return 'sexual';
+    }
+
+    // Default: intensity axes like emotion intensities [0..1]
+    return 'intensity';
+  }
+
+  /**
+   * Get the valid range for this constraint's axis type.
+   * Returns the range after normalization (not raw values).
+   *
+   * @returns {{min: number, max: number}} The valid range for the axis.
+   */
+  getValidRange() {
+    const axisType = this.getAxisType();
+
+    switch (axisType) {
+      case 'mood':
+        // Mood axes normalize from [-100..100] to [-1..1]
+        return { min: -1, max: 1 };
+      case 'affect_trait':
+      case 'sexual':
+      case 'intensity':
+      default:
+        // These all normalize to [0..1]
+        return { min: 0, max: 1 };
+    }
+  }
+
+  /**
+   * Validate that this constraint's threshold value is within the valid range
+   * for its axis type. Returns validation result with issues if any.
+   *
+   * @returns {{valid: boolean, issue: string | null}} Validation result.
+   */
+  validateValueRange() {
+    const range = this.getValidRange();
+    const axisType = this.getAxisType();
+
+    // Check if value is outside valid range
+    if (this.#value < range.min) {
+      return {
+        valid: false,
+        issue:
+          `Gate threshold ${this.#value} is below minimum ${range.min} for ` +
+          `${axisType} axis "${this.#axis}". ` +
+          `${axisType === 'affect_trait' ? 'Affect traits are normalized from [0..100] to [0..1]. ' : ''}` +
+          `This gate will likely always fail or produce unexpected results.`,
+      };
+    }
+
+    if (this.#value > range.max) {
+      return {
+        valid: false,
+        issue:
+          `Gate threshold ${this.#value} exceeds maximum ${range.max} for ` +
+          `${axisType} axis "${this.#axis}". ` +
+          `${axisType === 'affect_trait' ? 'Affect traits are normalized from [0..100] to [0..1]. ' : ''}` +
+          `This gate will likely always fail or produce unexpected results.`,
+      };
+    }
+
+    return { valid: true, issue: null };
+  }
+
+  /**
+   * Parse a gate string and validate that its threshold is within the valid range.
+   * Useful for mod loading validation where you want to catch invalid gates early.
+   *
+   * @param {string} gateString - The gate condition string to parse.
+   * @param {object} [options] - Optional configuration.
+   * @param {boolean} [options.throwOnInvalid] - If true, throws an error for invalid gates.
+   * @returns {{constraint: GateConstraint, validation: {valid: boolean, issue: string | null}}}
+   *   The parsed constraint and its validation result.
+   * @throws {Error} If parsing fails, or if throwOnInvalid is true and validation fails.
+   */
+  static parseAndValidate(gateString, options = {}) {
+    const { throwOnInvalid = false } = options;
+
+    const constraint = GateConstraint.parse(gateString);
+    const validation = constraint.validateValueRange();
+
+    if (!validation.valid && throwOnInvalid) {
+      throw new Error(
+        `Invalid gate "${gateString}": ${validation.issue}`
+      );
+    }
+
+    return { constraint, validation };
   }
 }
 

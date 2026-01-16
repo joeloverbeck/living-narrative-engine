@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-anger-irritation",
+  "version": "1.0.0",
+  "name": "Emotions - Anger Irritation",
+  "description": "Low to mid escalation anger expressions: obstacles, friction, mounting frustration.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "frustration_spiral.expression.json",
+      "mild_irritation.expression.json"
+    ]
+  }
+}

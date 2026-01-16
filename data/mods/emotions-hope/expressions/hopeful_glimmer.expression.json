@@ -99,7 +99,7 @@
                             {
                                 "var": "emotions.release"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -144,5 +144,6 @@
         "olfactory": "The air catches a warmer human note-less sharp stress-sweat, more ordinary breath and skin."
     },
     "category": "calm",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "frequent",
+    "triggerRate": 0.0526
 }

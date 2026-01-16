@@ -13,41 +13,9 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.confusion"
-                            },
-                            0.25
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.confusion"
-                            },
-                            0.6
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
                                 "var": "emotions.focused_absorption"
                             },
                             0.5
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            25
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            10
                         ]
                     },
                     {
@@ -93,9 +61,25 @@
                     {
                         ">=": [
                             {
-                                "var": "moodAxes.arousal"
+                                "var": "moodAxes.engagement"
                             },
-                            -10
+                            25
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.confusion"
+                            },
+                            0.45
                         ]
                     },
                     {
@@ -145,14 +129,6 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.transfixed"
-                            },
-                            0.5
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "emotions.entranced"
                             },
                             0.4
@@ -169,46 +145,14 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.boredom"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.apathy"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "emotions.panic"
                             },
                             0.15
                         ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.triumph"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.euphoria"
-                            },
-                            0.35
-                        ]
                     }
                 ]
             },
-            "failure_message": "Requires mid-range confusion with locked-in attention. The 'click' is evidenced by either a small_victory pop OR executive_focus (a usable grip returns). If threat is meaningfully present, executive_focus must be online so it reads as steerable control, not trance. Caps panic and trance-like absorption so it stays a clean cognitive re-ordering."
+            "failure_message": "Requires locked-in attention with a usable grip returning (small_victory or executive_focus) and low-enough present confusion for the moment to read as a 'click.' If threat is meaningfully present, executive_focus must be online so it reads as steerable control, not trance. Caps panic and trance-like absorption so it stays a clean cognitive re-ordering."
         },
         {
             "logic": {
@@ -365,6 +309,6 @@
         "tactile": "The tightness in the face and shoulders lets go. Hands get steadier, movements more deliberate, like the body found the right grip.",
         "limited": "Something shifts in {actor}'s focus—less scattered, more certain—like a solution just snapped into place."
     },
-    "diagnosticStatus": "unobserved",
-    "triggerRate": 0
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0006
 }

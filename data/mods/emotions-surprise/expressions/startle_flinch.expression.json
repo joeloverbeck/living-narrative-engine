@@ -1,150 +1,151 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-surprise:startle_flinch",
-  "description": "Sudden startle response triggered by rapid increase in surprise/startle emotion",
-  "priority": 78,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.surprise_startle"
-              },
-              0.45
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.surprise_startle"
-                      },
-                      {
-                        "var": "previousEmotions.surprise_startle"
-                      }
-                    ]
-                  },
-                  0.12
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-surprise:startle_flinch",
+    "description": "Sudden startle response triggered by rapid increase in surprise/startle emotion",
+    "priority": 78,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.surprise_startle"
+                                            },
+                                            {
+                                                "var": "previousEmotions.surprise_startle"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.arousal"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "max": [
+                                            {
+                                                "var": "emotions.alarm"
+                                            },
+                                            {
+                                                "var": "emotions.fear"
+                                            }
+                                        ]
+                                    },
+                                    0.15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.threat"
+                                    },
+                                    10
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    35
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.surprise_startle"
+                                    },
+                                    0.6
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.arousal"
-                      },
-                      {
-                        "var": "previousMoodAxes.arousal"
-                      }
-                    ]
-                  },
-                  15
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.threat"
-                      },
-                      {
-                        "var": "previousMoodAxes.threat"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              }
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "max": [
-                      {
-                        "var": "emotions.alarm"
-                      },
-                      {
-                        "var": "emotions.fear"
-                      }
-                    ]
-                  },
-                  0.15
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "moodAxes.threat"
-                  },
-                  10
-                ]
-              }
-            ]
-          },
-          {
-            "or": [
-              {
-                "<=": [
-                  {
-                    "var": "moodAxes.inhibitory_control"
-                  },
-                  35
-                ]
-              },
-              {
-                "<=": [
-                  {
-                    "var": "affectTraits.self_control"
-                  },
-                  45
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.surprise_startle"
-                  },
-                  0.6
-                ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.55
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.25
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires a noticeable startle rise (via surprise_startle spike or a sudden arousal/threat jump) with at least mild negative appraisal (alarm/fear or mild threat). Adds regulation realism: high inhibitory_control / high trait self_control can dampen a reflex flinch unless the startle intensity is strong. Excludes high panic/freeze so a brief flinch doesn't mislabel a larger spiral or immobility response."
-    }
-  ],
-  "actor_description": "My body jolts before I can think—sharp inhale yanked through my teeth, shoulders wrenching up, hands snapping to cover or block. My heart slams once, twice, a hammer behind my ribs, and every muscle coils tight. Then it's over. The world clicks back into focus and I'm standing there, adrenaline fizzing under my skin, caught in the aftershock of a reaction I never chose to make.",
-  "description_text": "{actor} jolts violently—shoulders wrenching upward, arms jerking in to protect their core, head snapping toward the source. Their eyes go wide and their breath catches audibly. The whole reaction is a single convulsive movement, raw reflex with no conscious thought behind it.",
-  "alternate_descriptions": {
-    "auditory": "A sharp, involuntary gasp cuts the air—then a sudden scrape or shuffle of feet jerking position, maybe the thud of a hand hitting wall or furniture. Quick, tactile sounds of a body moving without permission."
-  },
-  "category": "threat",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Requires a noticeable startle rise (via surprise_startle spike or a sudden arousal/threat jump) with at least mild negative appraisal (alarm/fear or mild threat). Adds regulation realism: high inhibitory_control / high trait self_control can dampen a reflex flinch unless the startle intensity is strong. Excludes high panic/freeze so a brief flinch doesn't mislabel a larger spiral or immobility response."
+        }
+    ],
+    "actor_description": "My body jolts before I can think—sharp inhale yanked through my teeth, shoulders wrenching up, hands snapping to cover or block. My heart slams once, twice, a hammer behind my ribs, and every muscle coils tight. Then it's over. The world clicks back into focus and I'm standing there, adrenaline fizzing under my skin, caught in the aftershock of a reaction I never chose to make.",
+    "description_text": "{actor} jolts violently—shoulders wrenching upward, arms jerking in to protect their core, head snapping toward the source. Their eyes go wide and their breath catches audibly. The whole reaction is a single convulsive movement, raw reflex with no conscious thought behind it.",
+    "alternate_descriptions": {
+        "auditory": "A sharp, involuntary gasp cuts the air—then a sudden scrape or shuffle of feet jerking position, maybe the thud of a hand hitting wall or furniture. Quick, tactile sounds of a body moving without permission."
+    },
+    "category": "threat",
+    "diagnosticStatus": "frequent",
+    "triggerRate": 0.0241
 }

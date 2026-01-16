@@ -223,5 +223,6 @@
         "olfactory": "I smell warm skin, fabric, and clean breath; the faint, ordinary scent of someone awake and engaged."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0097
 }

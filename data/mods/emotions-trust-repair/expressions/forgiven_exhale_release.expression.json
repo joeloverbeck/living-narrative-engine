@@ -1,0 +1,166 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-trust-repair:forgiven_exhale_release",
+    "description": "Repair received: the moment forgiveness lands. Relief rises as trust returns and the body finally stops bracing; guilt loosens its grip and self-worth inches back toward neutral. Style note: consider adding category 'repair' for social reconciliation beats like apology accepted / forgiveness received—distinct from calm, affection, or shame.",
+    "category": "affection",
+    "actor_description": "The pressure in my chest lets go like a knot slipping loose. I realize I've been holding my breath and the exhale comes out shaky, almost laughable with how much I needed it. The self-punishment quiets; I can meet the moment without flinching, and I feel myself soften toward them again.",
+    "description_text": "{actor} exhales like they've been braced for impact—shoulders dropping, jaw unclenching, eyes going wet-bright without breaking. Their posture turns subtly toward connection, guardedness easing into a careful, relieved warmth.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.release"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "previousEmotions.remorse"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.remorse"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.4
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.remorse"
+                                            },
+                                            {
+                                                "var": "emotions.remorse"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            },
+                                            {
+                                                "var": "moodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.release"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            0.62
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.release"
+                                            },
+                                            {
+                                                "var": "previousEmotions.release"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a forgiveness-like repair shift: release is high (the unbracing), trust is up, threat is low, affiliation is positive, and prior remorse was present but is easing (not spiraling). Blocks cynicism so the beat reads as repair received, not bitter doubt. Fires only on a noticeable remorse drop, threat drop, or release crossing/spike to prevent spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "A long breath slips out—half-sigh, half-laugh—followed by a small, unguarded softness in the voice, like tension finally left the throat.",
+        "tactile": "The room seems to unclench with them: shoulders lowering, hands loosening, the body's weight settling back down as if it no longer needs to hover on alert.",
+        "limited": "Relief shows first, then trust—{actor} relaxes visibly, as though a heavy expectation just lifted."
+    },
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0003
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-affection-care",
+  "version": "1.0.0",
+  "name": "Emotions - Affection Care",
+  "description": "Expressions for warmth, care, sympathy, and compassionate concern.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "comforted_vulnerability.expression.json",
+      "compassionate_concern.expression.json",
+      "steady_sympathy.expression.json",
+      "warm_affection.expression.json"
+    ]
+  }
+}

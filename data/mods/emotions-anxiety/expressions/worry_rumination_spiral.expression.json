@@ -246,5 +246,6 @@
         "tactile": "The air around {actor} feels restless—small shifts, foot tapping, fingers worrying at a seam, tension that never quite discharges.",
         "limited": "{actor} looks preoccupied and tense, attention snagging on something they can’t seem to put down."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0001
 }

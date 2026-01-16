@@ -5,22 +5,10 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import jsonLogic from 'json-logic-js';
-import HierarchicalClauseNode from '../models/HierarchicalClauseNode.js';
-import ClauseNormalizer from './ClauseNormalizer.js';
-import { collectVarPaths } from '../../utils/jsonLogicVarExtractor.js';
-import { getEpsilonForVariable } from '../config/advancedMetricsConfig.js';
-import GateConstraint from '../models/GateConstraint.js';
-import AxisInterval from '../models/AxisInterval.js';
 import {
   evaluateConstraint,
   extractMoodConstraints,
 } from '../utils/moodRegimeUtils.js';
-import {
-  normalizeAffectTraits,
-  normalizeMoodAxes,
-  normalizeSexualAxes,
-  resolveAxisValue,
-} from '../utils/axisNormalizationUtils.js';
 import {
   buildPopulationHash,
   buildPopulationPredicate,
@@ -29,11 +17,12 @@ import {
   createSamplingCoverageCalculator,
 } from './monteCarloSamplingCoverage.js';
 import AblationImpactCalculator from './AblationImpactCalculator.js';
-import {
-  MOOD_AXES,
-  AFFECT_TRAITS,
-  MOOD_AXIS_RANGE,
-} from '../../constants/moodAffectConstants.js';
+import ContextBuilder from './simulatorCore/ContextBuilder.js';
+import ExpressionEvaluator from './simulatorCore/ExpressionEvaluator.js';
+import GateEvaluator from './simulatorCore/GateEvaluator.js';
+import PrototypeEvaluator from './simulatorCore/PrototypeEvaluator.js';
+import ViolationEstimator from './simulatorCore/ViolationEstimator.js';
+import VariablePathValidator from './simulatorCore/VariablePathValidator.js';
 
 const DEFAULT_SAMPLING_COVERAGE_CONFIG = {
   enabled: true,
@@ -41,36 +30,6 @@ const DEFAULT_SAMPLING_COVERAGE_CONFIG = {
   minSamplesPerBin: 1,
   tailPercent: 0.1,
 };
-
-const SAMPLING_COVERAGE_DOMAIN_RANGES = [
-  { pattern: /^previousMoodAxes\./, domain: 'previousMoodAxes', ...MOOD_AXIS_RANGE },
-  { pattern: /^previousEmotions\./, domain: 'previousEmotions', min: 0, max: 1 },
-  {
-    pattern: /^previousSexualStates\./,
-    domain: 'previousSexualStates',
-    min: 0,
-    max: 1,
-  },
-  { pattern: /^moodAxes\./, domain: 'moodAxes', ...MOOD_AXIS_RANGE },
-  { pattern: /^mood\./, domain: 'moodAxes', ...MOOD_AXIS_RANGE },
-  { pattern: /^emotions\./, domain: 'emotions', min: 0, max: 1 },
-  { pattern: /^sexualStates\./, domain: 'sexualStates', min: 0, max: 1 },
-  { pattern: /^sexual\./, domain: 'sexualStates', min: 0, max: 1 },
-];
-
-const SEXUAL_AXIS_NAMES = new Set([
-  'sex_excitation',
-  'sex_inhibition',
-  'sexual_inhibition',
-  'baseline_libido',
-]);
-
-const MOOD_AXIS_NAMES = new Set(MOOD_AXES);
-const AFFECT_TRAIT_NAMES = new Set(AFFECT_TRAITS);
-
-const DERIVED_AXIS_RAW_SCALES = new Map([
-  ['sexual_arousal', 1],
-]);
 
 /**
  * @typedef {'uniform' | 'gaussian'} DistributionType
@@ -254,16 +213,28 @@ const DERIVED_AXIS_RAW_SCALES = new Map([
  */
 class MonteCarloSimulator {
   /** @type {object} */
-  #dataRegistry;
-
-  /** @type {object} */
   #logger;
 
   /** @type {object} */
-  #emotionCalculatorAdapter;
+  #randomStateGenerator;
 
   /** @type {object} */
-  #randomStateGenerator;
+  #contextBuilder;
+
+  /** @type {object} */
+  #expressionEvaluator;
+
+  /** @type {object} */
+  #gateEvaluator;
+
+  /** @type {object} */
+  #prototypeEvaluator;
+
+  /** @type {object} */
+  #violationEstimator;
+
+  /** @type {object} */
+  #variablePathValidator;
 
   /**
    * @param {object} deps
@@ -271,12 +242,24 @@ class MonteCarloSimulator {
    * @param {object} deps.logger - ILogger
    * @param {object} deps.emotionCalculatorAdapter - IEmotionCalculatorAdapter
    * @param {object} deps.randomStateGenerator - IRandomStateGenerator
+   * @param {object} [deps.contextBuilder] - IMonteCarloContextBuilder
+   * @param {object} [deps.expressionEvaluator] - IMonteCarloExpressionEvaluator
+   * @param {object} [deps.gateEvaluator] - IMonteCarloGateEvaluator
+   * @param {object} [deps.prototypeEvaluator] - IMonteCarloPrototypeEvaluator
+   * @param {object} [deps.violationEstimator] - IMonteCarloViolationEstimator
+   * @param {object} [deps.variablePathValidator] - IMonteCarloVariablePathValidator
    */
   constructor({
     dataRegistry,
     logger,
     emotionCalculatorAdapter,
     randomStateGenerator,
+    contextBuilder,
+    expressionEvaluator,
+    gateEvaluator,
+    prototypeEvaluator,
+    violationEstimator,
+    variablePathValidator,
   }) {
     validateDependency(dataRegistry, 'IDataRegistry', logger, {
       requiredMethods: ['get'],
@@ -309,19 +292,141 @@ class MonteCarloSimulator {
       }
     );
 
-    this.#dataRegistry = dataRegistry;
     this.#logger = logger;
-    this.#emotionCalculatorAdapter = emotionCalculatorAdapter;
     this.#randomStateGenerator = randomStateGenerator;
+    if (contextBuilder !== undefined) {
+      validateDependency(contextBuilder, 'IMonteCarloContextBuilder', logger, {
+        requiredMethods: [
+          'buildContext',
+          'buildKnownContextKeys',
+          'normalizeGateContext',
+          'initializeMoodRegimeAxisHistograms',
+          'initializeMoodRegimeSampleReservoir',
+          'recordMoodRegimeAxisHistograms',
+          'recordMoodRegimeSampleReservoir',
+        ],
+      });
+      this.#contextBuilder = contextBuilder;
+    } else {
+      this.#contextBuilder = new ContextBuilder({
+        logger,
+        dataRegistry,
+        emotionCalculatorAdapter,
+      });
+    }
+
+    if (expressionEvaluator !== undefined) {
+      validateDependency(
+        expressionEvaluator,
+        'IMonteCarloExpressionEvaluator',
+        logger,
+        {
+          requiredMethods: [
+            'initClauseTracking',
+            'evaluateWithTracking',
+            'evaluatePrerequisite',
+            'evaluateAllPrerequisites',
+            'finalizeClauseResults',
+            'buildHierarchicalTree',
+            'evaluateThresholdCondition',
+          ],
+        }
+      );
+      this.#expressionEvaluator = expressionEvaluator;
+    } else {
+      this.#expressionEvaluator = new ExpressionEvaluator();
+    }
+
+    if (gateEvaluator !== undefined) {
+      validateDependency(gateEvaluator, 'IMonteCarloGateEvaluator', logger, {
+        requiredMethods: [
+          'buildGateClampRegimePlan',
+          'checkGates',
+          'checkPrototypeCompatibility',
+          'computeGateCompatibility',
+          'evaluateGatePass',
+          'resolveGateTarget',
+          'resolveGateContext',
+          'recordGateOutcomeIfApplicable',
+          'denormalizeGateThreshold',
+          'buildAxisIntervalsFromMoodConstraints',
+        ],
+      });
+      this.#gateEvaluator = gateEvaluator;
+    } else {
+      this.#gateEvaluator = new GateEvaluator({
+        logger,
+        dataRegistry,
+        contextBuilder: this.#contextBuilder,
+      });
+    }
+
+    if (prototypeEvaluator !== undefined) {
+      validateDependency(
+        prototypeEvaluator,
+        'IMonteCarloPrototypeEvaluator',
+        logger,
+        {
+          requiredMethods: [
+            'extractPrototypeReferences',
+            'preparePrototypeEvaluationTargets',
+            'initializePrototypeEvaluationSummary',
+            'createPrototypeEvaluationStats',
+            'updatePrototypeEvaluationSummary',
+            'evaluatePrototypeSample',
+            'recordPrototypeEvaluation',
+            'collectPrototypeReferencesFromLogic',
+            'getPrototype',
+          ],
+        }
+      );
+      this.#prototypeEvaluator = prototypeEvaluator;
+    } else {
+      this.#prototypeEvaluator = new PrototypeEvaluator({
+        logger,
+        dataRegistry,
+      });
+    }
+
+    if (violationEstimator !== undefined) {
+      validateDependency(
+        violationEstimator,
+        'IMonteCarloViolationEstimator',
+        logger,
+        {
+          requiredMethods: [
+            'countFailedClauses',
+            'getFailedLeavesSummary',
+          ],
+        }
+      );
+      this.#violationEstimator = violationEstimator;
+    } else {
+      this.#violationEstimator = new ViolationEstimator();
+    }
+
+    if (variablePathValidator !== undefined) {
+      validateDependency(
+        variablePathValidator,
+        'IMonteCarloVariablePathValidator',
+        logger,
+        {
+          requiredMethods: [
+            'validateExpressionVarPaths',
+            'validateVarPath',
+            'collectSamplingCoverageVariables',
+            'resolveSamplingCoverageVariable',
+            'extractReferencedEmotions',
+            'filterEmotions',
+          ],
+        }
+      );
+      this.#variablePathValidator = variablePathValidator;
+    } else {
+      this.#variablePathValidator = new VariablePathValidator();
+    }
   }
 
-  /**
-   * Run Monte Carlo simulation for an expression
-   *
-   * @param {object} expression - Expression to evaluate
-   * @param {SimulationConfig} [config]
-   * @returns {SimulationResult}
-   */
   /**
    * Run Monte Carlo simulation for an expression
    *
@@ -377,7 +482,7 @@ class MonteCarloSimulator {
     const CHUNK_SIZE = 1000;
     let triggerCount = 0;
     const clauseTracking = trackClauses
-      ? this.#initClauseTracking(expression)
+      ? this.#expressionEvaluator.initClauseTracking(expression)
       : null;
     const ablationCalculator = clauseTracking
       ? new AblationImpactCalculator(clauseTracking)
@@ -399,11 +504,12 @@ class MonteCarloSimulator {
     let inRegimeSampleCount = 0;
     const trackedGateAxes = gateClampRegimePlan.trackedGateAxes ?? [];
     const moodRegimeAxisHistograms =
-      this.#initializeMoodRegimeAxisHistograms(trackedGateAxes);
+      this.#contextBuilder.initializeMoodRegimeAxisHistograms(trackedGateAxes);
     const moodRegimeHistogramAxes = Object.keys(moodRegimeAxisHistograms);
-    const moodRegimeSampleReservoir = this.#initializeMoodRegimeSampleReservoir(
-      moodRegimeSampleReservoirLimit
-    );
+    const moodRegimeSampleReservoir =
+      this.#contextBuilder.initializeMoodRegimeSampleReservoir(
+        moodRegimeSampleReservoirLimit
+      );
 
     // Track ground-truth witnesses (first N triggered samples) and nearest miss
     const witnesses = [];
@@ -411,11 +517,16 @@ class MonteCarloSimulator {
     let nearestMissFailedCount = Infinity;
 
     // Extract referenced emotions once before simulation loop for witness capture
-    const referencedEmotions = this.#extractReferencedEmotions(expression);
+    const referencedEmotions =
+      this.#variablePathValidator.extractReferencedEmotions(expression);
     const prototypeEvaluationTargets =
-      this.#preparePrototypeEvaluationTargets(expression?.prerequisites);
+      this.#prototypeEvaluator.preparePrototypeEvaluationTargets(
+        expression?.prerequisites
+      );
     const prototypeEvaluationSummary =
-      this.#initializePrototypeEvaluationSummary(prototypeEvaluationTargets);
+      this.#prototypeEvaluator.initializePrototypeEvaluationSummary(
+        prototypeEvaluationTargets
+      );
 
     // Sensitivity analysis: store built contexts for post-hoc threshold evaluation
     const storedContexts = storeSamplesForSensitivity ? [] : null;
@@ -426,7 +537,7 @@ class MonteCarloSimulator {
     };
 
     const samplingCoverageVariables = resolvedSamplingCoverageConfig.enabled
-      ? this.#collectSamplingCoverageVariables(expression)
+      ? this.#variablePathValidator.collectSamplingCoverageVariables(expression)
       : [];
 
     const samplingCoverageCalculator =
@@ -458,7 +569,7 @@ class MonteCarloSimulator {
           storedContexts.length < sensitivitySampleLimit;
 
         // Build context once for potential storage and evaluation
-        const context = this.#buildContext(
+        const context = this.#contextBuilder.buildContext(
           current,
           previous,
           affectTraits,
@@ -487,11 +598,11 @@ class MonteCarloSimulator {
         if (inRegime) {
           inRegimeSampleCount++;
           if (moodRegimeHistogramAxes.length > 0) {
-            this.#recordMoodRegimeAxisHistograms(
+            this.#contextBuilder.recordMoodRegimeAxisHistograms(
               moodRegimeAxisHistograms,
               context
             );
-            this.#recordMoodRegimeSampleReservoir(
+            this.#contextBuilder.recordMoodRegimeSampleReservoir(
               moodRegimeSampleReservoir,
               moodRegimeHistogramAxes,
               context
@@ -534,14 +645,15 @@ class MonteCarloSimulator {
               previous,
               affectTraits,
               // Include computed emotions (filtered to only referenced ones)
-              computedEmotions: this.#filterEmotions(
+              computedEmotions: this.#variablePathValidator.filterEmotions(
                 context.emotions,
                 referencedEmotions
               ),
-              previousComputedEmotions: this.#filterEmotions(
-                context.previousEmotions,
-                referencedEmotions
-              ),
+              previousComputedEmotions:
+                this.#variablePathValidator.filterEmotions(
+                  context.previousEmotions,
+                  referencedEmotions
+                ),
             });
           }
         } else if (clauseTracking) {
@@ -674,7 +786,10 @@ class MonteCarloSimulator {
       moodRegimeDefined,
       confidenceInterval,
       clauseFailures: clauseTracking
-        ? this.#finalizeClauseResults(clauseTracking, sampleCount)
+        ? this.#expressionEvaluator.finalizeClauseResults(
+            clauseTracking,
+            sampleCount
+          )
         : [],
       distribution,
       samplingMode,
@@ -718,6 +833,16 @@ class MonteCarloSimulator {
     return resultPayload;
   }
 
+  // ============================================================
+  // Essential Private Methods (contain actual logic or bindings)
+  // ============================================================
+
+  /**
+   * Yield to the event loop to avoid blocking.
+   *
+   * @private
+   * @returns {Promise<void>}
+   */
   async #yieldToEventLoop() {
     await new Promise((resolve) => {
       if (typeof globalThis.requestIdleCallback === 'function') {
@@ -728,194 +853,9 @@ class MonteCarloSimulator {
     });
   }
 
-  #initializeMoodRegimeAxisHistograms(trackedGateAxes) {
-    if (!Array.isArray(trackedGateAxes) || trackedGateAxes.length === 0) {
-      return {};
-    }
-
-    const histograms = {};
-    for (const axis of trackedGateAxes) {
-      const spec = this.#getAxisHistogramSpec(axis);
-      if (!spec) {
-        continue;
-      }
-      histograms[axis] = {
-        axis,
-        min: spec.min,
-        max: spec.max,
-        binCount: spec.binCount,
-        bins: Array.from({ length: spec.binCount }, () => 0),
-        sampleCount: 0,
-      };
-    }
-
-    return histograms;
-  }
-
-  #initializeMoodRegimeSampleReservoir(limit) {
-    const resolvedLimit =
-      typeof limit === 'number' && Number.isFinite(limit)
-        ? Math.max(0, Math.floor(limit))
-        : 0;
-
-    return {
-      sampleCount: 0,
-      storedCount: 0,
-      limit: resolvedLimit,
-      samples: [],
-    };
-  }
-
-  #recordMoodRegimeAxisHistograms(histograms, context) {
-    for (const [axis, histogram] of Object.entries(histograms)) {
-      const value = this.#resolveGateAxisRawValue(axis, context);
-      if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
-        continue;
-      }
-
-      const binIndex = this.#getHistogramBinIndex(histogram, value);
-      if (binIndex === null) {
-        continue;
-      }
-
-      histogram.bins[binIndex] += 1;
-      histogram.sampleCount += 1;
-    }
-  }
-
-  #recordMoodRegimeSampleReservoir(reservoir, histogramAxes, context) {
-    if (!reservoir) {
-      return;
-    }
-
-    reservoir.sampleCount += 1;
-    if (reservoir.limit <= 0 || reservoir.samples.length >= reservoir.limit) {
-      reservoir.storedCount = reservoir.samples.length;
-      return;
-    }
-
-    const sample = {};
-    for (const axis of histogramAxes) {
-      const value = this.#resolveGateAxisRawValue(axis, context);
-      if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
-        continue;
-      }
-      sample[axis] = value;
-    }
-
-    reservoir.samples.push(sample);
-    reservoir.storedCount = reservoir.samples.length;
-  }
-
-  #getAxisHistogramSpec(axis) {
-    if (MOOD_AXIS_NAMES.has(axis)) {
-      return { min: -100, max: 100, binCount: 201 };
-    }
-    if (AFFECT_TRAIT_NAMES.has(axis)) {
-      return { min: 0, max: 100, binCount: 101 };
-    }
-    if (axis === 'sexual_arousal') {
-      return { min: 0, max: 1, binCount: 101 };
-    }
-    if (axis === 'baseline_libido') {
-      return { min: -50, max: 50, binCount: 101 };
-    }
-    if (axis === 'sex_excitation' || axis === 'sex_inhibition' || axis === 'sexual_inhibition') {
-      return { min: 0, max: 100, binCount: 101 };
-    }
-    return null;
-  }
-
-  #getHistogramBinIndex(histogram, value) {
-    const { min, max, binCount } = histogram;
-    if (typeof min !== 'number' || typeof max !== 'number' || typeof binCount !== 'number') {
-      return null;
-    }
-    if (binCount <= 0 || max === min) {
-      return null;
-    }
-
-    if (binCount === max - min + 1) {
-      const rounded = Math.round(value);
-      const clamped = Math.max(min, Math.min(max, rounded));
-      return clamped - min;
-    }
-
-    const clampedValue = Math.max(min, Math.min(max, value));
-    const ratio = (clampedValue - min) / (max - min);
-    const index = Math.round(ratio * (binCount - 1));
-    return Math.max(0, Math.min(binCount - 1, index));
-  }
-
-  #resolveGateAxisRawValue(axis, context) {
-    if (!context || typeof axis !== 'string') {
-      return null;
-    }
-
-    if (MOOD_AXIS_NAMES.has(axis)) {
-      return context?.moodAxes?.[axis] ?? context?.mood?.[axis] ?? null;
-    }
-
-    if (AFFECT_TRAIT_NAMES.has(axis)) {
-      return context?.affectTraits?.[axis] ?? null;
-    }
-
-    if (axis === 'sexual_arousal') {
-      return context?.sexualArousal ?? null;
-    }
-
-    if (SEXUAL_AXIS_NAMES.has(axis)) {
-      const sexualAxes = context?.sexualAxes ?? context?.sexual ?? {};
-      if (axis === 'sexual_inhibition') {
-        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
-      }
-      if (axis === 'sex_inhibition') {
-        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
-      }
-      return sexualAxes[axis] ?? null;
-    }
-
-    return null;
-  }
-
-  /**
-   * Initialize clause tracking data structure with hierarchical breakdown
-   *
-   * @private
-   * @param {object} expression
-   * @returns {Array}
-   */
-  #initClauseTracking(expression) {
-    const clauses = [];
-    if (!expression?.prerequisites) return clauses;
-
-    for (let i = 0; i < expression.prerequisites.length; i++) {
-      const prereq = expression.prerequisites[i];
-      clauses.push({
-        clauseIndex: i,
-        description: this.#describeClause(prereq),
-        failureCount: 0,
-        violationSum: 0,
-        inRegimeFailureCount: 0,
-        inRegimeEvaluationCount: 0,
-        // Build hierarchical tree for compound clauses
-        hierarchicalTree: this.#buildHierarchicalTree(prereq.logic, `${i}`),
-      });
-    }
-
-    // Mark single-clause case for last-mile tracking
-    const isSingleClause = clauses.length === 1;
-    for (const clause of clauses) {
-      if (clause.hierarchicalTree) {
-        clause.hierarchicalTree.isSingleClause = isSingleClause;
-      }
-    }
-
-    return clauses;
-  }
-
   /**
    * Build a gate clamp analysis plan for emotion/sexual threshold clauses.
+   * Binds buildHierarchicalTree to the expression evaluator module.
    *
    * @private
    * @param {object} expression
@@ -923,150 +863,25 @@ class MonteCarloSimulator {
    * @returns {GateClampRegimePlan}
    */
   #buildGateClampRegimePlan(expression, clauseTracking) {
-    const clauseGateMap = {};
-    const trackedGateAxes = new Set();
-
-    if (!expression?.prerequisites || expression.prerequisites.length === 0) {
-      return { trackedGateAxes: [], clauseGateMap };
-    }
-
-    const trees = clauseTracking
-      ? clauseTracking
-        .map((clause) => clause.hierarchicalTree)
-        .filter(Boolean)
-      : expression.prerequisites.map((prereq, index) =>
-        this.#buildHierarchicalTree(prereq.logic, `${index}`)
-      );
-
-    for (const tree of trees) {
-      this.#collectGatePlanLeaves(tree, clauseGateMap, trackedGateAxes);
-    }
-
-    return {
-      trackedGateAxes: [...trackedGateAxes].sort((a, b) =>
-        a.localeCompare(b)
-      ),
-      clauseGateMap,
-    };
+    return this.#gateEvaluator.buildGateClampRegimePlan(
+      expression,
+      clauseTracking,
+      this.#expressionEvaluator.buildHierarchicalTree.bind(
+        this.#expressionEvaluator
+      )
+    );
   }
 
   /**
-   * Collect gate metadata from leaf threshold clauses.
-   *
-   * @private
-   * @param {HierarchicalClauseNode} node
-   * @param {Record<string, GateClampClauseInfo>} clauseGateMap
-   * @param {Set<string>} trackedGateAxes
-   */
-  #collectGatePlanLeaves(node, clauseGateMap, trackedGateAxes) {
-    if (!node) {
-      return;
-    }
-
-    if (node.nodeType !== 'leaf') {
-      for (const child of node.children || []) {
-        this.#collectGatePlanLeaves(child, clauseGateMap, trackedGateAxes);
-      }
-      return;
-    }
-
-    const clauseId = node.clauseId;
-    if (!clauseId) {
-      return;
-    }
-
-    const gateTarget = this.#resolveGateTarget(node.variablePath);
-    if (!gateTarget) {
-      return;
-    }
-
-    const prototype = this.#getPrototype(gateTarget.prototypeId, gateTarget.type);
-    if (!prototype) {
-      return;
-    }
-
-    const gates = Array.isArray(prototype.gates) ? prototype.gates : [];
-    if (gates.length === 0) {
-      return;
-    }
-
-    const gatePredicates = [];
-    for (const gateStr of gates) {
-      let constraint;
-      try {
-        constraint = GateConstraint.parse(gateStr);
-      } catch {
-        continue;
-      }
-
-      const thresholdRaw = this.#denormalizeGateThreshold(
-        constraint.axis,
-        constraint.value
-      );
-      gatePredicates.push({
-        axis: constraint.axis,
-        operator: constraint.operator,
-        thresholdNormalized: constraint.value,
-        thresholdRaw,
-      });
-      trackedGateAxes.add(constraint.axis);
-    }
-
-    if (gatePredicates.length === 0) {
-      return;
-    }
-
-    clauseGateMap[clauseId] = {
-      prototypeId: gateTarget.prototypeId,
-      type: gateTarget.type,
-      usePrevious: gateTarget.usePrevious,
-      gatePredicates,
-    };
-  }
-
-  /**
-   * Describe a clause in human-readable form
-   *
-   * @private
-   * @param {object} prerequisite
-   * @returns {string}
-   */
-  #describeClause(prerequisite) {
-    const logic = prerequisite?.logic;
-    if (!logic) return 'Unknown clause';
-
-    // Simple description extraction
-    if (logic['>=']) {
-      const [left, right] = logic['>='];
-      if (left?.var && typeof right === 'number') {
-        return `${left.var} >= ${right}`;
-      }
-    }
-
-    if (logic['<=']) {
-      const [left, right] = logic['<='];
-      if (left?.var && typeof right === 'number') {
-        return `${left.var} <= ${right}`;
-      }
-    }
-
-    if (logic.and || logic.or) {
-      const op = logic.and ? 'AND' : 'OR';
-      const count = (logic.and || logic.or).length;
-      return `${op} of ${count} conditions`;
-    }
-
-    return JSON.stringify(logic).substring(0, 50);
-  }
-
-  /**
-   * Evaluate expression with clause tracking (includes hierarchical breakdown)
+   * Evaluate expression with clause tracking (includes hierarchical breakdown).
+   * Binds recordGateOutcomeIfApplicable callback.
    *
    * @private
    * @param {object} expression - The expression to evaluate
    * @param {object} context - Prebuilt evaluation context
    * @param {Array|null} clauseTracking - Tracking array for clause failures
    * @param {boolean} inRegime - Whether mood constraints passed for this sample
+   * @param {object|null} gateContextCache - Cache for gate context resolution
    * @returns {{triggered: boolean, clauseResults: Array<{passed: boolean}>|null, atomTruthMap: Map<string, boolean>|null}}
    */
   #evaluateWithTracking(
@@ -1076,278 +891,109 @@ class MonteCarloSimulator {
     inRegime,
     gateContextCache
   ) {
-    // Two-phase evaluation for last-mile tracking
-    let clauseResults = null;
-    let atomTruthMap = null;
-
-    if (clauseTracking && expression?.prerequisites) {
-      // Phase 1: Evaluate all clauses and collect results
-      clauseResults = [];
-      atomTruthMap = new Map();
-      for (let i = 0; i < expression.prerequisites.length; i++) {
-        const prereq = expression.prerequisites[i];
-        const clause = clauseTracking[i];
-        let passed;
-
-        // Use hierarchical evaluation if tree exists
-        if (clause.hierarchicalTree) {
-          passed = this.#evaluateHierarchicalNode(
-            clause.hierarchicalTree,
-            context,
-            inRegime,
-            gateContextCache,
-            atomTruthMap
-          );
-          if (!passed) {
-            clause.failureCount++;
-            // Violation is tracked at leaf level in the tree
-          }
-        } else {
-          // Fallback to atomic evaluation
-          passed = this.#evaluatePrerequisite(prereq, context);
-          if (!passed) {
-            clause.failureCount++;
-            const violation = this.#estimateViolation(prereq, context);
-            clause.violationSum += violation;
-          }
-          if (inRegime) {
-            clause.inRegimeEvaluationCount++;
-            if (!passed) {
-              clause.inRegimeFailureCount++;
-            }
-          }
-        }
-
-        clauseResults.push({ clause, passed });
+    return this.#expressionEvaluator.evaluateWithTracking(
+      expression,
+      context,
+      clauseTracking,
+      inRegime,
+      gateContextCache,
+      {
+        gateOutcomeRecorder: this.#recordGateOutcomeIfApplicable.bind(this),
       }
-
-      // Phase 2: Calculate last-mile for each clause
-      for (let i = 0; i < clauseResults.length; i++) {
-        const { clause: currentClause, passed: currentPassed } =
-          clauseResults[i];
-
-        // Check if all OTHER clauses passed
-        const othersPassed = clauseResults.every(
-          (result, j) => j === i || result.passed
-        );
-
-        if (othersPassed && currentClause.hierarchicalTree) {
-          currentClause.hierarchicalTree.recordOthersPassed();
-
-          if (!currentPassed) {
-            currentClause.hierarchicalTree.recordLastMileFail();
-          }
-        }
-      }
-    }
-
-    // Full evaluation
-    const triggered = this.#evaluateAllPrerequisites(expression, context);
-    return { triggered, clauseResults, atomTruthMap };
+    );
   }
 
   /**
-   * Build evaluation context from current and previous states
-   *
-   * Calculates derived emotions and sexual states from both current and previous
-   * mood/sexual axes, enabling "persistence-style" expressions that compare
-   * current vs previous values or check delta magnitudes.
+   * Record gate pass/fail outcomes for direct emotion-threshold leaf clauses.
+   * Binds evaluatePrototypeSample to the prototype evaluator module.
    *
    * @private
-   * @param {{mood: object, sexual: object}} currentState - Current mood and sexual state
-   * @param {{mood: object, sexual: object}} previousState - Previous mood and sexual state
-   * @param {{affective_empathy: number, cognitive_empathy: number, harm_aversion: number}|null} [affectTraits] - Affect traits for gate checking
-   * @param {Set<string>|null|undefined} [emotionFilter] - Emotion names to calculate
-   * @param {boolean} [includeGateTrace=false] - Whether to compute gate traces
-   * @returns {object} Context object with moodAxes, emotions, sexualStates, gateTrace, affectTraits, and their previous counterparts
+   * @param {object} node - Hierarchical clause node
+   * @param {object} context - Evaluation context
+   * @param {boolean} clausePassed - Whether the clause passed
+   * @param {boolean} inRegime - Whether in mood regime
+   * @param {object|null} gateContextCache - Cache for gate context resolution
    */
-  #buildContext(
-    currentState,
-    previousState,
-    affectTraits = null,
-    emotionFilter,
-    includeGateTrace = false
+  #recordGateOutcomeIfApplicable(
+    node,
+    context,
+    clausePassed,
+    inRegime,
+    gateContextCache
   ) {
-    // Calculate current emotions from current mood using prototypes
-    // Adapter mirrors runtime calculations (mood, sexual state, optional traits)
-    const emotions = this.#emotionCalculatorAdapter.calculateEmotionsFiltered(
-      currentState.mood,
-      currentState.sexual,
-      affectTraits,
-      emotionFilter
+    return this.#gateEvaluator.recordGateOutcomeIfApplicable(
+      node,
+      context,
+      clausePassed,
+      inRegime,
+      gateContextCache,
+      this.#prototypeEvaluator.evaluatePrototypeSample.bind(
+        this.#prototypeEvaluator
+      )
     );
-
-    // Calculate current sexualArousal from raw sexual state (derived value)
-    const sexualArousal =
-      this.#emotionCalculatorAdapter.calculateSexualArousal(
-        currentState.sexual
-      );
-
-    // Calculate current sexual states, passing the derived sexualArousal for prototype weights
-    const sexualStates =
-      this.#emotionCalculatorAdapter.calculateSexualStates(
-        currentState.mood,
-        currentState.sexual,
-        sexualArousal
-      );
-
-    // Calculate previous emotions from previous mood (NOT zeroed!)
-    // This enables "persistence-style" expressions like lingering_guilt
-    const previousEmotions = this.#emotionCalculatorAdapter.calculateEmotionsFiltered(
-      previousState.mood,
-      previousState.sexual,
-      affectTraits,
-      emotionFilter
-    );
-
-    // Calculate previous sexual arousal and states from previous state
-    const previousSexualArousal =
-      this.#emotionCalculatorAdapter.calculateSexualArousal(
-        previousState.sexual
-      );
-    const previousSexualStates =
-      this.#emotionCalculatorAdapter.calculateSexualStates(
-        previousState.mood,
-        previousState.sexual,
-        previousSexualArousal
-      );
-
-    const gateTrace = includeGateTrace
-      ? {
-          emotions:
-            this.#emotionCalculatorAdapter.calculateEmotionTracesFiltered(
-              currentState.mood,
-              currentState.sexual,
-              affectTraits,
-              emotionFilter
-            ),
-          sexualStates:
-            this.#emotionCalculatorAdapter.calculateSexualStateTraces(
-              currentState.mood,
-              currentState.sexual,
-              sexualArousal
-            ),
-        }
-      : null;
-
-    // Previous mood axes directly from previous state
-    const previousMoodAxes = previousState.mood;
-
-    // Default affect traits for backwards compatibility
-    const defaultTraits = {
-      affective_empathy: 50,
-      cognitive_empathy: 50,
-      harm_aversion: 50,
-    };
-
-    return {
-      mood: currentState.mood,
-      moodAxes: currentState.mood, // Alias for expressions that check moodAxes.*
-      sexualAxes: currentState.sexual,
-      emotions,
-      sexualStates,
-      sexualArousal, // Derived value available for expression evaluation
-      previousEmotions,
-      previousSexualStates,
-      previousMoodAxes,
-      previousSexualAxes: previousState.sexual,
-      previousSexualArousal, // Derived value for previous state arousal comparisons
-      affectTraits: affectTraits ?? defaultTraits, // Include affect traits in context
-      gateTrace,
-    };
   }
 
   /**
-   * Check if all gates pass for a prototype.
-   * Gates must ALL pass for the emotion to be calculated; otherwise intensity = 0.
-   * This matches EmotionCalculatorService.#checkGates() behavior.
-   *
-   * @private
-   * @param {string[] | undefined} gates - Array of gate strings
-   * @param {object} normalizedAxes - Normalized axis values (in [-1, 1] or [0, 1] range)
-   * @returns {boolean} - True if all gates pass or no gates defined
-   */
-  #checkGates(gates, normalizedAxes) {
-    if (!gates || !Array.isArray(gates) || gates.length === 0) return true;
-
-    for (const gate of gates) {
-      let constraint;
-      try {
-        constraint = GateConstraint.parse(gate);
-      } catch {
-        continue;
-      }
-
-      const axisValue = normalizedAxes[constraint.axis];
-      if (axisValue === undefined) continue;
-
-      if (!constraint.isSatisfiedBy(axisValue)) return false;
-    }
-    return true;
-  }
-
-  /**
-   * Evaluate a single prerequisite
-   *
-   * @private
-   * @param {object} prereq
-   * @param {object} context
-   * @returns {boolean}
-   */
-  #evaluatePrerequisite(prereq, context) {
-    try {
-      return jsonLogic.apply(prereq.logic, context);
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Evaluate all prerequisites
+   * Compute gate compatibility for prototypes referenced in prerequisites.
+   * Binds extractPrototypeReferences to the prototype evaluator module.
    *
    * @private
    * @param {object} expression
-   * @param {object} context
-   * @returns {boolean}
+   * @param {Array<{varPath: string, operator: string, threshold: number}>} moodConstraints
+   * @returns {{emotions: Record<string, {compatible: boolean, reason: string|null}>, sexualStates: Record<string, {compatible: boolean, reason: string|null}>}}
    */
-  #evaluateAllPrerequisites(expression, context) {
-    if (!expression?.prerequisites) return true;
-
-    for (const prereq of expression.prerequisites) {
-      if (!this.#evaluatePrerequisite(prereq, context)) {
-        return false;
-      }
-    }
-    return true;
+  #computeGateCompatibility(expression, moodConstraints) {
+    return this.#gateEvaluator.computeGateCompatibility(
+      expression,
+      moodConstraints,
+      this.#prototypeEvaluator.extractPrototypeReferences.bind(
+        this.#prototypeEvaluator
+      )
+    );
   }
 
   /**
-   * Estimate violation magnitude for a failed prerequisite
+   * Count the number of failed leaf clauses for a given sample.
+   * Binds evaluatePrerequisite to the expression evaluator module.
    *
    * @private
-   * @param {object} prereq
-   * @param {object} context
-   * @returns {number}
+   * @param {object[]} clauseTracking - Clause tracking array
+   * @param {object} expression - Expression being evaluated
+   * @param {object} context - Evaluation context
+   * @returns {number} Count of failed leaf clauses
    */
-  #estimateViolation(prereq, context) {
-    const logic = prereq?.logic;
-    if (!logic) return 0;
-
-    if (logic['>=']) {
-      const [left, right] = logic['>='];
-      if (left?.var && typeof right === 'number') {
-        const actual = this.#getNestedValue(context, left.var);
-        if (typeof actual === 'number') {
-          return Math.max(0, right - actual);
-        }
-      }
-    }
-
-    return 0.1; // Default small violation
+  #countFailedClauses(clauseTracking, expression, context) {
+    return this.#violationEstimator.countFailedClauses(
+      clauseTracking,
+      expression,
+      context,
+      (prereq, ctx) =>
+        this.#expressionEvaluator.evaluatePrerequisite(prereq, ctx)
+    );
   }
 
   /**
-   * Get nested value from object using dot notation
+   * Get summary of failed leaf conditions for a sample.
+   * Binds evaluatePrerequisite to the expression evaluator module.
+   *
+   * @private
+   * @param {object[]} clauseTracking - Clause tracking array
+   * @param {object} expression - Expression being evaluated
+   * @param {object} context - Evaluation context
+   * @returns {Array<{description: string, actual: number|null, threshold: number|null, violation: number|null}>}
+   */
+  #getFailedLeavesSummary(clauseTracking, expression, context) {
+    return this.#violationEstimator.getFailedLeavesSummary(
+      clauseTracking,
+      expression,
+      context,
+      (prereq, ctx) =>
+        this.#expressionEvaluator.evaluatePrerequisite(prereq, ctx)
+    );
+  }
+
+  /**
+   * Get nested value from object using dot notation.
    *
    * @private
    * @param {object} obj
@@ -1359,165 +1005,7 @@ class MonteCarloSimulator {
   }
 
   /**
-   * Extract ceiling data from the worst leaf in a hierarchical tree.
-   * For compound nodes (AND/OR), finds the leaf with the largest ceiling gap.
-   *
-   * @private
-   * @param {HierarchicalClauseNode|null} tree
-   * @returns {{ceilingGap: number|null, maxObserved: number|null, thresholdValue: number|null}}
-   */
-  #extractCeilingData(tree) {
-    if (!tree) {
-      return { ceilingGap: null, maxObserved: null, thresholdValue: null };
-    }
-
-    // For leaf nodes, extract directly
-    if (tree.nodeType === 'leaf') {
-      return {
-        ceilingGap: tree.ceilingGap,
-        maxObserved: tree.maxObservedValue,
-        thresholdValue: tree.thresholdValue,
-      };
-    }
-
-    // For compound nodes, find the worst ceiling among children
-    let worstCeiling = { ceilingGap: null, maxObserved: null, thresholdValue: null };
-    let worstGap = -Infinity;
-
-    for (const child of tree.children || []) {
-      const childCeiling = this.#extractCeilingData(child);
-      if (childCeiling.ceilingGap !== null && childCeiling.ceilingGap > worstGap) {
-        worstGap = childCeiling.ceilingGap;
-        worstCeiling = childCeiling;
-      }
-    }
-
-    return worstCeiling;
-  }
-
-  /**
-   * Finalize clause results with rates and hierarchical breakdown
-   *
-   * @private
-   * @param {Array} clauseTracking
-   * @param {number} sampleCount
-   * @returns {ClauseResult[]}
-   */
-  #finalizeClauseResults(clauseTracking, sampleCount) {
-    return clauseTracking
-      .map((c) => {
-        // Extract ceiling data from the worst leaf in the tree
-        const ceilingData = this.#extractCeilingData(c.hierarchicalTree);
-        const leafOnly = c.hierarchicalTree?.nodeType === 'leaf';
-        const inRegimeFailureRate =
-          c.hierarchicalTree?.inRegimeFailureRate ??
-          (c.inRegimeEvaluationCount > 0
-            ? c.inRegimeFailureCount / c.inRegimeEvaluationCount
-            : null);
-        const inRegimePassRate =
-          typeof inRegimeFailureRate === 'number'
-            ? 1 - inRegimeFailureRate
-            : null;
-        const achievableRange = leafOnly
-          ? {
-              min: c.hierarchicalTree?.minObservedValue ?? null,
-              max: c.hierarchicalTree?.maxObservedValue ?? null,
-            }
-          : null;
-        const inRegimeAchievableRange = leafOnly
-          ? {
-              min: c.hierarchicalTree?.inRegimeMinObservedValue ?? null,
-              max: c.hierarchicalTree?.inRegimeMaxObservedValue ?? null,
-            }
-          : null;
-        const gatePassRateInRegime = leafOnly
-          ? c.hierarchicalTree?.gatePassRateInRegime ?? null
-          : null;
-        const gateClampRateInRegime = leafOnly
-          ? c.hierarchicalTree?.gateClampRateInRegime ?? null
-          : null;
-        const passRateGivenGateInRegime = leafOnly
-          ? c.hierarchicalTree?.passRateGivenGateInRegime ?? null
-          : null;
-        const gatePassInRegimeCount = leafOnly
-          ? c.hierarchicalTree?.gatePassInRegimeCount ?? null
-          : null;
-        const gateFailInRegimeCount = leafOnly
-          ? c.hierarchicalTree?.gateFailInRegimeCount ?? null
-          : null;
-        const gatePassAndClausePassInRegimeCount = leafOnly
-          ? c.hierarchicalTree?.gatePassAndClausePassInRegimeCount ?? null
-          : null;
-        const gatePassAndClauseFailInRegimeCount = leafOnly
-          ? c.hierarchicalTree?.gatePassAndClauseFailInRegimeCount ?? null
-          : null;
-        const rawPassInRegimeCount = leafOnly
-          ? c.hierarchicalTree?.rawPassInRegimeCount ?? null
-          : null;
-        const lostPassInRegimeCount = leafOnly
-          ? c.hierarchicalTree?.lostPassInRegimeCount ?? null
-          : null;
-        const lostPassRateInRegime = leafOnly
-          ? c.hierarchicalTree?.lostPassRateInRegime ?? null
-          : null;
-        const gatedPassInRegimeCount =
-          typeof rawPassInRegimeCount === 'number' &&
-          typeof lostPassInRegimeCount === 'number'
-            ? rawPassInRegimeCount - lostPassInRegimeCount
-            : null;
-
-        return {
-          clauseDescription: c.description,
-          clauseIndex: c.clauseIndex,
-          failureCount: c.failureCount,
-          failureRate: c.failureCount / sampleCount,
-          inRegimeFailureRate,
-          inRegimePassRate,
-          averageViolation:
-            c.failureCount > 0 ? c.violationSum / c.failureCount : 0,
-          violationP50: c.hierarchicalTree?.violationP50 ?? null,
-          violationP90: c.hierarchicalTree?.violationP90 ?? null,
-          nearMissRate: c.hierarchicalTree?.nearMissRate ?? null,
-          nearMissEpsilon: c.hierarchicalTree?.nearMissEpsilon ?? null,
-          // Last-mile tracking fields
-          lastMileFailRate: c.hierarchicalTree?.lastMileFailRate ?? null,
-          lastMileContext: {
-            othersPassedCount: c.hierarchicalTree?.othersPassedCount ?? 0,
-            lastMileFailCount: c.hierarchicalTree?.lastMileFailCount ?? 0,
-          },
-          isSingleClause: c.hierarchicalTree?.isSingleClause ?? false,
-          // Ceiling detection fields (from worst leaf)
-          ceilingGap: ceilingData.ceilingGap,
-          maxObserved: ceilingData.maxObserved,
-          thresholdValue: ceilingData.thresholdValue,
-          achievableRange,
-          inRegimeAchievableRange,
-          redundantInRegime: leafOnly
-            ? c.hierarchicalTree?.redundantInRegime ?? null
-            : null,
-          tuningDirection: leafOnly
-            ? c.hierarchicalTree?.tuningDirection ?? null
-            : null,
-          gatePassRateInRegime,
-          gateClampRateInRegime,
-          passRateGivenGateInRegime,
-          gatePassInRegimeCount,
-          gateFailInRegimeCount,
-          gatePassAndClausePassInRegimeCount,
-          gatePassAndClauseFailInRegimeCount,
-          rawPassInRegimeCount,
-          lostPassInRegimeCount,
-          lostPassRateInRegime,
-          gatedPassInRegimeCount,
-          // Include hierarchical breakdown if available
-          hierarchicalBreakdown: c.hierarchicalTree?.toJSON() ?? null,
-        };
-      })
-      .sort((a, b) => b.failureRate - a.failureRate);
-  }
-
-  /**
-   * Calculate Wilson score confidence interval
+   * Calculate Wilson score confidence interval.
    *
    * @private
    * @param {number} rate
@@ -1540,7 +1028,7 @@ class MonteCarloSimulator {
   }
 
   /**
-   * Get z-score for confidence level
+   * Get z-score for confidence level.
    *
    * @private
    * @param {number} level
@@ -1552,227 +1040,6 @@ class MonteCarloSimulator {
     if (level >= 0.95) return 1.96;
     if (level >= 0.9) return 1.645;
     return 1.96; // Default to 95%
-  }
-
-  // ============================================================
-  // Hierarchical Tree Building and Evaluation Methods
-  // ============================================================
-
-  /**
-   * Build a hierarchical tracking tree from a JSON Logic expression.
-   *
-   * @private
-   * @param {object} logic - The JSON Logic object
-   * @param {string} pathPrefix - Path prefix for node IDs
-   * @param {'and' | 'or' | 'root'} parentNodeType - The parent node's type for context-aware analysis
-   * @returns {HierarchicalClauseNode}
-   */
-  #buildHierarchicalTree(logic, pathPrefix = '0', parentNodeType = 'root') {
-    if (!logic || typeof logic !== 'object') {
-      const clauseMeta = ClauseNormalizer.normalizeLeaf(logic, pathPrefix);
-      const node = new HierarchicalClauseNode({
-        id: pathPrefix,
-        nodeType: 'leaf',
-        description: this.#describeLeafCondition(logic),
-        logic,
-        clauseId: clauseMeta.clauseId,
-        clauseType: clauseMeta.clauseType,
-      });
-      node.parentNodeType = parentNodeType;
-      const thresholdInfo = this.#extractThresholdFromLogic(logic);
-      if (thresholdInfo) {
-        node.setThresholdMetadata(
-          thresholdInfo.threshold,
-          thresholdInfo.operator,
-          thresholdInfo.variablePath
-        );
-      }
-      return node;
-    }
-
-    // Handle AND nodes
-    if (logic.and && Array.isArray(logic.and)) {
-      const children = logic.and.map((child, i) =>
-        this.#buildHierarchicalTree(child, `${pathPrefix}.${i}`, 'and')
-      );
-      const node = new HierarchicalClauseNode({
-        id: pathPrefix,
-        nodeType: 'and',
-        description: `AND of ${logic.and.length} conditions`,
-        logic,
-        children,
-      });
-      node.parentNodeType = parentNodeType;
-      return node;
-    }
-
-    // Handle OR nodes
-    if (logic.or && Array.isArray(logic.or)) {
-      const children = logic.or.map((child, i) =>
-        this.#buildHierarchicalTree(child, `${pathPrefix}.${i}`, 'or')
-      );
-      const node = new HierarchicalClauseNode({
-        id: pathPrefix,
-        nodeType: 'or',
-        description: `OR of ${logic.or.length} conditions`,
-        logic,
-        children,
-      });
-      node.parentNodeType = parentNodeType;
-      return node;
-    }
-
-    const maxDecomposition = ClauseNormalizer.decomposeMaxClause(logic);
-    if (maxDecomposition) {
-      const children = maxDecomposition.map((child, i) =>
-        this.#buildHierarchicalTree(child, `${pathPrefix}.${i}`, 'and')
-      );
-      const node = new HierarchicalClauseNode({
-        id: pathPrefix,
-        nodeType: 'and',
-        description: `AND of ${children.length} conditions`,
-        logic,
-        children,
-      });
-      node.parentNodeType = parentNodeType;
-      return node;
-    }
-
-    // Leaf node (comparison operator)
-    const clauseMeta = ClauseNormalizer.normalizeLeaf(logic, pathPrefix);
-    const node = new HierarchicalClauseNode({
-      id: pathPrefix,
-      nodeType: 'leaf',
-      description: this.#describeLeafCondition(logic),
-      logic,
-      clauseId: clauseMeta.clauseId,
-      clauseType: clauseMeta.clauseType,
-    });
-    node.parentNodeType = parentNodeType;
-    const thresholdInfo = this.#extractThresholdFromLogic(logic);
-    if (thresholdInfo) {
-      node.setThresholdMetadata(
-        thresholdInfo.threshold,
-        thresholdInfo.operator,
-        thresholdInfo.variablePath
-      );
-    }
-    return node;
-  }
-
-  /**
-   * Describe a leaf condition in human-readable form.
-   *
-   * @private
-   * @param {object} logic
-   * @returns {string}
-   */
-  #describeLeafCondition(logic) {
-    if (!logic || typeof logic !== 'object') return String(logic);
-
-    const operators = ['>=', '<=', '>', '<', '==', '!='];
-    for (const op of operators) {
-      if (logic[op]) {
-        const [left, right] = logic[op];
-        const leftStr = this.#describeOperand(left);
-        const rightStr = this.#describeOperand(right);
-        return `${leftStr} ${op} ${rightStr}`;
-      }
-    }
-
-    // Handle other patterns - try to make them readable
-    return JSON.stringify(logic).substring(0, 60);
-  }
-
-  /**
-   * Describe an operand (left or right side of comparison).
-   *
-   * @private
-   * @param {*} operand
-   * @returns {string}
-   */
-  #describeOperand(operand) {
-    if (operand === null || operand === undefined) return 'null';
-    if (typeof operand === 'number') return String(operand);
-    if (typeof operand === 'string') return `"${operand}"`;
-    if (operand?.var) return operand.var;
-
-    // Handle arithmetic expressions like { "-": [...] }
-    if (operand['-']) {
-      const [a, b] = operand['-'];
-      return `(${this.#describeOperand(a)} - ${this.#describeOperand(b)})`;
-    }
-    if (operand['+']) {
-      const [a, b] = operand['+'];
-      return `(${this.#describeOperand(a)} + ${this.#describeOperand(b)})`;
-    }
-    if (operand['*']) {
-      const [a, b] = operand['*'];
-      return `(${this.#describeOperand(a)} * ${this.#describeOperand(b)})`;
-    }
-    if (operand['/']) {
-      const [a, b] = operand['/'];
-      return `(${this.#describeOperand(a)} / ${this.#describeOperand(b)})`;
-    }
-
-    return JSON.stringify(operand).substring(0, 30);
-  }
-
-  /**
-   * Extract threshold metadata from a JSON Logic comparison.
-   *
-   * @private
-   * @param {object} logic - The JSON Logic object
-   * @returns {{threshold: number, operator: string, variablePath: string}|null}
-   */
-  #extractThresholdFromLogic(logic) {
-    if (!logic || typeof logic !== 'object') return null;
-
-    const operators = ['>=', '<=', '>', '<', '=='];
-
-    for (const op of operators) {
-      if (logic[op] && Array.isArray(logic[op]) && logic[op].length === 2) {
-        const [left, right] = logic[op];
-
-        // Pattern: {"op": [{"var": "path"}, threshold]}
-        if (left?.var && typeof right === 'number') {
-          return {
-            threshold: right,
-            operator: op,
-            variablePath: left.var,
-          };
-        }
-
-        // Pattern: {"op": [threshold, {"var": "path"}]} (reversed)
-        if (right?.var && typeof left === 'number') {
-          return {
-            threshold: left,
-            operator: this.#reverseOperator(op),
-            variablePath: right.var,
-          };
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Reverse a comparison operator (for when threshold is on the left).
-   *
-   * @private
-   * @param {string} op
-   * @returns {string}
-   */
-  #reverseOperator(op) {
-    const reverseMap = {
-      '>=': '<=',
-      '<=': '>=',
-      '>': '<',
-      '<': '>',
-      '==': '==',
-    };
-    return reverseMap[op] || op;
   }
 
   /**
@@ -1793,303 +1060,19 @@ class MonteCarloSimulator {
   }
 
   /**
-   * Compute gate compatibility for prototypes referenced in prerequisites.
+   * Validate all variable paths in an expression's prerequisites.
    *
    * @private
-   * @param {object} expression
-   * @param {Array<{varPath: string, operator: string, threshold: number}>} moodConstraints
-   * @returns {{emotions: Record<string, {compatible: boolean, reason: string|null}>, sexualStates: Record<string, {compatible: boolean, reason: string|null}>}}
+   * @param {object} expression - Expression with prerequisites array
+   * @returns {{ warnings: UnseededVarWarning[] }}
    */
-  #computeGateCompatibility(expression, moodConstraints) {
-    const references = this.#extractPrototypeReferences(
-      expression?.prerequisites
+  #validateExpressionVarPaths(expression) {
+    const knownKeys = this.#contextBuilder.buildKnownContextKeys();
+    const warnings = this.#variablePathValidator.validateExpressionVarPaths(
+      expression,
+      knownKeys
     );
-    const axisIntervals = this.#buildAxisIntervalsFromMoodConstraints(
-      moodConstraints
-    );
-
-    const result = { emotions: {}, sexualStates: {} };
-
-    for (const prototypeId of references.emotions) {
-      result.emotions[prototypeId] = this.#checkPrototypeCompatibility(
-        prototypeId,
-        'emotion',
-        axisIntervals
-      );
-    }
-
-    for (const prototypeId of references.sexualStates) {
-      result.sexualStates[prototypeId] = this.#checkPrototypeCompatibility(
-        prototypeId,
-        'sexual',
-        axisIntervals
-      );
-    }
-
-    return result;
-  }
-
-  /**
-   * Check if a prototype's gates are compatible with mood regime constraints.
-   *
-   * @private
-   * @param {string} prototypeId
-   * @param {'emotion'|'sexual'} type
-   * @param {Map<string, AxisInterval>} axisIntervals
-   * @returns {{compatible: boolean, reason: string|null}}
-   */
-  #checkPrototypeCompatibility(prototypeId, type, axisIntervals) {
-    const prototype = this.#getPrototype(prototypeId, type);
-    if (!prototype) {
-      return { compatible: false, reason: 'prototype not found' };
-    }
-
-    const gates = Array.isArray(prototype.gates) ? prototype.gates : [];
-    if (gates.length === 0) {
-      return { compatible: true, reason: null };
-    }
-
-    for (const gateStr of gates) {
-      let constraint;
-      try {
-        constraint = GateConstraint.parse(gateStr);
-      } catch {
-        continue;
-      }
-
-      const interval =
-        axisIntervals.get(constraint.axis) ??
-        this.#getDefaultIntervalForAxis(constraint.axis);
-      const constrained = constraint.applyTo(interval);
-      if (constrained.isEmpty()) {
-        const reason = `gate \"${gateStr}\" conflicts with mood regime ${constraint.axis} in [${interval.min}, ${interval.max}]`;
-        return { compatible: false, reason };
-      }
-    }
-
-    return { compatible: true, reason: null };
-  }
-
-  /**
-   * Build axis intervals (normalized) from mood constraints.
-   *
-   * @private
-   * @param {Array<{varPath: string, operator: string, threshold: number}>} moodConstraints
-   * @returns {Map<string, AxisInterval>}
-   */
-  #buildAxisIntervalsFromMoodConstraints(moodConstraints) {
-    const intervals = new Map();
-    for (const constraint of moodConstraints || []) {
-      const axis = constraint.varPath
-        .replace('moodAxes.', '')
-        .replace('mood.', '');
-      const normalizedValue = this.#normalizeMoodAxisValue(
-        constraint.threshold
-      );
-      const current =
-        intervals.get(axis) ?? this.#getDefaultIntervalForAxis(axis);
-      const updated = current.applyConstraint(
-        constraint.operator,
-        normalizedValue
-      );
-      intervals.set(axis, updated);
-    }
-    return intervals;
-  }
-
-  /**
-   * Normalize mood axis values to [-1, 1] scale when raw inputs are provided.
-   *
-   * @private
-   * @param {number} value
-   * @returns {number}
-   */
-  #normalizeMoodAxisValue(value) {
-    return value / 100;
-  }
-
-  /**
-   * Get default interval bounds for an axis (normalized).
-   *
-   * @private
-   * @param {string} axis
-   * @returns {AxisInterval}
-   */
-  #getDefaultIntervalForAxis(axis) {
-    const sexualAxes = [
-      'sex_excitation',
-      'sex_inhibition',
-      'baseline_libido',
-      'sexual_arousal',
-    ];
-    if (sexualAxes.includes(axis)) {
-      return AxisInterval.forSexualAxis();
-    }
-    return AxisInterval.forMoodAxis();
-  }
-
-  /**
-   * Convert a normalized gate threshold into the raw prerequisite scale when possible.
-   *
-   * @private
-   * @param {string} axis
-   * @param {number} value
-   * @returns {number|null}
-   */
-  #denormalizeGateThreshold(axis, value) {
-    const scale = this.#getGateAxisRawScale(axis);
-    if (typeof scale !== 'number') {
-      return null;
-    }
-    return value * scale;
-  }
-
-  /**
-   * Resolve raw scale multiplier for gate axes.
-   *
-   * @private
-   * @param {string} axis
-   * @returns {number|null}
-   */
-  #getGateAxisRawScale(axis) {
-    if (DERIVED_AXIS_RAW_SCALES.has(axis)) {
-      return DERIVED_AXIS_RAW_SCALES.get(axis);
-    }
-    if (MOOD_AXIS_NAMES.has(axis)) {
-      return 100;
-    }
-    if (AFFECT_TRAIT_NAMES.has(axis)) {
-      return 100;
-    }
-    if (SEXUAL_AXIS_NAMES.has(axis)) {
-      return 100;
-    }
-    return null;
-  }
-
-  /**
-   * Extract prototype references from prerequisites.
-   *
-   * @private
-   * @param {Array} prerequisites
-   * @returns {{emotions: string[], sexualStates: string[]}}
-   */
-  #extractPrototypeReferences(prerequisites) {
-    const emotions = new Set();
-    const sexualStates = new Set();
-
-    if (!Array.isArray(prerequisites)) {
-      return { emotions: [], sexualStates: [] };
-    }
-
-    for (const prereq of prerequisites) {
-      this.#collectPrototypeReferencesFromLogic(
-        prereq.logic,
-        emotions,
-        sexualStates
-      );
-    }
-
-    return {
-      emotions: [...emotions],
-      sexualStates: [...sexualStates],
-    };
-  }
-
-  /**
-   * Prepare prototype evaluation targets with resolved weights/gates.
-   *
-   * @private
-   * @param {Array} prerequisites
-   * @returns {{emotions: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>, sexualStates: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>}}
-   */
-  #preparePrototypeEvaluationTargets(prerequisites) {
-    const references = this.#extractPrototypeReferences(prerequisites);
-    const emotions = [];
-    const sexualStates = [];
-
-    for (const prototypeId of references.emotions) {
-      const prototype = this.#getPrototype(prototypeId, 'emotion');
-      if (!prototype) {
-        this.#logger.warn(
-          `MonteCarloSimulator: Prototype not found for evaluation: emotions.${prototypeId}`
-        );
-        continue;
-      }
-      emotions.push({
-        prototypeId,
-        weights: prototype.weights ?? null,
-        gates: Array.isArray(prototype.gates) ? prototype.gates : null,
-      });
-    }
-
-    for (const prototypeId of references.sexualStates) {
-      const prototype = this.#getPrototype(prototypeId, 'sexual');
-      if (!prototype) {
-        this.#logger.warn(
-          `MonteCarloSimulator: Prototype not found for evaluation: sexualStates.${prototypeId}`
-        );
-        continue;
-      }
-      sexualStates.push({
-        prototypeId,
-        weights: prototype.weights ?? null,
-        gates: Array.isArray(prototype.gates) ? prototype.gates : null,
-      });
-    }
-
-    return { emotions, sexualStates };
-  }
-
-  /**
-   * Initialize prototype evaluation summary for streaming aggregation.
-   *
-   * @private
-   * @param {{emotions: Array<{prototypeId: string}>, sexualStates: Array<{prototypeId: string}>}} targets
-   * @returns {PrototypeEvaluationSummary|null}
-   */
-  #initializePrototypeEvaluationSummary(targets) {
-    if (!targets) {
-      return null;
-    }
-    if (targets.emotions.length === 0 && targets.sexualStates.length === 0) {
-      return null;
-    }
-
-    const summary = {
-      emotions: {},
-      sexualStates: {},
-    };
-
-    for (const target of targets.emotions) {
-      summary.emotions[target.prototypeId] =
-        this.#createPrototypeEvaluationStats();
-    }
-
-    for (const target of targets.sexualStates) {
-      summary.sexualStates[target.prototypeId] =
-        this.#createPrototypeEvaluationStats();
-    }
-
-    return summary;
-  }
-
-  /**
-   * Create an empty prototype evaluation stats object.
-   *
-   * @private
-   * @returns {PrototypeEvaluationStats}
-   */
-  #createPrototypeEvaluationStats() {
-    return {
-      moodSampleCount: 0,
-      gatePassCount: 0,
-      gateFailCount: 0,
-      failedGateCounts: {},
-      rawScoreSum: 0,
-      valueSum: 0,
-      valueSumGivenGate: 0,
-    };
+    return { warnings };
   }
 
   /**
@@ -2097,7 +1080,7 @@ class MonteCarloSimulator {
    *
    * @private
    * @param {PrototypeEvaluationSummary} summary
-   * @param {{emotions: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>, sexualStates: Array<{prototypeId: string, weights: object|null, gates: string[]|null}>}} targets
+   * @param {{emotions: Array, sexualStates: Array}} targets
    * @param {object} context
    * @param {object|null} gateContextCache
    */
@@ -2111,7 +1094,7 @@ class MonteCarloSimulator {
       return;
     }
 
-    const normalizedContext = this.#resolveGateContext(
+    const normalizedContext = this.#gateEvaluator.resolveGateContext(
       gateContextCache,
       context,
       false
@@ -2124,1161 +1107,18 @@ class MonteCarloSimulator {
     const normalizedSexual = normalizedContext.sexualAxes ?? {};
     const normalizedTraits = normalizedContext.traitAxes ?? {};
 
-    for (const target of targets.emotions) {
-      const stats = summary.emotions[target.prototypeId];
-      if (!stats) {
-        continue;
-      }
-      const evaluation = this.#evaluatePrototypeSample(
-        target,
-        normalizedMood,
-        normalizedSexual,
-        normalizedTraits
-      );
-      this.#recordPrototypeEvaluation(stats, evaluation);
-    }
-
-    for (const target of targets.sexualStates) {
-      const stats = summary.sexualStates[target.prototypeId];
-      if (!stats) {
-        continue;
-      }
-      const evaluation = this.#evaluatePrototypeSample(
-        target,
-        normalizedMood,
-        normalizedSexual,
-        {}
-      );
-      this.#recordPrototypeEvaluation(stats, evaluation);
-    }
-  }
-
-  /**
-   * Evaluate a prototype for a single normalized context.
-   *
-   * @private
-   * @param {{weights: object|null, gates: string[]|null}} target
-   * @param {Record<string, number>} normalizedMood
-   * @param {Record<string, number>} normalizedSexual
-   * @param {Record<string, number>} normalizedTraits
-   * @returns {{gatePass: boolean, failedGates: string[], rawScore: number, rawValue: number, value: number}}
-   */
-  #evaluatePrototypeSample(
-    target,
-    normalizedMood,
-    normalizedSexual,
-    normalizedTraits
-  ) {
-    const clamp01 = (value) => Math.max(0, Math.min(1, value));
-
-    let rawSum = 0;
-    let sumAbsWeights = 0;
-    if (target.weights && typeof target.weights === 'object') {
-      for (const [axis, weight] of Object.entries(target.weights)) {
-        if (typeof weight !== 'number') {
-          continue;
-        }
-        const axisValue = resolveAxisValue(
-          axis,
-          normalizedMood,
-          normalizedSexual,
-          normalizedTraits
-        );
-        rawSum += weight * axisValue;
-        sumAbsWeights += Math.abs(weight);
-      }
-    }
-
-    const rawScore = sumAbsWeights === 0 ? 0 : rawSum / sumAbsWeights;
-    const clampedRaw = clamp01(rawScore);
-
-    const failedGates = [];
-    const gates = Array.isArray(target.gates) ? target.gates : [];
-    for (const gateStr of gates) {
-      let constraint;
-      try {
-        constraint = GateConstraint.parse(gateStr);
-      } catch {
-        continue;
-      }
-      const axisValue = resolveAxisValue(
-        constraint.axis,
-        normalizedMood,
-        normalizedSexual,
-        normalizedTraits
-      );
-      if (!constraint.isSatisfiedBy(axisValue)) {
-        failedGates.push(gateStr);
-      }
-    }
-
-    const gatePass = failedGates.length === 0;
-    const value = gatePass ? clampedRaw : 0;
-
-    return { gatePass, failedGates, rawScore, rawValue: clampedRaw, value };
-  }
-
-  /**
-   * Record a single prototype evaluation into aggregate stats.
-   *
-   * @private
-   * @param {PrototypeEvaluationStats} stats
-   * @param {{gatePass: boolean, failedGates: string[], rawScore: number, value: number}} evaluation
-   */
-  #recordPrototypeEvaluation(stats, evaluation) {
-    if (!stats || !evaluation) {
-      return;
-    }
-
-    stats.moodSampleCount++;
-    if (evaluation.gatePass) {
-      stats.gatePassCount++;
-    } else {
-      stats.gateFailCount++;
-    }
-
-    for (const gateId of evaluation.failedGates) {
-      stats.failedGateCounts[gateId] =
-        (stats.failedGateCounts[gateId] ?? 0) + 1;
-    }
-
-    stats.rawScoreSum += evaluation.rawScore;
-    stats.valueSum += evaluation.value;
-    if (evaluation.gatePass) {
-      stats.valueSumGivenGate += evaluation.value;
-    }
-  }
-
-  /**
-   * Recursively collect prototype references from JSON Logic.
-   *
-   * @private
-   * @param {object} logic
-   * @param {Set<string>} emotions
-   * @param {Set<string>} sexualStates
-   */
-  #collectPrototypeReferencesFromLogic(logic, emotions, sexualStates) {
-    if (!logic || typeof logic !== 'object') return;
-
-    for (const op of ['>=', '<=', '>', '<', '==']) {
-      if (logic[op]) {
-        const [left, right] = logic[op];
-        const candidates = [left, right];
-        for (const candidate of candidates) {
-          if (candidate?.var && typeof candidate.var === 'string') {
-            if (candidate.var.startsWith('emotions.')) {
-              emotions.add(candidate.var.replace('emotions.', ''));
-            } else if (candidate.var.startsWith('sexualStates.')) {
-              sexualStates.add(candidate.var.replace('sexualStates.', ''));
-            }
-          }
-        }
-      }
-    }
-
-    if (logic.and || logic.or) {
-      const clauses = logic.and || logic.or;
-      for (const clause of clauses) {
-        this.#collectPrototypeReferencesFromLogic(
-          clause,
-          emotions,
-          sexualStates
-        );
-      }
-    }
-  }
-
-  /**
-   * Get prototype definition from dataRegistry.
-   *
-   * @private
-   * @param {string} prototypeId
-   * @param {'emotion'|'sexual'} type
-   * @returns {object|null}
-   */
-  #getPrototype(prototypeId, type) {
-    const lookupId =
-      type === 'emotion' ? 'core:emotion_prototypes' : 'core:sexual_prototypes';
-    const lookup = this.#dataRegistry.get('lookups', lookupId);
-    return lookup?.entries?.[prototypeId] || null;
-  }
-
-  /**
-   * Recursively evaluate a hierarchical tree node and update stats.
-   * Evaluates ALL children (no short-circuit) to collect accurate stats.
-   * Also tracks sibling-conditioned stats for leaves within compound nodes.
-   *
-   * @private
-   * @param {HierarchicalClauseNode} node
-   * @param {object} context
-   * @param {boolean} inRegime
-   * @param {object|null} gateContextCache
-   * @param {Map<string, boolean>|null} atomTruthMap
-   * @returns {boolean} - Whether the node evaluated to true
-   */
-  #evaluateHierarchicalNode(
-    node,
-    context,
-    inRegime,
-    gateContextCache,
-    atomTruthMap
-  ) {
-    if (node.nodeType === 'leaf') {
-      const clauseId = node.clauseId;
-      let passed;
-      if (atomTruthMap) {
-        const cacheKey = clauseId ?? `node:${node.id}`;
-        if (atomTruthMap.has(cacheKey)) {
-          passed = atomTruthMap.get(cacheKey);
-        } else {
-          passed = this.#evaluateLeafCondition(node.logic, context);
-          atomTruthMap.set(cacheKey, passed);
-        }
-      } else {
-        passed = this.#evaluateLeafCondition(node.logic, context);
-      }
-      const violation = passed
-        ? 0
-        : this.#estimateLeafViolation(node.logic, context);
-
-      // Record the actual observed value for ceiling analysis
-      const actualValue = this.#extractActualValue(node.logic, context);
-      if (actualValue !== null) {
-        if (inRegime) {
-          node.recordObservedValueInRegime(actualValue);
-        } else {
-          node.recordObservedValue(actualValue);
-        }
-      }
-
-      // Record near-miss if threshold metadata available
-      if (actualValue !== null && node.thresholdValue !== null && node.variablePath) {
-        const epsilon = getEpsilonForVariable(node.variablePath);
-        node.recordNearMiss(actualValue, node.thresholdValue, epsilon);
-      }
-
-      node.recordEvaluation(passed, violation);
-      if (inRegime) {
-        node.recordInRegimeEvaluation(passed);
-      }
-      this.#recordGateOutcomeIfApplicable(
-        node,
-        context,
-        passed,
-        inRegime,
-        gateContextCache
-      );
-      return passed;
-    }
-
-    if (node.nodeType === 'and') {
-      // For AND: all children must pass; evaluate ALL to track stats
-      const childResults = [];
-      for (const child of node.children) {
-        const childPassed = this.#evaluateHierarchicalNode(
-          child,
-          context,
-          inRegime,
-          gateContextCache,
-          atomTruthMap
-        );
-        childResults.push({ child, passed: childPassed });
-      }
-
-      // Track sibling-conditioned stats for each child
-      this.#recordSiblingConditionedStats(childResults);
-
-      const allPassed = childResults.every((r) => r.passed);
-      node.recordEvaluation(allPassed);
-      if (inRegime) {
-        node.recordInRegimeEvaluation(allPassed);
-      }
-      return allPassed;
-    }
-
-    if (node.nodeType === 'or') {
-      // For OR: any child must pass; evaluate ALL to track stats
-      const childResults = [];
-      for (const child of node.children) {
-        const childPassed = this.#evaluateHierarchicalNode(
-          child,
-          context,
-          inRegime,
-          gateContextCache,
-          atomTruthMap
-        );
-        childResults.push({ child, passed: childPassed });
-      }
-
-      // Track sibling-conditioned stats for each child
-      this.#recordSiblingConditionedStats(childResults);
-
-      const anyPassed = childResults.some((r) => r.passed);
-      const passingChildren = anyPassed
-        ? childResults.filter((result) => result.passed).map((result) => result.child)
-        : [];
-
-      // Track OR contribution: which alternative fired first when OR succeeded
-      if (anyPassed) {
-        if (passingChildren.length === 1) {
-          node.recordOrBlockExclusivePass(inRegime);
-        }
-        if (passingChildren.length > 1) {
-          for (let i = 0; i < passingChildren.length; i++) {
-            for (let j = i + 1; j < passingChildren.length; j++) {
-              node.recordOrPairPass(
-                passingChildren[i].id,
-                passingChildren[j].id,
-                inRegime
-              );
-            }
-          }
-        }
-        let firstContributorFound = false;
-        for (let i = 0; i < childResults.length; i++) {
-          const { child, passed } = childResults[i];
-          // All children get their orSuccessCount incremented
-          child.recordOrSuccess();
-          if (passed) {
-            child.recordOrPass();
-          }
-          // Only the first passing alternative gets contribution credit
-          if (passed && !firstContributorFound) {
-            child.recordOrContribution();
-            firstContributorFound = true;
-          }
-          if (passed) {
-            const siblingsFailed = childResults.every(
-              (result, j) => j === i || !result.passed
-            );
-            if (siblingsFailed) {
-              child.recordOrExclusivePass();
-            }
-          }
-        }
-      }
-
-      node.recordEvaluation(anyPassed);
-      if (inRegime) {
-        node.recordInRegimeEvaluation(anyPassed);
-      }
-      return anyPassed;
-    }
-
-    // Unknown node type - use json-logic directly
-    try {
-      const passed = jsonLogic.apply(node.logic, context);
-      node.recordEvaluation(passed);
-      if (inRegime) {
-        node.recordInRegimeEvaluation(passed);
-      }
-      return passed;
-    } catch {
-      node.recordEvaluation(false);
-      if (inRegime) {
-        node.recordInRegimeEvaluation(false);
-      }
-      return false;
-    }
-  }
-
-  /**
-   * Record gate pass/fail outcomes for direct emotion-threshold leaf clauses.
-   *
-   * @private
-   * @param {HierarchicalClauseNode} node
-   * @param {object} context
-   * @param {boolean} clausePassed
-   * @param {boolean} inRegime
-   * @param {object|null} gateContextCache
-   */
-  #recordGateOutcomeIfApplicable(
-    node,
-    context,
-    clausePassed,
-    inRegime,
-    gateContextCache
-  ) {
-    if (!node || node.nodeType !== 'leaf') {
-      return;
-    }
-
-    const gateTarget = this.#resolveGateTarget(node.variablePath);
-    if (!gateTarget) {
-      return;
-    }
-
-    const prototype = this.#getPrototype(gateTarget.prototypeId, gateTarget.type);
-    if (!prototype) {
-      return;
-    }
-
-    const normalizedContext = this.#resolveGateContext(
-      gateContextCache,
-      context,
-      gateTarget.usePrevious
+    this.#prototypeEvaluator.updatePrototypeEvaluationSummary(
+      summary,
+      targets,
+      normalizedMood,
+      normalizedSexual,
+      normalizedTraits
     );
-    if (!normalizedContext) {
-      return;
-    }
-
-    const evaluation = this.#evaluatePrototypeSample(
-      {
-        weights: prototype.weights ?? null,
-        gates: Array.isArray(prototype.gates) ? prototype.gates : null,
-      },
-      normalizedContext.moodAxes ?? {},
-      normalizedContext.sexualAxes ?? {},
-      normalizedContext.traitAxes ?? {}
-    );
-
-    node.recordGateEvaluation(evaluation.gatePass, clausePassed, inRegime);
-
-    if (
-      node.comparisonOperator === '>=' &&
-      typeof node.thresholdValue === 'number'
-    ) {
-      const rawPass = evaluation.rawValue >= node.thresholdValue;
-      node.recordLostPassInRegime(rawPass, clausePassed, inRegime);
-    }
-  }
-
-  /**
-   * Resolve gate evaluation target from a variable path.
-   *
-   * @private
-   * @param {string|null} variablePath
-   * @returns {{ prototypeId: string, usePrevious: boolean, type: 'emotion' | 'sexual' }|null}
-   */
-  #resolveGateTarget(variablePath) {
-    if (!variablePath || typeof variablePath !== 'string') {
-      return null;
-    }
-
-    if (variablePath.startsWith('emotions.')) {
-      return {
-        prototypeId: variablePath.slice('emotions.'.length),
-        usePrevious: false,
-        type: 'emotion',
-      };
-    }
-
-    if (variablePath.startsWith('previousEmotions.')) {
-      return {
-        prototypeId: variablePath.slice('previousEmotions.'.length),
-        usePrevious: true,
-        type: 'emotion',
-      };
-    }
-
-    if (variablePath.startsWith('sexualStates.')) {
-      return {
-        prototypeId: variablePath.slice('sexualStates.'.length),
-        usePrevious: false,
-        type: 'sexual',
-      };
-    }
-
-    if (variablePath.startsWith('previousSexualStates.')) {
-      return {
-        prototypeId: variablePath.slice('previousSexualStates.'.length),
-        usePrevious: true,
-        type: 'sexual',
-      };
-    }
-
-    return null;
-  }
-
-  /**
-   * Resolve normalized axes for gate evaluation, with simple per-sample caching.
-   *
-   * @private
-   * @param {object|null} gateContextCache
-   * @param {object} context
-   * @param {boolean} usePrevious
-   * @returns {{moodAxes: object, sexualAxes: object, traitAxes: object}|null}
-   */
-  #resolveGateContext(gateContextCache, context, usePrevious) {
-    if (!context) {
-      return null;
-    }
-
-    if (gateContextCache) {
-      if (usePrevious) {
-        if (!gateContextCache.previous) {
-          gateContextCache.previous = this.#normalizeGateContext(
-            context,
-            true
-          );
-        }
-        return gateContextCache.previous;
-      }
-
-      if (!gateContextCache.current) {
-        gateContextCache.current = this.#normalizeGateContext(context, false);
-      }
-      return gateContextCache.current;
-    }
-
-    return this.#normalizeGateContext(context, usePrevious);
-  }
-
-  /**
-   * Normalize axes from context for gate evaluation.
-   *
-   * @private
-   * @param {object} context
-   * @param {boolean} usePrevious
-   * @returns {{moodAxes: object, sexualAxes: object, traitAxes: object}}
-   */
-  #normalizeGateContext(context, usePrevious) {
-    const moodSource = usePrevious
-      ? context?.previousMoodAxes
-      : context?.moodAxes ?? context?.mood ?? {};
-    const sexualSource = usePrevious
-      ? context?.previousSexualAxes
-      : context?.sexualAxes ?? context?.sexual ?? null;
-    const sexualArousalSource = usePrevious
-      ? context?.previousSexualArousal ?? null
-      : context?.sexualArousal ?? null;
-
-    const moodAxes = normalizeMoodAxes(moodSource);
-    const sexualAxes = normalizeSexualAxes(
-      sexualSource,
-      sexualArousalSource
-    );
-    const traitAxes = normalizeAffectTraits(context?.affectTraits);
-
-    return { moodAxes, sexualAxes, traitAxes };
-  }
-
-  /**
-   * Evaluate gate pass/fail for a prototype using normalized axes.
-   *
-   * @private
-   * @param {string[]|undefined} gates
-   * @param {{moodAxes: object, sexualAxes: object, traitAxes: object}} normalized
-   * @returns {boolean}
-   */
-  #evaluateGatePass(gates, normalized) {
-    if (!gates || !Array.isArray(gates) || gates.length === 0) {
-      return true;
-    }
-
-    for (const gate of gates) {
-      let constraint;
-      try {
-        constraint = GateConstraint.parse(gate);
-      } catch {
-        continue;
-      }
-
-      const axisValue = resolveAxisValue(
-        constraint.axis,
-        normalized.moodAxes,
-        normalized.sexualAxes,
-        normalized.traitAxes
-      );
-
-      if (!constraint.isSatisfiedBy(axisValue)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Record sibling-conditioned stats for children of a compound node.
-   * For each child, if all siblings passed and this child failed,
-   * record a sibling-conditioned failure.
-   *
-   * @private
-   * @param {Array<{child: HierarchicalClauseNode, passed: boolean}>} childResults
-   */
-  #recordSiblingConditionedStats(childResults) {
-    for (let i = 0; i < childResults.length; i++) {
-      const { child: currentChild, passed: currentPassed } = childResults[i];
-
-      // Check if all siblings (other children) passed
-      const siblingsPassed = childResults.every(
-        (result, j) => j === i || result.passed
-      );
-
-      if (siblingsPassed) {
-        currentChild.recordSiblingsPassed();
-        if (!currentPassed) {
-          currentChild.recordSiblingConditionedFail();
-        }
-      }
-    }
-  }
-
-  /**
-   * Evaluate a leaf condition directly.
-   *
-   * @private
-   * @param {object} logic
-   * @param {object} context
-   * @returns {boolean}
-   */
-  #evaluateLeafCondition(logic, context) {
-    try {
-      return jsonLogic.apply(logic, context);
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Estimate violation magnitude for a leaf condition.
-   *
-   * @private
-   * @param {object} logic
-   * @param {object} context
-   * @returns {number}
-   */
-  #estimateLeafViolation(logic, context) {
-    if (!logic) return 0;
-
-    // Handle >= operator
-    if (logic['>=']) {
-      const [left, right] = logic['>='];
-      const actual = this.#resolveValue(left, context);
-      const threshold = this.#resolveValue(right, context);
-      if (typeof actual === 'number' && typeof threshold === 'number') {
-        return Math.max(0, threshold - actual);
-      }
-    }
-
-    // Handle <= operator
-    if (logic['<=']) {
-      const [left, right] = logic['<='];
-      const actual = this.#resolveValue(left, context);
-      const threshold = this.#resolveValue(right, context);
-      if (typeof actual === 'number' && typeof threshold === 'number') {
-        return Math.max(0, actual - threshold);
-      }
-    }
-
-    // Handle < operator
-    if (logic['<']) {
-      const [left, right] = logic['<'];
-      const actual = this.#resolveValue(left, context);
-      const threshold = this.#resolveValue(right, context);
-      if (typeof actual === 'number' && typeof threshold === 'number') {
-        return actual >= threshold ? actual - threshold + 0.01 : 0;
-      }
-    }
-
-    // Handle > operator
-    if (logic['>']) {
-      const [left, right] = logic['>'];
-      const actual = this.#resolveValue(left, context);
-      const threshold = this.#resolveValue(right, context);
-      if (typeof actual === 'number' && typeof threshold === 'number') {
-        return actual <= threshold ? threshold - actual + 0.01 : 0;
-      }
-    }
-
-    return 0.1; // Default small violation for unknown operators
-  }
-
-  /**
-   * Resolve a value from context (handles {var: "path"}, literals, and expressions).
-   *
-   * @private
-   * @param {*} expr
-   * @param {object} context
-   * @returns {*}
-   */
-  #resolveValue(expr, context) {
-    if (expr?.var) {
-      return this.#getNestedValue(context, expr.var);
-    }
-    if (typeof expr === 'number' || typeof expr === 'string') {
-      return expr;
-    }
-    // Try evaluating as json-logic expression (e.g., arithmetic)
-    try {
-      return jsonLogic.apply(expr, context);
-    } catch {
-      return expr;
-    }
-  }
-
-  /**
-   * Extract the actual value being compared in a condition.
-   * Used for ceiling analysis (max observed value tracking).
-   *
-   * @private
-   * @param {Object} logic - JSON Logic condition
-   * @param {Object} context - Evaluation context
-   * @returns {number|null} The actual value, or null for non-numeric comparisons
-   */
-  #extractActualValue(logic, context) {
-    if (!logic) return null;
-
-    const operators = ['>=', '<=', '>', '<', '=='];
-
-    for (const op of operators) {
-      if (logic[op]) {
-        const [left, right] = logic[op];
-
-        // Pattern: {"op": [{"var": "path"}, threshold]}
-        if (left?.var) {
-          const value = this.#resolveValue(left, context);
-          return typeof value === 'number' ? value : null;
-        }
-
-        // Pattern: {"op": [threshold, {"var": "path"}]}
-        if (right?.var) {
-          const value = this.#resolveValue(right, context);
-          return typeof value === 'number' ? value : null;
-        }
-      }
-    }
-
-    return null;
   }
 
   // ============================================================
-  // Unseeded Variable Detection Methods
+  // Sensitivity Analysis Methods
   // ============================================================
-
-  /**
-   * Build the set of known context keys from static definitions and prototype registries.
-   *
-   * @private
-   * @returns {{ topLevel: Set<string>, nestedKeys: Record<string, Set<string>>, scalarKeys: Set<string> }}
-   */
-  #buildKnownContextKeys() {
-    // Static top-level keys that are always seeded
-    const topLevel = new Set([
-      'mood',
-      'moodAxes',
-      'emotions',
-      'sexualStates',
-      'sexualArousal',
-      'previousEmotions',
-      'previousSexualStates',
-      'previousMoodAxes',
-      'previousSexualArousal',
-      'affectTraits', // NEW: Affect traits are now seeded
-    ]);
-
-    // Keys that are scalar (cannot have nested properties)
-    const scalarKeys = new Set(['sexualArousal', 'previousSexualArousal']);
-
-    // All mood axes from centralized constants (single source of truth)
-    const moodAxisSet = new Set(MOOD_AXES);
-
-    // Nested keys for each category (from prototypes + hardcoded mood axes)
-    const nestedKeys = {
-      mood: moodAxisSet,
-      moodAxes: new Set(moodAxisSet),
-      previousMoodAxes: new Set(moodAxisSet),
-    };
-
-    // Affect traits from centralized constants
-    nestedKeys.affectTraits = new Set(AFFECT_TRAITS);
-
-    // Get dynamic keys from emotion prototypes
-    const emotionLookup = this.#dataRegistry.get(
-      'lookups',
-      'core:emotion_prototypes'
-    );
-    if (emotionLookup?.entries) {
-      const emotionKeys = new Set(Object.keys(emotionLookup.entries));
-      nestedKeys.emotions = emotionKeys;
-      nestedKeys.previousEmotions = emotionKeys;
-    } else {
-      nestedKeys.emotions = new Set();
-      nestedKeys.previousEmotions = new Set();
-    }
-
-    // Get dynamic keys from sexual prototypes
-    const sexualLookup = this.#dataRegistry.get(
-      'lookups',
-      'core:sexual_prototypes'
-    );
-    if (sexualLookup?.entries) {
-      const sexualKeys = new Set(Object.keys(sexualLookup.entries));
-      nestedKeys.sexualStates = sexualKeys;
-      nestedKeys.previousSexualStates = sexualKeys;
-    } else {
-      nestedKeys.sexualStates = new Set();
-      nestedKeys.previousSexualStates = new Set();
-    }
-
-    return { topLevel, nestedKeys, scalarKeys };
-  }
-
-  /**
-   * Validate a single variable path against known context keys.
-   *
-   * @private
-   * @param {string} path - The variable path to validate (e.g., "emotions.joy")
-   * @param {{ topLevel: Set<string>, nestedKeys: Record<string, Set<string>>, scalarKeys: Set<string> }} knownKeys
-   * @returns {{ isValid: boolean, reason?: 'unknown_root' | 'unknown_nested_key' | 'invalid_nesting', suggestion?: string }}
-   */
-  #validateVarPath(path, knownKeys) {
-    const parts = path.split('.');
-    const root = parts[0];
-
-    // Check if root is known
-    if (!knownKeys.topLevel.has(root)) {
-      return {
-        isValid: false,
-        reason: 'unknown_root',
-        suggestion: `Unknown root variable "${root}". Valid roots: ${[...knownKeys.topLevel].sort().join(', ')}`,
-      };
-    }
-
-    // Check if trying to nest on a scalar
-    if (parts.length > 1 && knownKeys.scalarKeys.has(root)) {
-      return {
-        isValid: false,
-        reason: 'invalid_nesting',
-        suggestion: `"${root}" is a scalar value and cannot have nested properties like "${path}"`,
-      };
-    }
-
-    // Check nested key validity (if applicable)
-    if (parts.length > 1) {
-      const nestedKey = parts[1];
-      const validNestedKeys = knownKeys.nestedKeys[root];
-
-      if (validNestedKeys && !validNestedKeys.has(nestedKey)) {
-        const knownList =
-          validNestedKeys.size > 0
-            ? [...validNestedKeys].sort().slice(0, 5).join(', ') +
-              (validNestedKeys.size > 5 ? '...' : '')
-            : '(none available)';
-        return {
-          isValid: false,
-          reason: 'unknown_nested_key',
-          suggestion: `Unknown key "${nestedKey}" in "${root}". Known keys: ${knownList}`,
-        };
-      }
-    }
-
-    return { isValid: true };
-  }
-
-  /**
-   * Validate all variable paths in an expression's prerequisites.
-   *
-   * @private
-   * @param {object} expression - Expression with prerequisites array
-   * @returns {{ warnings: UnseededVarWarning[] }}
-   */
-  #validateExpressionVarPaths(expression) {
-    const warnings = [];
-    const knownKeys = this.#buildKnownContextKeys();
-
-    if (!expression?.prerequisites) {
-      return { warnings };
-    }
-
-    // Collect all var paths from all prerequisites
-    const allPaths = [];
-    for (const prereq of expression.prerequisites) {
-      if (prereq?.logic) {
-        collectVarPaths(prereq.logic, allPaths);
-      }
-    }
-
-    // Deduplicate paths for validation (but track all occurrences for warnings)
-    const seenPaths = new Set();
-    for (const path of allPaths) {
-      if (seenPaths.has(path)) continue;
-      seenPaths.add(path);
-
-      const result = this.#validateVarPath(path, knownKeys);
-      if (!result.isValid) {
-        warnings.push({
-          path,
-          reason: result.reason,
-          suggestion: result.suggestion,
-        });
-      }
-    }
-
-    return { warnings };
-  }
-
-  /**
-   * Collect sampling coverage variables referenced by the expression.
-   *
-   * @private
-   * @param {object} expression
-   * @returns {Array<{variablePath: string, domain: string, min: number, max: number}>}
-   */
-  #collectSamplingCoverageVariables(expression) {
-    if (!expression?.prerequisites) {
-      return [];
-    }
-
-    const allPaths = [];
-    for (const prereq of expression.prerequisites) {
-      if (prereq?.logic) {
-        collectVarPaths(prereq.logic, allPaths);
-      }
-    }
-
-    const uniquePaths = new Set(allPaths);
-    const variables = [];
-
-    for (const path of uniquePaths) {
-      const variable = this.#resolveSamplingCoverageVariable(path);
-      if (variable) {
-        variables.push(variable);
-      }
-    }
-
-    return variables;
-  }
-
-  /**
-   * Resolve sampling coverage config for a variable path.
-   *
-   * @private
-   * @param {string} variablePath
-   * @returns {{variablePath: string, domain: string, min: number, max: number} | null}
-   */
-  #resolveSamplingCoverageVariable(variablePath) {
-    if (!variablePath || typeof variablePath !== 'string') {
-      return null;
-    }
-
-    for (const domainConfig of SAMPLING_COVERAGE_DOMAIN_RANGES) {
-      if (domainConfig.pattern.test(variablePath)) {
-        return {
-          variablePath,
-          domain: domainConfig.domain,
-          min: domainConfig.min,
-          max: domainConfig.max,
-        };
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Count the number of failed leaf clauses for a given sample.
-   * Used for nearest-miss tracking.
-   *
-   * @private
-   * @param {object[]} clauseTracking - Clause tracking array
-   * @param {object} expression - Expression being evaluated
-   * @param {object} context - Evaluation context
-   * @returns {number} Count of failed leaf clauses
-   */
-  #countFailedClauses(clauseTracking, expression, context) {
-    let failedCount = 0;
-
-    for (let i = 0; i < expression.prerequisites.length; i++) {
-      const prereq = expression.prerequisites[i];
-      const clause = clauseTracking[i];
-
-      if (clause.hierarchicalTree) {
-        // Count failed leaves in hierarchical tree
-        failedCount += this.#countFailedLeavesInTree(clause.hierarchicalTree, context);
-      } else {
-        // Simple atomic clause - check if it fails
-        const result = this.#evaluatePrerequisite(prereq, context);
-        if (!result) {
-          failedCount++;
-        }
-      }
-    }
-
-    return failedCount;
-  }
-
-  /**
-   * Count failed leaf nodes in a hierarchical tree.
-   *
-   * @private
-   * @param {object} node - Hierarchical tree node
-   * @param {object} context - Evaluation context
-   * @returns {number} Count of failed leaf clauses
-   */
-  #countFailedLeavesInTree(node, context) {
-    if (!node.isCompound) {
-      // Leaf node - evaluate and count if failed
-      try {
-        const result = jsonLogic.apply(node.logic, context);
-        return result ? 0 : 1;
-      } catch {
-        return 1; // Treat errors as failures
-      }
-    }
-
-    // Compound node - sum failed children
-    let failedCount = 0;
-    for (const child of node.children || []) {
-      failedCount += this.#countFailedLeavesInTree(child, context);
-    }
-    return failedCount;
-  }
-
-  /**
-   * Get summary of failed leaf conditions for a sample.
-   * Returns information useful for debugging nearest misses.
-   *
-   * @private
-   * @param {object[]} clauseTracking - Clause tracking array
-   * @param {object} expression - Expression being evaluated
-   * @param {object} context - Evaluation context
-   * @returns {Array<{description: string, actual: number|null, threshold: number|null, violation: number|null}>}
-   */
-  #getFailedLeavesSummary(clauseTracking, expression, context) {
-    const failedLeaves = [];
-
-    for (let i = 0; i < expression.prerequisites.length; i++) {
-      const prereq = expression.prerequisites[i];
-      const clause = clauseTracking[i];
-
-      if (clause.hierarchicalTree) {
-        // Collect failed leaves from tree
-        this.#collectFailedLeaves(clause.hierarchicalTree, context, failedLeaves);
-      } else {
-        // Simple atomic clause
-        const result = this.#evaluatePrerequisite(prereq, context);
-        if (!result) {
-          failedLeaves.push({
-            description: clause.description || `Clause ${i + 1}`,
-            actual: null,
-            threshold: null,
-            violation: null,
-          });
-        }
-      }
-    }
-
-    // Limit to first 5 failed leaves for brevity
-    return failedLeaves.slice(0, 5);
-  }
-
-  /**
-   * Recursively collect failed leaf descriptions from a hierarchical tree.
-   *
-   * @private
-   * @param {object} node - Hierarchical tree node
-   * @param {object} context - Evaluation context
-   * @param {Array} failedLeaves - Array to collect failed leaves into
-   */
-  #collectFailedLeaves(node, context, failedLeaves) {
-    if (!node.isCompound) {
-      // Leaf node - evaluate and collect if failed
-      let passed = false;
-      try {
-        passed = jsonLogic.apply(node.logic, context);
-      } catch {
-        passed = false;
-      }
-      if (!passed) {
-        // Try to extract threshold info from node
-        const violationInfo = this.#extractViolationInfo(node.logic, context);
-        failedLeaves.push({
-          description: node.description || 'Unknown condition',
-          actual: violationInfo.actual,
-          threshold: violationInfo.threshold,
-          violation: violationInfo.violation,
-        });
-      }
-      return;
-    }
-
-    // Compound node - recurse into children
-    for (const child of node.children || []) {
-      this.#collectFailedLeaves(child, context, failedLeaves);
-    }
-  }
-
-  /**
-   * Safely evaluate an operand in a JSON Logic expression.
-   *
-   * @private
-   * @param {*} operand - The operand to evaluate (literal, var reference, or expression)
-   * @param {object} context - Evaluation context
-   * @returns {*} The evaluated value, or null if evaluation fails
-   */
-  #safeEvalOperand(operand, context) {
-    // Handle literal values
-    if (typeof operand === 'number' || typeof operand === 'string' || typeof operand === 'boolean') {
-      return operand;
-    }
-
-    // Handle null/undefined
-    if (operand === null || operand === undefined) {
-      return null;
-    }
-
-    // Handle var reference
-    if (typeof operand === 'object' && operand.var) {
-      try {
-        return jsonLogic.apply(operand, context);
-      } catch {
-        return null;
-      }
-    }
-
-    // Handle other expressions (arithmetic, etc.)
-    if (typeof operand === 'object') {
-      try {
-        return jsonLogic.apply(operand, context);
-      } catch {
-        return null;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Extract threshold violation information from a comparison expression.
-   *
-   * @private
-   * @param {object} logic - JSON Logic expression
-   * @param {object} context - Evaluation context
-   * @returns {{actual: number|null, threshold: number|null, violation: number|null}}
-   */
-  #extractViolationInfo(logic, context) {
-    // Guard against null/undefined logic
-    if (!logic || typeof logic !== 'object') {
-      return { actual: null, threshold: null, violation: null };
-    }
-
-    // Check for comparison operators
-    const operators = ['>=', '<=', '>', '<', '=='];
-    for (const op of operators) {
-      if (logic[op]) {
-        const [leftExpr, rightExpr] = logic[op];
-
-        // Try to evaluate both sides
-        const left = this.#safeEvalOperand(leftExpr, context);
-        const right = this.#safeEvalOperand(rightExpr, context);
-
-        if (typeof left === 'number' && typeof right === 'number') {
-          // Determine which is actual and which is threshold
-          // Typically var references are on the left, thresholds on the right
-          const isLeftVar = typeof leftExpr === 'object' && leftExpr?.var;
-          const actual = isLeftVar ? left : right;
-          const threshold = isLeftVar ? right : left;
-          const violation = Math.abs(actual - threshold);
-
-          return { actual, threshold, violation };
-        }
-      }
-    }
-
-    return { actual: null, threshold: null, violation: null };
-  }
 
   /**
    * Compute threshold sensitivity for a given condition path.
@@ -3329,7 +1169,7 @@ class MonteCarloSimulator {
         const actualValue = this.#getNestedValue(context, varPath);
         if (actualValue === undefined || actualValue === null) continue;
 
-        const passes = this.#evaluateThresholdCondition(
+        const passes = this.#expressionEvaluator.evaluateThresholdCondition(
           actualValue,
           operator,
           threshold
@@ -3355,7 +1195,6 @@ class MonteCarloSimulator {
       grid,
     };
   }
-
 
   /**
    * Compute sensitivity for the ENTIRE expression, not just a single clause.
@@ -3517,93 +1356,6 @@ class MonteCarloSimulator {
         this.#replaceThresholdRecursive(value, varPath, operator, newThreshold);
       }
     }
-  }
-
-  /**
-   * Evaluate a threshold condition (helper for sensitivity analysis).
-   *
-   * @private
-   * @param {number} actual - Actual value from context
-   * @param {string} operator - Comparison operator
-   * @param {number} threshold - Threshold value
-   * @returns {boolean} Whether condition passes
-   */
-  #evaluateThresholdCondition(actual, operator, threshold) {
-    switch (operator) {
-      case '>=':
-        return actual >= threshold;
-      case '>':
-        return actual > threshold;
-      case '<=':
-        return actual <= threshold;
-      case '<':
-        return actual < threshold;
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Extract all emotion variable names referenced in an expression's prerequisites.
-   * Walks the JSON Logic tree to find all 'emotions.*' and 'previousEmotions.*' var paths.
-   *
-   * @private
-   * @param {object} expression - The expression containing prerequisites
-   * @returns {Set<string>} Set of emotion names (e.g., 'anger', 'grief')
-   */
-  #extractReferencedEmotions(expression) {
-    const emotionNames = new Set();
-
-    const extractFromLogic = (logic) => {
-      if (!logic || typeof logic !== 'object') return;
-
-      // Handle {"var": "emotions.anger"} or {"var": "previousEmotions.anger"}
-      if (logic.var && typeof logic.var === 'string') {
-        const match = logic.var.match(/^(?:previous)?[Ee]motions\.(\w+)$/);
-        if (match) {
-          emotionNames.add(match[1]);
-        }
-        return;
-      }
-
-      // Recurse into arrays and objects
-      for (const key in logic) {
-        const value = logic[key];
-        if (Array.isArray(value)) {
-          value.forEach(extractFromLogic);
-        } else if (typeof value === 'object') {
-          extractFromLogic(value);
-        }
-      }
-    };
-
-    if (expression?.prerequisites) {
-      for (const prereq of expression.prerequisites) {
-        extractFromLogic(prereq);
-      }
-    }
-
-    return emotionNames;
-  }
-
-  /**
-   * Filter computed emotions to include only those referenced in the expression.
-   *
-   * @private
-   * @param {object} allEmotions - Full computed emotions object
-   * @param {Set<string>} referencedNames - Set of referenced emotion names
-   * @returns {object} Filtered emotions object containing only referenced emotions
-   */
-  #filterEmotions(allEmotions, referencedNames) {
-    if (!allEmotions || referencedNames.size === 0) return {};
-
-    const filtered = {};
-    for (const name of referencedNames) {
-      if (name in allEmotions) {
-        filtered[name] = allEmotions[name];
-      }
-    }
-    return filtered;
   }
 }
 

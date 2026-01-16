@@ -188,5 +188,6 @@
         "tactile": "The air around them feels restless—fingers fidgeting, posture tilting forward, a jitter of contained motion like they're fighting the urge to move."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

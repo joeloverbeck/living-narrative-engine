@@ -151,5 +151,6 @@
         "olfactory": "There's clean sweat and warm breath in the air-alive, energized, not sour with fear."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.001
 }

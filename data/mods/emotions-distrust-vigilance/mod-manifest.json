@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-distrust-vigilance",
+  "version": "1.0.0",
+  "name": "Emotions - Distrust & Vigilance",
+  "description": "Expressions related to threat appraisal of reliability, including wary suspicion and trust fracture states.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "trust_fracture.expression.json",
+      "wary_suspicion.expression.json"
+    ]
+  }
+}

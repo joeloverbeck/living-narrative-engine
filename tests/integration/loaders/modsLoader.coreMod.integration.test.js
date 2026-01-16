@@ -1,6 +1,4 @@
 // @jest-environment node
-const fs = require('fs/promises');
-const path = require('path');
 const {
   registerLoaders,
 } = require('../../../src/dependencyInjection/registrations/loadersRegistrations.js');
@@ -55,37 +53,17 @@ function nodeFileFetch(identifier) {
 }
 
 describe('Integration: ModsLoader can load the core mod (real files)', () => {
-  let originalGameJson;
-  const gameJsonPath = path.join(process.cwd(), 'data', 'game.json');
   let originalFetch;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     // Patch global.fetch for Node
     originalFetch = global.fetch;
     global.fetch = nodeFileFetch;
-    // Backup original game.json
-    try {
-      originalGameJson = await fs.readFile(gameJsonPath, 'utf8');
-    } catch {
-      originalGameJson = null;
-    }
   });
 
-  afterAll(async () => {
-    // Restore original game.json if it existed
-    if (originalGameJson !== null) {
-      await fs.writeFile(gameJsonPath, originalGameJson);
-    }
+  afterAll(() => {
     // Restore original fetch
     global.fetch = originalFetch;
-  });
-
-  beforeEach(async () => {
-    // Create a minimal game.json that only includes the core mod
-    const testGameConfig = {
-      mods: ['core'],
-    };
-    await fs.writeFile(gameJsonPath, JSON.stringify(testGameConfig, null, 2));
   });
 
   it('loads the core mod without error and registers its manifest', async () => {
@@ -114,13 +92,26 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
     const safeEventDispatcherStub = { dispatch: jest.fn() };
     container.register(tokens.ISafeEventDispatcher, safeEventDispatcherStub);
 
-    // Register Node-compatible data fetcher
-    // const nodeDataFetcher = new NodeDataFetcher();
-    // container.register(tokens.IDataFetcher, nodeDataFetcher);
-
     // Register interpreters first (provides OperationRegistry needed by RuleLoader)
     registerInterpreters(container);
     await registerLoaders(container);
+
+    // Override IDataFetcher AFTER registerLoaders to intercept game.json reads
+    // This avoids modifying the real file and prevents race conditions
+    const testGameConfig = { mods: ['core'] };
+    container.register(tokens.IDataFetcher, {
+      fetch: async (identifier) => {
+        if (identifier.endsWith('game.json')) {
+          return testGameConfig;
+        }
+        // For all other files, use real file fetch
+        const response = await nodeFileFetch(identifier);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${identifier}: ${response.statusText}`);
+        }
+        return response.json();
+      },
+    });
     const logger = container.resolve(tokens.ILogger);
     // Spy on logger.error for critical errors
     const errorSpy = jest.spyOn(logger, 'error');

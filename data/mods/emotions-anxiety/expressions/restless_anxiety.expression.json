@@ -208,5 +208,6 @@
         "tactile": "Someone's presence vibrates with contained tension-micro-movements, a restless shifting that you can feel through the air and proximity."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0008
 }

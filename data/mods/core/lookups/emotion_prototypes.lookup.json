@@ -953,25 +953,53 @@
         "engagement >= 0.05"
       ]
     },
+    "moral_outrage": {
+      "weights": {
+        "valence": -0.55,
+        "threat": 0.35,
+        "engagement": 0.85,
+        "affiliation": 0.55,
+        "agency_control": 0.45,
+        "arousal": 0.25,
+        "future_expectancy": 0.15,
+        "self_evaluation": 0.10,
+        "harm_aversion": 0.30,
+        "affective_empathy": 0.20,
+        "cognitive_empathy": 0.10,
+        "inhibitory_control": 0.45,
+        "self_control": 0.45
+      },
+      "gates": [
+        "valence <= -0.05",
+        "engagement >= 0.25",
+        "threat >= 0.10",
+        "affiliation >= 0.10",
+        "agency_control >= 0.15",
+        "inhibitory_control >= 0.20",
+        "self_control >= 0.20",
+        "harm_aversion >= 0.10"
+      ]
+    },
     "protest_anger": {
       "weights": {
-        "valence": -0.65,
+        "valence": -0.60,
         "threat": 0.55,
-        "engagement": 0.70,
-        "affiliation": 0.75,
-        "agency_control": 0.05,
-        "arousal": 0.35,
-        "self_evaluation": -0.20,
-        "future_expectancy": -0.10,
-        "inhibitory_control": -0.3,
-        "self_control": -0.3
+        "engagement": 0.80,
+        "affiliation": 0.70,
+        "agency_control": 0.30,
+        "arousal": 0.55,
+        "self_evaluation": 0.05,
+        "future_expectancy": 0.05,
+        "inhibitory_control": -0.15,
+        "self_control": -0.15
       },
       "gates": [
         "valence <= -0.10",
-        "engagement >= 0.15",
+        "engagement >= 0.20",
         "threat >= 0.10",
         "affiliation >= 0.10",
-        "arousal >= 0.05"
+        "arousal >= 0.10",
+        "agency_control >= 0.05"
       ]
     },
     "rage": {
@@ -993,20 +1021,22 @@
       "weights": {
         "valence": -0.75,
         "arousal": 1.0,
-        "inhibitory_control": -1.0,
-        "self_control": -0.9,
-        "agency_control": -0.15,
-        "threat": -0.25,
-        "affiliation": -0.15,
-        "engagement": 0.20
+        "inhibitory_control": -0.90,
+        "self_control": -0.60,
+        "agency_control": 0.35,
+        "threat": 0.10,
+        "affiliation": -0.20,
+        "engagement": 0.25,
+        "self_evaluation": 0.10
       },
       "gates": [
         "valence <= -0.15",
         "arousal >= 0.35",
-        "inhibitory_control <= -0.10",
-        "self_control <= -0.10",
-        "threat <= 0.60",
-        "agency_control >= -0.10"
+        "inhibitory_control <= 0.25",
+        "threat <= 0.70",
+        "agency_control >= -0.20",
+        "engagement >= 0.05",
+        "affiliation <= 0.35"
       ]
     },
     "resentment": {

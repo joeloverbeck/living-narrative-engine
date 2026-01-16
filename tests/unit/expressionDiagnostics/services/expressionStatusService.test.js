@@ -662,17 +662,19 @@ describe('ExpressionStatusService', () => {
       expect(result.map((e) => e.id)).toEqual(['a', 'b']);
     });
 
-    it('sorts by priority - impossible first', () => {
+    it('sorts by priority - impossible first, then unobserved, then unknown', () => {
       const expressions = [
         { id: 'a', diagnosticStatus: 'rare' },
         { id: 'b', diagnosticStatus: 'impossible' },
         { id: 'c', diagnosticStatus: 'unknown' },
         { id: 'd', diagnosticStatus: 'extremely_rare' },
+        { id: 'e', diagnosticStatus: 'unobserved' },
       ];
 
       const result = service.getProblematicExpressions(expressions);
 
-      expect(result.map((e) => e.id)).toEqual(['b', 'c', 'd', 'a']);
+      // impossible(0) > unobserved(1) > unknown(2) > extremely_rare(3) > rare(4)
+      expect(result.map((e) => e.id)).toEqual(['b', 'e', 'c', 'd', 'a']);
     });
 
     it('limits results to maxCount', () => {
@@ -712,6 +714,41 @@ describe('ExpressionStatusService', () => {
       const result = service.getProblematicExpressions(expressions);
 
       expect(result.length).toBe(10);
+    });
+
+    it('sorts unobserved before unknown (unobserved has higher priority)', () => {
+      const expressions = [
+        { id: 'a', diagnosticStatus: 'unknown' },
+        { id: 'b', diagnosticStatus: 'unobserved' },
+        { id: 'c', diagnosticStatus: 'impossible' },
+        { id: 'd', diagnosticStatus: 'rare' },
+      ];
+
+      const result = service.getProblematicExpressions(expressions);
+
+      // Expected order: impossible (0) > unobserved (1) > unknown (2) > rare (4)
+      expect(result.map((e) => e.id)).toEqual(['c', 'b', 'a', 'd']);
+    });
+
+    it('includes all problematic statuses including unobserved in sorted order', () => {
+      const expressions = [
+        { id: 'rare_expr', diagnosticStatus: 'rare' },
+        { id: 'impossible_expr', diagnosticStatus: 'impossible' },
+        { id: 'unknown_expr', diagnosticStatus: 'unknown' },
+        { id: 'unobserved_expr', diagnosticStatus: 'unobserved' },
+        { id: 'extremely_rare_expr', diagnosticStatus: 'extremely_rare' },
+      ];
+
+      const result = service.getProblematicExpressions(expressions);
+
+      // impossible(0) > unobserved(1) > unknown(2) > extremely_rare(3) > rare(4)
+      expect(result.map((e) => e.id)).toEqual([
+        'impossible_expr',
+        'unobserved_expr',
+        'unknown_expr',
+        'extremely_rare_expr',
+        'rare_expr',
+      ]);
     });
   });
 
@@ -770,12 +807,12 @@ describe('ExpressionStatusService', () => {
       expect(service.getStatusPriority('impossible')).toBe(0);
     });
 
-    it('returns 1 for unknown', () => {
-      expect(service.getStatusPriority('unknown')).toBe(1);
+    it('returns 1 for unobserved', () => {
+      expect(service.getStatusPriority('unobserved')).toBe(1);
     });
 
-    it('returns 2 for unobserved', () => {
-      expect(service.getStatusPriority('unobserved')).toBe(2);
+    it('returns 2 for unknown', () => {
+      expect(service.getStatusPriority('unknown')).toBe(2);
     });
 
     it('returns 3 for extremely_rare', () => {
@@ -798,8 +835,8 @@ describe('ExpressionStatusService', () => {
       expect(service.getStatusPriority('frequent')).toBe(7);
     });
 
-    it('returns 1 (unknown) for null status', () => {
-      expect(service.getStatusPriority(null)).toBe(1);
+    it('returns 2 (unknown) for null status', () => {
+      expect(service.getStatusPriority(null)).toBe(2);
     });
 
     it('returns 999 for unrecognized status', () => {

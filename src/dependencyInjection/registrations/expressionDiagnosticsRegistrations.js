@@ -10,6 +10,12 @@ import GateConstraintAnalyzer from '../../expressionDiagnostics/services/GateCon
 import IntensityBoundsCalculator from '../../expressionDiagnostics/services/IntensityBoundsCalculator.js';
 import MonteCarloSimulator from '../../expressionDiagnostics/services/MonteCarloSimulator.js';
 import RandomStateGenerator from '../../expressionDiagnostics/services/RandomStateGenerator.js';
+import ContextBuilder from '../../expressionDiagnostics/services/simulatorCore/ContextBuilder.js';
+import ExpressionEvaluator from '../../expressionDiagnostics/services/simulatorCore/ExpressionEvaluator.js';
+import GateEvaluator from '../../expressionDiagnostics/services/simulatorCore/GateEvaluator.js';
+import PrototypeEvaluator from '../../expressionDiagnostics/services/simulatorCore/PrototypeEvaluator.js';
+import ViolationEstimator from '../../expressionDiagnostics/services/simulatorCore/ViolationEstimator.js';
+import VariablePathValidator from '../../expressionDiagnostics/services/simulatorCore/VariablePathValidator.js';
 import FailureExplainer from '../../expressionDiagnostics/services/FailureExplainer.js';
 import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
 import PathSensitiveAnalyzer from '../../expressionDiagnostics/services/PathSensitiveAnalyzer.js';
@@ -74,6 +80,58 @@ export function registerExpressionDiagnosticsServices(container) {
   safeDebug(`Registered ${diagnosticsTokens.IRandomStateGenerator}`);
 
   registrar.singletonFactory(
+    diagnosticsTokens.IMonteCarloContextBuilder,
+    (c) =>
+      new ContextBuilder({
+        logger: c.resolve(tokens.ILogger),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        emotionCalculatorAdapter: c.resolve(
+          diagnosticsTokens.IEmotionCalculatorAdapter
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMonteCarloContextBuilder}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IMonteCarloExpressionEvaluator,
+    () => new ExpressionEvaluator()
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMonteCarloExpressionEvaluator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IMonteCarloGateEvaluator,
+    (c) =>
+      new GateEvaluator({
+        logger: c.resolve(tokens.ILogger),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMonteCarloGateEvaluator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IMonteCarloPrototypeEvaluator,
+    (c) =>
+      new PrototypeEvaluator({
+        logger: c.resolve(tokens.ILogger),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMonteCarloPrototypeEvaluator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IMonteCarloViolationEstimator,
+    () => new ViolationEstimator()
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMonteCarloViolationEstimator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IMonteCarloVariablePathValidator,
+    () => new VariablePathValidator()
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMonteCarloVariablePathValidator}`);
+
+  registrar.singletonFactory(
     diagnosticsTokens.IMonteCarloSimulator,
     (c) =>
       new MonteCarloSimulator({
@@ -84,6 +142,20 @@ export function registerExpressionDiagnosticsServices(container) {
         ),
         randomStateGenerator: c.resolve(
           diagnosticsTokens.IRandomStateGenerator
+        ),
+        contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
+        expressionEvaluator: c.resolve(
+          diagnosticsTokens.IMonteCarloExpressionEvaluator
+        ),
+        gateEvaluator: c.resolve(diagnosticsTokens.IMonteCarloGateEvaluator),
+        prototypeEvaluator: c.resolve(
+          diagnosticsTokens.IMonteCarloPrototypeEvaluator
+        ),
+        violationEstimator: c.resolve(
+          diagnosticsTokens.IMonteCarloViolationEstimator
+        ),
+        variablePathValidator: c.resolve(
+          diagnosticsTokens.IMonteCarloVariablePathValidator
         ),
       })
   );

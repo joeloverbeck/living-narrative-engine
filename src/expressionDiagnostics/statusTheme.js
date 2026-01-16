@@ -106,8 +106,8 @@ export const STATUS_KEYS = Object.freeze(Object.keys(STATUS_THEME));
  */
 export const STATUS_PRIORITY = Object.freeze({
   impossible: 0,
-  unknown: 1,
-  unobserved: 2,
+  unobserved: 1,
+  unknown: 2,
   extremely_rare: 3,
   rare: 4,
   uncommon: 5,

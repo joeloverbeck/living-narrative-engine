@@ -14,14 +14,27 @@ import path from 'node:path';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 
-const EXPRESSIONS_DIR = path.resolve(
+const EMOTIONS_AFFILIATION_DIR = path.resolve(
   'data/mods/emotions-affiliation/expressions'
 );
 
+const EMOTIONS_GRATITUDE_DIR = path.resolve(
+  'data/mods/emotions-gratitude/expressions'
+);
+
+const EMOTIONS_AFFECTION_CARE_DIR = path.resolve(
+  'data/mods/emotions-affection-care/expressions'
+);
+
 // Expression files that require compassion emotion (trait-gated)
-const COMPASSION_EXPRESSIONS = [
+// compassionate_concern and warm_affection moved to emotions-affection-care mod
+// tearful_gratitude moved to emotions-gratitude mod
+const AFFILIATION_EXPRESSIONS = [];
+
+const GRATITUDE_EXPRESSIONS = ['tearful_gratitude.expression.json'];
+
+const AFFECTION_CARE_EXPRESSIONS = [
   'compassionate_concern.expression.json',
-  'tearful_gratitude.expression.json',
   'warm_affection.expression.json',
 ];
 
@@ -34,26 +47,48 @@ describe('Affect Traits Integration - Emotions Affiliation Expressions', () => {
     logger = new ConsoleLogger('ERROR');
     jsonLogicService = new JsonLogicEvaluationService({ logger });
 
-    // Load actual expression files from mod
-    const expressions = await Promise.all(
-      COMPASSION_EXPRESSIONS.map(async (file) => {
-        const filePath = path.join(EXPRESSIONS_DIR, file);
+    // Load expression files from all three mods
+    const affiliationExpressions = await Promise.all(
+      AFFILIATION_EXPRESSIONS.map(async (file) => {
+        const filePath = path.join(EMOTIONS_AFFILIATION_DIR, file);
         const data = await readFile(filePath, { encoding: 'utf-8' });
         return JSON.parse(data);
       })
     );
 
+    const gratitudeExpressions = await Promise.all(
+      GRATITUDE_EXPRESSIONS.map(async (file) => {
+        const filePath = path.join(EMOTIONS_GRATITUDE_DIR, file);
+        const data = await readFile(filePath, { encoding: 'utf-8' });
+        return JSON.parse(data);
+      })
+    );
+
+    const affectionCareExpressions = await Promise.all(
+      AFFECTION_CARE_EXPRESSIONS.map(async (file) => {
+        const filePath = path.join(EMOTIONS_AFFECTION_CARE_DIR, file);
+        const data = await readFile(filePath, { encoding: 'utf-8' });
+        return JSON.parse(data);
+      })
+    );
+
+    const allExpressions = [
+      ...affiliationExpressions,
+      ...gratitudeExpressions,
+      ...affectionCareExpressions,
+    ];
+
     expressionsById = Object.fromEntries(
-      expressions.map((expression) => [expression.id, expression])
+      allExpressions.map((expression) => [expression.id, expression])
     );
   });
 
   describe('Expression File Loading', () => {
     it('loads compassionate_concern expression with valid structure', () => {
       const expression =
-        expressionsById['emotions-affiliation:compassionate_concern'];
+        expressionsById['emotions-affection-care:compassionate_concern'];
       expect(expression).toBeDefined();
-      expect(expression.id).toBe('emotions-affiliation:compassionate_concern');
+      expect(expression.id).toBe('emotions-affection-care:compassionate_concern');
       expect(expression.prerequisites).toBeDefined();
       expect(Array.isArray(expression.prerequisites)).toBe(true);
       expect(expression.prerequisites.length).toBeGreaterThan(0);
@@ -61,14 +96,15 @@ describe('Affect Traits Integration - Emotions Affiliation Expressions', () => {
 
     it('loads tearful_gratitude expression with valid structure', () => {
       const expression =
-        expressionsById['emotions-affiliation:tearful_gratitude'];
+        expressionsById['emotions-gratitude:tearful_gratitude'];
       expect(expression).toBeDefined();
+      expect(expression.id).toBe('emotions-gratitude:tearful_gratitude');
       expect(expression.prerequisites).toBeDefined();
       expect(expression.prerequisites.length).toBeGreaterThan(0);
     });
 
     it('loads warm_affection expression with valid structure', () => {
-      const expression = expressionsById['emotions-affiliation:warm_affection'];
+      const expression = expressionsById['emotions-affection-care:warm_affection'];
       expect(expression).toBeDefined();
       expect(expression.prerequisites).toBeDefined();
       expect(expression.prerequisites.length).toBeGreaterThan(0);
@@ -79,7 +115,7 @@ describe('Affect Traits Integration - Emotions Affiliation Expressions', () => {
     describe('compassionate_concern expression', () => {
       it('first prerequisite fails when compassion is zero (blocked by trait gate)', () => {
         const expression =
-          expressionsById['emotions-affiliation:compassionate_concern'];
+          expressionsById['emotions-affection-care:compassionate_concern'];
         const logic = expression.prerequisites[0].logic;
 
         // Context where compassion is zero (sociopath scenario - emotion blocked by trait gate)
@@ -110,7 +146,7 @@ describe('Affect Traits Integration - Emotions Affiliation Expressions', () => {
 
       it('second prerequisite (rise detection) passes with significant compassion increase', () => {
         const expression =
-          expressionsById['emotions-affiliation:compassionate_concern'];
+          expressionsById['emotions-affection-care:compassionate_concern'];
         const logic = expression.prerequisites[1].logic;
 
         // Context with compassion rise >= 0.07
@@ -125,7 +161,7 @@ describe('Affect Traits Integration - Emotions Affiliation Expressions', () => {
 
       it('second prerequisite fails with low compassion and no rise', () => {
         const expression =
-          expressionsById['emotions-affiliation:compassionate_concern'];
+          expressionsById['emotions-affection-care:compassionate_concern'];
         const logic = expression.prerequisites[1].logic;
 
         // Context with low compassion and no significant rise

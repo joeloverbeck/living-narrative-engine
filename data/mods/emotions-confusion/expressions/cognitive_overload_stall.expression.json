@@ -245,5 +245,6 @@
         "tactile": "There’s a tightness behind my eyes and a faint buzzing restlessness in my hands—energy present, but no clean channel for it.",
         "limited": "My attention stays on it, but the next step won’t resolve; I keep pausing and trying again."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-guilt:self_forgiveness_release",
-    "description": "Self-forgiveness release: the knot of guilt loosens and relief moves in\u2014breathing returns, posture unhooks, and the inner voice stops prosecuting for a beat. Style note: consider adding category 'release' for resolution/aftershock moments (guilt loosening, tension draining) that aren\u2019t purely calm/joy.",
+    "description": "Self-forgiveness release: the knot of guilt loosens and relief moves in—breathing returns, posture unhooks, and the inner voice stops prosecuting for a beat. Style note: consider adding category 'release' for resolution/aftershock moments (guilt loosening, tension draining) that aren’t purely calm/joy.",
     "category": "calm",
     "priority": 72,
     "prerequisites": [
@@ -13,7 +13,7 @@
                             {
                                 "var": "emotions.release"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -162,7 +162,7 @@
                                             {
                                                 "var": "previousEmotions.release"
                                             },
-                                            0.50
+                                            0.5
                                         ]
                                     },
                                     {
@@ -170,7 +170,7 @@
                                             {
                                                 "var": "emotions.release"
                                             },
-                                            0.50
+                                            0.5
                                         ]
                                     }
                                 ]
@@ -187,7 +187,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             }
                         ]
@@ -197,11 +197,12 @@
             "failure_message": "Requires a real self-forgiveness unclench: release is meaningfully present while guilt/remorse were recently moderate-high but are now easing. Grounds in recovering self-evaluation and low-ish threat (but allows valence to remain slightly negative). Blocks humiliation/shame spikes and high cynicism so it doesn’t misfire during self-attack or bitter detachment. Triggers only on a self-evaluation jump, a guilt/remorse drop, or a release crossing/spike to prevent spam."
         }
     ],
-    "actor_description": "The pressure in my chest finally unhooks. I can take a full breath without it catching, like my body stopped bracing for punishment. The accusation in my head goes quiet for a moment, replaced by a tired, honest softness\u2014maybe I\u2019m allowed to be human and still move forward.",
+    "actor_description": "The pressure in my chest finally unhooks. I can take a full breath without it catching, like my body stopped bracing for punishment. The accusation in my head goes quiet for a moment, replaced by a tired, honest softness—maybe I’m allowed to be human and still move forward.",
     "description_text": "{actor}'s shoulders ease and their breath deepens, as if a weight just slid off. Their face unclenches; the urgency to self-correct fades into a steadier, gentler composure.",
     "alternate_descriptions": {
-        "auditory": "I hear a long exhale\u2014unforced, almost shaky at the end\u2014like the sound of finally letting something go.",
-        "tactile": "The air feels less tight around them; their movements stop hitching, hands loosening as if they\u2019d been gripping an invisible handle."
+        "auditory": "I hear a long exhale—unforced, almost shaky at the end—like the sound of finally letting something go.",
+        "tactile": "The air feels less tight around them; their movements stop hitching, hands loosening as if they’d been gripping an invisible handle."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.001
 }

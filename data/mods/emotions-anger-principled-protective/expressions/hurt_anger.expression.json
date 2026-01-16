@@ -1,0 +1,299 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-anger-principled-protective:hurt_anger",
+    "description": "Hurt anger: affiliative anger with pain underneath—betrayal, rejection, humiliation, or grief-adjacent hurt. High anger with high affiliation, low self-evaluation/valence, and threatened connection.",
+    "priority": 78,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            70
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    35
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    45
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    -20
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.protest_anger"
+                                    },
+                                    {
+                                        "var": "emotions.smoldering_anger"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.sadness"
+                                    },
+                                    0.22
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.grief"
+                                    },
+                                    0.18
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.disappointment"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.regret"
+                                    },
+                                    0.18
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.embarrassment"
+                                    },
+                                    0.2
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.humiliation"
+                                    },
+                                    0.18
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.protest_anger"
+                                            },
+                                            {
+                                                "var": "previousEmotions.protest_anger"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.self_evaluation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.self_evaluation"
+                                            }
+                                        ]
+                                    },
+                                    -8
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.protest_anger"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.protest_anger"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "actor_description": "The anger comes with a sting in it—like a bruise you didn't know you had until someone pressed it. Part of me wants to lash out, but the sharper part is the hurt: the sense that I mattered, that we were connected, and that something just got handled carelessly. My chest feels tight. My throat feels crowded. I can feel myself wanting to say something harsh and immediately regrettable, because harshness is a way to stop the bleeding. I look at them and I'm angry, yes—but I'm also watching for any sign they understand what they did. I'm still oriented toward them. I still care. That's the problem. My words come out edged and shaky: accusations that are half boundary, half plea. I'm trying to protect myself without admitting how much it hit.",
+    "description_text": "{actor}'s anger shows up with visible strain—eyes bright with tension, mouth set too hard, voice sharp in a way that can't quite hide the hurt underneath. They stay oriented toward the person who caused it, not away: the posture is confrontational but connected, as if they're demanding recognition rather than seeking destruction. The hostility flickers with vulnerability—an accusation that feels like a wounded reach for repair.",
+    "alternate_descriptions": {
+        "auditory": "I hear a voice catch at the edges—sharp consonants with a tremor beneath them. The rhythm suggests restraint failing in small bursts: a hard question, a tight pause, a quieter admission buried inside anger.",
+        "tactile": "The air feels raw—like there's exposed nerve in the room. It's anger with tenderness still attached, making every word feel more personal and more risky."
+    },
+    "category": "anger",
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0003
+}

@@ -88,7 +88,7 @@
                             {
                                 "var": "emotions.shame"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -96,7 +96,7 @@
                             {
                                 "var": "emotions.humiliation"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -104,7 +104,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -124,7 +124,7 @@
                                             {
                                                 "var": "emotions.guilt"
                                             },
-                                            0.40
+                                            0.4
                                         ]
                                     },
                                     {
@@ -132,7 +132,7 @@
                                             {
                                                 "var": "emotions.guilt"
                                             },
-                                            0.70
+                                            0.7
                                         ]
                                     },
                                     {
@@ -182,7 +182,7 @@
                                             {
                                                 "var": "emotions.remorse"
                                             },
-                                            0.40
+                                            0.4
                                         ]
                                     },
                                     {
@@ -190,7 +190,7 @@
                                             {
                                                 "var": "emotions.remorse"
                                             },
-                                            0.70
+                                            0.7
                                         ]
                                     },
                                     {
@@ -246,5 +246,6 @@
         "tactile": "A body holds itself guarded-muscles tight in the shoulders, a careful stillness, like someone bracing to be blamed even if nobody's speaking."
     },
     "category": "shame",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0003
 }
