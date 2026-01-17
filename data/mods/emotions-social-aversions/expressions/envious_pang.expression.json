@@ -1,202 +1,203 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-social-aversions:envious_pang",
-  "description": "A quick, status-based envy pang: attention narrows into comparison and a self-worth sting, without tipping into possessive jealousy or sexual/romantic pull.",
-  "priority": 72,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.envy"
-              },
-              0.45
-            ]
-          },
-          {
-            "or": [
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-social-aversions:envious_pang",
+    "description": "A quick, status-based envy pang: attention narrows into comparison and a self-worth sting, without tipping into possessive jealousy or sexual/romantic pull.",
+    "priority": 72,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    "<": [
-                      {
-                        "var": "previousEmotions.envy"
-                      },
-                      0.45
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.envy"
-                      },
-                      0.45
-                    ]
-                  }
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.envy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.envy"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.envy"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.envy"
+                                            },
+                                            {
+                                                "var": "previousEmotions.envy"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.self_evaluation"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.self_evaluation"
+                                            }
+                                        ]
+                                    },
+                                    -10
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.self_evaluation"
+                                    },
+                                    -10
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.romantic_yearning"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_craving"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_lust"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.love_attachment"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hatred"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.contempt"
+                            },
+                            0.35
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.envy"
-                      },
-                      {
-                        "var": "previousEmotions.envy"
-                      }
-                    ]
-                  },
-                  0.12
-                ]
-              }
-            ]
-          },
-          {
-            "or": [
-              {
-                "<=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.self_evaluation"
-                      },
-                      {
-                        "var": "previousMoodAxes.self_evaluation"
-                      }
-                    ]
-                  },
-                  -10
-                ]
-              },
-              {
-                "<=": [
-                  {
-                    "var": "moodAxes.self_evaluation"
-                  },
-                  -10
-                ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.valence"
-              },
-              -10
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.affiliation"
-              },
-              10
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.affiliation"
-              },
-              -35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.jealousy"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.romantic_yearning"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.sexual_craving"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.sexual_lust"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.love_attachment"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.smoldering_anger"
-              },
-              0.30
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.rage"
-              },
-              0.45
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.hatred"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.contempt"
-              },
-              0.35
-            ]
-          }
-        ]
-      },
-      "failure_message": "Quick envy pang only: requires envy crossing/spike plus a self-evaluation sting, grounded in negative valence and engaged comparison. Explicitly caps smoldering_anger (sustained cold hostility) and other heavy hostilities so this stays a brief pang rather than a bitter simmer."
-    }
-  ],
-  "actor_description": "Something pinches behind my ribs—small but sharp—and my thoughts tilt into measuring. I feel my face tighten as if I've been caught lacking, even if no one said a word. My attention locks in on what I don't have, and it takes a second to unclench my jaw and breathe past the sting.",
-  "description_text": "{actor} goes still for a beat, eyes tracking with a too-focused intensity. Their mouth tightens and the warmth in their expression thins, like a brief internal comparison just landed hard.",
-  "alternate_descriptions": {
-    "auditory": "A clipped inhale slips out, followed by a short, controlled exhale—like someone swallowing a reaction before it becomes a comment.",
-    "tactile": "The air around them feels tighter: shoulders subtly braced, fingers flexing once as if to shake off a prickling irritation.",
-    "limited": "A brief shadow crosses their face—attention narrowing, posture tightening—then they smooth it away."
-  },
-  "category": "anger",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Quick envy pang only: requires envy crossing/spike plus a self-evaluation sting, grounded in negative valence and engaged comparison. Explicitly caps smoldering_anger (sustained cold hostility) and other heavy hostilities so this stays a brief pang rather than a bitter simmer."
+        }
+    ],
+    "actor_description": "Something pinches behind my ribs—small but sharp—and my thoughts tilt into measuring. I feel my face tighten as if I've been caught lacking, even if no one said a word. My attention locks in on what I don't have, and it takes a second to unclench my jaw and breathe past the sting.",
+    "description_text": "{actor} goes still for a beat, eyes tracking with a too-focused intensity. Their mouth tightens and the warmth in their expression thins, like a brief internal comparison just landed hard.",
+    "alternate_descriptions": {
+        "auditory": "A clipped inhale slips out, followed by a short, controlled exhale—like someone swallowing a reaction before it becomes a comment.",
+        "tactile": "The air around them feels tighter: shoulders subtly braced, fingers flexing once as if to shake off a prickling irritation.",
+        "limited": "A brief shadow crosses their face—attention narrowing, posture tightening—then they smooth it away."
+    },
+    "category": "anger",
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0004
 }

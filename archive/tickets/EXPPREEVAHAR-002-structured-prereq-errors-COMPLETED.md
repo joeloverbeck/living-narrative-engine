@@ -6,7 +6,7 @@ Introduce a structured `ExpressionPrerequisiteError` payload and consistent logg
 
 ## Background
 
-Evaluation errors currently collapse to a `false` result with minimal context. This makes it hard to identify invalid JSON Logic, missing vars, or range issues at runtime.
+Evaluation errors currently collapse to a `false` result with minimal context. This makes it hard to identify invalid JSON Logic or missing vars at runtime.
 
 ## File List (Expected to Touch)
 
@@ -16,7 +16,6 @@ Evaluation errors currently collapse to a `false` result with minimal context. T
 ### Existing Files
 - `src/expressions/expressionEvaluatorService.js`
 - `src/logic/jsonLogicEvaluationService.js`
-- `src/logging/loggerStrategy.js`
 - `tests/unit/expressions/expressionEvaluatorService.test.js`
 
 ## Out of Scope (MUST NOT Change)
@@ -33,7 +32,7 @@ Evaluation errors currently collapse to a `false` result with minimal context. T
   - Compact JSON summary of the logic (single-line string).
   - Resolved logic (if condition refs exist).
   - Vars referenced and their resolved values.
-  - Error category: `invalid-logic`, `missing-var`, `range-mismatch`, `evaluation-error`.
+  - Error category: `invalid-logic`, `missing-var`, `evaluation-error`.
 - Update `expressionEvaluatorService` to construct and log this payload on evaluation failure.
 - Ensure logs use a stable prefix (for grepability) like `EXPR_PREREQ_ERROR` and include an error code.
 
@@ -41,7 +40,7 @@ Evaluation errors currently collapse to a `false` result with minimal context. T
 
 ### Tests That Must Pass
 
-1. `npm run test:unit -- --runInBand --testPathPattern="expressionEvaluatorService"`
+1. `npm run test:unit -- --runInBand --testPathPatterns="expressionEvaluatorService" --coverage=false`
 
 ### Invariants That Must Remain True
 
@@ -49,3 +48,18 @@ Evaluation errors currently collapse to a `false` result with minimal context. T
 2. Logging uses a stable prefix and error code across failures.
 3. Errors do not leak full context data beyond the referenced var paths.
 
+## Assumptions (Revalidated)
+
+- `ExpressionEvaluatorService` already resolves `condition_ref` via `resolveConditionRefs`.
+- `JsonLogicEvaluationService` already validates logic and can return trace failures via `evaluateWithTrace`.
+- There is no strict-mode change in this ticket (strict-mode remains out of scope).
+
+## Status
+
+Completed
+
+## Outcome
+
+- Actual: Added `ExpressionPrerequisiteError` payload + structured logging from `ExpressionEvaluatorService` with stable prefix and error codes.
+- Actual: Used `evaluateWithTrace` only on failures to categorize invalid logic, missing vars, or evaluation errors.
+- Adjusted: Removed logger strategy edits from scope and updated the test command to `--testPathPatterns` with coverage disabled for subset runs.

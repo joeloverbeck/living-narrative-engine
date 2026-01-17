@@ -222,7 +222,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (cynicism, wrath, protest_anger, smoldering_anger, contempt, resentment, rage, despair, apathy, numbness, guilt, remorse); mood axes (future_expectancy, valence, engagement, arousal, inhibitory_control); state change detection from previous values."
         }
     ],
     "alternate_descriptions": {

@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/expression.schema.json",
+  "id": "test:invalid_expression",
+  "description": "An invalid expression fixture for testing the validation CLI",
+  "priority": 50,
+  "prerequisites": [
+    {
+      "logic": {
+        ">=": [
+          {
+            "var": "emotions.rage"
+          },
+          150
+        ]
+      },
+      "failure_message": "Invalid: value 150 is outside range for emotions (0..1)"
+    }
+  ],
+  "actor_description": "Test actor description",
+  "description_text": "{actor} test description text",
+  "category": "test"
+}

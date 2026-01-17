@@ -72,7 +72,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (inspiration, despair, cynicism, boredom, fear, panic); mood axes (engagement, future_expectancy)."
         },
         {
             "logic": {
@@ -116,7 +117,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (inspiration); mood axes (engagement); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "Something in me clicks into place. The world stops being a wall and turns into a set of handles-ways to grab, ways to try. I can almost feel the idea forming behind my eyes, not as words yet but as shape and pressure, like a door unlatching. My body comes along for it: breath fuller, posture rising without permission. I want to move. I want to make a first attempt before the feeling cools.",

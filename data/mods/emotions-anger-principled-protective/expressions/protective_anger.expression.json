@@ -215,7 +215,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (moral_outrage, wrath, love_attachment, compassion, hatred, contempt, disgust, rage, apathy, numbness); mood axes (affiliation, agency_control, engagement, threat, inhibitory_control, arousal); affect traits (harm_aversion); state change detection from previous values."
         }
     ],
     "actor_description": "The anger doesn't feel like hatred. It feels like a hand clamping down around something precious.\n\nI get closer to the line instead of backing away from it—closer to the person I'm defending, closer to the problem, closer to whatever thinks it gets to keep pushing. Heat lifts behind my ribs, but it organizes itself into a single instruction: stop. My voice steadies. My eyes narrow, not to punish, but to aim. I can feel the shape of the boundary I want and the exact words that draw it. I'm not looking to win an argument; I'm looking to make the danger understand the rules. If I have to escalate, I will—but it's a choice, not a leak. I'm present, focused, and angry on purpose.",

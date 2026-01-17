@@ -140,7 +140,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (love_attachment, freeze, withdrawn_isolation, adoration, affection, lonely_yearning, shame, panic); mood axes (affiliation, threat)."
         },
         {
             "logic": {
@@ -214,7 +215,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (lonely_yearning, love_attachment); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "It's not just desire; it's them. Heat pulls through me, but it's threaded with something softer-an ache in my chest, a hunger for closeness that feels almost steady. I keep imagining the small proofs of nearness: a touch that lingers, breath shared, the relief of not having to reach anymore. Even when I don't move, my attention keeps drifting back to them like a compass needle.",

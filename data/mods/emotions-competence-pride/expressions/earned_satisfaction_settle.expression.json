@@ -172,7 +172,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (release, confidence, contentment, pride); mood axes (agency_control, self_evaluation, threat, engagement, arousal); state change detection from previous values."
         }
     ],
     "alternate_descriptions": {

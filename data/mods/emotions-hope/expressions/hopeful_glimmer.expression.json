@@ -133,7 +133,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (hope, despair, dread, terror, anxiety, stress_acute, hypervigilance, apathy, numbness, release); mood axes (future_expectancy); state change detection from previous values."
         }
     ],
     "actor_description": "Something in me eases-small, but unmistakable. The future isn't only a block of grey; it has a seam in it. I catch myself running a scenario that doesn't end in damage control, and my body responds before I can argue it down: a longer breath, shoulders dropping a fraction, the faint urge to lean forward instead of brace. I don't trust it enough to celebrate. I just let it exist. A thin thread of \"this might work\" pulls tight and holds.",

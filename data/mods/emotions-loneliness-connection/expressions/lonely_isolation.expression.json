@@ -64,7 +64,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (withdrawn_isolation, protest_anger, lonely_yearning, despair); mood axes (affiliation, engagement, valence)."
         },
         {
             "logic": {
@@ -87,7 +88,8 @@
                     },
                     0.45
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (affection, love_attachment, trust, gratitude) for transition detection."
         },
         {
             "logic": {
@@ -181,7 +183,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (withdrawn_isolation, affection, love_attachment, trust); mood axes (engagement, affiliation); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "The room has people in it, noise in it-maybe even faces turned my way-and none of it reaches. It's like there's a pane of glass between me and everything else. I can think of words to say, but they feel pre-translated, already wrong. I'm here, technically. I just don't feel with anyone.",

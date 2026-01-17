@@ -350,7 +350,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (smoldering_anger, rage, wrath, executive_focus, protest_anger, sympathy, compassion, lonely_yearning, panic, terror, fear, surprise_startle, contempt, hatred, determination); mood axes (agency_control, engagement, inhibitory_control, arousal, valence, affiliation); affect traits (self_control); state change detection from previous values."
         }
     ],
     "actor_description": "The heat drains out and leaves something cleaner behind it. I get very still. My thoughts line up like tools on a table-what matters, what doesn't, what I'll do and when. My jaw locks, my voice wants to go flat. I'm not here to explode. I'm here to choose the moment.",

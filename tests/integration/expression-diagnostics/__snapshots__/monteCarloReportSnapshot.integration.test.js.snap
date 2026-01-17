@@ -94,6 +94,9 @@ No triggering states found during simulation.
 ## Blocker Analysis
 Signal: final (gate-clamped intensity).
 
+> **[FULL PREREQS]** **[GLOBAL]**
+> *Computed from ALL prerequisites using post-gate (final) values.*
+
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
@@ -128,7 +131,7 @@ None
 - **Interpretation**: Normal distribution
 
 #### Ceiling Analysis
-- **Max Observed**: N/A
+- **Max Observed**: 0.65
 - **Threshold**: N/A
 - **Ceiling Gap**: 0.00 (achievable)
 - **Insight**: Easily achievable
@@ -158,6 +161,15 @@ None
 
 
 
+
+
+
+## Non-Axis Clause Feasibility
+
+> **[NON-AXIS ONLY]** **[IN-REGIME]**
+> *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
+
+No non-axis clauses found in prerequisites.
 
 
 
@@ -326,6 +338,15 @@ No blockers identified.
 
 
 
+## Non-Axis Clause Feasibility
+
+> **[NON-AXIS ONLY]** **[IN-REGIME]**
+> *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
+
+No non-axis clauses found in prerequisites.
+
+
+
 
 
 
@@ -453,6 +474,15 @@ No blockers identified.
 
 
 
+
+
+
+## Non-Axis Clause Feasibility
+
+> **[NON-AXIS ONLY]** **[IN-REGIME]**
+> *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
+
+No non-axis clauses found in prerequisites.
 
 
 
@@ -611,6 +641,9 @@ No triggering states found during simulation.
 ## Blocker Analysis
 Signal: final (gate-clamped intensity).
 
+> **[FULL PREREQS]** **[GLOBAL]**
+> *Computed from ALL prerequisites using post-gate (final) values.*
+
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
@@ -694,7 +727,7 @@ None
 - **Interpretation**: Values skewed toward upper range
 
 #### Ceiling Analysis
-- **Max Observed**: 0.35
+- **Min Observed**: N/A
 - **Threshold**: 0.30
 - **Ceiling Gap**: 0.05 (UNREACHABLE)
 - **Insight**: Ceiling is challenging
@@ -743,7 +776,7 @@ None
 - **Interpretation**: Normal distribution
 
 #### Ceiling Analysis
-- **Max Observed**: N/A
+- **Max Observed**: 0.65
 - **Threshold**: N/A
 - **Ceiling Gap**: 0.00 (achievable)
 - **Insight**: Easily achievable
@@ -773,6 +806,15 @@ None
 
 
 
+
+
+
+## Non-Axis Clause Feasibility
+
+> **[NON-AXIS ONLY]** **[IN-REGIME]**
+> *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
+
+No non-axis clauses found in prerequisites.
 
 
 
@@ -894,6 +936,9 @@ No triggering states found during simulation.
 ## Blocker Analysis
 Signal: final (gate-clamped intensity).
 
+> **[FULL PREREQS]** **[GLOBAL]**
+> *Computed from ALL prerequisites using post-gate (final) values.*
+
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
@@ -977,7 +1022,7 @@ None
 - **Interpretation**: Values skewed toward upper range
 
 #### Ceiling Analysis
-- **Max Observed**: 0.35
+- **Min Observed**: N/A
 - **Threshold**: 0.30
 - **Ceiling Gap**: 0.05 (UNREACHABLE)
 - **Insight**: Ceiling is challenging
@@ -1026,7 +1071,7 @@ None
 - **Interpretation**: Normal distribution
 
 #### Ceiling Analysis
-- **Max Observed**: N/A
+- **Max Observed**: 0.65
 - **Threshold**: N/A
 - **Ceiling Gap**: 0.00 (achievable)
 - **Insight**: Easily achievable
@@ -1056,6 +1101,15 @@ None
 
 
 
+
+
+
+## Non-Axis Clause Feasibility
+
+> **[NON-AXIS ONLY]** **[IN-REGIME]**
+> *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
+
+No non-axis clauses found in prerequisites.
 
 
 
@@ -1224,6 +1278,9 @@ No triggering states found during simulation.
 ## Blocker Analysis
 Signal: final (gate-clamped intensity).
 
+> **[FULL PREREQS]** **[GLOBAL]**
+> *Computed from ALL prerequisites using post-gate (final) values.*
+
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
@@ -1386,7 +1443,7 @@ None
 - **Interpretation**: Values skewed toward upper range
 
 #### Ceiling Analysis
-- **Max Observed**: 0.35
+- **Min Observed**: N/A
 - **Threshold**: 0.30
 - **Ceiling Gap**: 0.05 (UNREACHABLE)
 - **Insight**: Ceiling is challenging
@@ -1435,7 +1492,7 @@ None
 - **Interpretation**: Normal distribution
 
 #### Ceiling Analysis
-- **Max Observed**: N/A
+- **Max Observed**: 0.65
 - **Threshold**: N/A
 - **Ceiling Gap**: 0.00 (achievable)
 - **Insight**: Easily achievable
@@ -1471,6 +1528,9 @@ None
 
 Ranking of emotion prototypes by how well they fit this expression's mood regime.
 
+> **[AXIS-ONLY FIT]** **[IN-REGIME]**
+> *Computed from mood-regime axis constraints only (emotion clauses not enforced).*
+
 **Population**: stored-mood-regime (predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; count: 3; hash: 441edcdd).
 | Rank | Prototype | Gate Pass | P(I≥t) | Conflict | Composite |
 |------|-----------|-----------|--------|----------|-----------|
@@ -1497,6 +1557,14 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
 - **Conflict Magnitude**: 1.70
 
 ---
+
+
+## Non-Axis Clause Feasibility
+
+> **[NON-AXIS ONLY]** **[IN-REGIME]**
+> *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
+
+No non-axis clauses found in prerequisites.
 
 ## 🧭 Implied Prototype from Prerequisites
 
@@ -1559,6 +1627,7 @@ Analysis of prototype coverage in "prototype space".
 | 3 | **fear** | 0.76 | 1.09 | 0.00 |
 
 ---
+
 
 
 ## Report Integrity Warnings
@@ -1727,6 +1796,9 @@ No triggering states found during simulation.
 ## Blocker Analysis
 Signal: final (gate-clamped intensity).
 
+> **[FULL PREREQS]** **[GLOBAL]**
+> *Computed from ALL prerequisites using post-gate (final) values.*
+
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
@@ -1810,7 +1882,7 @@ None
 - **Interpretation**: Values skewed toward upper range
 
 #### Ceiling Analysis
-- **Max Observed**: 0.35
+- **Min Observed**: N/A
 - **Threshold**: 0.30
 - **Ceiling Gap**: 0.05 (UNREACHABLE)
 - **Insight**: Ceiling is challenging
@@ -1859,7 +1931,7 @@ None
 - **Interpretation**: Normal distribution
 
 #### Ceiling Analysis
-- **Max Observed**: N/A
+- **Max Observed**: 0.65
 - **Threshold**: N/A
 - **Ceiling Gap**: 0.00 (achievable)
 - **Insight**: Easily achievable
@@ -1925,6 +1997,15 @@ It does **not** estimate overall expression trigger rate.
 | 0.55 | 10.00% | -60.00% | 10,000 |
 | 0.60 | 5.00% | -80.00% | 10,000 |
 | 0.65 | 2.00% | -92.00% | 10,000 |
+
+
+## Non-Axis Clause Feasibility
+
+> **[NON-AXIS ONLY]** **[IN-REGIME]**
+> *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
+
+No non-axis clauses found in prerequisites.
+
 
 
 

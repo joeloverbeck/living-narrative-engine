@@ -186,7 +186,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (awe, entranced, quiet_absorption, transfixed, focused_absorption, terror, rage, panic, euphoria, executive_focus); mood axes (engagement, agency_control, arousal, threat); state change detection from previous values."
         },
         {
             "logic": {
@@ -270,7 +271,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (surprise_startle, awe, entranced); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "It stops me. My breath catches halfway in and doesn't want to finish. The world suddenly feels too large to hold in a single thought-like something has opened above me and I'm staring straight into it. My body goes quiet without asking permission: hands useless at my sides, tongue blank, heart thudding slow and heavy. I feel small, but not crushed-more like I've been reminded, with absolute clarity, that I'm standing inside something vast.",

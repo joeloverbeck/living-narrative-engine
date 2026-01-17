@@ -31,7 +31,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (confusion); state change detection from previous values."
         },
         {
             "logic": {
@@ -109,7 +110,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (confusion, transfixed, entranced, quiet_absorption, spellbound_absorption, surprise_startle, terror, dread, hypervigilance) for transition detection."
         },
         {
             "logic": {
@@ -147,7 +149,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (panic); mood axes (engagement, agency_control, threat) for transition detection."
         }
     ],
     "actor_description": "I don't get it. I keep turning it over and it keeps coming back wrong. My brow tightens; I replay what I just saw or heard, hunting the missing step like it's hiding in plain sight. The more I try to force it to click, the more it resists. I can feel my attention snagging-wait, how does that follow?-stuck at the point where the logic should bridge and doesn't.",

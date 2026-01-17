@@ -126,7 +126,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (determination, executive_focus, interest, flow, enthusiasm, release); mood axes (engagement, agency_control, threat, arousal); state change detection from previous values."
         },
         {
             "logic": {
@@ -217,7 +218,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (executive_focus, determination); mood axes (agency_control); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "I stop negotiating with myself. The noise falls back and the next step comes forward-simple, doable. My attention narrows until it has edges; everything irrelevant goes slightly dim. Breath steadies. Jaw tightens once, then settles. I can feel my body choosing efficiency: smaller movements, cleaner timing, no wasted gestures. The fear doesn't have to be gone; it just doesn't get a vote. I pick the line I'm going to walk and start walking it.",

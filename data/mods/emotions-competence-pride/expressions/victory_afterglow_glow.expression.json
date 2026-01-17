@@ -242,7 +242,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (triumph, pride, release, panic, terror, hypervigilance, alarm, shame, humiliation, embarrassment, stress_acute); mood axes (valence, agency_control, threat, engagement, arousal); state change detection from previous values."
         }
     ],
     "actor_description": "The rush doesn't vanish—it spreads. My breathing finds a steadier rhythm and the victory settles into my limbs like warmth. I feel taller without forcing it, like my body finally believes I can handle what I just handled. The grin lingers, quieter now; the energy is still there, but it's usable—confidence instead of a burst.",

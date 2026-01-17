@@ -8,6 +8,8 @@ import StatisticalComputationService from '../StatisticalComputationService.js';
 import ReportDataExtractor from '../ReportDataExtractor.js';
 import BlockerTreeTraversal from '../BlockerTreeTraversal.js';
 import { filterContextsByConstraints } from '../../utils/moodRegimeUtils.js';
+import { SCOPE_METADATA } from '../../models/AnalysisScopeMetadata.js';
+import { renderScopeMetadataHeader } from '../../utils/scopeMetadataRenderer.js';
 
 class PrototypeSectionGenerator {
   #formattingService;
@@ -121,11 +123,14 @@ class PrototypeSectionGenerator {
         storedPopulations?.storedMoodRegime ?? null
       );
 
+    const scopeHeader = renderScopeMetadataHeader(SCOPE_METADATA.PROTOTYPE_FIT);
+
     let section = `
 ## 🎯 Prototype Fit Analysis
 
 Ranking of ${includeType ? 'emotion/sexual' : 'emotion'} prototypes by how well they fit this expression's mood regime.
 
+${scopeHeader}
 ${orConstraintWarning}${populationLabel}| Rank | Prototype |${includeType ? ' Type |' : ''} Gate Pass | P(I≥t) | Conflict | Composite |
 |------|-----------|${includeType ? '------|' : ''}-----------|--------|----------|-----------|
 `;

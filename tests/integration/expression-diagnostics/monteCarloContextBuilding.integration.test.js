@@ -288,8 +288,8 @@ describe('MonteCarloSimulator - Context Building Behavior', () => {
       affective_empathy: 50,
       cognitive_empathy: 50,
       harm_aversion: 50,
+      self_control: 50,
     });
-    expect(context.affectTraits.self_control).toBeUndefined();
   });
 
   it('normalizes gate context values for prototype evaluation', async () => {

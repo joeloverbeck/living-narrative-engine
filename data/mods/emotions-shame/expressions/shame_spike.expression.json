@@ -1,159 +1,160 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-shame:shame_spike",
-  "description": "Acute shame response with rapid onset causing visible recoil and avoidance",
-  "priority": 82,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.shame"
-              },
-              0.6
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "emotions.embarrassment"
-              },
-              0.45
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.humiliation"
-              },
-              0.6
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.numbness"
-              },
-              0.65
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.apathy"
-              },
-              0.6
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.self_evaluation"
-              },
-              -10
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.agency_control"
-              },
-              10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.affiliation"
-              },
-              25
-            ]
-          },
-          {
-            "or": [
-              {
-                "<=": [
-                  {
-                    "var": "emotions.panic"
-                  },
-                  0.55
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-shame:shame_spike",
+    "description": "Acute shame response with rapid onset causing visible recoil and avoidance",
+    "priority": 82,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.embarrassment"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.panic"
+                                    },
+                                    0.55
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.shame"
+                                    },
+                                    {
+                                        "+": [
+                                            {
+                                                "var": "emotions.panic"
+                                            },
+                                            0.1
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.shame"
+                                    },
+                                    {
+                                        "var": "previousEmotions.shame"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.embarrassment"
+                                    },
+                                    {
+                                        "var": "previousEmotions.embarrassment"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "previousEmotions.shame"
+                            },
+                            0.62
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.shame"
-                  },
-                  {
-                    "+": [
-                      {
-                        "var": "emotions.panic"
-                      },
-                      0.1
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            ">=": [
-              {
-                "-": [
-                  {
-                    "var": "emotions.shame"
-                  },
-                  {
-                    "var": "previousEmotions.shame"
-                  }
-                ]
-              },
-              0.12
-            ]
-          },
-          {
-            ">=": [
-              {
-                "-": [
-                  {
-                    "var": "emotions.embarrassment"
-                  },
-                  {
-                    "var": "previousEmotions.embarrassment"
-                  }
-                ]
-              },
-              0.08
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "previousEmotions.shame"
-              },
-              0.62
-            ]
-          }
-        ]
-      }
-    }
-  ],
-  "actor_description": "Heat climbs my neck and face like a rash. My stomach drops-empty, sick-and my thoughts tighten into one ugly sentence: they saw that. I can feel my posture trying to fold in on itself, shoulders up, chin down, as if smaller would mean safer. My mouth goes dry. I want to say something-anything-to cover it, but every word feels like it'll make the spotlight brighter.",
-  "description_text": "{actor} visibly contracts-shoulders rounding, chin dipping. Their gaze snaps down or away, and they touch their face or chest like they're checking whether they're exposed. A flush rises unevenly; their breathing turns shallow, as if they're bracing for impact.",
-  "alternate_descriptions": {
-    "auditory": "I hear a small, strangled sound-half laugh, half choke-followed by a sudden silence, like someone swallowed the rest of their sentence.",
-    "tactile": "A body pulls inward; the air feels tighter, as if someone's trying to occupy less space without moving."
-  },
-  "category": "shame",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Requires emotion conditions (shame, embarrassment, humiliation, numbness, apathy, panic); mood axes (self_evaluation, threat, agency_control, affiliation); state change detection from previous values."
+        }
+    ],
+    "actor_description": "Heat climbs my neck and face like a rash. My stomach drops-empty, sick-and my thoughts tighten into one ugly sentence: they saw that. I can feel my posture trying to fold in on itself, shoulders up, chin down, as if smaller would mean safer. My mouth goes dry. I want to say something-anything-to cover it, but every word feels like it'll make the spotlight brighter.",
+    "description_text": "{actor} visibly contracts-shoulders rounding, chin dipping. Their gaze snaps down or away, and they touch their face or chest like they're checking whether they're exposed. A flush rises unevenly; their breathing turns shallow, as if they're bracing for impact.",
+    "alternate_descriptions": {
+        "auditory": "I hear a small, strangled sound-half laugh, half choke-followed by a sudden silence, like someone swallowed the rest of their sentence.",
+        "tactile": "A body pulls inward; the air feels tighter, as if someone's trying to occupy less space without moving."
+    },
+    "category": "shame",
+    "diagnosticStatus": "unknown"
 }

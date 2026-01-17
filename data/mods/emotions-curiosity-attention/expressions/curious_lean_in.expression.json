@@ -136,7 +136,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (curiosity, transfixed, entranced, quiet_absorption, spellbound_absorption, fear, suspicion, boredom, fatigue, panic, freeze); mood axes (engagement, agency_control, arousal, affiliation, threat)."
         },
         {
             "logic": {
@@ -212,7 +213,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (curiosity); mood axes (engagement); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "I catch myself leaning forward before I've decided to. My eyes keep snagging on the small parts-the seam, the edge, the detail that doesn't quite fit-and it lights up that bright, itchy need to close the gap between seeing and knowing. I can feel my attention tightening into a point, like my mind is reaching out ahead of my body. One question finishes and the next one is already forming in my mouth.",

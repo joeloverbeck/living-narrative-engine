@@ -85,6 +85,7 @@ describe('ContextBuilder', () => {
         affective_empathy: 50,
         cognitive_empathy: 50,
         harm_aversion: 50,
+        self_control: 50,
       });
       expect(context.gateTrace).toEqual({
         emotions: { joy: { trace: 0.4 } },

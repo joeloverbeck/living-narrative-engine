@@ -208,7 +208,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (interest, focused_absorption, transfixed, entranced, quiet_absorption, spellbound_absorption, flow, suspicion, boredom, apathy, numbness, fatigue, hypervigilance, fear, terror, rage, confusion, panic); mood axes (engagement, agency_control, affiliation, arousal, threat)."
         },
         {
             "logic": {
@@ -299,7 +300,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (interest, focused_absorption); mood axes (engagement); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "Something hooks me. My attention gathers itself without effort-like a hand closing around a thread. The noise of everything else doesn't vanish, but it drops a few steps back, turning into background texture. I can feel my body cooperate: shoulders settle, breath evens, eyes track. Little connections start snapping into place-that relates to that-and I'm suddenly more awake than I was a moment ago.",

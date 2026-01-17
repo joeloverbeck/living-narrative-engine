@@ -32,6 +32,11 @@ import PrototypeSectionGenerator from './sectionGenerators/PrototypeSectionGener
 import SensitivitySectionGenerator from './sectionGenerators/SensitivitySectionGenerator.js';
 import BlockerSectionGenerator from './sectionGenerators/BlockerSectionGenerator.js';
 import CoreSectionGenerator from './sectionGenerators/CoreSectionGenerator.js';
+import NonAxisClauseExtractor from './NonAxisClauseExtractor.js';
+import NonAxisFeasibilityAnalyzer from './NonAxisFeasibilityAnalyzer.js';
+import FitFeasibilityConflictDetector from './FitFeasibilityConflictDetector.js';
+import NonAxisFeasibilitySectionGenerator from './sectionGenerators/NonAxisFeasibilitySectionGenerator.js';
+import ConflictWarningSectionGenerator from './sectionGenerators/ConflictWarningSectionGenerator.js';
 
 /**
  * Generates comprehensive markdown reports from Monte Carlo simulation results.
@@ -52,6 +57,12 @@ class MonteCarloReportGenerator {
   #prototypeSectionGenerator;
   #sensitivitySectionGenerator;
   #blockerSectionGenerator;
+  #prototypeGateAlignmentAnalyzer;
+  #nonAxisClauseExtractor;
+  #nonAxisFeasibilityAnalyzer;
+  #fitFeasibilityConflictDetector;
+  #nonAxisFeasibilitySectionGenerator;
+  #conflictWarningSectionGenerator;
 
   /**
    * @param {object} deps
@@ -69,6 +80,12 @@ class MonteCarloReportGenerator {
    * @param {import('./sectionGenerators/PrototypeSectionGenerator.js').default} [deps.prototypeSectionGenerator] - Optional prototype section generator (created internally if not provided)
    * @param {import('./sectionGenerators/SensitivitySectionGenerator.js').default} [deps.sensitivitySectionGenerator] - Optional sensitivity section generator (created internally if not provided)
    * @param {import('./sectionGenerators/BlockerSectionGenerator.js').default} [deps.blockerSectionGenerator] - Optional blocker section generator (created internally if not provided)
+   * @param {import('./PrototypeGateAlignmentAnalyzer.js').default} [deps.prototypeGateAlignmentAnalyzer] - Optional prototype gate alignment analyzer
+   * @param {import('./NonAxisClauseExtractor.js').default} [deps.nonAxisClauseExtractor] - Optional non-axis clause extractor (created via lazy init if not provided)
+   * @param {import('./NonAxisFeasibilityAnalyzer.js').default} [deps.nonAxisFeasibilityAnalyzer] - Optional non-axis feasibility analyzer (created via lazy init if not provided)
+   * @param {import('./FitFeasibilityConflictDetector.js').default} [deps.fitFeasibilityConflictDetector] - Optional fit/feasibility conflict detector (created via lazy init if not provided)
+   * @param {import('./sectionGenerators/NonAxisFeasibilitySectionGenerator.js').default} [deps.nonAxisFeasibilitySectionGenerator] - Optional non-axis feasibility section generator (created via lazy init if not provided)
+   * @param {import('./sectionGenerators/ConflictWarningSectionGenerator.js').default} [deps.conflictWarningSectionGenerator] - Optional conflict warning section generator (created via lazy init if not provided)
    */
   constructor({
     logger,
@@ -85,6 +102,12 @@ class MonteCarloReportGenerator {
     prototypeSectionGenerator = null,
     sensitivitySectionGenerator = null,
     blockerSectionGenerator = null,
+    prototypeGateAlignmentAnalyzer = null,
+    nonAxisClauseExtractor = null,
+    nonAxisFeasibilityAnalyzer = null,
+    fitFeasibilityConflictDetector = null,
+    nonAxisFeasibilitySectionGenerator = null,
+    conflictWarningSectionGenerator = null,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -151,6 +174,12 @@ class MonteCarloReportGenerator {
         dataExtractor: this.#dataExtractor,
         prototypeSectionGenerator: this.#prototypeSectionGenerator,
       });
+    this.#prototypeGateAlignmentAnalyzer = prototypeGateAlignmentAnalyzer;
+    this.#nonAxisClauseExtractor = nonAxisClauseExtractor;
+    this.#nonAxisFeasibilityAnalyzer = nonAxisFeasibilityAnalyzer;
+    this.#fitFeasibilityConflictDetector = fitFeasibilityConflictDetector;
+    this.#nonAxisFeasibilitySectionGenerator = nonAxisFeasibilitySectionGenerator;
+    this.#conflictWarningSectionGenerator = conflictWarningSectionGenerator;
   }
 
   /**
@@ -227,6 +256,41 @@ class MonteCarloReportGenerator {
       simulationResult.storedContexts
     );
 
+    // Run prototype gate alignment analysis if analyzer is available
+    let prototypeGateAlignmentSection = '';
+    let gateAlignmentResult = null;
+    if (this.#prototypeGateAlignmentAnalyzer && prerequisites) {
+      const emotionConditions =
+        this.#extractEmotionConditionsFromPrereqs(prerequisites);
+      const transformedConditions =
+        this.#transformEmotionConditionsForGateAnalysis(emotionConditions);
+      gateAlignmentResult = this.#prototypeGateAlignmentAnalyzer.analyze(
+        prerequisites,
+        transformedConditions
+      );
+      prototypeGateAlignmentSection =
+        this.#generatePrototypeGateAlignmentSection(gateAlignmentResult);
+    }
+
+    // Non-axis feasibility analysis (emotions, sexual states, deltas)
+    const inRegimeContexts = this.#filterContextsByMoodConstraints(
+      simulationResult.storedContexts ?? [],
+      moodConstraints
+    );
+
+    const nonAxisFeasibility = this.#getOrCreateNonAxisFeasibilityAnalyzer().analyze(
+      prerequisites ?? [],
+      inRegimeContexts,
+      expressionName
+    );
+
+    // Conflict detection between prototype fit and feasibility
+    const fitFeasibilityConflicts = this.#getOrCreateFitFeasibilityConflictDetector().detect(
+      prototypeFitAnalysis?.fitResults ?? null,
+      nonAxisFeasibility,
+      gateAlignmentResult
+    );
+
     const sections = [
       this.#coreSectionGenerator.generateHeader(expressionName, simulationResult),
       this.#coreSectionGenerator.generatePopulationSummary(populationSummary),
@@ -292,6 +356,12 @@ class MonteCarloReportGenerator {
         storedPopulations,
         hasOrMoodConstraintsFlag
       ),
+      // Conflict warnings and non-axis feasibility (must follow prototype fit)
+      this.#getOrCreateConflictWarningSectionGenerator().generate(fitFeasibilityConflicts),
+      this.#getOrCreateNonAxisFeasibilitySectionGenerator().generate(
+        nonAxisFeasibility,
+        populationSummary?.inRegimeSampleCount ?? storedPopulations?.storedMoodRegime?.count ?? 0
+      ),
       this.#prototypeSectionGenerator.generateImpliedPrototypeSection(
         prototypeFitAnalysis?.impliedPrototype,
         populationSummary,
@@ -303,6 +373,7 @@ class MonteCarloReportGenerator {
         populationSummary,
         storedPopulations
       ),
+      prototypeGateAlignmentSection,
       this.#coreSectionGenerator.generateStaticCrossReference(
         staticAnalysis,
         blockers
@@ -369,6 +440,81 @@ class MonteCarloReportGenerator {
     return mergedWarnings;
   }
 
+  // ===========================================================================
+  // Lazy Initialization Getters for Non-Axis Feasibility Services
+  // ===========================================================================
+
+  /**
+   * Get or lazily create the NonAxisClauseExtractor.
+   * @private
+   * @returns {import('./NonAxisClauseExtractor.js').default}
+   */
+  #getOrCreateNonAxisClauseExtractor() {
+    if (!this.#nonAxisClauseExtractor) {
+      this.#nonAxisClauseExtractor = new NonAxisClauseExtractor({
+        logger: this.#logger,
+      });
+    }
+    return this.#nonAxisClauseExtractor;
+  }
+
+  /**
+   * Get or lazily create the NonAxisFeasibilityAnalyzer.
+   * @private
+   * @returns {import('./NonAxisFeasibilityAnalyzer.js').default}
+   */
+  #getOrCreateNonAxisFeasibilityAnalyzer() {
+    if (!this.#nonAxisFeasibilityAnalyzer) {
+      this.#nonAxisFeasibilityAnalyzer = new NonAxisFeasibilityAnalyzer({
+        logger: this.#logger,
+        clauseExtractor: this.#getOrCreateNonAxisClauseExtractor(),
+      });
+    }
+    return this.#nonAxisFeasibilityAnalyzer;
+  }
+
+  /**
+   * Get or lazily create the FitFeasibilityConflictDetector.
+   * @private
+   * @returns {import('./FitFeasibilityConflictDetector.js').default}
+   */
+  #getOrCreateFitFeasibilityConflictDetector() {
+    if (!this.#fitFeasibilityConflictDetector) {
+      this.#fitFeasibilityConflictDetector = new FitFeasibilityConflictDetector({
+        logger: this.#logger,
+      });
+    }
+    return this.#fitFeasibilityConflictDetector;
+  }
+
+  /**
+   * Get or lazily create the NonAxisFeasibilitySectionGenerator.
+   * @private
+   * @returns {import('./sectionGenerators/NonAxisFeasibilitySectionGenerator.js').default}
+   */
+  #getOrCreateNonAxisFeasibilitySectionGenerator() {
+    if (!this.#nonAxisFeasibilitySectionGenerator) {
+      this.#nonAxisFeasibilitySectionGenerator = new NonAxisFeasibilitySectionGenerator({
+        logger: this.#logger,
+      });
+    }
+    return this.#nonAxisFeasibilitySectionGenerator;
+  }
+
+  /**
+   * Get or lazily create the ConflictWarningSectionGenerator.
+   * @private
+   * @returns {import('./sectionGenerators/ConflictWarningSectionGenerator.js').default}
+   */
+  #getOrCreateConflictWarningSectionGenerator() {
+    if (!this.#conflictWarningSectionGenerator) {
+      this.#conflictWarningSectionGenerator = new ConflictWarningSectionGenerator({
+        logger: this.#logger,
+      });
+    }
+    return this.#conflictWarningSectionGenerator;
+  }
+
   /**
    * Extract axis constraints from expression prerequisites.
    * @private
@@ -379,6 +525,72 @@ class MonteCarloReportGenerator {
     return this.#dataExtractor.extractAxisConstraints(prerequisites);
   }
 
+  /**
+   * Transform emotion conditions from varPath format to type+id format for gate analysis.
+   * @private
+   * @param {Array<{varPath: string, operator: string, threshold: number}>} emotionConditions
+   * @returns {Array<{type: string, id: string, operator: string, threshold: number}>}
+   */
+  #transformEmotionConditionsForGateAnalysis(emotionConditions) {
+    if (!Array.isArray(emotionConditions)) {
+      return [];
+    }
+    return emotionConditions
+      .filter((c) => c.varPath?.startsWith('emotions.'))
+      .map((c) => ({
+        type: 'emotion',
+        id: c.varPath.replace('emotions.', ''),
+        operator: c.operator,
+        threshold: c.threshold,
+      }));
+  }
+
+  /**
+   * Generate Prototype Gate Alignment section.
+   * @private
+   * @param {import('./PrototypeGateAlignmentAnalyzer.js').AlignmentAnalysisResult|null} result
+   * @returns {string} Markdown section content
+   */
+  #generatePrototypeGateAlignmentSection(result) {
+    if (!result || result.contradictions.length === 0) {
+      return '';
+    }
+
+    const lines = [
+      '## Prototype Gate Alignment',
+      '',
+      '| Emotion | Prototype Gate | Regime (axis) | Status | Distance |',
+      '|---------|----------------|---------------|--------|----------|',
+    ];
+
+    for (const c of result.contradictions) {
+      const regimeStr = `${c.axis} ∈ [${c.regime.min.toFixed(2)}, ${c.regime.max.toFixed(2)}]`;
+      const statusBadge = c.severity === 'critical' ? '**CONTRADICTION**' : 'contradiction';
+      lines.push(
+        `| ${c.emotionId} | \`${c.gateString}\` | ${regimeStr} | ${statusBadge} | ${c.distance.toFixed(3)} |`
+      );
+    }
+
+    lines.push('');
+
+    // Add recommendations per critical contradiction
+    const criticalContradictions = result.contradictions.filter(
+      (c) => c.severity === 'critical'
+    );
+    for (const c of criticalContradictions) {
+      lines.push(
+        `> **Unreachable emotion under regime**: \`emotions.${c.emotionId}\` is always 0 in-regime ` +
+          `because prototype gate \`${c.gateString}\` contradicts regime \`${c.axis} >= ${c.regime.min.toFixed(2)}\`.`
+      );
+      lines.push(
+        `> **Fix**: Relax regime on \`${c.axis}\`, loosen the prototype gate, ` +
+          `or replace/create a prototype (e.g., focused_${c.emotionId.split('_').pop()}).`
+      );
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
 
   #buildSweepWarningContext({ blockers, globalSensitivityData }) {
     return {

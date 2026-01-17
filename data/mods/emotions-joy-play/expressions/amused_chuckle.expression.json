@@ -107,7 +107,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (amusement, protest_anger, fear, rage, disgust, contempt, cynicism, curiosity); mood axes (threat, affiliation)."
         },
         {
             "logic": {
@@ -148,7 +149,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (amusement); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "A laugh slips out before I can decide whether to keep it in-small, surprised, almost like a pressure valve popping. For a heartbeat the world tilts lighter; my chest loosens, my mouth pulls up on its own. Whatever was heavy a second ago isn't gone, but it's not sitting on me with the same weight.",

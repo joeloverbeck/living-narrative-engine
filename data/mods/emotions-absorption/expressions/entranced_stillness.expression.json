@@ -211,7 +211,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (entranced, quiet_absorption, spellbound_absorption, transfixed, confusion); mood axes (engagement, threat, arousal, agency_control, valence); state change detection from previous values."
         }
     ],
     "actor_description": "I stop reaching for the wheel. My attention sinks and stays-caught, held, almost tenderly restrained. The world narrows to one thread and I follow it because it keeps pulling. Movement feels optional; breath slows; the usual little corrections and self-checks fade. It isn't effort or mastery. It's capture-quiet, steady, and hard to interrupt.",

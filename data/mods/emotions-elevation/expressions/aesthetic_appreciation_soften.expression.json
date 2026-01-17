@@ -124,7 +124,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (aesthetic_appreciation, quiet_absorption, transfixed, entranced, stress_acute, rage, boredom, panic, calm, contentment, relief); mood axes (engagement, threat, arousal)."
         },
         {
             "logic": {
@@ -235,7 +236,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (aesthetic_appreciation, quiet_absorption); mood axes (arousal); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "Something about it lands gentle. My attention stops scrambling and just rests-on shape, texture, the quiet rightness of how parts fit together. I feel my shoulders drop as if I'd been bracing without noticing; a slow exhale slides out of me like permission. I don't want to solve it or use it-I just want to stay with it for a moment and let the inside of my chest unclench.",

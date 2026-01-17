@@ -150,7 +150,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (humiliation, shame, embarrassment, fear, alarm, hypervigilance, numbness, panic); mood axes (threat, self_evaluation, agency_control, affiliation); state change detection from previous values."
         }
     ],
     "actor_description": "The floor drops away. My skin goes hot and thin—like every layer just peeled back and the air itself is touching too much of me. Sounds sharpen to needles. I'm suddenly, horribly aware: my face, my hands, where I'm standing, how much space I take up. Everything about me feels wrong and massive and seen. My throat closes. My body knows only one thing—get OUT. Dissolve, run, claw backward through time, anything to stop existing in this exact spot where everyone's eyes just landed.",

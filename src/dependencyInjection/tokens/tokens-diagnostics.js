@@ -34,6 +34,8 @@ export const diagnosticsTokens = freeze({
 
   // Prototype Constraint Analysis (Monte Carlo report enhancement)
   IPrototypeConstraintAnalyzer: 'IPrototypeConstraintAnalyzer',
+  // Prototype Gate Alignment Analysis (PROREGGATALI series)
+  IPrototypeGateAlignmentAnalyzer: 'IPrototypeGateAlignmentAnalyzer',
 
   // Prototype Fit Ranking (Monte Carlo prototype fit analysis)
   IPrototypeRegistryService: 'IPrototypeRegistryService',
@@ -50,6 +52,15 @@ export const diagnosticsTokens = freeze({
 
   // Sensitivity Analysis (EXPDIAMONCARREFREP-008)
   ISensitivityAnalyzer: 'ISensitivityAnalyzer',
+
+  // Non-Axis Feasibility Analysis (PROFITBLOSCODIS series)
+  INonAxisClauseExtractor: 'INonAxisClauseExtractor',
+  INonAxisFeasibilityAnalyzer: 'INonAxisFeasibilityAnalyzer',
+  IFitFeasibilityConflictDetector: 'IFitFeasibilityConflictDetector',
+
+  // Scope Disambiguation Section Generators (PROFITBLOSCODIS series)
+  INonAxisFeasibilitySectionGenerator: 'INonAxisFeasibilitySectionGenerator',
+  IConflictWarningSectionGenerator: 'IConflictWarningSectionGenerator',
 
   // Phase 4 - SMT Solver (to be added in EXPDIA-013)
   // ISmtSolver: 'ISmtSolver',

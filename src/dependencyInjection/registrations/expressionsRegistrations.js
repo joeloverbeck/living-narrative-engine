@@ -13,6 +13,7 @@ import ExpressionDispatcher from '../../expressions/expressionDispatcher.js';
 import ExpressionPersistenceListener from '../../expressions/expressionPersistenceListener.js';
 import ExpressionEvaluationLogger from '../../expressions/expressionEvaluationLogger.js';
 import { getEndpointConfig } from '../../config/endpointConfig.js';
+import { isExpressionPrerequisiteStrictModeEnabled } from '../../config/expressionPrerequisiteConfig.js';
 
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -48,6 +49,7 @@ export function registerExpressionServices(container) {
       jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
       gameDataRepository: c.resolve(tokens.IGameDataRepository),
       logger: c.resolve(tokens.ILogger),
+      strictMode: isExpressionPrerequisiteStrictModeEnabled(),
     });
   });
 

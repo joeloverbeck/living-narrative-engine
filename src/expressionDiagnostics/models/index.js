@@ -11,3 +11,15 @@ export { default as GateConstraint, VALID_OPERATORS } from './GateConstraint.js'
 export { default as DiagnosticResult } from './DiagnosticResult.js';
 export { default as KnifeEdge } from './KnifeEdge.js';
 export { default as PathSensitiveResult } from './PathSensitiveResult.js';
+export { SCOPE_METADATA } from './AnalysisScopeMetadata.js';
+export {
+  FEASIBILITY_CLASSIFICATIONS,
+  createNonAxisClauseFeasibility,
+  isValidClassification,
+} from './NonAxisClauseFeasibility.js';
+export {
+  CONFLICT_TYPES,
+  isValidConflictType,
+  createPrototypeScore,
+  createFitFeasibilityConflict,
+} from './FitFeasibilityConflict.js';

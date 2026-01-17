@@ -20,6 +20,7 @@ import FailureExplainer from '../../expressionDiagnostics/services/FailureExplai
 import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
 import PathSensitiveAnalyzer from '../../expressionDiagnostics/services/PathSensitiveAnalyzer.js';
 import PrototypeConstraintAnalyzer from '../../expressionDiagnostics/services/PrototypeConstraintAnalyzer.js';
+import PrototypeGateAlignmentAnalyzer from '../../expressionDiagnostics/services/PrototypeGateAlignmentAnalyzer.js';
 import PrototypeFitRankingService from '../../expressionDiagnostics/services/PrototypeFitRankingService.js';
 import ContextAxisNormalizer from '../../expressionDiagnostics/services/ContextAxisNormalizer.js';
 import PrototypeGateChecker from '../../expressionDiagnostics/services/PrototypeGateChecker.js';
@@ -31,6 +32,11 @@ import PrototypeTypeDetector from '../../expressionDiagnostics/services/Prototyp
 import EmotionCalculatorAdapter from '../../expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import SensitivityAnalyzer from '../../expressionDiagnostics/services/SensitivityAnalyzer.js';
 import PrototypeSynthesisService from '../../expressionDiagnostics/services/PrototypeSynthesisService.js';
+import NonAxisClauseExtractor from '../../expressionDiagnostics/services/NonAxisClauseExtractor.js';
+import NonAxisFeasibilityAnalyzer from '../../expressionDiagnostics/services/NonAxisFeasibilityAnalyzer.js';
+import FitFeasibilityConflictDetector from '../../expressionDiagnostics/services/FitFeasibilityConflictDetector.js';
+import NonAxisFeasibilitySectionGenerator from '../../expressionDiagnostics/services/sectionGenerators/NonAxisFeasibilitySectionGenerator.js';
+import ConflictWarningSectionGenerator from '../../expressionDiagnostics/services/sectionGenerators/ConflictWarningSectionGenerator.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -226,6 +232,17 @@ export function registerExpressionDiagnosticsServices(container) {
   );
   safeDebug(`Registered ${diagnosticsTokens.IPrototypeConstraintAnalyzer}`);
 
+  // Prototype Gate Alignment Analysis (PROREGGATALI series)
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeGateAlignmentAnalyzer,
+    (c) =>
+      new PrototypeGateAlignmentAnalyzer({
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeGateAlignmentAnalyzer}`);
+
   registrar.singletonFactory(
     diagnosticsTokens.IPrototypeRegistryService,
     (c) =>
@@ -356,6 +373,58 @@ export function registerExpressionDiagnosticsServices(container) {
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.ISensitivityAnalyzer}`);
+
+  // Non-Axis Clause Extractor (PROFITBLOSCODIS-003)
+  registrar.singletonFactory(
+    diagnosticsTokens.INonAxisClauseExtractor,
+    (c) =>
+      new NonAxisClauseExtractor({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.INonAxisClauseExtractor}`);
+
+  // Non-Axis Feasibility Analyzer (PROFITBLOSCODIS-004)
+  // Note: Must be registered AFTER NonAxisClauseExtractor (dependency)
+  registrar.singletonFactory(
+    diagnosticsTokens.INonAxisFeasibilityAnalyzer,
+    (c) =>
+      new NonAxisFeasibilityAnalyzer({
+        logger: c.resolve(tokens.ILogger),
+        clauseExtractor: c.resolve(diagnosticsTokens.INonAxisClauseExtractor),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.INonAxisFeasibilityAnalyzer}`);
+
+  // Fit Feasibility Conflict Detector (PROFITBLOSCODIS-005)
+  registrar.singletonFactory(
+    diagnosticsTokens.IFitFeasibilityConflictDetector,
+    (c) =>
+      new FitFeasibilityConflictDetector({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IFitFeasibilityConflictDetector}`);
+
+  // Non-Axis Feasibility Section Generator (PROFITBLOSCODIS-009)
+  registrar.singletonFactory(
+    diagnosticsTokens.INonAxisFeasibilitySectionGenerator,
+    (c) =>
+      new NonAxisFeasibilitySectionGenerator({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.INonAxisFeasibilitySectionGenerator}`);
+
+  // Conflict Warning Section Generator (PROFITBLOSCODIS-008)
+  registrar.singletonFactory(
+    diagnosticsTokens.IConflictWarningSectionGenerator,
+    (c) =>
+      new ConflictWarningSectionGenerator({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IConflictWarningSectionGenerator}`);
 
   // Note: Additional services will be registered as they're implemented
   // - ISmtSolver (EXPDIA-013)

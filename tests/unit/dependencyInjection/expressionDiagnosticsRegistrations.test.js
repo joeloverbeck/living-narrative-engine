@@ -69,10 +69,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
-    it('should register exactly 25 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeRegistryService + PrototypeTypeDetector + ContextAxisNormalizer + PrototypeGateChecker + PrototypeIntensityCalculator + PrototypeSimilarityMetrics + PrototypeGapAnalyzer + PrototypeFitRankingService + PrototypeSynthesisService + SensitivityAnalyzer + ExpressionEvaluator + FailureExplainer + GateEvaluator + PrototypeEvaluator + ViolationEstimator + VariablePathValidator)', () => {
+    it('should register exactly 31 services (Phase 1 + Phase 2 + ExpressionStatusService + EmotionCalculatorAdapter + PathSensitiveAnalyzer + PrototypeConstraintAnalyzer + PrototypeGateAlignmentAnalyzer + PrototypeRegistryService + PrototypeTypeDetector + ContextAxisNormalizer + PrototypeGateChecker + PrototypeIntensityCalculator + PrototypeSimilarityMetrics + PrototypeGapAnalyzer + PrototypeFitRankingService + PrototypeSynthesisService + SensitivityAnalyzer + ExpressionEvaluator + FailureExplainer + GateEvaluator + PrototypeEvaluator + ViolationEstimator + VariablePathValidator + NonAxisClauseExtractor + NonAxisFeasibilityAnalyzer + FitFeasibilityConflictDetector + NonAxisFeasibilitySectionGenerator + ConflictWarningSectionGenerator)', () => {
       registerExpressionDiagnosticsServices(mockContainer);
 
-      expect(mockContainer.register).toHaveBeenCalledTimes(25);
+      expect(mockContainer.register).toHaveBeenCalledTimes(31);
     });
 
     it('should register ViolationEstimator', () => {
@@ -100,6 +100,16 @@ describe('expressionDiagnosticsRegistrations', () => {
 
       expect(mockContainer.register).toHaveBeenCalledWith(
         diagnosticsTokens.IPrototypeRegistryService,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register PrototypeGateAlignmentAnalyzer', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IPrototypeGateAlignmentAnalyzer,
         expect.any(Function),
         expect.any(Object)
       );
@@ -196,7 +206,58 @@ describe('expressionDiagnosticsRegistrations', () => {
         registerExpressionDiagnosticsServices(containerWithoutLogger);
       }).not.toThrow();
 
-      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(25);
+      expect(containerWithoutLogger.register).toHaveBeenCalledTimes(31);
+    });
+
+    // New service registration tests for PROFITBLOSCODIS-013
+    it('should register NonAxisClauseExtractor', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.INonAxisClauseExtractor,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register NonAxisFeasibilityAnalyzer', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.INonAxisFeasibilityAnalyzer,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register FitFeasibilityConflictDetector', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IFitFeasibilityConflictDetector,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register NonAxisFeasibilitySectionGenerator', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.INonAxisFeasibilitySectionGenerator,
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('should register ConflictWarningSectionGenerator', () => {
+      registerExpressionDiagnosticsServices(mockContainer);
+
+      expect(mockContainer.register).toHaveBeenCalledWith(
+        diagnosticsTokens.IConflictWarningSectionGenerator,
+        expect.any(Function),
+        expect.any(Object)
+      );
     });
   });
 
@@ -255,6 +316,37 @@ describe('expressionDiagnosticsRegistrations', () => {
     it('should export IExpressionStatusService token', () => {
       expect(diagnosticsTokens.IExpressionStatusService).toBe(
         'IExpressionStatusService'
+      );
+    });
+
+    // New token tests for PROFITBLOSCODIS-013
+    it('should export INonAxisClauseExtractor token', () => {
+      expect(diagnosticsTokens.INonAxisClauseExtractor).toBe(
+        'INonAxisClauseExtractor'
+      );
+    });
+
+    it('should export INonAxisFeasibilityAnalyzer token', () => {
+      expect(diagnosticsTokens.INonAxisFeasibilityAnalyzer).toBe(
+        'INonAxisFeasibilityAnalyzer'
+      );
+    });
+
+    it('should export IFitFeasibilityConflictDetector token', () => {
+      expect(diagnosticsTokens.IFitFeasibilityConflictDetector).toBe(
+        'IFitFeasibilityConflictDetector'
+      );
+    });
+
+    it('should export INonAxisFeasibilitySectionGenerator token', () => {
+      expect(diagnosticsTokens.INonAxisFeasibilitySectionGenerator).toBe(
+        'INonAxisFeasibilitySectionGenerator'
+      );
+    });
+
+    it('should export IConflictWarningSectionGenerator token', () => {
+      expect(diagnosticsTokens.IConflictWarningSectionGenerator).toBe(
+        'IConflictWarningSectionGenerator'
       );
     });
 

@@ -24,6 +24,12 @@ import {
  * @param {object} [options.prototypeConstraintAnalyzer] - Optional prototype analyzer
  * @param {object} [options.prototypeFitRankingService] - Optional ranking service
  * @param {object} [options.prototypeSynthesisService] - Optional synthesis service
+ * @param {object} [options.prototypeGateAlignmentAnalyzer] - Optional gate alignment analyzer
+ * @param {object} [options.nonAxisClauseExtractor] - Optional non-axis clause extractor (lazy created if null)
+ * @param {object} [options.nonAxisFeasibilityAnalyzer] - Optional non-axis feasibility analyzer (lazy created if null)
+ * @param {object} [options.fitFeasibilityConflictDetector] - Optional conflict detector (lazy created if null)
+ * @param {object} [options.nonAxisFeasibilitySectionGenerator] - Optional section generator (lazy created if null)
+ * @param {object} [options.conflictWarningSectionGenerator] - Optional section generator (lazy created if null)
  * @returns {MonteCarloReportGenerator}
  */
 export function createReportGenerator({
@@ -31,6 +37,12 @@ export function createReportGenerator({
   prototypeConstraintAnalyzer = null,
   prototypeFitRankingService = null,
   prototypeSynthesisService = null,
+  prototypeGateAlignmentAnalyzer = null,
+  nonAxisClauseExtractor = null,
+  nonAxisFeasibilityAnalyzer = null,
+  fitFeasibilityConflictDetector = null,
+  nonAxisFeasibilitySectionGenerator = null,
+  conflictWarningSectionGenerator = null,
 }) {
   if (!logger) {
     throw new Error('createReportGenerator requires logger');
@@ -92,6 +104,12 @@ export function createReportGenerator({
     coreSectionGenerator,
     prototypeSectionGenerator,
     blockerSectionGenerator,
+    prototypeGateAlignmentAnalyzer,
+    nonAxisClauseExtractor,
+    nonAxisFeasibilityAnalyzer,
+    fitFeasibilityConflictDetector,
+    nonAxisFeasibilitySectionGenerator,
+    conflictWarningSectionGenerator,
   });
 }
 

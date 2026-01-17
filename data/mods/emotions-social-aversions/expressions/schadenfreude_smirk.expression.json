@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-social-aversions:schadenfreude_smirk",
-    "description": "A quick, rewarding jolt of satisfaction at another\u2019s setback\u2014less \u201cjoy\u201d than superiority-flavored amusement. Style note: consider adding category 'social_aversions' for sharper rivalry/antipathy beats that aren\u2019t cleanly anger or shame.",
+    "description": "A quick, rewarding jolt of satisfaction at another’s setback—less “joy” than superiority-flavored amusement. Style note: consider adding category 'social_aversions' for sharper rivalry/antipathy beats that aren’t cleanly anger or shame.",
     "category": "anger",
-    "actor_description": "I feel a bright little lift in my chest before I can police it\u2014an ugly spark of pleasure. A smile threatens at the corner of my mouth, and my thoughts sharpen into a petty kind of clarity: good. I have to swallow the satisfaction down or let it show.",
-    "description_text": "{actor} lets out a small, involuntary smirk\u2014eyes narrowing with a quick flash of satisfaction. The reaction is brief but sharp, like a private victory they almost don\u2019t bother to hide.",
+    "actor_description": "I feel a bright little lift in my chest before I can police it—an ugly spark of pleasure. A smile threatens at the corner of my mouth, and my thoughts sharpen into a petty kind of clarity: good. I have to swallow the satisfaction down or let it show.",
+    "description_text": "{actor} lets out a small, involuntary smirk—eyes narrowing with a quick flash of satisfaction. The reaction is brief but sharp, like a private victory they almost don’t bother to hide.",
     "priority": 73,
     "prerequisites": [
         {
@@ -131,7 +131,7 @@
                             {
                                 "var": "emotions.smoldering_anger"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -163,9 +163,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a short, clipped breath that could be a laugh if it weren\u2019t swallowed instantly\u2014like someone almost let their satisfaction out loud.",
-        "tactile": "There\u2019s a tiny warmth in the face and a quick loosening in the chest, followed by a tightening at the jaw as the reaction gets reined back in.",
-        "limited": "A brief lift of the mouth\u2014gone fast\u2014like a private win."
+        "auditory": "I hear a short, clipped breath that could be a laugh if it weren’t swallowed instantly—like someone almost let their satisfaction out loud.",
+        "tactile": "There’s a tiny warmth in the face and a quick loosening in the chest, followed by a tightening at the jaw as the reaction gets reined back in.",
+        "limited": "A brief lift of the mouth—gone fast—like a private win."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

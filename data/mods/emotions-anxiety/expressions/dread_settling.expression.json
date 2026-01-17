@@ -207,6 +207,6 @@
         "limited": "I sense that someone is moving with deliberate care. Tense but controlled, like they're already bracing for impact."
     },
     "category": "threat",
-    "diagnosticStatus": "unobserved",
-    "triggerRate": 0
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.00001
 }

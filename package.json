@@ -102,6 +102,7 @@
     "validate:body-descriptors": "node scripts/validate-body-descriptors.js",
     "validate:recipe": "node scripts/validate-recipe.js",
     "validate:operations": "node scripts/validateOperations.js",
+    "validate:expressions": "node scripts/validateExpressions.js",
     "generate:effects": "node scripts/generateEffects.js",
     "validate:goap-contexts": "node scripts/validateGoapContexts.js",
     "validate:goals": "node scripts/validateGoals.js",

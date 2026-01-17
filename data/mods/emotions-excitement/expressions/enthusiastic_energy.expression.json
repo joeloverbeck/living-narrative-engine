@@ -141,7 +141,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (enthusiasm, interest, fear, anxiety, despair, apathy, fatigue, numbness, boredom, anticipation, determination); mood axes (engagement, arousal); state change detection from previous values."
         }
     ],
     "actor_description": "The energy comes up bright, like someone turned the lights on inside my ribs. Thoughts quicken and start connecting on their own-easy, playful, productive. I feel it in my hands and feet: the impulse to gesture, to move, to do something with this charge before it fades. My voice wants out of my throat. I'm not escaping anything; I'm leaning into it. Whatever's next, I want to meet it at speed and leave a mark.",

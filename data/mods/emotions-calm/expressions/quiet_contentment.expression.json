@@ -170,7 +170,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (contentment, calm, relief, stress_acute, anxiety, unease, boredom, apathy, release, small_victory); mood axes (valence, arousal, threat); state change detection from previous values."
         }
     ],
     "actor_description": "This is enough. The wanting in me goes quiet, like someone finally stopped knocking. My breathing slows without effort; the tight places in my shoulders let go. Nothing needs fixing right now. The world feels simple and sufficient-small details landing gently instead of demanding my attention. It isn't a high. It's rest.",

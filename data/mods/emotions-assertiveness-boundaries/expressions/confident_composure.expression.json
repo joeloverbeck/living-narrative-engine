@@ -246,7 +246,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (confidence, anxiety, panic, rage, contempt, shame, release, small_victory); mood axes (agency_control, self_evaluation, valence, affiliation, threat, arousal); state change detection from previous values."
         }
     ],
     "actor_description": "I settle into myself. It isn't bravado-more like the noise drops low enough to hear what matters. My shoulders unclench, my breath finds an even rhythm, and my hands stop doing that tiny frantic overcorrection. I know what I can do, and I don't need to sell it.",

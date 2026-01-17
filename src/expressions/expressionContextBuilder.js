@@ -4,20 +4,13 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { createEntityContext } from '../logic/contextAssembler.js';
+import { MOOD_AXES } from '../constants/moodAffectConstants.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IEntityManager} IEntityManager */
 
-const MOOD_AXES_KEYS = [
-  'valence',
-  'arousal',
-  'agency_control',
-  'threat',
-  'engagement',
-  'future_expectancy',
-  'self_evaluation',
-  'affiliation',
-];
+// Use canonical mood axes from single source of truth
+const MOOD_AXES_KEYS = [...MOOD_AXES];
 
 class ExpressionContextBuilder {
   #emotionCalculatorService;
