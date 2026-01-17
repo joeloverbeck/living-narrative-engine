@@ -245,7 +245,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (rage, jealousy, love_attachment, envy, shame, embarrassment, freeze, unease, anxiety, panic); mood axes (self_evaluation, arousal, threat, engagement, inhibitory_control, affiliation); affect traits (self_control); state change detection from previous values."
         }
     ],
     "actor_description": "It hits hot and stupid-my stomach tightens, my chest goes hard, and my attention keeps snapping back no matter what I tell myself. I watch and compare without meaning to, and the comparison feels like losing. I want to look indifferent. I can't. There's this embarrassing urgency under my skin: the urge to reclaim space, to matter more, to be the obvious choice. The worst part is the self-awareness of it-how small it makes me feel-while the feeling keeps burning anyway.",

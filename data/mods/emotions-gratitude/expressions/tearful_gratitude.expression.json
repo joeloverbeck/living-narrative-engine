@@ -206,7 +206,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (gratitude, lonely_yearning, relief, affection, admiration, awe, inspiration, sadness, despair, numbness, hatred, contempt, disgust, rage); mood axes (affiliation, engagement, threat, valence, arousal); state change detection from previous values."
         }
     ],
     "actor_description": "I don't realize I'm crying until my throat tightens and my eyes burn. It isn't sadness-it's the opposite: the sudden, almost embarrassing pressure of having been met when I expected to fend for myself. My chest feels too full, like my body is trying to make room for what I can't say cleanly. I blink hard. I breathe in, and it trembles on the way out. I want to speak, to name it, but the gratitude keeps arriving faster than language.",

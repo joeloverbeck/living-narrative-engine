@@ -116,7 +116,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (affection, love_attachment, trust, lonely_yearning, panic, disgust, contempt, hatred, rage, numbness); mood axes (affiliation, engagement, threat)."
         },
         {
             "logic": {
@@ -183,7 +184,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (affection, love_attachment, trust); mood axes (affiliation); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "Warmth moves through me the moment I register them-simple, physical, unmistakable. My face softens without permission. My breathing drops lower in my chest. It isn't a rush, and it isn't need. It's steadier than that: the quiet sense that I want to be near, that I'm better oriented when they're in the room. If I reach out, it's not to take-it's to make contact and stay there for a second.",

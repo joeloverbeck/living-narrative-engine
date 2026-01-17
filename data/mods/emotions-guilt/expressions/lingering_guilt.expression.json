@@ -236,7 +236,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (regret, shame, humiliation, terror, fear, guilt, remorse); mood axes (self_evaluation, engagement, threat, arousal, affiliation); state change detection from previous values."
         }
     ],
     "actor_description": "It's still there-the same scene, the same fork in the road, the same version of me that chose wrong or froze. It doesn't flare up; it just sits in me, steady as a stone, and my mind keeps worrying it like a sore tooth. I catch myself editing imaginary conversations, rehearsing apologies I'll never deliver. My stomach stays tight; my throat feels crowded, like my body is trying to make me smaller in advance of judgment.",

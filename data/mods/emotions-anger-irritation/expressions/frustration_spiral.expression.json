@@ -115,7 +115,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (frustration, irritation, smoldering_anger, rage, despair, fatigue); mood axes (arousal, engagement, agency_control, inhibitory_control); affect traits (self_control); state change detection from previous values."
         },
         {
             "logic": {
@@ -201,7 +202,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (frustration, irritation); mood axes (agency_control, inhibitory_control); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "It's not one problem anymore-it's everything stacking. I try, it doesn't work, I try again, and I can feel the heat rising behind my eyes like my patience is catching fire. My thoughts start to snag; I can't hold the whole shape of the situation at once, only the part that's resisting me. My jaw tightens, my hands get stupidly strong on whatever I'm holding, and the impulse to force it-to slam, to shove, to blame something-keeps climbing the ladder in my chest.",

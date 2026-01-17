@@ -221,7 +221,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (triumph, pride, release, shame, humiliation, embarrassment, panic, stress_acute); mood axes (valence, agency_control, arousal, engagement, threat); state change detection from previous values."
         }
     ],
     "actor_description": "It hits all at once—the snap, the flood. My chest breaks wide open, ribs spreading like I've been breathing shallow for hours and just now remembered how. Heat rushes up through my throat; my shoulders slam down and I feel vertebrae I forgot I had. Laughter punches out before I can shape it—raw, untidy, half-shout. The weight I was carrying dissolves so fast I almost stumble forward into the space it left. Salt on my lips, blood hammering bright in my skull, and underneath everything: the clean, simple fact that we fucking did it. My hands are shaking but not from fear this time. From the afterburn of getting there.",

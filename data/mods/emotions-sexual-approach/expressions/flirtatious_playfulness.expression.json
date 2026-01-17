@@ -183,7 +183,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (protest_anger, freeze, fear, dread, panic, amusement, enthusiasm, confidence, interest); mood axes (engagement, affiliation, threat); state change detection from previous values."
         }
     ],
     "actor_description": "There's a spark here-bright, not desperate-and I want to play with it. I catch myself holding eye contact a beat too long, letting the pause do the work. The heat in me feels easy, almost funny, like I've got room to tease instead of needing to take. I want to test the distance: lean in, back off, watch what it does to them. My smile keeps slipping out on its own, and my voice wants to soften-hooking words, making them land like a touch.",

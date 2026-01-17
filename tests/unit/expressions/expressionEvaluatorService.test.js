@@ -11,14 +11,17 @@ const createLogger = () => ({
 const createService = ({
   expressions = [],
   evaluateImpl = null,
+  evaluateWithTraceImpl = null,
   gameDataRepositoryOverrides = {},
+  strictMode = false,
 } = {}) => {
   const expressionRegistry = {
     getExpressionsByPriority: jest.fn().mockReturnValue(expressions),
   };
   const jsonLogicEvaluationService = {
     evaluate: evaluateImpl ?? jest.fn(),
-    evaluateWithTrace: jest.fn().mockReturnValue({ resultBoolean: true }),
+    evaluateWithTrace:
+      evaluateWithTraceImpl ?? jest.fn().mockReturnValue({ resultBoolean: true }),
   };
   const gameDataRepository = {
     getConditionDefinition: jest.fn(),
@@ -31,6 +34,7 @@ const createService = ({
     jsonLogicEvaluationService,
     gameDataRepository,
     logger,
+    strictMode,
   });
 
   return {
@@ -182,6 +186,23 @@ describe('ExpressionEvaluatorService', () => {
     expect(logger.warn).toHaveBeenCalled();
   });
 
+  it('should isolate strict mode missing logic errors to the failing expression', () => {
+    const expressions = [
+      { id: 'expr:missing-logic', prerequisites: [{ reason: 'missing' }] },
+      { id: 'expr:valid', prerequisites: [{ logic: { '==': [1, 1] } }] },
+    ];
+    const evaluate = jest.fn().mockReturnValue(true);
+    const { service, logger } = createService({
+      expressions,
+      evaluateImpl: evaluate,
+      strictMode: true,
+    });
+
+    expect(service.evaluate({})).toEqual(expressions[1]);
+    expect(evaluate).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalled();
+  });
+
   it('should handle JSON Logic evaluation errors gracefully', () => {
     const expression = {
       id: 'expr:error',
@@ -197,6 +218,86 @@ describe('ExpressionEvaluatorService', () => {
 
     expect(service.evaluate({})).toBeNull();
     expect(logger.error).toHaveBeenCalled();
+  });
+
+  it('should isolate strict mode evaluation errors to the failing expression', () => {
+    const expressions = [
+      { id: 'expr:error', prerequisites: [{ logic: { '==': [1, 1] } }] },
+      { id: 'expr:ok', prerequisites: [{ logic: { '==': [2, 2] } }] },
+    ];
+    const evaluate = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error('boom');
+      })
+      .mockReturnValueOnce(true);
+    const { service, logger } = createService({
+      expressions,
+      evaluateImpl: evaluate,
+      strictMode: true,
+    });
+
+    expect(service.evaluate({})).toEqual(expressions[1]);
+    expect(evaluate).toHaveBeenCalledTimes(2);
+    expect(logger.error).toHaveBeenCalled();
+  });
+
+  it('should log structured error payload for missing context vars', () => {
+    const expression = {
+      id: 'expr:missing-var',
+      prerequisites: [{ logic: { '>': [{ var: 'moodAxes.valence' }, 0] } }],
+    };
+    const evaluateWithTrace = jest.fn().mockReturnValue({
+      resultBoolean: false,
+      failure: { op: '>', reason: 'Operation evaluated to false' },
+    });
+    const { service, logger } = createService({
+      expressions: [expression],
+      evaluateWithTraceImpl: evaluateWithTrace,
+    });
+
+    const context = { actor: { id: 'actor-1' }, moodAxes: {} };
+    expect(service.evaluate(context)).toBeNull();
+    expect(logger.error).toHaveBeenCalled();
+
+    const [message, payload] = logger.error.mock.calls[0];
+    expect(message).toContain('EXPR_PREREQ_ERROR');
+    expect(payload.category).toBe('missing-var');
+    expect(payload.expressionId).toBe('expr:missing-var');
+    expect(payload.prerequisiteIndex).toBe(1);
+    expect(payload.vars).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: 'moodAxes.valence', missing: true }),
+      ])
+    );
+  });
+
+  it('should log structured error payload for invalid logic', () => {
+    const expression = {
+      id: 'expr:invalid-logic',
+      prerequisites: [{ logic: { '??': [1, 2] } }],
+    };
+    const evaluateWithTrace = jest.fn().mockReturnValue({
+      resultBoolean: false,
+      failure: {
+        op: 'validation',
+        reason: "JSON Logic validation error: Disallowed operation '??'",
+      },
+    });
+    const { service, logger } = createService({
+      expressions: [expression],
+      evaluateWithTraceImpl: evaluateWithTrace,
+    });
+
+    expect(service.evaluate({})).toBeNull();
+    expect(logger.error).toHaveBeenCalled();
+
+    const [message, payload] = logger.error.mock.calls[0];
+    expect(message).toContain('EXPR_PREREQ_ERROR');
+    expect(payload.category).toBe('invalid-logic');
+    expect(payload.code).toBe('EXPR_PREREQ_INVALID_LOGIC');
+    expect(payload.expressionId).toBe('expr:invalid-logic');
+    expect(payload.prerequisiteIndex).toBe(1);
   });
 
   it('should evaluate expressions in priority order', () => {

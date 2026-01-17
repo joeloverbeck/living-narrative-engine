@@ -142,7 +142,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (hypervigilance, fear, dissociation, panic, freeze, numbness, executive_focus); mood axes (threat, arousal, engagement, agency_control); state change detection from previous values."
         }
     ],
     "actor_description": "My attention won't settle—it keeps snagging on everything, pulling tight. Every sound sharpens into a question mark: footsteps, doors, voices dropping. My eyes track movement before I decide to look, scanning doorways, hands, exits in loops I can't stop running. My chest stays tight, breath never quite deep enough, muscles coiled like I'm about to need them. It's exhausting, but the exhaustion doesn't matter—stopping feels like lowering my guard right before the hit comes. If I just scan one more time, maybe I'll catch it. Maybe I'll be ready.",

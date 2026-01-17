@@ -116,10 +116,37 @@ class PrototypeIntensityCalculator {
    * Compute emotion intensity from weights and context.
    * @param {object} weights - Axis weights
    * @param {object} ctx - Context object
+   * @param {object} [options] - Computation options
+   * @param {boolean} [options.strict=false] - If true, throws on missing axes
    * @returns {number} Normalized intensity in [0, 1]
+   * @throws {Error} If strict=true and any weighted axis is missing from context
    */
-  computeIntensity(weights, ctx) {
+  computeIntensity(weights, ctx, options = {}) {
+    const { strict = false } = options;
     const normalized = this.#contextAxisNormalizer.getNormalizedAxes(ctx);
+
+    // Validate all axes are present before computing (in strict mode)
+    if (strict) {
+      const missingAxes = [];
+      for (const axis of Object.keys(weights)) {
+        const resolved = axis === 'SA' ? 'sexual_arousal' : axis;
+        const found =
+          Object.prototype.hasOwnProperty.call(normalized.traitAxes, resolved) ||
+          Object.prototype.hasOwnProperty.call(normalized.sexualAxes, resolved) ||
+          Object.prototype.hasOwnProperty.call(normalized.moodAxes, resolved);
+        if (!found) missingAxes.push(resolved);
+      }
+
+      if (missingAxes.length > 0) {
+        throw new Error(
+          `[PrototypeIntensityCalculator] Missing axes: [${missingAxes.join(', ')}]. ` +
+            `Available mood: [${Object.keys(normalized.moodAxes).join(', ')}]. ` +
+            `Available sexual: [${Object.keys(normalized.sexualAxes).join(', ')}]. ` +
+            `Available traits: [${Object.keys(normalized.traitAxes).join(', ')}].`
+        );
+      }
+    }
+
     let rawSum = 0;
     let sumAbsWeights = 0;
 

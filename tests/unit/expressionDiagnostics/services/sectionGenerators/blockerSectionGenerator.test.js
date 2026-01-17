@@ -5,6 +5,7 @@
 import { describe, it, expect } from '@jest/globals';
 import BlockerSectionGenerator from '../../../../../src/expressionDiagnostics/services/sectionGenerators/BlockerSectionGenerator.js';
 import ReportFormattingService from '../../../../../src/expressionDiagnostics/services/ReportFormattingService.js';
+import { SCOPE_METADATA } from '../../../../../src/expressionDiagnostics/models/AnalysisScopeMetadata.js';
 
 const createHierarchy = () => ({
   nodeType: 'and',
@@ -149,5 +150,123 @@ describe('BlockerSectionGenerator', () => {
     expect(section).toContain('#### Condition Breakdown');
     expect(section).toContain('#### Worst Offender Analysis');
     expect(section).toContain('PROTO MATH');
+  });
+
+  describe('scope metadata header', () => {
+    it('includes FULL PREREQS badge in blocker analysis', () => {
+      const formattingService = new ReportFormattingService();
+      const generator = new BlockerSectionGenerator({ formattingService });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        inRegimeSampleCount: 200,
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).toContain('[FULL PREREQS]');
+    });
+
+    it('includes GLOBAL badge in blocker analysis', () => {
+      const formattingService = new ReportFormattingService();
+      const generator = new BlockerSectionGenerator({ formattingService });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        inRegimeSampleCount: 200,
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).toContain('[GLOBAL]');
+    });
+
+    it('includes scope description about post-gate values', () => {
+      const formattingService = new ReportFormattingService();
+      const generator = new BlockerSectionGenerator({ formattingService });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        inRegimeSampleCount: 200,
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).toContain('post-gate (final) values');
+    });
+
+    it('positions scope header after Signal line and before Probability Funnel', () => {
+      const formattingService = new ReportFormattingService();
+      const generator = new BlockerSectionGenerator({ formattingService });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        inRegimeSampleCount: 200,
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      const signalIndex = section.indexOf('Signal: final');
+      const scopeIndex = section.indexOf('[FULL PREREQS]');
+      const funnelIndex = section.indexOf('### Probability Funnel');
+
+      expect(scopeIndex).toBeGreaterThan(signalIndex);
+      expect(scopeIndex).toBeLessThan(funnelIndex);
+    });
+  });
+
+  describe('import verification', () => {
+    it('can import SCOPE_METADATA from models', () => {
+      expect(SCOPE_METADATA.BLOCKER_GLOBAL).toBeDefined();
+      expect(SCOPE_METADATA.BLOCKER_GLOBAL.scope).toBe('full_prereqs');
+    });
   });
 });

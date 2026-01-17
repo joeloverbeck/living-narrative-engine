@@ -284,7 +284,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (protest_anger, wrath, rage, hatred, smoldering_anger, sadness, grief, disappointment, regret, embarrassment, humiliation); mood axes (affiliation, valence, self_evaluation, engagement, threat, arousal, agency_control, inhibitory_control); affect traits (self_control); state change detection from previous values."
         }
     ],
     "actor_description": "The anger comes with a sting in it—like a bruise you didn't know you had until someone pressed it. Part of me wants to lash out, but the sharper part is the hurt: the sense that I mattered, that we were connected, and that something just got handled carelessly. My chest feels tight. My throat feels crowded. I can feel myself wanting to say something harsh and immediately regrettable, because harshness is a way to stop the bleeding. I look at them and I'm angry, yes—but I'm also watching for any sign they understand what they did. I'm still oriented toward them. I still care. That's the problem. My words come out edged and shaky: accusations that are half boundary, half plea. I'm trying to protect myself without admitting how much it hit.",

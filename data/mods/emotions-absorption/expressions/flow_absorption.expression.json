@@ -132,7 +132,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (focused_absorption, flow, release, interest, fascination, transfixed, entranced, executive_focus, stress_acute, anxiety); mood axes (engagement, agency_control, threat, arousal)."
         },
         {
             "logic": {
@@ -278,7 +279,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (flow, focused_absorption, release); mood axes (engagement, threat); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "The noise in my head drops out. My attention narrows until there's only the next step, and my body keeps meeting it without hesitation. I'm not forcing anything-decisions arrive already made, corrections happen before they become mistakes, and time stops feeling like time. There's a clean, quiet momentum to it, like I'm being pulled forward along a track I can finally trust.",

@@ -64,7 +64,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (euphoria, fatigue, numbness, despair, anxiety); mood axes (valence, arousal)."
         },
         {
             "logic": {
@@ -93,7 +94,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (euphoria); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "It hits like a lift under the ribs-too bright to hold neatly. My chest feels wide, my skin lightly charged, thoughts sprinting ahead of my mouth. I want to move, to speak, to share the fact of being alive right now. Even my laughter feels involuntary, like my body is leaking sunlight.",

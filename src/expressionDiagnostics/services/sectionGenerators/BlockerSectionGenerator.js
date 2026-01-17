@@ -4,6 +4,8 @@
 
 import BlockerTreeTraversal from '../BlockerTreeTraversal.js';
 import ReportDataExtractor from '../ReportDataExtractor.js';
+import { SCOPE_METADATA } from '../../models/AnalysisScopeMetadata.js';
+import { renderScopeMetadataHeader } from '../../utils/scopeMetadataRenderer.js';
 
 class BlockerSectionGenerator {
   #formattingService;
@@ -81,9 +83,12 @@ No blockers identified.
       simulationResult,
     });
 
+    const scopeHeader = renderScopeMetadataHeader(SCOPE_METADATA.BLOCKER_GLOBAL);
+
     return `## Blocker Analysis
 Signal: final (gate-clamped intensity).
 
+${scopeHeader}
 ${probabilityFunnel}
 
 ${blockerSections.join('\n')}
@@ -1407,11 +1412,20 @@ ${flagsStr}`;
     const insight =
       adv.ceilingAnalysis?.insight ?? 'No ceiling insight available.';
 
-    // Get maxObserved properly
-    const maxVal = hb.maxObservedValue ?? blocker.maxObserved ?? 'N/A';
+    // Select appropriate observed bound based on operator type
+    // For >= and > operators: use maxObserved (we need high values to pass)
+    // For <= and < operators: use minObserved (we need low values to pass)
+    // Note: For single-leaf non-compound nodes, the leaf data may be in children[0]
+    const leafNode = hb.children?.[0] ?? hb;
+    const operator = hb.comparisonOperator ?? leafNode.comparisonOperator;
+    const isLowBound = operator === '<=' || operator === '<';
+    const observedVal = isLowBound
+      ? (hb.minObservedValue ?? leafNode.minObservedValue ?? 'N/A')
+      : (hb.maxObservedValue ?? leafNode.maxObservedValue ?? blocker.maxObserved ?? 'N/A');
+    const boundLabel = isLowBound ? 'Min Observed' : 'Max Observed';
 
     return `#### Ceiling Analysis
-- **Max Observed**: ${typeof maxVal === 'number' ? this.#formattingService.formatNumber(maxVal) : maxVal}
+- **${boundLabel}**: ${typeof observedVal === 'number' ? this.#formattingService.formatNumber(observedVal) : observedVal}
 - **Threshold**: ${typeof threshold === 'number' ? this.#formattingService.formatNumber(threshold) : threshold}
 - **Ceiling Gap**: ${this.#formattingService.formatNumber(ceilingGap)} (${achievableStr})
 - **Insight**: ${insight}`;

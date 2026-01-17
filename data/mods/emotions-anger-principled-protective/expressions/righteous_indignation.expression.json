@@ -206,7 +206,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -247,7 +247,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (moral_outrage, rage, wrath, smoldering_anger, contempt, hatred); mood axes (affiliation, engagement, arousal, valence, inhibitory_control); affect traits (self_control); state change detection from previous values."
         }
     ],
     "alternate_descriptions": {

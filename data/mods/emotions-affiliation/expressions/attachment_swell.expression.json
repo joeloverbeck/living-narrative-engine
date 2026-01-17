@@ -123,7 +123,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (love_attachment, affection, lonely_yearning, panic, jealousy, trust, gratitude); mood axes (affiliation, engagement, valence, threat, agency_control); state change detection from previous values."
         }
     ],
     "actor_description": "It comes on as warmth before it becomes thought-an easing under my ribs, like my body recognizes them as safe and important. My breathing slows without permission. My shoulders loosen. I feel pulled toward them in a simple, steady way. Not hunger. Not panic. Just this quiet certainty: you matter to me. I want to keep them close enough to protect, close enough to be useful. My voice goes softer. I find myself angling my body toward them like that's the most natural thing in the world.",

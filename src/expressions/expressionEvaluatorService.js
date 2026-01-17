@@ -4,6 +4,14 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { resolveConditionRefs } from '../utils/conditionRefResolver.js';
+import ExpressionPrerequisiteError from './ExpressionPrerequisiteError.js';
+
+const PREREQ_ERROR_PREFIX = 'EXPR_PREREQ_ERROR';
+const PREREQ_ERROR_CODES = {
+  invalidLogic: 'EXPR_PREREQ_INVALID_LOGIC',
+  missingVar: 'EXPR_PREREQ_MISSING_VAR',
+  evaluationError: 'EXPR_PREREQ_EVALUATION_ERROR',
+};
 
 /**
  * Evaluates expression prerequisites and returns matching expressions.
@@ -13,6 +21,7 @@ class ExpressionEvaluatorService {
   #jsonLogicEvaluationService;
   #gameDataRepository;
   #logger;
+  #strictMode;
 
   /**
    * @param {object} deps
@@ -20,12 +29,14 @@ class ExpressionEvaluatorService {
    * @param {object} deps.jsonLogicEvaluationService
    * @param {object} deps.gameDataRepository
    * @param {object} deps.logger
+   * @param {boolean} [deps.strictMode=false]
    */
   constructor({
     expressionRegistry,
     jsonLogicEvaluationService,
     gameDataRepository,
     logger,
+    strictMode = false,
   }) {
     validateDependency(expressionRegistry, 'ExpressionRegistry', logger, {
       requiredMethods: ['getExpressionsByPriority'],
@@ -47,6 +58,7 @@ class ExpressionEvaluatorService {
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#gameDataRepository = gameDataRepository;
     this.#logger = logger;
+    this.#strictMode = Boolean(strictMode);
   }
 
   /**
@@ -123,8 +135,24 @@ class ExpressionEvaluatorService {
       ? expression.prerequisites
       : [];
 
-    for (const prerequisite of prerequisites) {
+    for (let index = 0; index < prerequisites.length; index += 1) {
+      const prerequisite = prerequisites[index];
+      const prerequisiteIndex = index + 1;
       if (!prerequisite?.logic) {
+        if (this.#strictMode) {
+          const error = new Error('Missing prerequisite logic');
+          const prerequisiteError = this.#logPrerequisiteError({
+            category: 'invalid-logic',
+            code: PREREQ_ERROR_CODES.invalidLogic,
+            error,
+            expression,
+            prerequisiteIndex,
+            logic: null,
+            resolvedLogic: null,
+            context,
+          });
+          throw prerequisiteError;
+        }
         this.#logger.warn(
           `Expression ${expression?.id ?? 'unknown'} has prerequisite without logic, skipping`
         );
@@ -133,12 +161,83 @@ class ExpressionEvaluatorService {
 
       try {
         const resolvedLogic = this.#resolvePrerequisiteLogic(prerequisite.logic);
-        const result = this.#jsonLogicEvaluationService.evaluate(
-          resolvedLogic,
-          context
-        );
+        let result;
+        try {
+          result = this.#jsonLogicEvaluationService.evaluate(
+            resolvedLogic,
+            context
+          );
+        } catch (error) {
+          const prerequisiteError = this.#logPrerequisiteError({
+            category: 'evaluation-error',
+            code: PREREQ_ERROR_CODES.evaluationError,
+            error,
+            expression,
+            prerequisiteIndex,
+            logic: prerequisite.logic,
+            resolvedLogic,
+            context,
+          });
+          if (this.#strictMode) {
+            throw prerequisiteError;
+          }
+          return false;
+        }
 
         if (!result) {
+          const missingPaths = this.#findMissingVarPaths(resolvedLogic, context);
+          let traceResult;
+          try {
+            traceResult = this.#jsonLogicEvaluationService.evaluateWithTrace(
+              resolvedLogic,
+              context
+            );
+          } catch (error) {
+            const prerequisiteError = this.#logPrerequisiteError({
+              category: 'evaluation-error',
+              code: PREREQ_ERROR_CODES.evaluationError,
+              error,
+              expression,
+              prerequisiteIndex,
+              logic: prerequisite.logic,
+              resolvedLogic,
+              context,
+            });
+            if (this.#strictMode) {
+              throw prerequisiteError;
+            }
+            return false;
+          }
+          const failure = traceResult?.failure;
+          const isValidationFailure = failure?.op === 'validation';
+          const isEvaluationError =
+            typeof failure?.reason === 'string' &&
+            failure.reason.startsWith('Evaluation error');
+          if (missingPaths.length > 0 || isValidationFailure || isEvaluationError) {
+            const category = missingPaths.length
+              ? 'missing-var'
+              : isValidationFailure
+                ? 'invalid-logic'
+                : 'evaluation-error';
+            const code = missingPaths.length
+              ? PREREQ_ERROR_CODES.missingVar
+              : isValidationFailure
+                ? PREREQ_ERROR_CODES.invalidLogic
+                : PREREQ_ERROR_CODES.evaluationError;
+            const prerequisiteError = this.#logPrerequisiteError({
+              category,
+              code,
+              error: failure,
+              expression,
+              prerequisiteIndex,
+              logic: prerequisite.logic,
+              resolvedLogic,
+              context,
+            });
+            if (this.#strictMode) {
+              throw prerequisiteError;
+            }
+          }
           this.#logger.debug(
             `Expression ${expression?.id ?? 'unknown'} prerequisite failed`,
             { logic: prerequisite.logic }
@@ -146,10 +245,19 @@ class ExpressionEvaluatorService {
           return false;
         }
       } catch (err) {
-        this.#logger.error(
-          `Error evaluating expression ${expression?.id ?? 'unknown'} prerequisite`,
-          err
-        );
+        const prerequisiteError = this.#logPrerequisiteError({
+          category: 'invalid-logic',
+          code: PREREQ_ERROR_CODES.invalidLogic,
+          error: err,
+          expression,
+          prerequisiteIndex,
+          logic: prerequisite.logic,
+          resolvedLogic: null,
+          context,
+        });
+        if (this.#strictMode) {
+          throw prerequisiteError;
+        }
         return false;
       }
     }
@@ -175,12 +283,22 @@ class ExpressionEvaluatorService {
     for (let index = 0; index < prerequisites.length; index += 1) {
       const prerequisite = prerequisites[index];
       if (!prerequisite?.logic) {
-        results.push({
-          index,
-          status: 'skipped',
-          message: 'Missing logic; prerequisite skipped.',
-        });
-        continue;
+        if (this.#strictMode) {
+          results.push({
+            index,
+            status: 'failed',
+            message: 'Missing logic; strict mode enabled.',
+          });
+          passed = false;
+          break;
+        } else {
+          results.push({
+            index,
+            status: 'skipped',
+            message: 'Missing logic; prerequisite skipped.',
+          });
+          continue;
+        }
       }
 
       let resolvedLogic;
@@ -332,6 +450,199 @@ class ExpressionEvaluatorService {
   }
 
   /**
+   * Get resolved values for referenced var paths.
+   *
+   * @private
+   * @param {object} logic
+   * @param {object} context
+   * @returns {Array<{path: string, value: any, missing: boolean, hasDefault: boolean}>}
+   */
+  #getReferencedVarValues(logic, context) {
+    const refs = this.#collectVarPaths(logic);
+    const seen = new Set();
+    const values = [];
+
+    for (const ref of refs) {
+      if (!ref.path) {
+        continue;
+      }
+      const key = `${ref.path}:${ref.hasDefault ? 'default' : 'nodefault'}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+
+      const missing =
+        ref.path.includes('[') ||
+        ref.path.includes(']') ||
+        !this.#hasPath(context, ref.path);
+      const rawValue = missing ? undefined : this.#getValueAtPath(context, ref.path);
+      values.push({
+        path: ref.path,
+        value: this.#summarizeValue(rawValue),
+        missing,
+        hasDefault: ref.hasDefault,
+      });
+    }
+
+    return values;
+  }
+
+  /**
+   * Read a dotted path value from an object.
+   *
+   * @private
+   * @param {object} context
+   * @param {string} path
+   * @returns {any}
+   */
+  #getValueAtPath(context, path) {
+    if (!context || typeof context !== 'object') {
+      return undefined;
+    }
+    if (path === '') {
+      return context;
+    }
+
+    const segments = path.split('.');
+    let current = context;
+    for (const segment of segments) {
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+      const key =
+        Array.isArray(current) && /^[0-9]+$/.test(segment)
+          ? Number(segment)
+          : segment;
+      current = current[key];
+    }
+    return current;
+  }
+
+  /**
+   * Summarize a value for logging without leaking full context.
+   *
+   * @private
+   * @param {any} value
+   * @returns {any}
+   */
+  #summarizeValue(value) {
+    if (value === null || value === undefined) {
+      return value;
+    }
+    const valueType = typeof value;
+    if (valueType === 'string') {
+      return value.length > 120 ? `${value.slice(0, 120)}...` : value;
+    }
+    if (valueType === 'number' || valueType === 'boolean') {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return { type: 'array', length: value.length };
+    }
+    if (valueType === 'object') {
+      const keys = Object.keys(value);
+      return {
+        type: 'object',
+        keyCount: keys.length,
+        keys: keys.slice(0, 5),
+      };
+    }
+    return valueType;
+  }
+
+  /**
+   * Summarize logic into a compact single-line string.
+   *
+   * @private
+   * @param {any} logic
+   * @returns {string}
+   */
+  #summarizeLogic(logic) {
+    if (logic === undefined) {
+      return 'undefined';
+    }
+    if (logic === null) {
+      return 'null';
+    }
+    if (typeof logic === 'string') {
+      return logic.length > 180 ? `${logic.slice(0, 180)}...` : logic;
+    }
+    try {
+      const serialized = JSON.stringify(logic);
+      if (serialized === undefined) {
+        return '[unserializable]';
+      }
+      return serialized.length > 180
+        ? `${serialized.slice(0, 180)}...`
+        : serialized;
+    } catch {
+      return '[unserializable]';
+    }
+  }
+
+  /**
+   * Log a structured prerequisite error.
+   *
+   * @private
+   * @param {object} details
+   */
+  #logPrerequisiteError({
+    category,
+    code,
+    error,
+    expression,
+    prerequisiteIndex,
+    logic,
+    resolvedLogic,
+    context,
+  }) {
+    const expressionId = expression?.id ?? 'unknown';
+    const modId =
+      typeof expression?.modId === 'string'
+        ? expression.modId
+        : typeof expression?.mod?.id === 'string'
+          ? expression.mod.id
+          : typeof expression?.mod === 'string'
+            ? expression.mod
+            : undefined;
+    const logicSummary = this.#summarizeLogic(logic);
+    const resolvedLogicSummary = resolvedLogic
+      ? this.#summarizeLogic(resolvedLogic)
+      : undefined;
+    const vars = this.#getReferencedVarValues(
+      resolvedLogic ?? logic ?? {},
+      context
+    );
+    const errorMessage =
+      error && typeof error.message === 'string'
+        ? error.message
+        : error && typeof error.reason === 'string'
+          ? error.reason
+          : '';
+    const message = `${PREREQ_ERROR_PREFIX} ${code}: Expression ${expressionId} prerequisite ${prerequisiteIndex} ${category}${errorMessage ? ` (${errorMessage})` : ''}`;
+
+    const prerequisiteError = new ExpressionPrerequisiteError({
+      message,
+      code,
+      category,
+      expressionId,
+      modId,
+      prerequisiteIndex,
+      logicSummary,
+      resolvedLogicSummary,
+      vars,
+    });
+
+    this.#logger.error(
+      `${PREREQ_ERROR_PREFIX} ${prerequisiteError.code}`,
+      prerequisiteError.toJSON()
+    );
+
+    return prerequisiteError;
+  }
+
+  /**
    * Check whether a dotted path exists in an object.
    *
    * @private
@@ -403,8 +714,15 @@ class ExpressionEvaluatorService {
     const matchingExpressions = [];
 
     for (const expression of expressions) {
-      if (this.#evaluatePrerequisites(expression, context)) {
-        matchingExpressions.push(expression);
+      try {
+        if (this.#evaluatePrerequisites(expression, context)) {
+          matchingExpressions.push(expression);
+        }
+      } catch (error) {
+        if (error instanceof ExpressionPrerequisiteError) {
+          continue;
+        }
+        throw error;
       }
     }
 

@@ -202,5 +202,6 @@
         "limited": "{actor} falters for a moment, then steadies themselves and continues."
     },
     "category": "shame",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unobserved",
+    "triggerRate": 0
 }

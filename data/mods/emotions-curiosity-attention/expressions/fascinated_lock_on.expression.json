@@ -236,7 +236,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (fascination, transfixed, entranced, focused_absorption, freeze, boredom, fear, anxiety, numbness, fatigue, panic, executive_focus, release); mood axes (engagement, arousal, agency_control, threat, valence); state change detection from previous values."
         }
     ],
     "actor_description": "It catches. My attention cinches down until everything else turns to background noise. I can feel myself holding still on purpose-breath quieter, eyes wanting to miss nothing. Little details start to matter: tiny shifts, patterns, the next piece that will make it click. Interruptions don't just annoy me-they bounce off, like they can't get traction.",

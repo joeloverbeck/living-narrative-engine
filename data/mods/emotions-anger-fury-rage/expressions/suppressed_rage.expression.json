@@ -229,7 +229,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (rage, wrath, smoldering_anger, despair, guilt, remorse); mood axes (engagement, arousal, future_expectancy, threat, affiliation, agency_control, inhibitory_control); affect traits (self_control); state change detection from previous values."
         },
         {
             "logic": {
@@ -320,7 +321,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (rage, frustration); mood axes (inhibitory_control); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "It surges up hot and immediate, and I clamp down so hard it feels like biting metal. My jaw locks; my tongue presses against my teeth; my hands want to do something-hit, throw, shove-and I keep them still by force. I take a measured breath like it's a rule I have to follow, and the anger doesn't go away; it just gets packed tighter, louder, closer to the surface.",

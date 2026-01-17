@@ -136,7 +136,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (sympathy, compassion, apathy, numbness, panic, rage, hatred); mood axes (engagement, affiliation, threat, valence); affect traits (cognitive_empathy, harm_aversion, affective_empathy)."
         },
         {
             "logic": {
@@ -215,7 +216,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (sympathy, compassion); state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "My attention goes to them like it has weight. It isn't curiosity-it's pull. Something in me tightens, not with fear, but with readiness: What do you need? What can I do? I feel it physically-jaw softening, breath turning careful, hands wanting to move without being told. I don't have to like someone to recognize hurt. I just have to see it.",

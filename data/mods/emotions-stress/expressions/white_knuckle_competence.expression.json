@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-stress:white_knuckle_competence",
-    "description": "Pressure held in a tight grip\u2014high load, high focus, and stubborn follow-through. The body runs hot, the mind stays task-locked, and the will refuses to slip, even while tension leaks through the edges.",
+    "description": "Pressure held in a tight grip—high load, high focus, and stubborn follow-through. The body runs hot, the mind stays task-locked, and the will refuses to slip, even while tension leaks through the edges.",
     "category": "agency",
-    "actor_description": "I\u2019m running hot, but I\u2019m still here\u2014hands steady by force of will, jaw set like a clamp. My thoughts narrow into a workable tunnel: next step, next step, don\u2019t look down. It doesn\u2019t feel good; it feels controlled. I can hear my own breathing like a metronome I\u2019m using to keep the whole thing from shaking apart.",
-    "description_text": "{actor} moves with clipped precision\u2014focused, fast, and a little too controlled. Their posture is rigidly functional, breath measured, eyes fixed as if they\u2019re refusing to give the pressure any room.",
+    "actor_description": "I’m running hot, but I’m still here—hands steady by force of will, jaw set like a clamp. My thoughts narrow into a workable tunnel: next step, next step, don’t look down. It doesn’t feel good; it feels controlled. I can hear my own breathing like a metronome I’m using to keep the whole thing from shaking apart.",
+    "description_text": "{actor} moves with clipped precision—focused, fast, and a little too controlled. Their posture is rigidly functional, breath measured, eyes fixed as if they’re refusing to give the pressure any room.",
     "priority": 76,
     "prerequisites": [
         {
@@ -303,9 +303,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "Their voice comes out tight and efficient\u2014short phrases, quick corrections, a controlled exhale between words like they\u2019re keeping tempo.",
-        "tactile": "Being near them feels like standing next to a vibrating cable\u2014contained tension, heat, and small tremors of effort held just under the skin.",
+        "auditory": "Their voice comes out tight and efficient—short phrases, quick corrections, a controlled exhale between words like they’re keeping tempo.",
+        "tactile": "Being near them feels like standing next to a vibrating cable—contained tension, heat, and small tremors of effort held just under the skin.",
         "limited": "{actor} looks intensely focused and tightly wound, pushing through with visible effort."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0003
 }

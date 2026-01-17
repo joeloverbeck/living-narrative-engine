@@ -136,6 +136,7 @@ const normalizeAffectTraits = (affectTraits) => {
 
 /**
  * Resolve axis values across traits, sexual axes, then mood axes.
+ * Returns 0 for missing axes (permissive mode for backward compatibility).
  * @param {string} axis
  * @param {Record<string, number>} normalizedMood
  * @param {Record<string, number>} normalizedSexual
@@ -161,10 +162,51 @@ const resolveAxisValue = (
   return normalizedMood[resolvedAxis] ?? 0;
 };
 
+/**
+ * Strict axis resolution that throws on missing axis.
+ * Use in Monte Carlo diagnostics to detect prototype weight misconfigurations.
+ * @param {string} axis - Axis name to resolve
+ * @param {Record<string, number>} normalizedMood - Normalized mood axes
+ * @param {Record<string, number>} normalizedSexual - Normalized sexual axes
+ * @param {Record<string, number>} [normalizedTraits] - Normalized affect traits
+ * @param {string} [contextLabel] - Label for error messages
+ * @returns {number}
+ * @throws {Error} If axis is not found in any source
+ */
+const resolveAxisValueStrict = (
+  axis,
+  normalizedMood,
+  normalizedSexual,
+  normalizedTraits = {},
+  contextLabel = 'intensity calculation'
+) => {
+  const resolvedAxis = axis === 'SA' ? 'sexual_arousal' : axis;
+
+  if (Object.prototype.hasOwnProperty.call(normalizedTraits, resolvedAxis)) {
+    return normalizedTraits[resolvedAxis];
+  }
+
+  if (Object.prototype.hasOwnProperty.call(normalizedSexual, resolvedAxis)) {
+    return normalizedSexual[resolvedAxis];
+  }
+
+  if (Object.prototype.hasOwnProperty.call(normalizedMood, resolvedAxis)) {
+    return normalizedMood[resolvedAxis];
+  }
+
+  throw new Error(
+    `[AxisNormalization] Missing axis "${resolvedAxis}" in ${contextLabel}. ` +
+      `Available mood: [${Object.keys(normalizedMood).join(', ')}]. ` +
+      `Available sexual: [${Object.keys(normalizedSexual).join(', ')}]. ` +
+      `Available traits: [${Object.keys(normalizedTraits).join(', ')}].`
+  );
+};
+
 export {
   calculateSexualArousal,
   normalizeAffectTraits,
   normalizeMoodAxes,
   normalizeSexualAxes,
   resolveAxisValue,
+  resolveAxisValueStrict,
 };

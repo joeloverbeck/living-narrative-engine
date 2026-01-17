@@ -311,7 +311,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (hatred, contempt, disgust, smoldering_anger, wrath, rage, affection, compassion, guilt, remorse, panic, freeze); mood axes (valence, engagement, agency_control, affiliation, arousal, inhibitory_control); affect traits (self_control); state change detection from previous values."
         }
     ],
     "alternate_descriptions": {

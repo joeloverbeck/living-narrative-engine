@@ -349,7 +349,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (smoldering_anger, executive_focus, wrath, hatred, resentment, contempt, rage, panic, compassion, sympathy, guilt, remorse); mood axes (agency_control, engagement, valence, arousal, threat, inhibitory_control); affect traits (self_control); state change detection from previous values."
         }
     ],
     "alternate_descriptions": {

@@ -1,191 +1,192 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-social-selfconsciousness:embarrassed_blush",
-  "description": "A quick, recoverable self-conscious flare—heat to the face, awkward recalibration, and a brief urge to hide without collapsing into shame.",
-  "priority": 66,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.embarrassment"
-              },
-              0.52
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              12
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              15
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              55
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              5
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.self_evaluation"
-              },
-              -8
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.self_evaluation"
-              },
-              -45
-            ]
-          },
-          {
-            "or": [
-              {
-                "<=": [
-                  {
-                    "var": "moodAxes.inhibitory_control"
-                  },
-                  55
-                ]
-              },
-              {
-                "<=": [
-                  {
-                    "var": "affectTraits.self_control"
-                  },
-                  60
-                ]
-              },
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-social-selfconsciousness:embarrassed_blush",
+    "description": "A quick, recoverable self-conscious flare—heat to the face, awkward recalibration, and a brief urge to hide without collapsing into shame.",
+    "priority": 66,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.embarrassment"
-                      },
-                      0.62
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "moodAxes.arousal"
-                      },
-                      20
-                    ]
-                  }
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.embarrassment"
+                            },
+                            0.52
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            12
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -8
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.self_evaluation"
+                            },
+                            -45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    55
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    60
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.embarrassment"
+                                            },
+                                            0.62
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.arousal"
+                                            },
+                                            20
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.embarrassment"
+                                            },
+                                            0.52
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.embarrassment"
+                                            },
+                                            0.52
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.embarrassment"
+                                            },
+                                            {
+                                                "var": "previousEmotions.embarrassment"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.shame"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.humiliation"
-              },
-              0.45
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.dissociation"
-              },
-              0.35
-            ]
-          },
-          {
-            "or": [
-              {
-                "and": [
-                  {
-                    "<": [
-                      {
-                        "var": "previousEmotions.embarrassment"
-                      },
-                      0.52
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.embarrassment"
-                      },
-                      0.52
-                    ]
-                  }
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.embarrassment"
-                      },
-                      {
-                        "var": "previousEmotions.embarrassment"
-                      }
-                    ]
-                  },
-                  0.12
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires embarrassment to cross/spike into a noticeable self-conscious flare, grounded by mildly negative self-evaluation with elevated arousal and moderate social threat. High inhibitory_control + high trait self_control dampens outward leakage unless embarrassment/arousal are strong enough to break through. Caps shame/humiliation so it stays light and recoverable. Blocks panic/dissociation so it doesn't misfire during overwhelm/shutdown."
-    }
-  ],
-  "actor_description": "Heat rushes up my face before I can get ahead of it, like my skin is tattling on me. My thoughts stutter—too aware of my hands, my voice, the space I'm taking—and I want to shrink without actually disappearing. I try to smooth it over fast, but the more I try to look normal, the more obvious it feels. It's not crushing—just sharp, bright, and inconvenient.",
-  "description_text": "{actor} blushes and goes visibly self-conscious—eyes flicking away, posture tightening as they adjust too quickly. There's a brief, awkward half-smile like they're trying to reset the moment and move on.",
-  "alternate_descriptions": {
-    "auditory": "A quick, breathy laugh slips out—too short, a little too loud—followed by a tiny stumble in their words as they backtrack and rephrase.",
-    "tactile": "A faint radiating warmth and restless fidgeting—hands touch face or collar, shoulders drawing in as if to make themselves smaller.",
-    "limited": "{actor} shows a brief flash of embarrassment—blushing, averting their gaze, and recalibrating their posture before carrying on."
-  },
-  "category": "shame",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Requires embarrassment to cross/spike into a noticeable self-conscious flare, grounded by mildly negative self-evaluation with elevated arousal and moderate social threat. High inhibitory_control + high trait self_control dampens outward leakage unless embarrassment/arousal are strong enough to break through. Caps shame/humiliation so it stays light and recoverable. Blocks panic/dissociation so it doesn't misfire during overwhelm/shutdown."
+        }
+    ],
+    "actor_description": "Heat rushes up my face before I can get ahead of it, like my skin is tattling on me. My thoughts stutter—too aware of my hands, my voice, the space I'm taking—and I want to shrink without actually disappearing. I try to smooth it over fast, but the more I try to look normal, the more obvious it feels. It's not crushing—just sharp, bright, and inconvenient.",
+    "description_text": "{actor} blushes and goes visibly self-conscious—eyes flicking away, posture tightening as they adjust too quickly. There's a brief, awkward half-smile like they're trying to reset the moment and move on.",
+    "alternate_descriptions": {
+        "auditory": "A quick, breathy laugh slips out—too short, a little too loud—followed by a tiny stumble in their words as they backtrack and rephrase.",
+        "tactile": "A faint radiating warmth and restless fidgeting—hands touch face or collar, shoulders drawing in as if to make themselves smaller.",
+        "limited": "{actor} shows a brief flash of embarrassment—blushing, averting their gaze, and recalibrating their posture before carrying on."
+    },
+    "category": "shame",
+    "diagnosticStatus": "rare",
+    "triggerRate": 0.0001
 }

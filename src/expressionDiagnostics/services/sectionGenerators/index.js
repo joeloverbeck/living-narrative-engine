@@ -10,6 +10,8 @@ export { default as PrototypeSectionGenerator } from './PrototypeSectionGenerato
 export { default as SensitivitySectionGenerator } from './SensitivitySectionGenerator.js';
 export { default as BlockerSectionGenerator } from './BlockerSectionGenerator.js';
 export { default as CoreSectionGenerator } from './CoreSectionGenerator.js';
+export { default as ConflictWarningSectionGenerator } from './ConflictWarningSectionGenerator.js';
+export { default as NonAxisFeasibilitySectionGenerator } from './NonAxisFeasibilitySectionGenerator.js';
 
 // Placeholder export until generators are added.
 export const SECTION_GENERATORS_VERSION = '1.0.0';

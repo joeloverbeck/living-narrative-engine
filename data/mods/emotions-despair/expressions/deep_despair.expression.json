@@ -151,7 +151,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (despair, sadness, hope, optimism, dissociation, rage, terror); mood axes (future_expectancy, engagement, agency_control, arousal, affiliation); state change detection from previous values."
         }
     ],
     "actor_description": "It's like the bottom has dropped out of tomorrow. I try to picture anything improving and my mind just… won't render it. Every thought turns into the same dead end: why bother. My body feels heavier than it should-limbs thick, chest tight, breath shallow like I'm rationing air. Even pain would be cleaner than this flat, swallowing weight. I can't find the part of me that reaches.",

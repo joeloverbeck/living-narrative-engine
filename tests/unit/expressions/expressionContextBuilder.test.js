@@ -109,6 +109,7 @@ describe('ExpressionContextBuilder', () => {
           future_expectancy: 0,
           self_evaluation: 0,
           affiliation: 0,
+          inhibitory_control: 0,
         },
       })
     );
@@ -164,6 +165,7 @@ describe('ExpressionContextBuilder', () => {
       future_expectancy: 45,
       self_evaluation: 60,
       affiliation: 35,
+      inhibitory_control: 20,
     };
 
     const result = builder.buildContext(
@@ -227,6 +229,7 @@ describe('ExpressionContextBuilder', () => {
       future_expectancy: 0,
       self_evaluation: 0,
       affiliation: 0,
+      inhibitory_control: 0,
     });
   });
 
@@ -246,6 +249,7 @@ describe('ExpressionContextBuilder', () => {
         future_expectancy: 5,
         self_evaluation: 6,
         affiliation: 7,
+        inhibitory_control: 8,
       },
     };
 
@@ -327,6 +331,7 @@ describe('ExpressionContextBuilder', () => {
       future_expectancy: 0,
       self_evaluation: 0,
       affiliation: 0,
+      inhibitory_control: 0,
     });
   });
 
@@ -446,6 +451,7 @@ describe('ExpressionContextBuilder', () => {
         future_expectancy: 0,
         self_evaluation: 0,
         affiliation: 0,
+        inhibitory_control: 0,
       },
     };
 
@@ -475,6 +481,7 @@ describe('ExpressionContextBuilder', () => {
         future_expectancy: 0,
         self_evaluation: 0,
         affiliation: 0,
+        inhibitory_control: 0,
         extra_axis: 5,
       },
     };
@@ -490,7 +497,7 @@ describe('ExpressionContextBuilder', () => {
   });
 
   // ============================================
-  // Affiliation Axis Tests (8th mood axis)
+  // Mood Axes Tests (all 9 canonical axes)
   // ============================================
 
   describe('affiliation axis support', () => {
@@ -528,6 +535,7 @@ describe('ExpressionContextBuilder', () => {
           future_expectancy: 5,
           self_evaluation: 6,
           affiliation: 15,
+          inhibitory_control: 9,
         },
       };
 
@@ -581,6 +589,73 @@ describe('ExpressionContextBuilder', () => {
       );
 
       expect(result.moodAxes.affiliation).toBe(-50);
+    });
+  });
+
+  describe('inhibitory_control axis support', () => {
+    it('should include inhibitory_control in moodAxes', () => {
+      const moodData = {
+        valence: 10,
+        arousal: 20,
+        agency_control: 30,
+        threat: -10,
+        engagement: 5,
+        future_expectancy: -15,
+        self_evaluation: 8,
+        affiliation: 25,
+        inhibitory_control: 45,
+      };
+
+      const result = builder.buildContext(
+        'actor-1',
+        moodData,
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 5 }
+      );
+
+      expect(result.moodAxes.inhibitory_control).toBe(45);
+    });
+
+    it('should default inhibitory_control to 0 when not provided in mood data', () => {
+      const result = builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      );
+
+      expect(result.moodAxes.inhibitory_control).toBe(0);
+    });
+
+    it('should initialize previousMoodAxes.inhibitory_control to 0 when previous state is null', () => {
+      const result = builder.buildContext(
+        'actor-1',
+        { valence: 10 },
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 },
+        null
+      );
+
+      expect(result.previousMoodAxes.inhibitory_control).toBe(0);
+    });
+
+    it('should handle negative inhibitory_control values', () => {
+      const moodData = {
+        valence: 10,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: 0,
+        inhibitory_control: -60,
+      };
+
+      const result = builder.buildContext(
+        'actor-1',
+        moodData,
+        { sex_excitation: 20, sex_inhibition: 10, baseline_libido: 0 }
+      );
+
+      expect(result.moodAxes.inhibitory_control).toBe(-60);
     });
   });
 });

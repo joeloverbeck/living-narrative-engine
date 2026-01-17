@@ -88,7 +88,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (protest_anger, freeze, panic); mood axes (engagement, agency_control, threat, arousal)."
         },
         {
             "logic": {
@@ -122,7 +123,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "I feel composed in my own skin-warm, awake, and entirely unashamed of wanting. My breath slows on purpose. I can feel the control in small choices: where I place my weight, how long I hold a look, when I let a smile arrive. It isn't urgency. It's intention.",

@@ -116,7 +116,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires emotion conditions (freeze, panic, calm, contentment, relief, disgust); mood axes (threat, arousal)."
         },
         {
             "logic": {
@@ -145,7 +146,8 @@
                         ]
                     }
                 ]
-            }
+            },
+            "failure_message": "Requires state change detection from previous values for transition detection."
         }
     ],
     "actor_description": "I let myself sink into it. Heat spreads slow and honest, the kind that loosens my shoulders and quiets the noise in my head. Nothing needs to be chased; nothing needs to be proved. My breath deepens, my body feels heavier in a good way-like I finally fit inside it.",

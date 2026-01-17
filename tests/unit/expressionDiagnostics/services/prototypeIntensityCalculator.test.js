@@ -230,4 +230,86 @@ describe('PrototypeIntensityCalculator (via PrototypeFitRankingService)', () => 
 
     expect(result.kNearestNeighbors[0].pIntensityAbove).toBe(0);
   });
+
+  it('computes correct intensity when inhibitory_control axis is provided', () => {
+    // Regression test: ensures all 9 mood axes are properly handled.
+    // Before fix, inhibitory_control was missing from MOOD_AXES_KEYS,
+    // causing weights referencing it to contribute 0 to numerator
+    // while still being counted in the denominator, crushing intensity.
+    const prototypes = [
+      {
+        id: 'unease-like',
+        type: 'emotion',
+        // Simplified weights similar to unease prototype
+        weights: { valence: -0.3, threat: 0.5, inhibitory_control: -0.2 },
+        gates: [],
+      },
+    ];
+    const service = createService(prototypes);
+
+    // Context where all weights align positively:
+    // - valence: -100 (negative weight * negative value = positive)
+    // - threat: 100 (positive weight * positive value = positive)
+    // - inhibitory_control: -100 (negative weight * negative value = positive)
+    const contexts = [
+      {
+        moodAxes: {
+          valence: -100,
+          arousal: 0,
+          agency_control: 0,
+          threat: 100,
+          engagement: 0,
+          future_expectancy: 0,
+          self_evaluation: 0,
+          affiliation: 0,
+          inhibitory_control: -100,
+        },
+      },
+    ];
+
+    const results = service.analyzeAllPrototypeFit(
+      { id: 'expr' },
+      contexts,
+      new Map(),
+      0.3
+    );
+    const entry = getResult(results, 'unease-like');
+
+    // With all axes aligned:
+    // rawSum = (-0.3 * -1) + (0.5 * 1) + (-0.2 * -1) = 0.3 + 0.5 + 0.2 = 1.0
+    // sumAbsWeights = 0.3 + 0.5 + 0.2 = 1.0
+    // intensity = 1.0 / 1.0 = 1.0 (clamped to [0,1])
+    expect(entry.intensityDistribution.p50).toBeCloseTo(1.0, 6);
+    expect(entry.intensityDistribution.pAboveThreshold).toBe(1);
+  });
+
+  it('handles missing inhibitory_control gracefully with permissive mode', () => {
+    // Verifies backward compatibility: contexts without full axis set
+    // still work (missing axes default to 0).
+    const prototypes = [
+      {
+        id: 'partial-context',
+        type: 'emotion',
+        weights: { valence: 1, inhibitory_control: 0.5 },
+        gates: [],
+      },
+    ];
+    const service = createService(prototypes);
+
+    // Context missing inhibitory_control - should default to 0
+    const contexts = [{ moodAxes: { valence: 60 } }];
+
+    const results = service.analyzeAllPrototypeFit(
+      { id: 'expr' },
+      contexts,
+      new Map(),
+      0.2
+    );
+    const entry = getResult(results, 'partial-context');
+
+    // rawSum = (1 * 0.6) + (0.5 * 0) = 0.6
+    // sumAbsWeights = 1 + 0.5 = 1.5
+    // intensity = 0.6 / 1.5 = 0.4
+    expect(entry.intensityDistribution.p50).toBeCloseTo(0.4, 6);
+  });
 });

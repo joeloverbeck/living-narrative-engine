@@ -665,15 +665,39 @@
     },
     "unease": {
       "weights": {
-        "threat": 0.5,
-        "arousal": 0.2,
-        "valence": -0.3,
-        "agency_control": -0.2,
-        "inhibitory_control": -0.2,
-        "self_control": -0.2
+        "threat": 0.55,
+        "arousal": 0.15,
+        "valence": -0.25,
+        "agency_control": -0.10,
+        "future_expectancy": -0.05,
+        "inhibitory_control": 0.10,
+        "self_control": 0.10
       },
       "gates": [
-        "threat >= 0.10"
+        "threat >= 0.10",
+        "threat <= 0.55",
+        "arousal <= 0.60",
+        "valence <= 0.25"
+      ]
+    },
+    "apprehension": {
+      "weights": {
+        "threat": 0.70,
+        "future_expectancy": -0.20,
+        "valence": -0.15,
+        "arousal": -0.10,
+        "agency_control": 0.10,
+        "engagement": 0.15,
+        "inhibitory_control": 0.40,
+        "self_control": 0.35
+      },
+      "gates": [
+        "threat >= 0.15",
+        "threat <= 0.70",
+        "arousal <= 0.45",
+        "agency_control >= -0.10",
+        "inhibitory_control >= 0.10",
+        "valence <= 0.30"
       ]
     },
     "stress_acute": {
