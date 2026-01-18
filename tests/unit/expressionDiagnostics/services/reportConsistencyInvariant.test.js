@@ -94,9 +94,9 @@ describe('Report Consistency Invariants', () => {
       expect(result.maxValue).toBe(0.5);
       expect(result.maxValue).toBeLessThan(0.8);
 
-      // Therefore passRate MUST be 0
+      // Therefore passRate MUST be 0 - three-tier classification uses EMPIRICALLY_UNREACHABLE
       expect(result.passRate).toBe(0);
-      expect(result.classification).toBe('IMPOSSIBLE');
+      expect(result.classification).toBe('EMPIRICALLY_UNREACHABLE');
     });
   });
 
@@ -182,9 +182,9 @@ describe('Report Consistency Invariants', () => {
       expect(results).toHaveLength(1);
       const result = results[0];
 
-      // All values exceed threshold, passRate must be 0
+      // All values exceed threshold, passRate must be 0 - three-tier uses EMPIRICALLY_UNREACHABLE
       expect(result.passRate).toBe(0);
-      expect(result.classification).toBe('IMPOSSIBLE');
+      expect(result.classification).toBe('EMPIRICALLY_UNREACHABLE');
     });
   });
 
@@ -276,10 +276,11 @@ describe('Report Consistency Invariants', () => {
       const result = results[0];
 
       // Max delta (0.2) < threshold (0.5), so passRate must be 0
+      // Three-tier classification: ceiling effect detected (max < threshold)
       expect(result.maxValue).toBeCloseTo(0.2, 10);
       expect(result.maxValue).toBeLessThan(0.5);
       expect(result.passRate).toBe(0);
-      expect(result.classification).toBe('IMPOSSIBLE');
+      expect(result.classification).toBe('EMPIRICALLY_UNREACHABLE');
     });
   });
 
@@ -307,10 +308,18 @@ describe('Report Consistency Invariants', () => {
       // Key invariant: cannot be both passing (passRate > 0) and have max < threshold
       if (result.passRate > 0) {
         expect(result.maxValue).toBeGreaterThanOrEqual(result.threshold);
+        // Three-tier: none of the impossible/unreachable statuses should appear when passing
         expect(result.classification).not.toBe('IMPOSSIBLE');
+        expect(result.classification).not.toBe('THEORETICALLY_IMPOSSIBLE');
+        expect(result.classification).not.toBe('EMPIRICALLY_UNREACHABLE');
       }
 
-      if (result.classification === 'IMPOSSIBLE') {
+      // Any of the impossible statuses imply zero pass rate
+      if (
+        result.classification === 'IMPOSSIBLE' ||
+        result.classification === 'THEORETICALLY_IMPOSSIBLE' ||
+        result.classification === 'EMPIRICALLY_UNREACHABLE'
+      ) {
         expect(result.passRate).toBe(0);
       }
     });
@@ -318,10 +327,10 @@ describe('Report Consistency Invariants', () => {
     it('should ensure classification matches passRate', () => {
       const testCases = [
         {
-          // IMPOSSIBLE case
+          // EMPIRICALLY_UNREACHABLE case (max < threshold, ceiling effect)
           prereqs: [{ logic: { '>=': [{ var: 'emotions.a' }, 0.9] } }],
           contexts: [{ emotions: { a: 0.1 } }, { emotions: { a: 0.2 } }],
-          expectedClassification: 'IMPOSSIBLE',
+          expectedClassification: 'EMPIRICALLY_UNREACHABLE',
           expectedPassRate: 0,
         },
         {

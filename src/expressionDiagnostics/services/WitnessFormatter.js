@@ -4,22 +4,27 @@
  * extracted from MonteCarloReportGenerator. Formats mood state, sexual state,
  * affect traits, computed emotions, and binding axes.
  * @see MonteCarloReportGenerator.js
+ * @see AxisSignConflictExplainer.js for plain-English conflict explanations
  */
 
 class WitnessFormatter {
   #formattingService;
+  /** @type {import('./AxisSignConflictExplainer.js').default|null} */
+  #axisSignConflictExplainer;
 
   /**
    * Create a WitnessFormatter instance.
    * @param {object} deps - Dependencies
    * @param {object} deps.formattingService - ReportFormattingService instance
+   * @param {object} [deps.axisSignConflictExplainer] - Optional AxisSignConflictExplainer for plain-English explanations
    * @throws {Error} If formattingService is not provided
    */
-  constructor({ formattingService }) {
+  constructor({ formattingService, axisSignConflictExplainer = null }) {
     if (!formattingService) {
       throw new Error('WitnessFormatter requires formattingService');
     }
     this.#formattingService = formattingService;
+    this.#axisSignConflictExplainer = axisSignConflictExplainer;
   }
 
   // ============================================================================
@@ -206,7 +211,7 @@ ${traits}`;
    * TODO: Consider relocating to PrototypeFormatter during MONCARREPGENREFANA-008
    * as this is called from prototype analysis context, not witness formatting.
    */
-  formatBindingAxes(bindingAxes) {
+  formatBindingAxes(bindingAxes, analysisContext = {}) {
     if (!bindingAxes || bindingAxes.length === 0) {
       return '**Binding Axes**: None (all axes can reach optimal values)';
     }
@@ -217,6 +222,12 @@ ${traits}`;
       return `**Binding Axes**: ${axesList} (constraints limit optimal values)`;
     }
 
+    // Use AxisSignConflictExplainer for enhanced explanations when available
+    if (this.#axisSignConflictExplainer) {
+      return this.#formatConflictsWithExplainer(conflicts, analysisContext);
+    }
+
+    // Fallback to original technical formatting
     const conflictLines = conflicts.map((a) => {
       if (a.conflictType === 'positive_weight_low_max') {
         return `- ⚠️ **${a.axis}**: Has positive weight (+${a.weight.toFixed(2)}) but constraint limits max to ${a.constraintMax.toFixed(2)}`;
@@ -227,6 +238,69 @@ ${traits}`;
     });
 
     return `**Binding Axes (Structural Conflicts)**:\n${conflictLines.join('\n')}`;
+  }
+
+  /**
+   * Format conflicts using AxisSignConflictExplainer for plain-English explanations.
+   * @param {Array} conflicts - Array of conflict objects
+   * @param {object} analysisContext - Additional context for analysis (threshold, p95, etc.)
+   * @returns {string} Formatted markdown with plain-English explanations
+   */
+  #formatConflictsWithExplainer(conflicts, analysisContext) {
+    const { threshold = 0, p95Value = 0, maxObserved = 0 } = analysisContext;
+
+    const sections = conflicts.map((a) => {
+      // Build conflict details for the explainer
+      const conflictDetails = {
+        conflictType: a.conflictType,
+        axisName: a.axis,
+        prototypeSign: a.conflictType === 'positive_weight_low_max' ? 'positive' : 'negative',
+        moodRegimeMax: a.constraintMax,
+        requiredForThreshold: a.optimalValue || 0,
+        lostIntensity: a.lostIntensity || 0,
+        threshold,
+        p95Value,
+        maxObserved,
+        meanValue: 0, // Not available in this context
+      };
+
+      // Generate plain-English explanation
+      const plainEnglish = this.#axisSignConflictExplainer.explain(conflictDetails);
+
+      // Generate technical details for collapsible section
+      const technicalDetails = this.#formatTechnicalDetails(a);
+
+      // Return formatted block
+      return this.#axisSignConflictExplainer.formatFullExplanationBlock(
+        conflictDetails,
+        technicalDetails
+      );
+    });
+
+    return `**Binding Axes (Structural Conflicts)**:\n\n${sections.join('\n\n---\n\n')}`;
+  }
+
+  /**
+   * Format technical details for a conflict (used in collapsible section).
+   * @param {object} conflict - Conflict object
+   * @returns {string} Formatted technical details
+   */
+  #formatTechnicalDetails(conflict) {
+    const lines = [
+      `- **Conflict Type**: \`${conflict.conflictType}\``,
+      `- **Weight**: ${conflict.weight >= 0 ? '+' : ''}${conflict.weight.toFixed(2)}`,
+      `- **Constraint Range**: [${conflict.constraintMin.toFixed(2)}, ${conflict.constraintMax.toFixed(2)}]`,
+      `- **Optimal Value**: ${conflict.optimalValue?.toFixed(2) || 'N/A'}`,
+      `- **Contribution**: ${conflict.contribution?.toFixed(3) || 'N/A'}`,
+      `- **Lost Raw Sum**: ${conflict.lostRawSum?.toFixed(3) || 'N/A'}`,
+      `- **Lost Intensity**: ${conflict.lostIntensity?.toFixed(3) || 'N/A'}`,
+    ];
+
+    if (conflict.sources && conflict.sources.length > 0) {
+      lines.push(`- **Sources**: ${conflict.sources.map((s) => `${s.varPath} ${s.operator} ${s.threshold}`).join(', ')}`);
+    }
+
+    return lines.join('\n');
   }
 }
 

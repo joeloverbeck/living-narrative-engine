@@ -30,6 +30,7 @@ import {
  * @param {object} [options.fitFeasibilityConflictDetector] - Optional conflict detector (lazy created if null)
  * @param {object} [options.nonAxisFeasibilitySectionGenerator] - Optional section generator (lazy created if null)
  * @param {object} [options.conflictWarningSectionGenerator] - Optional section generator (lazy created if null)
+ * @param {object} [options.axisSignConflictExplainer] - Optional axis sign conflict explainer for plain-English explanations
  * @returns {MonteCarloReportGenerator}
  */
 export function createReportGenerator({
@@ -43,13 +44,17 @@ export function createReportGenerator({
   fitFeasibilityConflictDetector = null,
   nonAxisFeasibilitySectionGenerator = null,
   conflictWarningSectionGenerator = null,
+  axisSignConflictExplainer = null,
 }) {
   if (!logger) {
     throw new Error('createReportGenerator requires logger');
   }
 
   const formattingService = new ReportFormattingService();
-  const witnessFormatter = new WitnessFormatter({ formattingService });
+  const witnessFormatter = new WitnessFormatter({
+    formattingService,
+    axisSignConflictExplainer,
+  });
   const statisticalService = new StatisticalComputationService();
   const dataExtractor = new ReportDataExtractor({
     logger,

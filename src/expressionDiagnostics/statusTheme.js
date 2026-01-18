@@ -33,6 +33,8 @@ export const STATUS_THEME = Object.freeze({
     label: 'Unknown',
     colorName: 'gray',
   }),
+  // Legacy "impossible" status - kept for backward compatibility
+  // New code should use theoretically_impossible or empirically_unreachable
   impossible: Object.freeze({
     fill: '#CC3311',
     background: '#F9E7E2',
@@ -41,6 +43,27 @@ export const STATUS_THEME = Object.freeze({
     label: 'Impossible',
     colorName: 'red',
   }),
+  // Three-tier classification: static analysis proves no solution exists
+  theoretically_impossible: Object.freeze({
+    fill: '#990000',
+    background: '#F5E0E0',
+    text: '#4D0000',
+    emoji: '🚫',
+    label: 'Theoretically Impossible',
+    colorName: 'dark-red',
+    description: 'Static analysis proves this cannot occur',
+  }),
+  // Three-tier classification: observed max < threshold (ceiling effect)
+  empirically_unreachable: Object.freeze({
+    fill: '#CC3311',
+    background: '#F9E7E2',
+    text: '#5C1708',
+    emoji: '⛔',
+    label: 'Empirically Unreachable',
+    colorName: 'red',
+    description: 'Observed maximum below threshold in sampled conditions',
+  }),
+  // Three-tier classification: 0 hits but no ceiling evidence
   unobserved: Object.freeze({
     fill: '#DDAA33',
     background: '#FDF5E6',
@@ -48,6 +71,7 @@ export const STATUS_THEME = Object.freeze({
     emoji: '🟡',
     label: 'Unobserved',
     colorName: 'amber',
+    description: 'No triggers found, but not proven impossible',
   }),
   extremely_rare: Object.freeze({
     fill: '#EE7733',
@@ -105,14 +129,16 @@ export const STATUS_KEYS = Object.freeze(Object.keys(STATUS_THEME));
  * @type {Readonly<Record<string, number>>}
  */
 export const STATUS_PRIORITY = Object.freeze({
-  impossible: 0,
-  unobserved: 1,
-  unknown: 2,
-  extremely_rare: 3,
-  rare: 4,
-  uncommon: 5,
-  normal: 6,
-  frequent: 7,
+  theoretically_impossible: 0,
+  impossible: 1, // Legacy, same priority as theoretically_impossible
+  empirically_unreachable: 2,
+  unobserved: 3,
+  unknown: 4,
+  extremely_rare: 5,
+  rare: 6,
+  uncommon: 7,
+  normal: 8,
+  frequent: 9,
 });
 
 /**

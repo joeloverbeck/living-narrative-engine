@@ -17,6 +17,7 @@ import PrototypeEvaluator from '../../expressionDiagnostics/services/simulatorCo
 import ViolationEstimator from '../../expressionDiagnostics/services/simulatorCore/ViolationEstimator.js';
 import VariablePathValidator from '../../expressionDiagnostics/services/simulatorCore/VariablePathValidator.js';
 import FailureExplainer from '../../expressionDiagnostics/services/FailureExplainer.js';
+import AxisSignConflictExplainer from '../../expressionDiagnostics/services/AxisSignConflictExplainer.js';
 import ExpressionStatusService from '../../expressionDiagnostics/services/ExpressionStatusService.js';
 import PathSensitiveAnalyzer from '../../expressionDiagnostics/services/PathSensitiveAnalyzer.js';
 import PrototypeConstraintAnalyzer from '../../expressionDiagnostics/services/PrototypeConstraintAnalyzer.js';
@@ -193,6 +194,15 @@ export function registerExpressionDiagnosticsServices(container) {
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.IFailureExplainer}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IAxisSignConflictExplainer,
+    (c) =>
+      new AxisSignConflictExplainer({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IAxisSignConflictExplainer}`);
 
   // Status Persistence Service
   registrar.singletonFactory(

@@ -222,7 +222,7 @@ describe('Fit vs Feasibility Conflict Integration', () => {
       expect(report).toContain('## Non-Axis Clause Feasibility');
       expect(report).toContain('[NON-AXIS ONLY]');
       expect(report).toContain('emotions.confusion');
-      expect(report).toContain('IMPOSSIBLE');
+      expect(report).toContain('EMPIRICALLY_UNREACHABLE');
     });
 
     it('should NOT show conflict when all clauses are achievable', () => {
@@ -567,7 +567,7 @@ describe('Fit vs Feasibility Conflict Integration', () => {
         r.varPath.includes('confusion')
       );
       expect(confusionResult).toBeDefined();
-      expect(confusionResult.classification).toBe('IMPOSSIBLE');
+      expect(confusionResult.classification).toBe('EMPIRICALLY_UNREACHABLE');
     });
 
     it('should classify OK when most contexts pass threshold', () => {

@@ -2133,7 +2133,7 @@ describe('MonteCarloReportGenerator', () => {
       expect(report).toContain('**baseline (stored contexts)**');
     });
 
-    it('should calculate change percentages from baseline', () => {
+    it('should calculate change percentages from baseline using pp format', () => {
       const sensitivityData = [
         {
           kind: 'marginalClausePassRateSweep',
@@ -2155,11 +2155,11 @@ describe('MonteCarloReportGenerator', () => {
         sensitivityData,
       });
 
-      // 0.04 / 0.02 = 2x, so +100.00%
-      expect(report).toContain('+100.00%');
+      // From 2% to 4% = +2.00 pp with 2× multiplier
+      expect(report).toContain('+2.00 pp');
     });
 
-    it('should handle zero baseline gracefully', () => {
+    it('should handle zero baseline with zero-hit analysis', () => {
       const sensitivityData = [
         {
           kind: 'marginalClausePassRateSweep',
@@ -2181,8 +2181,8 @@ describe('MonteCarloReportGenerator', () => {
         sensitivityData,
       });
 
-      // When baseline is 0 and other rate is positive, should show +∞
-      expect(report).toContain('+∞');
+      // When baseline is 0, shows Zero-Hit Analysis section
+      expect(report).toContain('Zero-Hit Analysis');
     });
 
     it('should handle multiple sensitivity results', () => {
@@ -2378,7 +2378,7 @@ describe('MonteCarloReportGenerator', () => {
       );
     });
 
-    it('should show +∞ when baseline triggerRate is 0 and other point has triggers', () => {
+    it('should show zero-hit global analysis when baseline triggerRate is 0', () => {
       const globalSensitivityData = [
         {
           varPath: 'emotions.joy',
@@ -2400,10 +2400,11 @@ describe('MonteCarloReportGenerator', () => {
         globalSensitivityData,
       });
 
-      expect(report).toContain('+∞');
+      // When baseline is 0, shows Zero-Hit Global Analysis
+      expect(report).toContain('Zero-Hit Global Analysis');
     });
 
-    it('should show -100% when baseline has triggers but other point is 0', () => {
+    it('should show pp format with arrow annotation when rate drops to 0', () => {
       const globalSensitivityData = [
         {
           varPath: 'emotions.joy',
@@ -2425,10 +2426,11 @@ describe('MonteCarloReportGenerator', () => {
         globalSensitivityData,
       });
 
-      expect(report).toContain('-100%');
+      // From 5% to 0% = -5.00 pp with (→ 0) annotation
+      expect(report).toContain('→ 0');
     });
 
-    it('should show negative percentage when other point has lower triggerRate than baseline', () => {
+    it('should show negative pp when other point has lower triggerRate than baseline', () => {
       const globalSensitivityData = [
         {
           varPath: 'emotions.joy',
@@ -2450,11 +2452,11 @@ describe('MonteCarloReportGenerator', () => {
         globalSensitivityData,
       });
 
-      // When other rate (0.05) < baseline rate (0.10), change should be negative (-50%)
-      expect(report).toContain('-50.00%');
+      // From 10% to 5% = -5.00 pp
+      expect(report).toContain('-5.00 pp');
     });
 
-    it('should show 0% when both baseline and other point have 0 triggerRate', () => {
+    it('should show Zero-Hit analysis when both baseline and other points have 0 triggerRate', () => {
       const globalSensitivityData = [
         {
           varPath: 'emotions.joy',
@@ -2476,19 +2478,11 @@ describe('MonteCarloReportGenerator', () => {
         globalSensitivityData,
       });
 
-      // Extract global sensitivity section specifically
-      const globalSensitivityMatch = report.match(
-        /### 🎯 Global Expression Sensitivity[\s\S]*?(?=###|## |$)/
-      );
-      expect(globalSensitivityMatch).not.toBeNull();
-      const globalSection = globalSensitivityMatch[0];
-
-      // In the global section, non-baseline row should show 0% (not +∞ or -100%)
-      expect(globalSection).toContain('| 0.35 | 0.00% | 0% |');
-      expect(globalSection).not.toContain('+∞');
+      // When all rates are 0, shows No Triggers Found warning
+      expect(report).toContain('No Triggers Found');
     });
 
-    it('should show first triggering threshold recommendation when baseline is 0', () => {
+    it('should show nearest miss analysis when baseline is 0', () => {
       const globalSensitivityData = [
         {
           varPath: 'emotions.joy',
@@ -2511,9 +2505,9 @@ describe('MonteCarloReportGenerator', () => {
         globalSensitivityData,
       });
 
-      expect(report).toContain('First threshold with triggers');
+      // Zero-Hit analysis shows nearest miss and actionable insight
+      expect(report).toContain('Nearest Miss Analysis');
       expect(report).toContain('Actionable Insight');
-      expect(report).toContain('0.30');
     });
 
     it('should show no triggers warning when all thresholds produce 0 triggerRate', () => {

@@ -803,40 +803,49 @@ describe('ExpressionStatusService', () => {
       service = new ExpressionStatusService({ logger: mockLogger });
     });
 
-    it('returns 0 for impossible (highest priority)', () => {
-      expect(service.getStatusPriority('impossible')).toBe(0);
+    // New three-tier classification priorities
+    it('returns 0 for theoretically_impossible (highest priority)', () => {
+      expect(service.getStatusPriority('theoretically_impossible')).toBe(0);
     });
 
-    it('returns 1 for unobserved', () => {
-      expect(service.getStatusPriority('unobserved')).toBe(1);
+    it('returns 1 for impossible (legacy)', () => {
+      expect(service.getStatusPriority('impossible')).toBe(1);
     });
 
-    it('returns 2 for unknown', () => {
-      expect(service.getStatusPriority('unknown')).toBe(2);
+    it('returns 2 for empirically_unreachable', () => {
+      expect(service.getStatusPriority('empirically_unreachable')).toBe(2);
     });
 
-    it('returns 3 for extremely_rare', () => {
-      expect(service.getStatusPriority('extremely_rare')).toBe(3);
+    it('returns 3 for unobserved', () => {
+      expect(service.getStatusPriority('unobserved')).toBe(3);
     });
 
-    it('returns 4 for rare', () => {
-      expect(service.getStatusPriority('rare')).toBe(4);
+    it('returns 4 for unknown', () => {
+      expect(service.getStatusPriority('unknown')).toBe(4);
     });
 
-    it('returns 5 for uncommon', () => {
-      expect(service.getStatusPriority('uncommon')).toBe(5);
+    it('returns 5 for extremely_rare', () => {
+      expect(service.getStatusPriority('extremely_rare')).toBe(5);
     });
 
-    it('returns 6 for normal', () => {
-      expect(service.getStatusPriority('normal')).toBe(6);
+    it('returns 6 for rare', () => {
+      expect(service.getStatusPriority('rare')).toBe(6);
     });
 
-    it('returns 7 for frequent', () => {
-      expect(service.getStatusPriority('frequent')).toBe(7);
+    it('returns 7 for uncommon', () => {
+      expect(service.getStatusPriority('uncommon')).toBe(7);
     });
 
-    it('returns 2 (unknown) for null status', () => {
-      expect(service.getStatusPriority(null)).toBe(2);
+    it('returns 8 for normal', () => {
+      expect(service.getStatusPriority('normal')).toBe(8);
+    });
+
+    it('returns 9 for frequent', () => {
+      expect(service.getStatusPriority('frequent')).toBe(9);
+    });
+
+    it('returns 4 (unknown) for null status', () => {
+      expect(service.getStatusPriority(null)).toBe(4);
     });
 
     it('returns 999 for unrecognized status', () => {
@@ -849,6 +858,15 @@ describe('ExpressionStatusService', () => {
 
     beforeEach(() => {
       service = new ExpressionStatusService({ logger: mockLogger });
+    });
+
+    // New three-tier classification statuses
+    it('returns true for theoretically_impossible', () => {
+      expect(service.isProblematicStatus('theoretically_impossible')).toBe(true);
+    });
+
+    it('returns true for empirically_unreachable', () => {
+      expect(service.isProblematicStatus('empirically_unreachable')).toBe(true);
     });
 
     it('returns true for impossible', () => {
