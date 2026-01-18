@@ -12,12 +12,14 @@ class BlockerSectionGenerator {
   #treeTraversal;
   #dataExtractor;
   #prototypeSectionGenerator;
+  #blockerCalculator;
 
   constructor({
     formattingService,
     treeTraversal = null,
     dataExtractor = null,
     prototypeSectionGenerator = null,
+    blockerCalculator = null,
   } = {}) {
     if (!formattingService) {
       throw new Error('BlockerSectionGenerator requires formattingService');
@@ -27,6 +29,7 @@ class BlockerSectionGenerator {
     this.#treeTraversal = treeTraversal ?? new BlockerTreeTraversal();
     this.#dataExtractor = dataExtractor ?? new ReportDataExtractor();
     this.#prototypeSectionGenerator = prototypeSectionGenerator ?? null;
+    this.#blockerCalculator = blockerCalculator;
   }
 
   /**
@@ -85,14 +88,21 @@ No blockers identified.
 
     const scopeHeader = renderScopeMetadataHeader(SCOPE_METADATA.BLOCKER_GLOBAL);
 
-    return `## Blocker Analysis
-Signal: final (gate-clamped intensity).
+    // Generate core blocker summary if calculator is available
+    const coreBlockerSummary = this.#generateCoreBlockerSection(simulationResult);
 
-${scopeHeader}
-${probabilityFunnel}
+    const sections = [
+      '## Blocker Analysis',
+      'Signal: final (gate-clamped intensity).',
+      '',
+      scopeHeader,
+      probabilityFunnel,
+      coreBlockerSummary,
+      blockerSections.join('\n'),
+      note,
+    ].filter((section) => typeof section === 'string' && section.trim().length > 0);
 
-${blockerSections.join('\n')}
-${note}`;
+    return `${sections.join('\n')}`;
   }
 
   #generateProbabilityFunnel({ sampleCount, blockers, simulationResult }) {
@@ -1522,6 +1532,103 @@ ${flagsStr}`;
 **Action**: ${action}
 **Priority**: ${priority}
 **Guidance**: ${message}`;
+  }
+
+  /**
+   * Generate core blocker section using MinimalBlockerSetCalculator.
+   * Returns empty string if no calculator is configured.
+   *
+   * @param {object|null} simulationResult - Monte Carlo simulation result
+   * @returns {string} Formatted core blocker section or empty string
+   */
+  #generateCoreBlockerSection(simulationResult) {
+    if (!this.#blockerCalculator || !simulationResult) {
+      return '';
+    }
+
+    const clauses = simulationResult.clauseTracking ?? [];
+    if (clauses.length === 0) {
+      return '';
+    }
+
+    const result = this.#blockerCalculator.calculate(clauses, simulationResult);
+    return this.#formatCoreBlockerSummary(result);
+  }
+
+  /**
+   * Format core blocker summary for display.
+   *
+   * @param {object} blockerResult - MinimalBlockerSetCalculator result
+   * @returns {string} Formatted markdown section
+   */
+  #formatCoreBlockerSummary(blockerResult) {
+    const { coreBlockers, nonCoreConstraints } = blockerResult;
+
+    if (coreBlockers.length === 0) {
+      return '';
+    }
+
+    const lines = [];
+    lines.push(`### Core Blockers (${coreBlockers.length})`);
+    lines.push('');
+    lines.push('*These clauses have the highest impact on trigger rate:*');
+    lines.push('');
+
+    for (let i = 0; i < coreBlockers.length; i++) {
+      const blocker = coreBlockers[i];
+      const rank = i + 1;
+
+      lines.push(`**${rank}. ${blocker.clauseDescription || blocker.clauseId}**`);
+      lines.push(
+        `- Last-Mile Rate: ${this.#formattingService.formatPercentage(blocker.lastMileRate)}`
+      );
+      lines.push(
+        `- Impact Score: ${this.#formattingService.formatPercentage(blocker.impactScore)}`
+      );
+      lines.push(
+        `- Composite Score: ${this.#formattingService.formatNumber(blocker.compositeScore)}`
+      );
+
+      const insight = this.#generateBlockerInsight(blocker);
+      if (insight) {
+        lines.push(`- 💡 ${insight}`);
+      }
+      lines.push('');
+    }
+
+    if (nonCoreConstraints.length > 0) {
+      lines.push(
+        `*${nonCoreConstraints.length} non-core constraints with >95% pass rate*`
+      );
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Generate actionable insight for a core blocker based on its metrics.
+   *
+   * @param {object} blocker - Core blocker information
+   * @returns {string|null} Insight message or null if none applies
+   */
+  #generateBlockerInsight(blocker) {
+    // High last-mile rate = this clause is the "final gatekeeper"
+    if (blocker.lastMileRate > 0.8) {
+      return 'Final gatekeeper - nearly always the last barrier to pass';
+    }
+
+    // High impact score = removing would significantly improve rate
+    if (blocker.impactScore > 0.3) {
+      return 'High impact - addressing this could significantly improve trigger rate';
+    }
+
+    // Moderate impact
+    if (blocker.impactScore > 0.1) {
+      return 'Meaningful contribution to blocking';
+    }
+
+    return null;
   }
 }
 

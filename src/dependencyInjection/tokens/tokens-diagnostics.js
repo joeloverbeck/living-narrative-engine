@@ -68,6 +68,17 @@ export const diagnosticsTokens = freeze({
 
   // Phase 5 - Suggestions (to be added in EXPDIA-015)
   // IThresholdSuggester: 'IThresholdSuggester',
+
+  // Section Generators
+  IBlockerSectionGenerator: 'IBlockerSectionGenerator',
+
+  // Actionability Services (MONCARACTIMP series)
+  IMinimalBlockerSetCalculator: 'IMinimalBlockerSetCalculator',
+  IConstructiveWitnessSearcher: 'IConstructiveWitnessSearcher',
+  IOrBlockAnalyzer: 'IOrBlockAnalyzer',
+  IEditSetGenerator: 'IEditSetGenerator',
+  IImportanceSamplingValidator: 'IImportanceSamplingValidator',
+  IActionabilitySectionGenerator: 'IActionabilitySectionGenerator',
 });
 
 export default diagnosticsTokens;

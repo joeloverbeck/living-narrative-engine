@@ -447,6 +447,9 @@ export function registerRenderers(registrar, logger) {
         prototypeGateAlignmentAnalyzer: c.resolve(
           diagnosticsTokens.IPrototypeGateAlignmentAnalyzer
         ),
+        actionabilitySectionGenerator: c.resolve(
+          diagnosticsTokens.IActionabilitySectionGenerator
+        ),
       }),
     { lifecycle: 'singletonFactory' },
     logger

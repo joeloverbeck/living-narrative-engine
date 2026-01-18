@@ -38,6 +38,14 @@ import NonAxisFeasibilityAnalyzer from '../../expressionDiagnostics/services/Non
 import FitFeasibilityConflictDetector from '../../expressionDiagnostics/services/FitFeasibilityConflictDetector.js';
 import NonAxisFeasibilitySectionGenerator from '../../expressionDiagnostics/services/sectionGenerators/NonAxisFeasibilitySectionGenerator.js';
 import ConflictWarningSectionGenerator from '../../expressionDiagnostics/services/sectionGenerators/ConflictWarningSectionGenerator.js';
+import BlockerSectionGenerator from '../../expressionDiagnostics/services/sectionGenerators/BlockerSectionGenerator.js';
+import ReportFormattingService from '../../expressionDiagnostics/services/ReportFormattingService.js';
+import MinimalBlockerSetCalculator from '../../expressionDiagnostics/services/MinimalBlockerSetCalculator.js';
+import OrBlockAnalyzer from '../../expressionDiagnostics/services/OrBlockAnalyzer.js';
+import ConstructiveWitnessSearcher from '../../expressionDiagnostics/services/ConstructiveWitnessSearcher.js';
+import ImportanceSamplingValidator from '../../expressionDiagnostics/services/ImportanceSamplingValidator.js';
+import EditSetGenerator from '../../expressionDiagnostics/services/EditSetGenerator.js';
+import ActionabilitySectionGenerator from '../../expressionDiagnostics/services/sectionGenerators/ActionabilitySectionGenerator.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -108,7 +116,10 @@ export function registerExpressionDiagnosticsServices(container) {
 
   registrar.singletonFactory(
     diagnosticsTokens.IMonteCarloExpressionEvaluator,
-    () => new ExpressionEvaluator()
+    (c) =>
+      new ExpressionEvaluator({
+        jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
+      })
   );
   safeDebug(`Registered ${diagnosticsTokens.IMonteCarloExpressionEvaluator}`);
 
@@ -435,6 +446,82 @@ export function registerExpressionDiagnosticsServices(container) {
       })
   );
   safeDebug(`Registered ${diagnosticsTokens.IConflictWarningSectionGenerator}`);
+
+  // Actionability Services (MONCARACTIMP series)
+  registrar.singletonFactory(
+    diagnosticsTokens.IMinimalBlockerSetCalculator,
+    (c) =>
+      new MinimalBlockerSetCalculator({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IMinimalBlockerSetCalculator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IOrBlockAnalyzer,
+    (c) =>
+      new OrBlockAnalyzer({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IOrBlockAnalyzer}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IConstructiveWitnessSearcher,
+    (c) =>
+      new ConstructiveWitnessSearcher({
+        logger: c.resolve(tokens.ILogger),
+        stateGenerator: c.resolve(diagnosticsTokens.IRandomStateGenerator),
+        expressionEvaluator: c.resolve(
+          diagnosticsTokens.IMonteCarloExpressionEvaluator
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IConstructiveWitnessSearcher}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IImportanceSamplingValidator,
+    (c) =>
+      new ImportanceSamplingValidator({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IImportanceSamplingValidator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IEditSetGenerator,
+    (c) =>
+      new EditSetGenerator({
+        logger: c.resolve(tokens.ILogger),
+        blockerCalculator: c.resolve(diagnosticsTokens.IMinimalBlockerSetCalculator),
+        orBlockAnalyzer: c.resolve(diagnosticsTokens.IOrBlockAnalyzer),
+        validator: c.resolve(diagnosticsTokens.IImportanceSamplingValidator),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IEditSetGenerator}`);
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IActionabilitySectionGenerator,
+    (c) =>
+      new ActionabilitySectionGenerator({
+        logger: c.resolve(tokens.ILogger),
+        orBlockAnalyzer: c.resolve(diagnosticsTokens.IOrBlockAnalyzer),
+        witnessSearcher: c.resolve(diagnosticsTokens.IConstructiveWitnessSearcher),
+        editSetGenerator: c.resolve(diagnosticsTokens.IEditSetGenerator),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IActionabilitySectionGenerator}`);
+
+  // Section Generators
+  registrar.singletonFactory(
+    diagnosticsTokens.IBlockerSectionGenerator,
+    (c) =>
+      new BlockerSectionGenerator({
+        formattingService: new ReportFormattingService(),
+        blockerCalculator: c.resolve(diagnosticsTokens.IMinimalBlockerSetCalculator),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IBlockerSectionGenerator}`);
 
   // Note: Additional services will be registered as they're implemented
   // - ISmtSolver (EXPDIA-013)

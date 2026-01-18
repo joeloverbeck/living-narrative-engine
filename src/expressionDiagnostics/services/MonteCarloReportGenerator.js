@@ -63,6 +63,7 @@ class MonteCarloReportGenerator {
   #fitFeasibilityConflictDetector;
   #nonAxisFeasibilitySectionGenerator;
   #conflictWarningSectionGenerator;
+  #actionabilitySectionGenerator;
 
   /**
    * @param {object} deps
@@ -86,6 +87,7 @@ class MonteCarloReportGenerator {
    * @param {import('./FitFeasibilityConflictDetector.js').default} [deps.fitFeasibilityConflictDetector] - Optional fit/feasibility conflict detector (created via lazy init if not provided)
    * @param {import('./sectionGenerators/NonAxisFeasibilitySectionGenerator.js').default} [deps.nonAxisFeasibilitySectionGenerator] - Optional non-axis feasibility section generator (created via lazy init if not provided)
    * @param {import('./sectionGenerators/ConflictWarningSectionGenerator.js').default} [deps.conflictWarningSectionGenerator] - Optional conflict warning section generator (created via lazy init if not provided)
+   * @param {import('./sectionGenerators/ActionabilitySectionGenerator.js').default} [deps.actionabilitySectionGenerator] - Optional actionability section generator
    */
   constructor({
     logger,
@@ -108,6 +110,7 @@ class MonteCarloReportGenerator {
     fitFeasibilityConflictDetector = null,
     nonAxisFeasibilitySectionGenerator = null,
     conflictWarningSectionGenerator = null,
+    actionabilitySectionGenerator = null,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -180,6 +183,7 @@ class MonteCarloReportGenerator {
     this.#fitFeasibilityConflictDetector = fitFeasibilityConflictDetector;
     this.#nonAxisFeasibilitySectionGenerator = nonAxisFeasibilitySectionGenerator;
     this.#conflictWarningSectionGenerator = conflictWarningSectionGenerator;
+    this.#actionabilitySectionGenerator = actionabilitySectionGenerator;
   }
 
   /**
@@ -373,6 +377,7 @@ class MonteCarloReportGenerator {
         populationSummary,
         storedPopulations
       ),
+      this.#generateActionabilitySection(simulationResult),
       prototypeGateAlignmentSection,
       this.#coreSectionGenerator.generateStaticCrossReference(
         staticAnalysis,
@@ -384,7 +389,9 @@ class MonteCarloReportGenerator {
       this.#coreSectionGenerator.generateLegend(),
     ];
 
-    return sections.join('\n');
+    return sections
+      .filter((section) => typeof section === 'string' && section.trim().length > 0)
+      .join('\n');
   }
 
   /**
@@ -513,6 +520,66 @@ class MonteCarloReportGenerator {
       });
     }
     return this.#conflictWarningSectionGenerator;
+  }
+
+  /**
+   * Get or lazily create the ActionabilitySectionGenerator.
+   * @private
+   * @returns {import('./sectionGenerators/ActionabilitySectionGenerator.js').default|null}
+   */
+  #getOrCreateActionabilitySectionGenerator() {
+    if (!this.#actionabilitySectionGenerator) {
+      // Lazy initialization requires complex dependency chain
+      // Prefer DI injection; this fallback is for backwards compatibility
+      this.#logger.warn(
+        'MonteCarloReportGenerator: ActionabilitySectionGenerator not injected, ' +
+          'actionability section will be skipped'
+      );
+      return null;
+    }
+    return this.#actionabilitySectionGenerator;
+  }
+
+  /**
+   * Generate actionability section for low trigger rate expressions.
+   * @private
+   * @param {object} simulationResult - Simulation result
+   * @returns {string} Markdown section or empty string
+   */
+  #generateActionabilitySection(simulationResult) {
+    if (!simulationResult) {
+      return '';
+    }
+
+    const triggerRate = simulationResult.triggerRate ?? 0;
+
+    // Only generate for low trigger rate expressions (<10%)
+    if (triggerRate >= 0.1) {
+      return '';
+    }
+
+    const generator = this.#getOrCreateActionabilitySectionGenerator();
+    if (!generator) {
+      return '';
+    }
+
+    try {
+      const result = generator.generate(simulationResult);
+      if (
+        !result ||
+        !Array.isArray(result.formatted) ||
+        result.formatted.length === 0
+      ) {
+        return '';
+      }
+      return result.formatted.join('\n');
+    } catch (err) {
+      this.#logger.error(
+        'MonteCarloReportGenerator: Actionability section generation failed',
+        err
+      );
+      return '';
+    }
   }
 
   /**

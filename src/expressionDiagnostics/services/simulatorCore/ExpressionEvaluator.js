@@ -10,13 +10,16 @@ import { getEpsilonForVariable } from '../../config/advancedMetricsConfig.js';
 
 class ExpressionEvaluator {
   #gateOutcomeRecorder;
+  #jsonLogicService;
 
   /**
    * @param {Object} [deps]
    * @param {(node: HierarchicalClauseNode, context: object, clausePassed: boolean, inRegime: boolean, gateContextCache: object|null) => void} [deps.gateOutcomeRecorder]
+   * @param {import('../../../logic/jsonLogicEvaluationService.js').default} [deps.jsonLogicService] - Optional JsonLogicEvaluationService for validated evaluation
    */
-  constructor({ gateOutcomeRecorder } = {}) {
+  constructor({ gateOutcomeRecorder, jsonLogicService } = {}) {
     this.#gateOutcomeRecorder = gateOutcomeRecorder ?? null;
+    this.#jsonLogicService = jsonLogicService ?? null;
   }
 
   /**
@@ -147,7 +150,9 @@ class ExpressionEvaluator {
    */
   evaluatePrerequisite(prereq, context) {
     try {
-      return jsonLogic.apply(prereq.logic, context);
+      return this.#jsonLogicService
+        ? this.#jsonLogicService.evaluate(prereq.logic, context)
+        : jsonLogic.apply(prereq.logic, context);
     } catch {
       return false;
     }
@@ -540,7 +545,9 @@ class ExpressionEvaluator {
     }
 
     try {
-      const passed = jsonLogic.apply(node.logic, context);
+      const passed = this.#jsonLogicService
+        ? this.#jsonLogicService.evaluate(node.logic, context)
+        : jsonLogic.apply(node.logic, context);
       node.recordEvaluation(passed);
       if (inRegime) {
         node.recordInRegimeEvaluation(passed);
@@ -564,7 +571,9 @@ class ExpressionEvaluator {
    */
   evaluateLeafCondition(logic, context) {
     try {
-      return jsonLogic.apply(logic, context);
+      return this.#jsonLogicService
+        ? this.#jsonLogicService.evaluate(logic, context)
+        : jsonLogic.apply(logic, context);
     } catch {
       return false;
     }
@@ -818,7 +827,9 @@ class ExpressionEvaluator {
       return expr;
     }
     try {
-      return jsonLogic.apply(expr, context);
+      return this.#jsonLogicService
+        ? this.#jsonLogicService.evaluate(expr, context)
+        : jsonLogic.apply(expr, context);
     } catch {
       return expr;
     }
