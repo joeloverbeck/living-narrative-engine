@@ -234,7 +234,8 @@ describe('Delta Clause Feasibility', () => {
       expect(result.signal).toBe('delta');
       expect(result.passRate).toBe(0);
       expect(result.maxValue).toBeCloseTo(0.2, 10); // max delta is 0.2, below 0.5 threshold
-      expect(result.classification).toBe('IMPOSSIBLE');
+      // Three-tier classification: ceiling effect detected (max < threshold)
+      expect(result.classification).toBe('EMPIRICALLY_UNREACHABLE');
     });
 
     it('should NOT return UNKNOWN for valid delta clauses', () => {

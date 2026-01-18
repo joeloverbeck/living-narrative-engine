@@ -9,7 +9,13 @@
 import { STATUS_THEME, STATUS_KEYS } from '../statusTheme.js';
 
 /**
- * @typedef {'unknown' | 'impossible' | 'unobserved' | 'extremely_rare' | 'rare' | 'uncommon' | 'normal' | 'frequent'} RarityCategory
+ * Rarity category for expression diagnostic classification.
+ * Three-tier system for zero-hit cases:
+ * - theoretically_impossible: Static analysis proves no solution exists
+ * - empirically_unreachable: Observed max < threshold (ceiling effect)
+ * - unobserved: No triggers found, but not proven impossible
+ *
+ * @typedef {'unknown' | 'impossible' | 'theoretically_impossible' | 'empirically_unreachable' | 'unobserved' | 'extremely_rare' | 'rare' | 'uncommon' | 'normal' | 'frequent'} RarityCategory
  */
 
 /**
@@ -355,6 +361,48 @@ class DiagnosticResult {
     }
 
     return RARITY_CATEGORIES.FREQUENT;
+  }
+
+  /**
+   * Get human-readable reason for the current rarity classification.
+   * Returns the description from STATUS_THEME if available, otherwise a generic message.
+   *
+   * For three-tier zero-hit classifications:
+   * - theoretically_impossible: "Static analysis proves this cannot occur"
+   * - empirically_unreachable: "Observed maximum below threshold in sampled conditions"
+   * - unobserved: "No triggers found, but not proven impossible"
+   *
+   * @returns {string} Human-readable explanation of the rarity classification.
+   */
+  get rarityReason() {
+    const category = this.rarityCategory;
+    const theme = STATUS_THEME[category];
+
+    // Return description from theme if available
+    if (theme && theme.description) {
+      return theme.description;
+    }
+
+    // Fallback descriptions for categories without explicit description
+    switch (category) {
+      case 'impossible':
+        return 'Static analysis indicates this expression cannot trigger';
+      case 'unobserved':
+        return 'No triggers found in sampled conditions, but not proven impossible';
+      case 'extremely_rare':
+        return 'Trigger rate is below 0.001%';
+      case 'rare':
+        return 'Trigger rate is below 0.05%';
+      case 'uncommon':
+        return 'Trigger rate is below 0.5%';
+      case 'normal':
+        return 'Trigger rate is below 2%';
+      case 'frequent':
+        return 'Trigger rate is 2% or higher';
+      case 'unknown':
+      default:
+        return 'Insufficient data for classification';
+    }
   }
 
   /**

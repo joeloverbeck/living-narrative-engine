@@ -17,6 +17,7 @@ export const diagnosticsTokens = freeze({
   // Phase 2 - Monte Carlo
   IMonteCarloSimulator: 'IMonteCarloSimulator',
   IFailureExplainer: 'IFailureExplainer',
+  IAxisSignConflictExplainer: 'IAxisSignConflictExplainer',
   IEmotionCalculatorAdapter: 'IEmotionCalculatorAdapter',
   IRandomStateGenerator: 'IRandomStateGenerator',
   IMonteCarloContextBuilder: 'IMonteCarloContextBuilder',

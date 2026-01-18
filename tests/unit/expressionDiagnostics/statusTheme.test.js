@@ -20,15 +20,22 @@ import {
 } from '../../../src/expressionDiagnostics/statusTheme.js';
 
 /**
- * Mapping of colorName to expected emoji for visual consistency.
- * Derived from STATUS_THEME to ensure the emoji matches the stated color family.
- * This eliminates duplication by using the single source of truth.
+ * Mapping of colorName to acceptable emojis for visual consistency.
+ * Some color families have multiple valid emojis (e.g., 'red' can use 🔴 or ⛔).
+ * This accounts for the three-tier classification where different severity levels
+ * may share a color family but use different emojis for distinction.
  */
-const EXPECTED_EMOJI_FOR_COLOR = Object.freeze(
-  Object.fromEntries(
-    Object.values(STATUS_THEME).map((entry) => [entry.colorName, entry.emoji])
-  )
-);
+const ACCEPTABLE_EMOJIS_FOR_COLOR = Object.freeze({
+  gray: ['⚪'],
+  red: ['🔴', '⛔'], // Legacy 'impossible' uses 🔴, 'empirically_unreachable' uses ⛔
+  'dark-red': ['🚫'], // 'theoretically_impossible' uses prohibition sign
+  amber: ['🟡'],
+  orange: ['🟠'],
+  magenta: ['🟣'],
+  cyan: ['🩵'],
+  teal: ['🟢'],
+  indigo: ['🔵'],
+});
 
 describe('statusTheme.js', () => {
   describe('STATUS_THEME structure', () => {
@@ -36,6 +43,8 @@ describe('statusTheme.js', () => {
       const expectedKeys = [
         'unknown',
         'impossible',
+        'theoretically_impossible',
+        'empirically_unreachable',
         'unobserved',
         'extremely_rare',
         'rare',
@@ -79,10 +88,10 @@ describe('statusTheme.js', () => {
       'status "%s" emoji should visually match its colorName',
       (statusKey) => {
         const entry = STATUS_THEME[statusKey];
-        const expectedEmoji = EXPECTED_EMOJI_FOR_COLOR[entry.colorName];
+        const acceptableEmojis = ACCEPTABLE_EMOJIS_FOR_COLOR[entry.colorName];
 
-        expect(expectedEmoji).toBeDefined();
-        expect(entry.emoji).toBe(expectedEmoji);
+        expect(acceptableEmojis).toBeDefined();
+        expect(acceptableEmojis).toContain(entry.emoji);
       }
     );
 
@@ -95,7 +104,9 @@ describe('statusTheme.js', () => {
     it('all statuses should have consistent emoji-color pairings', () => {
       // This test documents the expected mapping
       expect(STATUS_THEME.unknown.emoji).toBe('⚪'); // gray
-      expect(STATUS_THEME.impossible.emoji).toBe('🔴'); // red
+      expect(STATUS_THEME.impossible.emoji).toBe('🔴'); // red (legacy)
+      expect(STATUS_THEME.theoretically_impossible.emoji).toBe('🚫'); // dark-red (static impossibility)
+      expect(STATUS_THEME.empirically_unreachable.emoji).toBe('⛔'); // red (ceiling effect)
       expect(STATUS_THEME.unobserved.emoji).toBe('🟡'); // amber → yellow
       expect(STATUS_THEME.extremely_rare.emoji).toBe('🟠'); // orange
       expect(STATUS_THEME.rare.emoji).toBe('🟣'); // magenta → purple
@@ -268,6 +279,8 @@ describe('statusTheme.js', () => {
       const warningMessage = mockLogger.warn.mock.calls[0][0];
       expect(warningMessage).toContain('unknown');
       expect(warningMessage).toContain('impossible');
+      expect(warningMessage).toContain('theoretically_impossible');
+      expect(warningMessage).toContain('empirically_unreachable');
       expect(warningMessage).toContain('unobserved');
       expect(warningMessage).toContain('extremely_rare');
       expect(warningMessage).toContain('rare');
@@ -285,12 +298,20 @@ describe('statusTheme.js', () => {
       }
     });
 
-    it('should have impossible as highest priority (0)', () => {
-      expect(STATUS_PRIORITY.impossible).toBe(0);
+    it('should have theoretically_impossible as highest priority (0)', () => {
+      expect(STATUS_PRIORITY.theoretically_impossible).toBe(0);
     });
 
-    it('should have frequent as lowest priority (7)', () => {
-      expect(STATUS_PRIORITY.frequent).toBe(7);
+    it('should have legacy impossible at priority 1', () => {
+      expect(STATUS_PRIORITY.impossible).toBe(1);
+    });
+
+    it('should have empirically_unreachable at priority 2', () => {
+      expect(STATUS_PRIORITY.empirically_unreachable).toBe(2);
+    });
+
+    it('should have frequent as lowest priority (9)', () => {
+      expect(STATUS_PRIORITY.frequent).toBe(9);
     });
 
     it('should be frozen', () => {
@@ -298,12 +319,12 @@ describe('statusTheme.js', () => {
     });
 
     it('should have unobserved before unknown in priority', () => {
-      expect(STATUS_PRIORITY.unobserved).toBe(1);
-      expect(STATUS_PRIORITY.unknown).toBe(2);
+      expect(STATUS_PRIORITY.unobserved).toBe(3);
+      expect(STATUS_PRIORITY.unknown).toBe(4);
     });
 
     it('should have uncommon in correct position', () => {
-      expect(STATUS_PRIORITY.uncommon).toBe(5);
+      expect(STATUS_PRIORITY.uncommon).toBe(7);
     });
   });
 
@@ -321,6 +342,8 @@ describe('statusTheme.js', () => {
 
     it('should not contain problematic statuses', () => {
       expect(NON_PROBLEMATIC_STATUSES.has('impossible')).toBe(false);
+      expect(NON_PROBLEMATIC_STATUSES.has('theoretically_impossible')).toBe(false);
+      expect(NON_PROBLEMATIC_STATUSES.has('empirically_unreachable')).toBe(false);
       expect(NON_PROBLEMATIC_STATUSES.has('unknown')).toBe(false);
       expect(NON_PROBLEMATIC_STATUSES.has('unobserved')).toBe(false);
       expect(NON_PROBLEMATIC_STATUSES.has('extremely_rare')).toBe(false);

@@ -1,9 +1,14 @@
 /**
  * @file NonAxisFeasibilityAnalyzer - Analyzes feasibility of non-axis clauses
  * @description Service to analyze feasibility of non-axis clauses within the mood regime
- * population, computing pass rates, max values, and classifying each clause as
- * IMPOSSIBLE, RARE, or OK.
+ * population, computing pass rates, max/min values, and classifying each clause using
+ * a three-tier system for zero-hit cases:
+ * - EMPIRICALLY_UNREACHABLE: ceiling/floor effect detected (max < threshold for >= ops)
+ * - UNOBSERVED: 0 hits but no ceiling evidence detected
+ * - RARE: passes exist but below 0.1%
+ * - OK: achievable at reasonable rates
  * @see specs/prototype-fit-blockers-scope-disambiguation.md
+ * @see specs/monte-carlo-report-clarity-improvements.md
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
@@ -25,8 +30,12 @@ function hashString(str) {
 
 /**
  * Classification result for a non-axis clause feasibility analysis.
+ * Three-tier system for zero-hit cases:
+ * - EMPIRICALLY_UNREACHABLE: observed max < threshold (ceiling detected)
+ * - UNOBSERVED: 0 hits but no ceiling evidence detected
+ * - IMPOSSIBLE: Legacy - kept for backward compatibility
  *
- * @typedef {'IMPOSSIBLE' | 'RARE' | 'OK' | 'UNKNOWN'} FeasibilityClassification
+ * @typedef {'EMPIRICALLY_UNREACHABLE' | 'UNOBSERVED' | 'IMPOSSIBLE' | 'RARE' | 'OK' | 'UNKNOWN'} FeasibilityClassification
  */
 
 /**
@@ -50,9 +59,11 @@ function hashString(str) {
  * @property {'in_regime'} population - Always 'in_regime' for this analyzer.
  * @property {number | null} passRate - Proportion of contexts passing the clause (0-1).
  * @property {number | null} maxValue - Maximum observed value for the variable.
+ * @property {number | null} minValue - Minimum observed value for the variable.
  * @property {number | null} p95Value - 95th percentile value for the variable.
  * @property {number | null} marginMax - Difference between maxValue and threshold.
  * @property {FeasibilityClassification} classification - Feasibility classification result.
+ * @property {boolean} hasEmpiricalCeiling - Whether an empirical ceiling was detected (max < threshold for >= ops).
  * @property {FeasibilityEvidence} evidence - Evidence supporting the classification.
  */
 
@@ -155,6 +166,7 @@ class NonAxisFeasibilityAnalyzer {
     const passRate = passCount / values.length;
 
     const sortedValues = [...values].sort((a, b) => a - b);
+    const minValue = sortedValues[0];
     const maxValue = sortedValues[sortedValues.length - 1];
     const p95Value = this.#computePercentile(sortedValues, 0.95);
     const marginMax = maxValue - clause.threshold;
@@ -162,19 +174,30 @@ class NonAxisFeasibilityAnalyzer {
     const classification = this.#classify(
       passRate,
       maxValue,
+      minValue,
       clause.threshold,
       clause.operator
     );
+
+    // Detect empirical ceiling/floor for evidence
+    const isUpperBoundOp = clause.operator === '>=' || clause.operator === '>';
+    const isLowerBoundOp = clause.operator === '<=' || clause.operator === '<';
+    const hasEmpiricalCeiling =
+      passRate === 0 &&
+      ((isUpperBoundOp && maxValue < clause.threshold - EPS) ||
+        (isLowerBoundOp && minValue > clause.threshold + EPS));
 
     const bestSampleRef = passCount > 0 ? this.#findBestSampleRef(clause, contexts, signal) : null;
     const note = this.#generateEvidenceNote(
       passRate,
       maxValue,
+      minValue,
       clause.threshold,
       clause.varPath,
       clause.operator,
       classification,
-      signal
+      signal,
+      hasEmpiricalCeiling
     );
 
     return {
@@ -186,10 +209,12 @@ class NonAxisFeasibilityAnalyzer {
       signal,
       population: 'in_regime',
       passRate,
+      minValue,
       maxValue,
       p95Value,
       marginMax,
       classification,
+      hasEmpiricalCeiling,
       evidence: {
         bestSampleRef,
         note,
@@ -319,18 +344,28 @@ class NonAxisFeasibilityAnalyzer {
    * @param {string} operator - Comparison operator.
    * @returns {FeasibilityClassification} Classification result.
    */
-  #classify(passRate, maxValue, threshold, operator) {
-    // For >= and > operators, IMPOSSIBLE if passRate === 0 AND maxValue < threshold - eps
-    // For <= and < operators, IMPOSSIBLE if passRate === 0 AND minValue > threshold + eps
-    // Since we track maxValue, we use a simplified rule for >= and >
+  #classify(passRate, maxValue, minValue, threshold, operator) {
+    // Three-tier classification for zero-hit cases:
+    // 1. EMPIRICALLY_UNREACHABLE: ceiling effect detected (max < threshold for upper-bound ops)
+    // 2. UNOBSERVED: 0 hits but no ceiling evidence
+    // 3. Legacy IMPOSSIBLE kept for backward compatibility
     if (passRate === 0) {
       const isUpperBoundOp = operator === '>=' || operator === '>';
+      const isLowerBoundOp = operator === '<=' || operator === '<';
+
+      // Check for ceiling effect (empirical unreachability)
       if (isUpperBoundOp && maxValue < threshold - EPS) {
-        return 'IMPOSSIBLE';
+        // Observed max is below threshold - ceiling detected
+        return 'EMPIRICALLY_UNREACHABLE';
       }
-      // For lower-bound operators, we would need minValue
-      // But since passRate === 0, that's also effectively impossible
-      return 'IMPOSSIBLE';
+
+      if (isLowerBoundOp && minValue > threshold + EPS) {
+        // Observed min is above threshold - floor detected
+        return 'EMPIRICALLY_UNREACHABLE';
+      }
+
+      // No ceiling/floor evidence detected - just unobserved
+      return 'UNOBSERVED';
     }
 
     if (passRate > 0 && passRate < RARE_THRESHOLD) {
@@ -434,18 +469,37 @@ class NonAxisFeasibilityAnalyzer {
   #generateEvidenceNote(
     passRate,
     maxValue,
+    minValue,
     threshold,
     varPath,
     operator,
     classification,
-    signal
+    signal,
+    hasEmpiricalCeiling
   ) {
     const percentStr = (passRate * 100).toFixed(1);
     const maxStr = maxValue.toFixed(3);
+    const minStr = minValue.toFixed(3);
     const thresholdStr = threshold.toFixed(3);
 
     switch (classification) {
+      case 'EMPIRICALLY_UNREACHABLE': {
+        // Ceiling effect detected - show gap to threshold
+        const isUpperBoundOp = operator === '>=' || operator === '>';
+        if (isUpperBoundOp) {
+          const gap = (threshold - maxValue).toFixed(3);
+          return `Empirical ceiling in sampled regime: max(${signal})=${maxStr} < ${thresholdStr} by ${gap} (no passes observed)`;
+        } else {
+          const gap = (minValue - threshold).toFixed(3);
+          return `Empirical floor in sampled regime: min(${signal})=${minStr} > ${thresholdStr} by ${gap} (no passes observed)`;
+        }
+      }
+      case 'UNOBSERVED': {
+        // No ceiling evidence, just unobserved
+        return `${varPath} ${operator} ${thresholdStr}: unobserved (0 passes, but max(${signal})=${maxStr} does not prove impossibility)`;
+      }
       case 'IMPOSSIBLE': {
+        // Legacy case - kept for backward compatibility
         const gap = Math.abs(threshold - maxValue).toFixed(3);
         return `${varPath} ${operator} ${thresholdStr} but max(${signal})=${maxStr} in-regime (${gap} short, ${percentStr}% pass)`;
       }
@@ -478,10 +532,12 @@ class NonAxisFeasibilityAnalyzer {
       signal,
       population: 'in_regime',
       passRate: null,
+      minValue: null,
       maxValue: null,
       p95Value: null,
       marginMax: null,
       classification: 'UNKNOWN',
+      hasEmpiricalCeiling: false,
       evidence: {
         bestSampleRef: null,
         note: `${clause.varPath} ${clause.operator} ${clause.threshold.toFixed(3)}: insufficient data for analysis`,

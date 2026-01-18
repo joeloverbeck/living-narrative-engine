@@ -84,8 +84,8 @@ describe('NonAxisFeasibilityAnalyzer', () => {
     });
   });
 
-  describe('IMPOSSIBLE classification', () => {
-    it('should classify as IMPOSSIBLE when passRate is 0 and maxValue < threshold', () => {
+  describe('EMPIRICALLY_UNREACHABLE classification (three-tier system)', () => {
+    it('should classify as EMPIRICALLY_UNREACHABLE when passRate is 0 and maxValue < threshold', () => {
       const clause = {
         varPath: 'emotions.confusion',
         operator: '>=',
@@ -96,7 +96,7 @@ describe('NonAxisFeasibilityAnalyzer', () => {
       };
       mockClauseExtractor.extract.mockReturnValue([clause]);
 
-      // Contexts where emotions.confusion is always below 0.5
+      // Contexts where emotions.confusion is always below 0.5 (ceiling effect)
       const contexts = [
         { emotions: { confusion: 0.1 } },
         { emotions: { confusion: 0.2 } },
@@ -106,12 +106,12 @@ describe('NonAxisFeasibilityAnalyzer', () => {
       const results = analyzer.analyze([], contexts, 'test_expr');
 
       expect(results).toHaveLength(1);
-      expect(results[0].classification).toBe('IMPOSSIBLE');
+      expect(results[0].classification).toBe('EMPIRICALLY_UNREACHABLE');
       expect(results[0].passRate).toBe(0);
       expect(results[0].maxValue).toBe(0.3);
     });
 
-    it('should classify as IMPOSSIBLE for > operator when max equals threshold', () => {
+    it('should classify as UNOBSERVED for > operator when max equals threshold (no ceiling evidence)', () => {
       const clause = {
         varPath: 'emotions.anger',
         operator: '>',
@@ -122,7 +122,8 @@ describe('NonAxisFeasibilityAnalyzer', () => {
       };
       mockClauseExtractor.extract.mockReturnValue([clause]);
 
-      // Contexts where emotions.anger never exceeds 0.5
+      // Contexts where emotions.anger never exceeds 0.5, but reaches it
+      // max(0.5) is NOT < threshold(0.5), so no ceiling evidence detected
       const contexts = [
         { emotions: { anger: 0.3 } },
         { emotions: { anger: 0.5 } }, // equals but not greater
@@ -132,11 +133,11 @@ describe('NonAxisFeasibilityAnalyzer', () => {
       const results = analyzer.analyze([], contexts, 'test_expr');
 
       expect(results).toHaveLength(1);
-      expect(results[0].classification).toBe('IMPOSSIBLE');
+      expect(results[0].classification).toBe('UNOBSERVED');
       expect(results[0].passRate).toBe(0);
     });
 
-    it('should classify as IMPOSSIBLE for <= operator when all values exceed threshold', () => {
+    it('should classify as EMPIRICALLY_UNREACHABLE for <= operator when all values exceed threshold (floor effect)', () => {
       const clause = {
         varPath: 'emotions.joy',
         operator: '<=',
@@ -147,7 +148,7 @@ describe('NonAxisFeasibilityAnalyzer', () => {
       };
       mockClauseExtractor.extract.mockReturnValue([clause]);
 
-      // All values exceed threshold
+      // All values exceed threshold - floor detected (min > threshold)
       const contexts = [
         { emotions: { joy: 0.5 } },
         { emotions: { joy: 0.6 } },
@@ -157,7 +158,7 @@ describe('NonAxisFeasibilityAnalyzer', () => {
       const results = analyzer.analyze([], contexts, 'test_expr');
 
       expect(results).toHaveLength(1);
-      expect(results[0].classification).toBe('IMPOSSIBLE');
+      expect(results[0].classification).toBe('EMPIRICALLY_UNREACHABLE');
       expect(results[0].passRate).toBe(0);
     });
   });
@@ -471,7 +472,7 @@ describe('NonAxisFeasibilityAnalyzer', () => {
   });
 
   describe('evidence generation', () => {
-    it('should generate appropriate evidence note for IMPOSSIBLE classification', () => {
+    it('should generate appropriate evidence note for EMPIRICALLY_UNREACHABLE classification', () => {
       const clause = {
         varPath: 'emotions.confusion',
         operator: '>=',
@@ -482,6 +483,7 @@ describe('NonAxisFeasibilityAnalyzer', () => {
       };
       mockClauseExtractor.extract.mockReturnValue([clause]);
 
+      // Max 0.2 < threshold 0.5, so ceiling effect detected
       const contexts = [
         { emotions: { confusion: 0.1 } },
         { emotions: { confusion: 0.2 } },
@@ -489,10 +491,10 @@ describe('NonAxisFeasibilityAnalyzer', () => {
 
       const results = analyzer.analyze([], contexts, 'test_expr');
 
-      expect(results[0].evidence.note).toContain('emotions.confusion');
-      expect(results[0].evidence.note).toContain('>=');
-      expect(results[0].evidence.note).toContain('short');
-      expect(results[0].evidence.note).toContain('0.0% pass');
+      expect(results[0].classification).toBe('EMPIRICALLY_UNREACHABLE');
+      // EMPIRICALLY_UNREACHABLE generates "Empirical ceiling" evidence note
+      expect(results[0].evidence.note).toContain('Empirical ceiling');
+      expect(results[0].evidence.note).toContain('max(final)');
       expect(results[0].evidence.bestSampleRef).toBeNull();
     });
 
