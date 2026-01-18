@@ -4,13 +4,18 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { createEntityContext } from '../logic/contextAssembler.js';
-import { MOOD_AXES } from '../constants/moodAffectConstants.js';
+import {
+  MOOD_AXES,
+  AFFECT_TRAITS,
+  DEFAULT_AFFECT_TRAITS,
+} from '../constants/moodAffectConstants.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IEntityManager} IEntityManager */
 
-// Use canonical mood axes from single source of truth
+// Use canonical mood axes and affect traits from single source of truth
 const MOOD_AXES_KEYS = [...MOOD_AXES];
+const AFFECT_TRAITS_KEYS = [...AFFECT_TRAITS];
 
 class ExpressionContextBuilder {
   #emotionCalculatorService;
@@ -106,6 +111,7 @@ class ExpressionContextBuilder {
       emotions: this.#mapToObject(emotions),
       sexualStates: this.#mapToObject(sexualStates),
       moodAxes: this.#extractMoodAxes(moodData),
+      affectTraits: this.#extractAffectTraits(actorId),
       sexualArousal,
       previousEmotions,
       previousSexualStates,
@@ -255,6 +261,34 @@ class ExpressionContextBuilder {
       axes[key] = moodData?.[key] ?? 0;
     }
     return axes;
+  }
+
+  /**
+   * Extract affect traits from actor's component data.
+   * Returns default values (50) if the actor doesn't have the affect_traits component.
+   *
+   * @param {string} actorId - The actor entity ID.
+   * @returns {Record<string, number>} Affect traits object.
+   * @private
+   */
+  #extractAffectTraits(actorId) {
+    const traits = {};
+    let affectTraitsData = null;
+
+    // Try to get the affect_traits component from the actor
+    if (this.#entityManager.hasComponent(actorId, 'core:affect_traits')) {
+      affectTraitsData = this.#entityManager.getComponentData(
+        actorId,
+        'core:affect_traits'
+      );
+    }
+
+    // Extract each trait, using default values if not found
+    for (const key of AFFECT_TRAITS_KEYS) {
+      traits[key] = affectTraitsData?.[key] ?? DEFAULT_AFFECT_TRAITS[key];
+    }
+
+    return traits;
   }
 
   /**

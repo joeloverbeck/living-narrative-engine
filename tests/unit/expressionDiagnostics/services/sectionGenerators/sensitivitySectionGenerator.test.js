@@ -375,4 +375,138 @@ describe('SensitivitySectionGenerator', () => {
       expect(section).toContain('Δ Threshold');
     });
   });
+
+  // ============================================================================
+  // Non-Zero-Hit Threshold Suggestions Tests
+  // ============================================================================
+
+  describe('non-zero-hit threshold suggestions', () => {
+    let generator;
+    let formattingService;
+
+    beforeEach(() => {
+      formattingService = new ReportFormattingService();
+      generator = new SensitivitySectionGenerator({ formattingService });
+    });
+
+    it('shows threshold suggestions for low non-zero pass rates (1-10%)', () => {
+      const sensitivityData = [
+        {
+          kind: 'marginalClausePassRateSweep',
+          conditionPath: 'mood.joy',
+          operator: '>=',
+          originalThreshold: 0.7,
+          isIntegerDomain: false,
+          grid: [
+            { threshold: 0.5, passRate: 0.15, sampleCount: 1000 },
+            { threshold: 0.6, passRate: 0.08, sampleCount: 1000 },
+            { threshold: 0.7, passRate: 0.02, sampleCount: 1000 }, // baseline - 2%
+            { threshold: 0.8, passRate: 0.01, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const section = generator.generateSensitivityAnalysis(
+        sensitivityData,
+        { sampleCount: 1000, storedContextCount: 100 },
+        {},
+        null
+      );
+
+      // Should show threshold suggestions for non-zero but low pass rates
+      expect(section).toContain('Threshold Suggestions for Higher Pass Rates');
+      expect(section).toContain('Target Rate');
+      expect(section).toContain('Suggested Threshold');
+    });
+
+    it('does not show threshold suggestions for high pass rates (>10%)', () => {
+      const sensitivityData = [
+        {
+          kind: 'marginalClausePassRateSweep',
+          conditionPath: 'mood.joy',
+          operator: '>=',
+          originalThreshold: 0.5,
+          isIntegerDomain: false,
+          grid: [
+            { threshold: 0.4, passRate: 0.25, sampleCount: 1000 },
+            { threshold: 0.5, passRate: 0.15, sampleCount: 1000 }, // baseline - 15%
+            { threshold: 0.6, passRate: 0.08, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const section = generator.generateSensitivityAnalysis(
+        sensitivityData,
+        { sampleCount: 1000, storedContextCount: 100 },
+        {},
+        null
+      );
+
+      // Should NOT contain threshold suggestions for high pass rates
+      expect(section).not.toContain(
+        'Threshold Suggestions for Higher Pass Rates'
+      );
+    });
+
+    it('shows threshold suggestions for low non-zero trigger rates in global section', () => {
+      const globalSensitivityData = [
+        {
+          kind: 'expressionTriggerRateSweep',
+          varPath: 'mood.joy',
+          operator: '>=',
+          originalThreshold: 0.7,
+          isIntegerDomain: false,
+          grid: [
+            { threshold: 0.5, triggerRate: 0.12, sampleCount: 1000 },
+            { threshold: 0.6, triggerRate: 0.06, sampleCount: 1000 },
+            { threshold: 0.7, triggerRate: 0.02, sampleCount: 1000 }, // baseline - 2%
+            { threshold: 0.8, triggerRate: 0.005, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const section = generator.generateGlobalSensitivitySection(
+        globalSensitivityData,
+        { sampleCount: 1000, storedContextCount: 100 },
+        {},
+        null,
+        null
+      );
+
+      // Should show threshold suggestions for non-zero but low trigger rates
+      expect(section).toContain('Threshold Suggestions for Higher Trigger Rates');
+      expect(section).toContain('Target Rate');
+      expect(section).toContain('Suggested Threshold');
+    });
+
+    it('does not show threshold suggestions for high trigger rates (>10%)', () => {
+      const globalSensitivityData = [
+        {
+          kind: 'expressionTriggerRateSweep',
+          varPath: 'mood.joy',
+          operator: '>=',
+          originalThreshold: 0.5,
+          isIntegerDomain: false,
+          grid: [
+            { threshold: 0.4, triggerRate: 0.25, sampleCount: 1000 },
+            { threshold: 0.5, triggerRate: 0.15, sampleCount: 1000 }, // baseline - 15%
+            { threshold: 0.6, triggerRate: 0.08, sampleCount: 1000 },
+          ],
+        },
+      ];
+
+      const section = generator.generateGlobalSensitivitySection(
+        globalSensitivityData,
+        { sampleCount: 1000, storedContextCount: 100 },
+        {},
+        null,
+        null
+      );
+
+      // Should NOT contain threshold suggestions for high trigger rates
+      expect(section).not.toContain(
+        'Threshold Suggestions for Higher Trigger Rates'
+      );
+    });
+  });
 });

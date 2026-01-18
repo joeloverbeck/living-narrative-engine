@@ -269,4 +269,438 @@ describe('BlockerSectionGenerator', () => {
       expect(SCOPE_METADATA.BLOCKER_GLOBAL.scope).toBe('full_prereqs');
     });
   });
+
+  // ============================================================================
+  // Core Blocker Integration Tests (MONCARACTIMP-013)
+  // ============================================================================
+
+  describe('core blocker integration', () => {
+    it('accepts optional blockerCalculator in constructor (backward compatibility)', () => {
+      const formattingService = new ReportFormattingService();
+      // Should not throw when blockerCalculator is omitted
+      expect(
+        () => new BlockerSectionGenerator({ formattingService })
+      ).not.toThrow();
+    });
+
+    it('accepts blockerCalculator in constructor', () => {
+      const formattingService = new ReportFormattingService();
+      const mockBlockerCalculator = {
+        calculate: () => ({
+          coreBlockers: [],
+          nonCoreConstraints: [],
+          compositeScores: new Map(),
+        }),
+      };
+
+      expect(
+        () =>
+          new BlockerSectionGenerator({
+            formattingService,
+            blockerCalculator: mockBlockerCalculator,
+          })
+      ).not.toThrow();
+    });
+
+    it('does not include core blocker section when blockerCalculator is not provided', () => {
+      const formattingService = new ReportFormattingService();
+      const generator = new BlockerSectionGenerator({ formattingService });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        inRegimeSampleCount: 200,
+        clauseTracking: [
+          {
+            clauseId: 'clause-1',
+            passCount: 800,
+            failCount: 200,
+          },
+        ],
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).not.toContain('### Core Blockers');
+    });
+
+    it('includes core blocker section when blockerCalculator returns blockers', () => {
+      const formattingService = new ReportFormattingService();
+      const mockBlockerCalculator = {
+        calculate: () => ({
+          coreBlockers: [
+            {
+              clauseId: 'clause-1',
+              clauseDescription: 'emotions.joy >= 0.5',
+              lastMileRate: 0.6,
+              impactScore: 0.25,
+              compositeScore: 0.425,
+              classification: 'core',
+            },
+          ],
+          nonCoreConstraints: [],
+          compositeScores: new Map([['clause-1', 0.425]]),
+        }),
+      };
+
+      const generator = new BlockerSectionGenerator({
+        formattingService,
+        blockerCalculator: mockBlockerCalculator,
+      });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        inRegimeSampleCount: 200,
+        clauseTracking: [
+          {
+            clauseId: 'clause-1',
+            passCount: 800,
+            failCount: 200,
+          },
+        ],
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).toContain('### Core Blockers');
+      expect(section).toContain('emotions.joy >= 0.5');
+      expect(section).toContain('Last-Mile Rate');
+      expect(section).toContain('Impact Score');
+      expect(section).toContain('Composite Score');
+    });
+
+    it('does not include core blocker section when simulationResult is null', () => {
+      const formattingService = new ReportFormattingService();
+      const mockBlockerCalculator = {
+        calculate: () => ({
+          coreBlockers: [
+            {
+              clauseId: 'clause-1',
+              clauseDescription: 'emotions.joy >= 0.5',
+              lastMileRate: 0.6,
+              impactScore: 0.25,
+              compositeScore: 0.425,
+            },
+          ],
+          nonCoreConstraints: [],
+          compositeScores: new Map(),
+        }),
+      };
+
+      const generator = new BlockerSectionGenerator({
+        formattingService,
+        blockerCalculator: mockBlockerCalculator,
+      });
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        null // No simulationResult
+      );
+
+      expect(section).not.toContain('### Core Blockers');
+    });
+
+    it('does not include core blocker section when clauseTracking is empty', () => {
+      const formattingService = new ReportFormattingService();
+      const mockBlockerCalculator = {
+        calculate: () => ({
+          coreBlockers: [],
+          nonCoreConstraints: [],
+          compositeScores: new Map(),
+        }),
+      };
+
+      const generator = new BlockerSectionGenerator({
+        formattingService,
+        blockerCalculator: mockBlockerCalculator,
+      });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        inRegimeSampleCount: 200,
+        clauseTracking: [], // Empty
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).not.toContain('### Core Blockers');
+    });
+
+    describe('blocker insight generation', () => {
+      it('shows "final gatekeeper" insight for high lastMileRate (>0.8)', () => {
+        const formattingService = new ReportFormattingService();
+        const mockBlockerCalculator = {
+          calculate: () => ({
+            coreBlockers: [
+              {
+                clauseId: 'clause-1',
+                clauseDescription: 'Critical blocker',
+                lastMileRate: 0.85, // > 0.8
+                impactScore: 0.1,
+                compositeScore: 0.5,
+              },
+            ],
+            nonCoreConstraints: [],
+            compositeScores: new Map(),
+          }),
+        };
+
+        const generator = new BlockerSectionGenerator({
+          formattingService,
+          blockerCalculator: mockBlockerCalculator,
+        });
+
+        const simulationResult = {
+          triggerCount: 40,
+          sampleCount: 1000,
+          clauseTracking: [{ clauseId: 'clause-1' }],
+        };
+
+        const section = generator.generateBlockerAnalysis(
+          [createMockBlocker()],
+          1000,
+          null,
+          [],
+          null,
+          null,
+          false,
+          [],
+          null,
+          simulationResult
+        );
+
+        expect(section).toContain('Final gatekeeper');
+      });
+
+      it('shows "High impact" insight for impactScore > 0.3', () => {
+        const formattingService = new ReportFormattingService();
+        const mockBlockerCalculator = {
+          calculate: () => ({
+            coreBlockers: [
+              {
+                clauseId: 'clause-1',
+                clauseDescription: 'High impact blocker',
+                lastMileRate: 0.5, // <= 0.8
+                impactScore: 0.35, // > 0.3
+                compositeScore: 0.425,
+              },
+            ],
+            nonCoreConstraints: [],
+            compositeScores: new Map(),
+          }),
+        };
+
+        const generator = new BlockerSectionGenerator({
+          formattingService,
+          blockerCalculator: mockBlockerCalculator,
+        });
+
+        const simulationResult = {
+          triggerCount: 40,
+          sampleCount: 1000,
+          clauseTracking: [{ clauseId: 'clause-1' }],
+        };
+
+        const section = generator.generateBlockerAnalysis(
+          [createMockBlocker()],
+          1000,
+          null,
+          [],
+          null,
+          null,
+          false,
+          [],
+          null,
+          simulationResult
+        );
+
+        expect(section).toContain('High impact');
+      });
+
+      it('shows "Meaningful contribution" insight for impactScore > 0.1', () => {
+        const formattingService = new ReportFormattingService();
+        const mockBlockerCalculator = {
+          calculate: () => ({
+            coreBlockers: [
+              {
+                clauseId: 'clause-1',
+                clauseDescription: 'Moderate blocker',
+                lastMileRate: 0.5, // <= 0.8
+                impactScore: 0.15, // > 0.1 but <= 0.3
+                compositeScore: 0.325,
+              },
+            ],
+            nonCoreConstraints: [],
+            compositeScores: new Map(),
+          }),
+        };
+
+        const generator = new BlockerSectionGenerator({
+          formattingService,
+          blockerCalculator: mockBlockerCalculator,
+        });
+
+        const simulationResult = {
+          triggerCount: 40,
+          sampleCount: 1000,
+          clauseTracking: [{ clauseId: 'clause-1' }],
+        };
+
+        const section = generator.generateBlockerAnalysis(
+          [createMockBlocker()],
+          1000,
+          null,
+          [],
+          null,
+          null,
+          false,
+          [],
+          null,
+          simulationResult
+        );
+
+        expect(section).toContain('Meaningful contribution');
+      });
+    });
+
+    it('shows non-core constraints count when present', () => {
+      const formattingService = new ReportFormattingService();
+      const mockBlockerCalculator = {
+        calculate: () => ({
+          coreBlockers: [
+            {
+              clauseId: 'clause-1',
+              clauseDescription: 'Main blocker',
+              lastMileRate: 0.6,
+              impactScore: 0.25,
+              compositeScore: 0.425,
+            },
+          ],
+          nonCoreConstraints: [
+            { clauseId: 'non-core-1', inRegimePassRate: 0.96 },
+            { clauseId: 'non-core-2', inRegimePassRate: 0.98 },
+          ],
+          compositeScores: new Map(),
+        }),
+      };
+
+      const generator = new BlockerSectionGenerator({
+        formattingService,
+        blockerCalculator: mockBlockerCalculator,
+      });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        clauseTracking: [
+          { clauseId: 'clause-1' },
+          { clauseId: 'non-core-1' },
+          { clauseId: 'non-core-2' },
+        ],
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).toContain('2 non-core constraints');
+    });
+
+    it('uses clauseId as fallback when clauseDescription is missing', () => {
+      const formattingService = new ReportFormattingService();
+      const mockBlockerCalculator = {
+        calculate: () => ({
+          coreBlockers: [
+            {
+              clauseId: 'fallback-clause-id',
+              // clauseDescription is intentionally omitted
+              lastMileRate: 0.6,
+              impactScore: 0.25,
+              compositeScore: 0.425,
+            },
+          ],
+          nonCoreConstraints: [],
+          compositeScores: new Map(),
+        }),
+      };
+
+      const generator = new BlockerSectionGenerator({
+        formattingService,
+        blockerCalculator: mockBlockerCalculator,
+      });
+
+      const simulationResult = {
+        triggerCount: 40,
+        sampleCount: 1000,
+        clauseTracking: [{ clauseId: 'fallback-clause-id' }],
+      };
+
+      const section = generator.generateBlockerAnalysis(
+        [createMockBlocker()],
+        1000,
+        null,
+        [],
+        null,
+        null,
+        false,
+        [],
+        null,
+        simulationResult
+      );
+
+      expect(section).toContain('fallback-clause-id');
+    });
+  });
 });

@@ -5,6 +5,8 @@
  * sweeps are not informative.
  */
 
+import { actionabilityConfig } from '../../config/actionabilityConfig.js';
+
 /**
  * Target pass rates for threshold suggestions in zero-hit analysis.
  * @constant {number[]}
@@ -198,6 +200,34 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
             betterOption.threshold,
             isIntegerDomain
           )} for ~${this.#formattingService.formatPercentage(betterOption.passRate)} pass rate.`
+        );
+      }
+    }
+
+    // Add threshold suggestions for low but non-zero pass rates (1-10%)
+    if (
+      actionabilityConfig.thresholdSuggestions.enabled &&
+      actionabilityConfig.thresholdSuggestions.includeInNonZeroHitCases &&
+      originalRate > 0 &&
+      originalRate < 0.1
+    ) {
+      const suggestions = this.#computeThresholdSuggestions(
+        grid,
+        originalThreshold,
+        operator,
+        isIntegerDomain,
+        'passRate'
+      );
+      if (suggestions.length > 0) {
+        lines.push('');
+        lines.push('#### Threshold Suggestions for Higher Pass Rates');
+        lines.push('');
+        lines.push(
+          this.#formatThresholdSuggestionsTable(
+            suggestions,
+            conditionPath,
+            isIntegerDomain
+          )
         );
       }
     }
@@ -659,6 +689,34 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
           )} would increase expression trigger rate to ~${this.#formattingService.formatPercentage(
             betterOption.triggerRate
           )}.`
+        );
+      }
+    }
+
+    // Add threshold suggestions for low but non-zero trigger rates (1-10%)
+    if (
+      actionabilityConfig.thresholdSuggestions.enabled &&
+      actionabilityConfig.thresholdSuggestions.includeInNonZeroHitCases &&
+      originalRate > 0 &&
+      originalRate < 0.1
+    ) {
+      const suggestions = this.#computeThresholdSuggestions(
+        grid,
+        originalThreshold,
+        operator,
+        isIntegerDomain,
+        'triggerRate'
+      );
+      if (suggestions.length > 0) {
+        lines.push('');
+        lines.push('#### Threshold Suggestions for Higher Trigger Rates');
+        lines.push('');
+        lines.push(
+          this.#formatThresholdSuggestionsTable(
+            suggestions,
+            varPath,
+            isIntegerDomain
+          )
         );
       }
     }
