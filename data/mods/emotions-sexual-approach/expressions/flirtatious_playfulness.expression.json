@@ -194,5 +194,6 @@
         "tactile": "Someone's presence feels light, charged, teasing, like a playful tap meant to make me turn."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0005
 }

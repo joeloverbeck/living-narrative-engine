@@ -91,6 +91,11 @@ module.exports = {
       entry: 'src/expressionDiagnostics/workers/MonteCarloReportWorker.js',
       output: 'expressionDiagnostics/workers/MonteCarloReportWorker.js',
     },
+    {
+      name: 'prototype-analysis',
+      entry: 'src/prototype-analysis.js',
+      output: 'prototype-analysis.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -110,6 +115,7 @@ module.exports = {
     'damage-simulator.html',
     'expressions-simulator.html',
     'expression-diagnostics.html',
+    'prototype-analysis.html',
   ],
 
   // Static asset directories

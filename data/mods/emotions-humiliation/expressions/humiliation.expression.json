@@ -161,6 +161,6 @@
         "tactile": "Someone's body goes rigid the instant before pulling back—every muscle locked, breath held tight. When touched, they flinch away as if burned, or freeze completely, trembling. Their skin might feel clammy, furnace-hot, or cold. The desperate tension radiates through their frame: they want to vanish, but their body won't cooperate, caught between fleeing and shutting down."
     },
     "category": "shame",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0037
 }

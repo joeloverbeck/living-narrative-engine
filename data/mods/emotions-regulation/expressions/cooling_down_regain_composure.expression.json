@@ -335,5 +335,5 @@
         "tactile": "The air feels less tight around them, like tension is bleeding out through their shoulders and hands. The heat is still there, but it's contained—no longer spilling over.",
         "limited": "Something in {actor} settles: the agitation eases, and their control becomes visible again."
     },
-    "diagnosticStatus": "rare"
+    "diagnosticStatus": "unknown"
 }

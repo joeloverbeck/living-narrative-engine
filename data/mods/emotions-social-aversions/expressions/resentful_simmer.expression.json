@@ -216,6 +216,6 @@
         "limited": "There’s a restrained edge to {actor}: controlled, cool, and hard to budge."
     },
     "category": "anger",
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

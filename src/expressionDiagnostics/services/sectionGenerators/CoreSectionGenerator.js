@@ -282,6 +282,372 @@ class CoreSectionGenerator {
     return `## Executive Summary\n\n**Trigger Rate**: ${this.#formattingService.formatPercentage(triggerRate)} (95% CI: ${this.#formattingService.formatPercentage(ci.low)} - ${this.#formattingService.formatPercentage(ci.high)})\n**Rarity**: ${rarity}${rarityNote}\n\n${summary || 'No summary available.'}\n\n---\n`;
   }
 
+
+  /**
+   * Generate the Expected Trigger Rate Sanity Box section.
+   * Helps users understand whether 0 hits (or low hits) is statistically
+   * expected or surprising based on naive probability estimates.
+   *
+   * @param {object} simulationResult - Monte Carlo result with triggerCount, sampleCount
+   * @param {object|object[]} blockers - Blocker tree or array with per-clause failure data
+   * @returns {string} Markdown section
+   */
+  generateSanityBoxSection(simulationResult, blockers) {
+    if (!simulationResult || !blockers) {
+      return '';
+    }
+
+    const { triggerCount = 0, sampleCount = 0 } = simulationResult;
+    if (sampleCount === 0) {
+      return '';
+    }
+
+    // Extract leaf pass rates from blockers (handling tree structure)
+    const leafPassRates = this.#extractLeafPassRates(blockers);
+    if (leafPassRates.length === 0) {
+      return '';
+    }
+
+    // Calculate naive probability
+    const { naiveProbability, factors, warnings } =
+      this.#statisticalService.calculateNaiveProbability(leafPassRates);
+
+    // Calculate expected hits
+    const expectedHits = naiveProbability * sampleCount;
+
+    // Calculate P(k=0 | expected)
+    const pZeroHits = this.#statisticalService.calculatePoissonProbability(0, expectedHits);
+
+    // Classify the result
+    const classification = this.#classifySanityResult({
+      expectedHits,
+      actualHits: triggerCount,
+      pZeroHits,
+    });
+
+    // Build section
+    const lines = [
+      '## Independence Baseline Comparison',
+      '',
+      'This section compares Monte Carlo results against naive probability estimates (assuming clause independence) to identify correlation effects. Deviations indicate clauses are not statistically independent.',
+      '',
+      `| Metric | Value |`,
+      `|--------|-------|`,
+      `| Naive probability (product of pass rates) | ${this.#formattingService.formatScientificNotation(naiveProbability)} |`,
+      `| Expected hits per ${this.#formattingService.formatCount(sampleCount)} samples | ${expectedHits.toFixed(2)} |`,
+      `| Actual hits | ${triggerCount} |`,
+      `| P(0 hits \\| expected=${expectedHits.toFixed(2)}) | ${this.#formattingService.formatScientificNotation(pZeroHits)} |`,
+      '',
+      `### Interpretation`,
+      '',
+      `${this.#formattingService.formatSanityStatus(classification.status)}: ${classification.explanation}`,
+    ];
+
+    // Add warnings if any
+    if (warnings.length > 0) {
+      lines.push('', '**Warnings**:', ...warnings.map(w => `- ${w}`));
+    }
+
+    // Detect overconstrained conjunctions
+    const overconstrainedInfo = this.detectOverconstrainedConjunctions(blockers);
+    if (overconstrainedInfo.length > 0) {
+      lines.push('', '### Overconstrained Conjunction Warnings', '');
+      for (const info of overconstrainedInfo) {
+        const emotionList = info.lowPassChildren
+          .map((c) => c.emotionName)
+          .join(', ');
+        const jointPct = (info.naiveJointProbability * 100).toFixed(4);
+        lines.push(
+          `> **Warning**: ${info.lowPassChildren.length} emotion thresholds ` +
+            `(${emotionList}) each have <10% pass rate and are ANDed together. ` +
+            `Joint probability: ${jointPct}%. ` +
+            `Consider (2-of-${info.lowPassChildren.length}) rule or OR-softening.`
+        );
+      }
+      lines.push('');
+    }
+
+    // Add factor breakdown for transparency (limit to 15 for readability)
+    if (factors.length > 0 && factors.length <= 15) {
+      lines.push(
+        '',
+        '### Clause Pass Rate Factors',
+        '',
+        '| Clause | Pass Rate (in-regime) |',
+        '|--------|------------------------|',
+        ...factors.map(f => `| ${f.clauseId} | ${this.#formattingService.formatPercentage(f.rate)} |`)
+      );
+    } else if (factors.length > 15) {
+      lines.push(
+        '',
+        `> **Note**: ${factors.length} clause factors omitted for brevity.`
+      );
+    }
+
+    lines.push('', '---', '');
+    return lines.join('\n');
+  }
+
+  /**
+   * Extract leaf pass rates from blockers tree structure.
+   * Handles both flat arrays and hierarchical HierarchicalClauseNode trees.
+   *
+   * @private
+   * @param {object|object[]} blockers - Blocker tree or array
+   * @returns {Array<{clauseId: string, inRegimePassRate?: number, passRate?: number, failureRate?: number}>}
+   */
+  #extractLeafPassRates(blockers) {
+    const leaves = [];
+
+    // Handle array of blockers
+    const blockerArray = Array.isArray(blockers) ? blockers : [blockers];
+
+    const traverse = (node) => {
+      if (!node) return;
+
+      // Get hierarchical breakdown if present
+      const hb = node.hierarchicalBreakdown ?? node;
+
+      // Check if this is a leaf node (no children or nodeType === 'leaf')
+      const isLeaf =
+        hb.nodeType === 'leaf' || (!hb.children || hb.children.length === 0);
+
+      if (isLeaf) {
+        // Calculate pass rate from available data
+        // Prefer inRegimePassRate if directly provided, otherwise calculate from failure rate
+        let passRate;
+        let failureRate;
+        if (hb.inRegimePassRate != null) {
+          passRate = hb.inRegimePassRate;
+          failureRate = 1 - passRate;
+        } else if (hb.passRate != null) {
+          passRate = hb.passRate;
+          failureRate = 1 - passRate;
+        } else {
+          failureRate = hb.inRegimeFailureRate ?? hb.failureRate ?? 0;
+          passRate = 1 - failureRate;
+        }
+
+        leaves.push({
+          clauseId:
+            hb.clauseId ?? hb.description ?? hb.variablePath ?? 'unknown',
+          inRegimePassRate: passRate,
+          passRate: passRate,
+          failureRate: failureRate,
+        });
+      } else if (hb.nodeType === 'or') {
+        // For OR blocks, use the union pass rate as a single factor
+        // OR blocks pass if ANY child passes
+        let orPassRate;
+        let orFailureRate;
+
+        // PREFERRED: Use in-regime counts for in-regime calculation (FIX for Claim B)
+        if (hb.orUnionPassInRegimeCount != null && hb.inRegimeEvaluationCount > 0) {
+          orPassRate = hb.orUnionPassInRegimeCount / hb.inRegimeEvaluationCount;
+          orFailureRate = 1 - orPassRate;
+        }
+        // FALLBACK: Legacy data with clamping to prevent >100% rates
+        else if (hb.orUnionPassCount != null && hb.inRegimeEvaluationCount > 0) {
+          orPassRate = hb.orUnionPassCount / hb.inRegimeEvaluationCount;
+          // Clamp to valid probability range to handle domain mismatch
+          if (orPassRate > 1.0) {
+            orPassRate = 1.0;
+          }
+          orFailureRate = 1 - orPassRate;
+        } else if (hb.inRegimePassRate != null) {
+          orPassRate = hb.inRegimePassRate;
+          orFailureRate = 1 - orPassRate;
+        } else {
+          orFailureRate = hb.inRegimeFailureRate ?? hb.failureRate ?? 0;
+          orPassRate = 1 - orFailureRate;
+        }
+
+        leaves.push({
+          clauseId: `OR Block (${hb.id ?? hb.description ?? 'unnamed'})`,
+          inRegimePassRate: orPassRate,
+          passRate: orPassRate,
+          failureRate: orFailureRate,
+        });
+      } else if (Array.isArray(hb.children)) {
+        // Recurse into AND-block children
+        hb.children.forEach(traverse);
+      }
+    };
+
+    for (const blocker of blockerArray) {
+      traverse(blocker);
+    }
+
+    return leaves;
+  }
+
+  /**
+   * Classify sanity check result.
+   *
+   * @private
+   * @param {object} params
+   * @param {number} params.expectedHits - Expected number of hits based on naive probability
+   * @param {number} params.actualHits - Actual number of hits from simulation
+   * @param {number} params.pZeroHits - Probability of zero hits given expected
+   * @returns {{status: string, explanation: string}}
+   */
+  #classifySanityResult({ expectedHits, actualHits, pZeroHits }) {
+    // Guard against invalid expected hits
+    if (expectedHits <= 0) {
+      return actualHits === 0
+        ? {
+            status: 'expected_rare',
+            explanation:
+              'Zero expected hits - expression cannot trigger under independence assumption.',
+          }
+        : {
+            status: 'data_inconsistency',
+            explanation: `Got ${actualHits} hits with ≤0 expected. Check data integrity.`,
+          };
+    }
+
+    // Very rare expression - 0 hits is expected
+    if (expectedHits < 1) {
+      return {
+        status: 'expected_rare',
+        explanation: `Expression is inherently rare (expected ${expectedHits.toFixed(2)} hits). Zero hits is mathematically expected.`,
+      };
+    }
+
+    // Zero hits but within statistical variation (p > 5%)
+    if (actualHits === 0 && pZeroHits > 0.05) {
+      return {
+        status: 'statistically_plausible',
+        explanation: `Zero hits has ${(pZeroHits * 100).toFixed(1)}% probability given expected ${expectedHits.toFixed(1)} hits.`,
+      };
+    }
+
+    // Zero hits but very unexpected (p < 1% and expected >= 5)
+    if (actualHits === 0 && expectedHits >= 5 && pZeroHits < 0.01) {
+      return {
+        status: 'unexpected_zero',
+        explanation: `Zero hits is surprising (p=${this.#formattingService.formatScientificNotation(pZeroHits)}). Clause correlations may amplify blocking effects.`,
+      };
+    }
+
+    // NEW: Deviation check for non-zero actual hits
+    // A ratio outside [0.01, 100] indicates the independence assumption is badly violated
+    const ratio = actualHits / expectedHits;
+    if (ratio < 0.01 || ratio > 100) {
+      const ratioFormatted =
+        ratio < 0.01
+          ? ratio.toExponential(2)
+          : this.#formattingService.formatNumber(ratio, 2);
+      return {
+        status: 'large_deviation',
+        explanation: `Actual hits (${actualHits}) differ significantly from expected (${expectedHits.toFixed(1)}). Ratio: ${ratioFormatted}. This indicates clause correlations amplify or suppress triggering beyond independence assumptions.`,
+      };
+    }
+
+    // Actual hits roughly match expectation
+    return {
+      status: 'normal',
+      explanation: `Actual hits (${actualHits}) align with expected (${expectedHits.toFixed(1)}).`,
+    };
+  }
+
+
+  /**
+   * Detect AND nodes with ≥3 low-pass emotion threshold children.
+   * These represent structurally overconstrained conjunctions that are
+   * essentially impossible to satisfy.
+   *
+   * @param {object|object[]} blockers - Blocker tree or array
+   * @returns {Array<{andNodeId: string, lowPassChildren: Array<{clauseId: string, emotionName: string, passRate: number, threshold: number|null, operator: string}>, naiveJointProbability: number, suggestions: string[]}>}
+   */
+  detectOverconstrainedConjunctions(blockers) {
+    const PASS_RATE_THRESHOLD = 0.10;
+    const MIN_LOW_PASS_CHILDREN = 3;
+    const results = [];
+
+    const traverse = (node, path = '') => {
+      if (!node) return;
+      const hb = node.hierarchicalBreakdown ?? node;
+
+      // Only process AND nodes
+      if (hb.nodeType === 'and' && Array.isArray(hb.children)) {
+        const lowPassChildren = [];
+
+        for (const child of hb.children) {
+          const childHb = child.hierarchicalBreakdown ?? child;
+          const isLeaf =
+            childHb.nodeType === 'leaf' ||
+            !childHb.children ||
+            childHb.children.length === 0;
+
+          if (isLeaf) {
+            let passRate;
+            if (childHb.inRegimePassRate != null) {
+              passRate = childHb.inRegimePassRate;
+            } else if (childHb.passRate != null) {
+              passRate = childHb.passRate;
+            } else {
+              const failureRate =
+                childHb.inRegimeFailureRate ?? childHb.failureRate ?? 0;
+              passRate = 1 - failureRate;
+            }
+
+            // Check if this is an emotion threshold with low pass rate
+            if (passRate < PASS_RATE_THRESHOLD) {
+              const emotionName = this.#extractEmotionName(childHb);
+              if (emotionName) {
+                lowPassChildren.push({
+                  clauseId:
+                    childHb.clauseId ?? childHb.description ?? 'unknown',
+                  emotionName,
+                  passRate,
+                  threshold: childHb.thresholdValue ?? null,
+                  operator:
+                    childHb.comparisonOperator ?? childHb.operator ?? '>=',
+                });
+              }
+            }
+          }
+        }
+
+        if (lowPassChildren.length >= MIN_LOW_PASS_CHILDREN) {
+          const naiveJoint = lowPassChildren.reduce(
+            (acc, c) => acc * c.passRate,
+            1
+          );
+          results.push({
+            andNodeId: (hb.clauseId ?? path) || 'root_and',
+            lowPassChildren,
+            naiveJointProbability: naiveJoint,
+            suggestions: [], // Will be populated by RecommendationEngine
+          });
+        }
+
+        // Continue traversing children
+        hb.children.forEach((child, i) => traverse(child, `${path}/child_${i}`));
+      } else if (Array.isArray(hb.children)) {
+        hb.children.forEach((child, i) => traverse(child, `${path}/child_${i}`));
+      }
+    };
+
+    const blockerArray = Array.isArray(blockers) ? blockers : [blockers];
+    blockerArray.forEach((b, i) => traverse(b, `blocker_${i}`));
+
+    return results;
+  }
+
+  /**
+   * Extract emotion name from a clause node.
+   * @param {Object} node - Hierarchical breakdown node
+   * @returns {string|null} Emotion name or null
+   */
+  #extractEmotionName(node) {
+    const path = node.variablePath ?? node.clauseId ?? '';
+    // Pattern: emotions.{emotionName} or var:emotions.{emotionName}
+    const match = path.match(/emotions\.(\w+)/);
+    return match ? match[1] : null;
+  }
+
   /**
    * Generate the Sampling Coverage section.
    * @param {object|null} samplingCoverage

@@ -187,6 +187,6 @@
         "limited": "{actor} shows a brief flash of embarrassment—blushing, averting their gaze, and recalibrating their posture before carrying on."
     },
     "category": "shame",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0001
 }

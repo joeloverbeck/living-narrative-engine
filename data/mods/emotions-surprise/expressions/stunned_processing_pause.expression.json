@@ -290,6 +290,6 @@
         "auditory": "I hear a sharp intake that doesn’t become a scream—more like someone swallowed their next sentence. A beat of silence follows, then a careful, delayed \"...wait.\"",
         "tactile": "The air feels suddenly tight, like the room is holding its breath. There’s a tiny tremor in still hands—muscles braced to move, waiting for the brain to decide how."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0002
 }

@@ -153,6 +153,6 @@
         "auditory": "I hear a long, thin exhale and a tired dryness in the voice—short answers, a faint edge that says ‘don’t ask me for more.’",
         "tactile": "The air feels heavy around them; their body carries a dull ache of overuse—shoulders set, hands slow, like everything takes an extra step."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0002
 }

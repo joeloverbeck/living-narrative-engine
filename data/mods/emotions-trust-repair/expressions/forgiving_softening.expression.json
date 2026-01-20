@@ -227,6 +227,6 @@
         "tactile": "The tension drains from my hands and shoulders; the air around me feels less prickly, like I'm no longer bracing for impact.",
         "limited": "A quiet thaw—guard down, breath steadier, the urge to fight replaced by a cautious willingness to be kind."
     },
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0055
 }

@@ -33,6 +33,7 @@ import PrototypeTypeDetector from '../../expressionDiagnostics/services/Prototyp
 import EmotionCalculatorAdapter from '../../expressionDiagnostics/adapters/EmotionCalculatorAdapter.js';
 import SensitivityAnalyzer from '../../expressionDiagnostics/services/SensitivityAnalyzer.js';
 import PrototypeSynthesisService from '../../expressionDiagnostics/services/PrototypeSynthesisService.js';
+import EmotionSimilarityService from '../../expressionDiagnostics/services/EmotionSimilarityService.js';
 import NonAxisClauseExtractor from '../../expressionDiagnostics/services/NonAxisClauseExtractor.js';
 import NonAxisFeasibilityAnalyzer from '../../expressionDiagnostics/services/NonAxisFeasibilityAnalyzer.js';
 import FitFeasibilityConflictDetector from '../../expressionDiagnostics/services/FitFeasibilityConflictDetector.js';
@@ -46,6 +47,12 @@ import ConstructiveWitnessSearcher from '../../expressionDiagnostics/services/Co
 import ImportanceSamplingValidator from '../../expressionDiagnostics/services/ImportanceSamplingValidator.js';
 import EditSetGenerator from '../../expressionDiagnostics/services/EditSetGenerator.js';
 import ActionabilitySectionGenerator from '../../expressionDiagnostics/services/sectionGenerators/ActionabilitySectionGenerator.js';
+import PrototypeCreateSuggestionBuilder from '../../expressionDiagnostics/services/recommendationBuilders/PrototypeCreateSuggestionBuilder.js';
+import GateClampRecommendationBuilder from '../../expressionDiagnostics/services/recommendationBuilders/GateClampRecommendationBuilder.js';
+import SoleBlockerRecommendationBuilder from '../../expressionDiagnostics/services/recommendationBuilders/SoleBlockerRecommendationBuilder.js';
+import AxisConflictAnalyzer from '../../expressionDiagnostics/services/recommendationBuilders/AxisConflictAnalyzer.js';
+import OverconstrainedConjunctionBuilder from '../../expressionDiagnostics/services/recommendationBuilders/OverconstrainedConjunctionBuilder.js';
+import { registerPrototypeOverlapServices } from './prototypeOverlapRegistrations.js';
 
 /**
  * Register Expression Diagnostics services with the DI container
@@ -385,6 +392,74 @@ export function registerExpressionDiagnosticsServices(container) {
   );
   safeDebug(`Registered ${diagnosticsTokens.IPrototypeSynthesisService}`);
 
+  // Prototype Create Suggestion Builder (RECENGREFANA-001)
+  // Note: Must be registered AFTER PrototypeSynthesisService (dependency)
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeCreateSuggestionBuilder,
+    (c) =>
+      new PrototypeCreateSuggestionBuilder({
+        prototypeSynthesisService: c.resolve(
+          diagnosticsTokens.IPrototypeSynthesisService
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IPrototypeCreateSuggestionBuilder}`);
+
+  // Gate Clamp Recommendation Builder (RECENGREFANA-002)
+  // Note: Stateless builder with no dependencies
+  registrar.singletonFactory(
+    diagnosticsTokens.IGateClampRecommendationBuilder,
+    () => new GateClampRecommendationBuilder()
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IGateClampRecommendationBuilder}`);
+
+  // Sole Blocker Recommendation Builder (RECENGREFANA-005)
+  // Note: Stateless builder with no dependencies
+  registrar.singletonFactory(
+    diagnosticsTokens.ISoleBlockerRecommendationBuilder,
+    () => new SoleBlockerRecommendationBuilder()
+  );
+  safeDebug(`Registered ${diagnosticsTokens.ISoleBlockerRecommendationBuilder}`);
+
+  // Emotion Similarity Service (Overconstrained conjunction detection)
+  registrar.singletonFactory(
+    diagnosticsTokens.IEmotionSimilarityService,
+    (c) =>
+      new EmotionSimilarityService({
+        prototypeRegistryService: c.resolve(
+          diagnosticsTokens.IPrototypeRegistryService
+        ),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IEmotionSimilarityService}`);
+
+  // Axis Conflict Analyzer (RECENGREFANA-003)
+  // Note: Must be registered AFTER EmotionSimilarityService (dependency)
+  registrar.singletonFactory(
+    diagnosticsTokens.IAxisConflictAnalyzer,
+    (c) =>
+      new AxisConflictAnalyzer({
+        emotionSimilarityService: c.resolve(
+          diagnosticsTokens.IEmotionSimilarityService
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IAxisConflictAnalyzer}`);
+
+  // Overconstrained Conjunction Builder (RECENGREFANA-004)
+  // Note: Must be registered AFTER EmotionSimilarityService (optional dependency)
+  registrar.singletonFactory(
+    diagnosticsTokens.IOverconstrainedConjunctionBuilder,
+    (c) =>
+      new OverconstrainedConjunctionBuilder({
+        emotionSimilarityService: c.resolve(
+          diagnosticsTokens.IEmotionSimilarityService
+        ),
+      })
+  );
+  safeDebug(`Registered ${diagnosticsTokens.IOverconstrainedConjunctionBuilder}`);
+
   registrar.singletonFactory(
     diagnosticsTokens.ISensitivityAnalyzer,
     (c) =>
@@ -526,6 +601,10 @@ export function registerExpressionDiagnosticsServices(container) {
   // Note: Additional services will be registered as they're implemented
   // - ISmtSolver (EXPDIA-013)
   // - IThresholdSuggester (EXPDIA-015)
+
+  // Prototype Overlap Analysis (PROOVEANA series)
+  registerPrototypeOverlapServices(registrar);
+  safeDebug('Registered Prototype Overlap Analysis services');
 
   safeDebug('Expression Diagnostics Registration: completed.');
 }

@@ -190,6 +190,6 @@
     "actor_description": "The room has people in it, noise in it-maybe even faces turned my way-and none of it reaches. It's like there's a pane of glass between me and everything else. I can think of words to say, but they feel pre-translated, already wrong. I'm here, technically. I just don't feel with anyone.",
     "description_text": "{actor} drifts behind their own eyes. Their posture closes-shoulders in, hands kept near the body-as if they're taking up less space. They answer a beat late, when they answer at all, like the room is slightly out of range.",
     "category": "affection",
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0179
 }

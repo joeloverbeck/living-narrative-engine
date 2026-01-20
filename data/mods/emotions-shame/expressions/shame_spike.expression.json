@@ -156,5 +156,6 @@
         "tactile": "A body pulls inward; the air feels tighter, as if someone's trying to occupy less space without moving."
     },
     "category": "shame",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0032
 }

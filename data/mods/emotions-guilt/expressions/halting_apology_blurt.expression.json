@@ -186,6 +186,6 @@
         "tactile": "The air feels tight with held breath and restless hands—fingers worrying at fabric, shoulders locked, posture trying to stay forward while the body wants to shrink.",
         "limited": "An awkward, earnest apology breaks out—messy but unmistakably meant."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0001
 }

@@ -162,6 +162,6 @@
         "limited": "A sudden, sustained jolt of fear snaps attention into a narrow, urgent tunnel."
     },
     "category": "threat",
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

@@ -501,6 +501,70 @@ class StatisticalComputationService {
   #evaluateComparison(value, operator, threshold) {
     return evaluateConstraint(value, operator, threshold);
   }
+
+
+  // ===========================================================================
+  // Sanity Box Statistical Methods
+  // ===========================================================================
+
+  /**
+   * Calculate naive probability as product of clause pass rates.
+   * This assumes independence between clauses, providing a baseline estimate
+   * for comparison with Monte Carlo simulation results.
+   *
+   * @param {object[]} clauseFailures - Array with passRate or inRegimePassRate
+   * @param {object} [options]
+   * @param {boolean} [options.useInRegime=true] - Prefer in-regime rates
+   * @returns {{naiveProbability: number, factors: Array<{clauseId: string, rate: number}>, warnings: string[]}}
+   */
+  calculateNaiveProbability(clauseFailures, { useInRegime = true } = {}) {
+    if (!Array.isArray(clauseFailures) || clauseFailures.length === 0) {
+      return { naiveProbability: 1.0, factors: [], warnings: ['No clause data available'] };
+    }
+
+    const factors = [];
+    const warnings = [];
+    let product = 1.0;
+
+    for (const clause of clauseFailures) {
+      // Get pass rate: prefer in-regime, fallback to global, compute from failure rate
+      const rate = useInRegime && clause.inRegimePassRate != null
+        ? clause.inRegimePassRate
+        : clause.passRate != null
+          ? clause.passRate
+          : 1 - (clause.failureRate ?? 0);
+
+      factors.push({ clauseId: clause.clauseId ?? 'unknown', rate });
+      product *= rate;
+
+      if (rate === 0) {
+        warnings.push(`Clause ${clause.clauseId ?? 'unknown'} has 0% pass rate`);
+      }
+    }
+
+    return { naiveProbability: product, factors, warnings };
+  }
+
+  /**
+   * Calculate Poisson probability P(k events | expected λ).
+   * Used for sanity checking whether observed hit counts are statistically
+   * plausible given an expected rate.
+   *
+   * @param {number} k - Number of observed events
+   * @param {number} lambda - Expected rate (mean)
+   * @returns {number} Probability P(k | λ)
+   */
+  calculatePoissonProbability(k, lambda) {
+    if (lambda <= 0) return k === 0 ? 1.0 : 0.0;
+    if (k === 0) return Math.exp(-lambda);
+
+    // General case: (λ^k * e^(-λ)) / k!
+    // Use log-space to avoid overflow: exp(k*ln(λ) - λ - ln(k!))
+    let logFactorial = 0;
+    for (let i = 2; i <= k; i++) logFactorial += Math.log(i);
+
+    return Math.exp(k * Math.log(lambda) - lambda - logFactorial);
+  }
 }
 
 export default StatisticalComputationService;

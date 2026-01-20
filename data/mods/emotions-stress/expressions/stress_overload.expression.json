@@ -241,6 +241,6 @@
         "limited": "Someone is visibly overloaded: urgent, strained, and running out of spare attention."
     },
     "category": "threat",
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

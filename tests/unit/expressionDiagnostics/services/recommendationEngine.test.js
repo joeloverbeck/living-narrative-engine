@@ -107,6 +107,98 @@ describe('RecommendationEngine', () => {
     ).toBe(true);
   });
 
+  // ============================================================================
+  // Change D: Specific mismatch titles (Monte Carlo information improvements)
+  // ============================================================================
+
+  describe('mismatch title specificity (Change D)', () => {
+    it('uses "gate suppresses emotion" title for gate-only mismatch', () => {
+      const engine = new RecommendationEngine();
+      const facts = baseFacts();
+      facts.clauses[0] = {
+        ...facts.clauses[0],
+        rawPassInRegimeCount: 120,
+        lostPassInRegimeCount: 40,
+        lostPassRateInRegime: 40 / 120, // Triggers gate mismatch
+      };
+      facts.prototypes[0] = {
+        ...facts.prototypes[0],
+        gateFailRate: 0.05,
+        gateFailCount: 20,
+        gatePassCount: 380,
+        pThreshGivenGate: 0.8, // High threshold pass given gate - no threshold mismatch
+        meanValueGivenGate: 0.7, // High mean - no threshold mismatch
+      };
+
+      const recommendations = engine.generate(facts);
+
+      expect(recommendations).toHaveLength(1);
+      expect(recommendations[0].title).toBe(
+        'Prototype gate suppresses emotion in this regime'
+      );
+    });
+
+    it('uses "threshold too high" title for threshold-only mismatch', () => {
+      const engine = new RecommendationEngine();
+      const facts = baseFacts();
+      facts.prototypes[0] = {
+        ...facts.prototypes[0],
+        moodSampleCount: 120,
+        gateFailCount: 10, // Low gate fail rate - no gate mismatch
+        gatePassCount: 110,
+        thresholdPassGivenGateCount: 5,
+        thresholdPassCount: 5,
+        gateFailRate: 10 / 120, // ~8% - below 10% gate mismatch threshold
+        gatePassRate: 110 / 120,
+        pThreshGivenGate: 0.045, // Very low - triggers threshold mismatch
+        pThreshEffective: 0.04,
+        meanValueGivenGate: 0.35, // Low mean - triggers threshold mismatch
+        failedGateCounts: [],
+        compatibilityScore: 0,
+      };
+
+      const recommendations = engine.generate(facts);
+
+      expect(recommendations).toHaveLength(1);
+      expect(recommendations[0].title).toBe(
+        'Threshold too high for observed distribution'
+      );
+    });
+
+    it('uses "both misaligned" title when gate and threshold both mismatched', () => {
+      const engine = new RecommendationEngine();
+      const facts = baseFacts();
+      facts.clauses[0] = {
+        ...facts.clauses[0],
+        rawPassInRegimeCount: 100,
+        lostPassInRegimeCount: 30,
+        lostPassRateInRegime: 0.3, // Triggers gate mismatch
+      };
+      facts.prototypes[0] = {
+        ...facts.prototypes[0],
+        moodSampleCount: 200,
+        gateFailCount: 60, // 30% gate fail - triggers gate mismatch
+        gatePassCount: 140,
+        thresholdPassGivenGateCount: 7,
+        thresholdPassCount: 7,
+        gateFailRate: 0.3,
+        gatePassRate: 0.7,
+        pThreshGivenGate: 0.05, // Low - triggers threshold mismatch
+        pThreshEffective: 0.035,
+        meanValueGivenGate: 0.35, // Low - triggers threshold mismatch
+        failedGateCounts: [{ gateId: 'valence >= 0.4', count: 40 }],
+        compatibilityScore: 0,
+      };
+
+      const recommendations = engine.generate(facts);
+
+      expect(recommendations).toHaveLength(1);
+      expect(recommendations[0].title).toBe(
+        'Prototype gate and threshold both misaligned'
+      );
+    });
+  });
+
   it('emits gate mismatch when lost-pass rate exceeds threshold even if gate fail rate is low', () => {
     const engine = new RecommendationEngine();
     const facts = baseFacts();
@@ -434,11 +526,217 @@ describe('RecommendationEngine', () => {
         String(item.label).includes('Axis conflict')
       )
     ).toBe(true);
+    // New binary choice format should include Option A with regime constraint
     expect(
       recommendations[0].actions.some((action) =>
         action.includes('moodAxes.valence >= 20')
       )
     ).toBe(true);
+    // Should have structuredActions for programmatic access
+    expect(recommendations[0].structuredActions).toBeDefined();
+    expect(recommendations[0].structuredActions.options).toHaveLength(2);
+    expect(recommendations[0].structuredActions.options[0].id).toBe(
+      'relax_regime'
+    );
+    expect(recommendations[0].structuredActions.options[1].id).toBe(
+      'change_emotion'
+    );
+    // Predicted effect should mention binary choice
+    expect(recommendations[0].predictedEffect).toContain('Option A or B');
+  });
+
+  it('axis sign conflict provides binary choice framing with both options', () => {
+    const mockEmotionSimilarityService = {
+      findEmotionsWithCompatibleAxisSign: (axisName, targetSign) => {
+        if (axisName === 'engagement' && targetSign === 'positive') {
+          return [
+            { emotionName: 'enthusiasm', axisWeight: 0.7 },
+            { emotionName: 'fascination', axisWeight: 1.0 },
+          ];
+        }
+        return [];
+      },
+    };
+    const engine = new RecommendationEngine({
+      emotionSimilarityService: mockEmotionSimilarityService,
+    });
+    const facts = {
+      expressionId: 'expr:binary-choice',
+      sampleCount: 500,
+      moodRegime: { definition: null, sampleCount: 300 },
+      overallPassRate: 0.1,
+      clauses: [
+        {
+          clauseId: 'var:emotions.disgust:>=:0.6',
+          clauseLabel: 'emotions.disgust >= 0.6',
+          clauseType: 'threshold',
+          operator: '>=',
+          prototypeId: 'disgust',
+          impact: 0.5,
+          thresholdValue: 0.6,
+        },
+      ],
+      prototypes: [
+        {
+          prototypeId: 'disgust',
+          moodSampleCount: 300,
+          gateFailCount: 30,
+          gatePassCount: 270,
+          thresholdPassGivenGateCount: 50,
+          thresholdPassCount: 50,
+          gateFailRate: 0.1,
+          gatePassRate: 0.9,
+          pThreshGivenGate: 50 / 270,
+          pThreshEffective: 0.15,
+          meanValueGivenGate: 0.4,
+          failedGateCounts: [],
+          compatibilityScore: -0.5,
+          axisConflicts: [
+            {
+              axis: 'engagement',
+              weight: -0.3,
+              constraintMin: 10,
+              constraintMax: 100,
+              conflictType: 'negative_weight_high_min',
+              contributionDelta: 0.5,
+              lostRawSum: 0.3,
+              lostIntensity: 0.3,
+              sources: [
+                {
+                  varPath: 'moodAxes.engagement',
+                  operator: '>=',
+                  threshold: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      invariants: [{ id: 'rate:overallPassRate', ok: true, message: '' }],
+    };
+
+    const recommendations = engine.generate(facts);
+
+    // Filter for axis_sign_conflict (facts may also trigger gate_incompatibility)
+    const axisConflictRecs = recommendations.filter(
+      (r) => r.type === 'axis_sign_conflict'
+    );
+    expect(axisConflictRecs).toHaveLength(1);
+    const rec = axisConflictRecs[0];
+
+    // Verify actions array has binary choice structure
+    expect(rec.actions.some((a) => a.includes('CONFLICT:'))).toBe(true);
+    expect(rec.actions.some((a) => a.includes('OPTION A:'))).toBe(true);
+    expect(rec.actions.some((a) => a.includes('OPTION B:'))).toBe(true);
+    expect(rec.actions.some((a) => a.includes('Trade-off:'))).toBe(true);
+
+    // Verify structuredActions has proper shape
+    expect(rec.structuredActions).toBeDefined();
+    expect(rec.structuredActions.conflictSummary).toBeTruthy();
+    expect(rec.structuredActions.conflictSummary).toContain('Engagement');
+    expect(rec.structuredActions.conflictSummary).toContain('disgust');
+
+    // Option A: relax regime
+    const optionA = rec.structuredActions.options[0];
+    expect(optionA.id).toBe('relax_regime');
+    expect(optionA.tradeoff).toContain('wider range');
+    expect(
+      optionA.actions.some((a) => a.includes('moodAxes.engagement >= 10'))
+    ).toBe(true);
+
+    // Option B: change emotion with alternatives
+    const optionB = rec.structuredActions.options[1];
+    expect(optionB.id).toBe('change_emotion');
+    expect(optionB.tradeoff).toContain('emotional signature');
+    expect(optionB.alternatives).toBeDefined();
+    expect(optionB.alternatives.length).toBeGreaterThan(0);
+
+    // Should include alternative emotion suggestions from the service
+    expect(
+      rec.actions.some((a) => a.includes('enthusiasm') || a.includes('Consider'))
+    ).toBe(true);
+  });
+
+  it('axis sign conflict works without emotionSimilarityService', () => {
+    const engine = new RecommendationEngine(); // No similarity service
+    const facts = {
+      expressionId: 'expr:no-similarity-service',
+      sampleCount: 500,
+      moodRegime: { definition: null, sampleCount: 300 },
+      overallPassRate: 0.1,
+      clauses: [
+        {
+          clauseId: 'var:emotions.fear:>=:0.5',
+          clauseLabel: 'emotions.fear >= 0.5',
+          clauseType: 'threshold',
+          operator: '>=',
+          prototypeId: 'fear',
+          impact: 0.4,
+          thresholdValue: 0.5,
+        },
+      ],
+      prototypes: [
+        {
+          prototypeId: 'fear',
+          moodSampleCount: 300,
+          gateFailCount: 30,
+          gatePassCount: 270,
+          thresholdPassGivenGateCount: 60,
+          thresholdPassCount: 60,
+          gateFailRate: 0.1,
+          gatePassRate: 0.9,
+          pThreshGivenGate: 60 / 270,
+          pThreshEffective: 0.18,
+          meanValueGivenGate: 0.35,
+          failedGateCounts: [],
+          compatibilityScore: -0.4,
+          axisConflicts: [
+            {
+              axis: 'agency_control',
+              weight: -0.5,
+              constraintMin: 5,
+              constraintMax: 100,
+              conflictType: 'negative_weight_high_min',
+              contributionDelta: 0.4,
+              lostRawSum: 0.2,
+              lostIntensity: 0.25,
+              sources: [
+                {
+                  varPath: 'moodAxes.agency_control',
+                  operator: '>=',
+                  threshold: 5,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      invariants: [{ id: 'rate:overallPassRate', ok: true, message: '' }],
+    };
+
+    const recommendations = engine.generate(facts);
+
+    // Filter for axis_sign_conflict (facts may also trigger gate_incompatibility)
+    const axisConflictRecs = recommendations.filter(
+      (r) => r.type === 'axis_sign_conflict'
+    );
+    expect(axisConflictRecs).toHaveLength(1);
+    const rec = axisConflictRecs[0];
+
+    // Should still provide binary choice even without alternatives
+    expect(rec.actions.some((a) => a.includes('OPTION A:'))).toBe(true);
+    expect(rec.actions.some((a) => a.includes('OPTION B:'))).toBe(true);
+
+    // Option B should still have fallback action
+    const optionB = rec.structuredActions.options[1];
+    expect(
+      optionB.actions.some((a) =>
+        a.includes('Adjust') && a.includes('weight toward 0')
+      )
+    ).toBe(true);
+
+    // Should format axis name nicely (snake_case to Title Case)
+    expect(rec.structuredActions.conflictSummary).toContain('Agency Control');
   });
 
   it('does not emit axis sign conflict recommendation for <= clauses', () => {
@@ -1221,5 +1519,202 @@ describe('RecommendationEngine - prototype_create_suggestion', () => {
         sevOrder[next.severity]
       );
     }
+  });
+});
+
+describe('RecommendationEngine - sole_blocker_edit recommendations', () => {
+  const createSoleBlockerFacts = (overrides = {}) => ({
+    expressionId: 'expr:test',
+    sampleCount: 500,
+    moodRegime: { definition: null, sampleCount: 500 },
+    overallPassRate: 0.3,
+    clauses: [
+      {
+        clauseId: 'var:emotions.anger:>=:0.5',
+        clauseLabel: 'emotions.anger >= 0.5',
+        clauseType: 'threshold',
+        operator: '>=',
+        thresholdValue: 0.5,
+        impact: 0.4,
+        lastMileFailRate: 0.42,
+        soleBlockerP50: 0.32,
+        soleBlockerP90: 0.18,
+        soleBlockerSampleCount: 120,
+        ...overrides,
+      },
+    ],
+    // Need at least one prototype for generate() to not return early
+    prototypes: [
+      {
+        prototypeId: 'proto:dummy',
+        gateFailRate: 0,
+        pThreshGivenGate: 1,
+        moodSampleCount: 500,
+      },
+    ],
+  });
+
+  it('should generate sole_blocker_edit recommendation when conditions are met', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts();
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec).toBeDefined();
+    expect(soleBlockerRec.title).toContain('Best First Edit');
+    expect(soleBlockerRec.title).toContain('Lower');
+  });
+
+  it('should include threshold suggestions with P50 and P90', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts();
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec.thresholdSuggestions).toBeDefined();
+    expect(soleBlockerRec.thresholdSuggestions.length).toBe(2);
+
+    const p50Suggestion = soleBlockerRec.thresholdSuggestions.find(
+      (s) => s.percentile === 'P50'
+    );
+    expect(p50Suggestion.targetPassRate).toBe(0.5);
+    expect(p50Suggestion.suggestedThreshold).toBe(0.32);
+
+    const p90Suggestion = soleBlockerRec.thresholdSuggestions.find(
+      (s) => s.percentile === 'P90'
+    );
+    expect(p90Suggestion.targetPassRate).toBe(0.9);
+    expect(p90Suggestion.suggestedThreshold).toBe(0.18);
+  });
+
+  it('should not generate recommendation when lastMileFailRate is too low', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts({
+      lastMileFailRate: 0.05, // Below 0.1 threshold
+    });
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec).toBeUndefined();
+  });
+
+  it('should not generate recommendation when sample count is insufficient', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts({
+      soleBlockerSampleCount: 5, // Below 10 threshold
+    });
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec).toBeUndefined();
+  });
+
+  it('should not generate recommendation when P50 is missing', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts({
+      soleBlockerP50: null,
+    });
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec).toBeUndefined();
+  });
+
+  it('should suggest "Raise" direction for < or <= operators', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts({
+      operator: '<',
+      clauseLabel: 'emotions.anger < 0.5',
+    });
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec.title).toContain('Raise');
+    expect(soleBlockerRec.thresholdSuggestions[0].direction).toBe('raise');
+  });
+
+  it('should include evidence with current threshold and percentiles', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts();
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec.evidence).toBeDefined();
+    expect(soleBlockerRec.evidence.length).toBeGreaterThanOrEqual(3);
+
+    const thresholdEvidence = soleBlockerRec.evidence.find(
+      (e) => e.label === 'Current threshold'
+    );
+    expect(thresholdEvidence.value).toBe('0.50');
+  });
+
+  it('should include actions with specific threshold suggestions', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts();
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec.actions).toBeDefined();
+    expect(soleBlockerRec.actions.length).toBe(2);
+    expect(soleBlockerRec.actions[0].label).toContain('Lower threshold to');
+    expect(soleBlockerRec.actions[0].detail).toContain('50%');
+  });
+
+  it('should set confidence based on sample count', () => {
+    const engine = new RecommendationEngine();
+
+    // Low sample count
+    const lowSampleFacts = createSoleBlockerFacts({
+      soleBlockerSampleCount: 15,
+    });
+    const lowResult = engine.generate(lowSampleFacts);
+    const lowRec = lowResult.find((r) => r.type === 'sole_blocker_edit');
+    expect(lowRec.confidence).toBe('low');
+
+    // High sample count (requires 500+ for "high" confidence)
+    const highSampleFacts = createSoleBlockerFacts({
+      soleBlockerSampleCount: 500,
+    });
+    const highResult = engine.generate(highSampleFacts);
+    const highRec = highResult.find((r) => r.type === 'sole_blocker_edit');
+    expect(highRec.confidence).toBe('high');
+  });
+
+  it('should include relatedClauseIds for linking', () => {
+    const engine = new RecommendationEngine();
+    const facts = createSoleBlockerFacts();
+
+    const recommendations = engine.generate(facts);
+
+    const soleBlockerRec = recommendations.find(
+      (r) => r.type === 'sole_blocker_edit'
+    );
+    expect(soleBlockerRec.relatedClauseIds).toContain(
+      'var:emotions.anger:>=:0.5'
+    );
   });
 });

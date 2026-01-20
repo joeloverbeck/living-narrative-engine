@@ -309,6 +309,6 @@
         "tactile": "The tightness in the face and shoulders lets go. Hands get steadier, movements more deliberate, like the body found the right grip.",
         "limited": "Something shifts in {actor}'s focus—less scattered, more certain—like a solution just snapped into place."
     },
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0006
 }

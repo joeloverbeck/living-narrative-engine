@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-moral-injury:moral_injury_corrode",
-    "description": "Moral injury: a corrosive blend of guilt and self-directed disgust that curdles into hopelessness\u2014less about fear of punishment and more about feeling fundamentally stained. The mind loops on the irreversible, and the future narrows into a dead-end certainty.",
+    "description": "Moral injury: a corrosive blend of guilt and self-directed disgust that curdles into hopelessness—less about fear of punishment and more about feeling fundamentally stained. The mind loops on the irreversible, and the future narrows into a dead-end certainty.",
     "category": "shame",
-    "actor_description": "It feels like something inside me has curdled. The guilt isn\u2019t just heavy\u2014it\u2019s contaminating, like I can\u2019t touch my own thoughts without getting dirty. I keep replaying it until the edges go raw, and the worst part is the certainty: I can\u2019t undo it. The future doesn\u2019t look scary; it looks sealed shut.",
-    "description_text": "{actor} goes rigid and inward\u2014jaw set, gaze unfocused, like they're staring through the room at something they can't escape. Their face tightens with a faint, self-recoiling revulsion, and their breathing turns shallow, controlled, as if holding themselves together takes all their attention.",
+    "actor_description": "It feels like something inside me has curdled. The guilt isn’t just heavy—it’s contaminating, like I can’t touch my own thoughts without getting dirty. I keep replaying it until the edges go raw, and the worst part is the certainty: I can’t undo it. The future doesn’t look scary; it looks sealed shut.",
+    "description_text": "{actor} goes rigid and inward—jaw set, gaze unfocused, like they're staring through the room at something they can't escape. Their face tightens with a faint, self-recoiling revulsion, and their breathing turns shallow, controlled, as if holding themselves together takes all their attention.",
     "priority": 86,
     "prerequisites": [
         {
@@ -23,7 +23,7 @@
                             {
                                 "var": "emotions.guilt"
                             },
-                            0.60
+                            0.6
                         ]
                     },
                     {
@@ -41,7 +41,7 @@
                                     {
                                         "var": "emotions.despair"
                                     },
-                                    0.60
+                                    0.6
                                 ]
                             },
                             {
@@ -172,9 +172,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "My voice comes out smaller and flatter than I expect\u2014words clipped, like I\u2019m rationing air. When I pause, it\u2019s not thoughtful; it\u2019s stuck, a silence with pressure behind it.",
-        "tactile": "There\u2019s a cold, crawling tightness under my skin, like my body wants to peel away from itself. My shoulders hold high and tense, and even small movements feel wrong\u2014too loud, too visible.",
-        "limited": "I go quiet and withdrawn, posture tightening as if I\u2019m trying to contain something that feels irreversible."
+        "auditory": "My voice comes out smaller and flatter than I expect—words clipped, like I’m rationing air. When I pause, it’s not thoughtful; it’s stuck, a silence with pressure behind it.",
+        "tactile": "There’s a cold, crawling tightness under my skin, like my body wants to peel away from itself. My shoulders hold high and tense, and even small movements feel wrong—too loud, too visible.",
+        "limited": "I go quiet and withdrawn, posture tightening as if I’m trying to contain something that feels irreversible."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-rejection:rejection_sting_pushed_out",
-    "description": "Social rejection sting\u2014an abrupt felt exclusion that hits as lonely pull plus self-worth sting, with a flash of hurt-anger. Style note: consider adding category 'rejection' for moments defined by affiliation rupture + self-worth pain (distinct from pure shame or pure loneliness).",
+    "description": "Social rejection sting—an abrupt felt exclusion that hits as lonely pull plus self-worth sting, with a flash of hurt-anger. Style note: consider adding category 'rejection' for moments defined by affiliation rupture + self-worth pain (distinct from pure shame or pure loneliness).",
     "category": "shame",
-    "actor_description": "It lands like a door closing in my face. My stomach drops and my chest goes tight-hot, like I want to protest and vanish at the same time. I can\u2019t stop replaying the social shape of it; my attention keeps snapping back there, searching for what I did wrong. I feel smaller, edged out, and it stings in a way that makes my jaw set.",
-    "description_text": "{actor} goes visibly tight and guarded\u2014eyes flicking back as if checking a boundary, mouth pressing thin. Their posture pulls in, but there\u2019s a brittle edge to it, like they\u2019re fighting the urge to snap back or shut down.",
+    "actor_description": "It lands like a door closing in my face. My stomach drops and my chest goes tight-hot, like I want to protest and vanish at the same time. I can’t stop replaying the social shape of it; my attention keeps snapping back there, searching for what I did wrong. I feel smaller, edged out, and it stings in a way that makes my jaw set.",
+    "description_text": "{actor} goes visibly tight and guarded—eyes flicking back as if checking a boundary, mouth pressing thin. Their posture pulls in, but there’s a brittle edge to it, like they’re fighting the urge to snap back or shut down.",
     "priority": 74,
     "prerequisites": [
         {
@@ -167,8 +167,9 @@
     ],
     "alternate_descriptions": {
         "auditory": "My voice gets clipped or too careful, like every word is being measured for whether it will be allowed to land.",
-        "tactile": "It feels like heat in my face and a tight band around my ribs\u2014arms close in, shoulders rising as if to make less of myself.",
+        "tactile": "It feels like heat in my face and a tight band around my ribs—arms close in, shoulders rising as if to make less of myself.",
         "limited": "I go quiet and tense, attention stuck on the social boundary I just hit."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

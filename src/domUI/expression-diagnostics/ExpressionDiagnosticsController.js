@@ -967,16 +967,24 @@ class ExpressionDiagnosticsController {
     this.#displaySamplingCoverage(result.samplingCoverage, result.samplingMode);
 
     const storedContexts = result?.storedContexts ?? [];
+    const baselineTriggerRate = result?.triggerRate ?? null;
+    const moodConstraints = this.#extractMoodConstraintsForUI(
+      this.#selectedExpression?.prerequisites ?? []
+    );
+    const sensitivityOptions = { baselineTriggerRate, moodConstraints };
+
     const globalSensitivityData =
       this.#sensitivityAnalyzer.computeGlobalSensitivityData(
         storedContexts,
         enrichedBlockers,
-        this.#selectedExpression?.prerequisites ?? null
+        this.#selectedExpression?.prerequisites ?? null,
+        sensitivityOptions
       );
     const sensitivityData = this.#reportGenerator?.collectReportIntegrityWarnings
       ? this.#sensitivityAnalyzer.computeSensitivityData(
         storedContexts,
-        enrichedBlockers
+        enrichedBlockers,
+        sensitivityOptions
       )
       : [];
 
@@ -1131,7 +1139,7 @@ class ExpressionDiagnosticsController {
       );
       meta.appendChild(
         this.#createRecommendationBadge(
-          `Impact (full sample): ${this.#formatImpact(impact)}`
+          `Clause Pass-Rate Impact: ${this.#formatImpact(impact)}`
         )
       );
       card.appendChild(meta);
@@ -2517,7 +2525,7 @@ class ExpressionDiagnosticsController {
       `Effective pass: ${
         effectivePass !== null ? this.#formatPercentage(effectivePass) : 'N/A'
       }`,
-      `Impact (full sample): ${this.#formatImpact(impact)}`,
+      `Clause Pass-Rate Impact: ${this.#formatImpact(impact)}`,
     ];
 
     for (const item of funnelItems) {
@@ -4311,7 +4319,13 @@ class ExpressionDiagnosticsController {
       : this.#sensitivityAnalyzer.computeGlobalSensitivityData(
         this.#rawSimulationResult?.storedContexts ?? [],
         this.#currentBlockers,
-        this.#selectedExpression?.prerequisites
+        this.#selectedExpression?.prerequisites,
+        {
+          baselineTriggerRate: this.#rawSimulationResult?.triggerRate ?? null,
+          moodConstraints: this.#extractMoodConstraintsForUI(
+            this.#selectedExpression?.prerequisites ?? []
+          ),
+        }
       );
 
     if (!sensitivityData || sensitivityData.length === 0) {

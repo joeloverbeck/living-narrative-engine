@@ -1,177 +1,178 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-shutdown:numb_flatness",
-  "description": "Blunted affect and emotional muting: numbness dominates with low engagement/arousal, without tipping into full dissociation or heavy grief/despair.",
-  "actor_description": "My feelings don't argue with me-they just don't show up. Thoughts still happen, but they land without weight, like they're sliding off a slick surface. I notice what should matter and it registers as a fact, not a pull. Even my body feels slightly turned down, as if someone lowered the volume on being here.",
-  "description_text": "{actor} looks oddly neutral-face slack, eyes unfocused in a steady way that isn't calm. Their responses come a beat late and a size too small, as if emotion is present only as an outline.",
-  "priority": 73,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.numbness"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.protest_anger"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              -20
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.valence"
-              },
-              -10
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              20
-            ]
-          },
-          {
-            "or": [
-              {
-                "<=": [
-                  {
-                    "var": "moodAxes.affiliation"
-                  },
-                  15
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "previousMoodAxes.affiliation"
-                      },
-                      {
-                        "var": "moodAxes.affiliation"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.despair"
-              },
-              0.6
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.numbness"
-                      },
-                      {
-                        "var": "previousEmotions.numbness"
-                      }
-                    ]
-                  },
-                  0.12
-                ]
-              },
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-shutdown:numb_flatness",
+    "description": "Blunted affect and emotional muting: numbness dominates with low engagement/arousal, without tipping into full dissociation or heavy grief/despair.",
+    "actor_description": "My feelings don't argue with me-they just don't show up. Thoughts still happen, but they land without weight, like they're sliding off a slick surface. I notice what should matter and it registers as a fact, not a pull. Even my body feels slightly turned down, as if someone lowered the volume on being here.",
+    "description_text": "{actor} looks oddly neutral-face slack, eyes unfocused in a steady way that isn't calm. Their responses come a beat late and a size too small, as if emotion is present only as an outline.",
+    "priority": 73,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    "<": [
-                      {
-                        "var": "previousEmotions.numbness"
-                      },
-                      0.55
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.numbness"
-                      },
-                      0.55
-                    ]
-                  }
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            -20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "moodAxes.affiliation"
+                                    },
+                                    15
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.despair"
+                            },
+                            0.6
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.numbness"
+                                            },
+                                            {
+                                                "var": "previousEmotions.numbness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.numbness"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.numbness"
+                                            },
+                                            0.55
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    -12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              },
-              {
-                "<=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.engagement"
-                      },
-                      {
-                        "var": "previousMoodAxes.engagement"
-                      }
-                    ]
-                  },
-                  -12
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "previousMoodAxes.affiliation"
-                      },
-                      {
-                        "var": "moodAxes.affiliation"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "Requires dominant numbness with low engagement/arousal and mildly negative valence; uses affiliation (low or sharply dropping) to encode ‘signal muted + social detachment’ directly. Keeps despair capped so deeper hopelessness owns the higher-tier beats. Needs a spike/crossing or notable engagement/affiliation drop to avoid spam."
-    }
-  ],
-  "alternate_descriptions": {
-    "auditory": "I hear a voice that stays even and slightly distant-short answers, few inflections, breaths that don't hitch or laugh.",
-    "tactile": "It feels like the room's emotional temperature dropped: less tension, less warmth, a muted presence that doesn't quite press back.",
-    "olfactory": "The air seems thin and plain-scents register, but they don't spark appetite or comfort.",
-    "limited": "Something in {actor} goes quiet and flat, like the emotional signal has been dampened."
-  },
-  "category": "shutdown",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Requires dominant numbness with low engagement/arousal and mildly negative valence; uses affiliation (low or sharply dropping) to encode ‘signal muted + social detachment’ directly. Keeps despair capped so deeper hopelessness owns the higher-tier beats. Needs a spike/crossing or notable engagement/affiliation drop to avoid spam."
+        }
+    ],
+    "alternate_descriptions": {
+        "auditory": "I hear a voice that stays even and slightly distant-short answers, few inflections, breaths that don't hitch or laugh.",
+        "tactile": "It feels like the room's emotional temperature dropped: less tension, less warmth, a muted presence that doesn't quite press back.",
+        "olfactory": "The air seems thin and plain-scents register, but they don't spark appetite or comfort.",
+        "limited": "Something in {actor} goes quiet and flat, like the emotional signal has been dampened."
+    },
+    "category": "shutdown",
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0063
 }

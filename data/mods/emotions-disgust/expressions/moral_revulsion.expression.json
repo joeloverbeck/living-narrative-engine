@@ -117,6 +117,6 @@
         "auditory": "I hear a sharp, disgusted exhale—like a hiss swallowed at the last second—followed by a clipped, hard-edged tone as if every word has to pass a moral filter.",
         "tactile": "The air feels suddenly wrong—skin prickling, jaw tight, shoulders drawing back as though proximity itself is contaminating."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

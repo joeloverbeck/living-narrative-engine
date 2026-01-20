@@ -191,5 +191,6 @@
         "olfactory": "The air smells warm and close: arousal threaded with nervous sweat, sharp at the edges, like adrenaline got into it."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

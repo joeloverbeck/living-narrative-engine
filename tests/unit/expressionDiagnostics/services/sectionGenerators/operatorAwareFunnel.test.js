@@ -256,7 +256,7 @@ describe('BlockerSectionGenerator - Operator-Aware Funnel', () => {
         simulationResult
       );
 
-      expect(report).toContain('Gate pass');
+      expect(report).toContain('Prototype gate pass');
       // Gate pass rate for >= should use gatePassInRegimeCount / inRegimeEvaluationCount
       // 600/800 = 0.75 = 75%
       expect(report).toContain('75');
@@ -300,7 +300,7 @@ describe('BlockerSectionGenerator - Operator-Aware Funnel', () => {
 
       // For <= operator, the "gate pass" metric should still be shown
       // but the interpretation is different (lower values are better)
-      expect(report).toContain('Gate pass');
+      expect(report).toContain('Prototype gate pass');
     });
   });
 
@@ -484,7 +484,7 @@ describe('BlockerSectionGenerator - Operator-Aware Funnel', () => {
       );
 
       // Should include funnel entries for key threshold clauses
-      expect(report).toContain('Gate pass');
+      expect(report).toContain('Prototype gate pass');
     });
   });
 

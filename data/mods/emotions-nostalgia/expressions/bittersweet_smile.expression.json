@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-nostalgia:bittersweet_smile",
-    "description": "Mixed-valence nostalgia\u2014warmth threaded with ache. The memory-feel lands tender rather than crushing: a small smile that doesn\u2019t quite outrun the sting.",
+    "description": "Mixed-valence nostalgia—warmth threaded with ache. The memory-feel lands tender rather than crushing: a small smile that doesn’t quite outrun the sting.",
     "category": "loss",
-    "actor_description": "A warmth rises in me, and it hurts at the same time\u2014like pressure behind the eyes paired with a sudden softness in the chest. I catch myself smiling, then feeling the smile wobble at the edges. The ache doesn\u2019t vanish; it just stops being sharp, turning into something I can hold without breaking.",
-    "description_text": "{actor} smiles faintly, but there\u2019s a sheen of ache in it\u2014eyes a touch damp, expression pulled between fondness and pain. Their breathing slows as if they\u2019re letting something tender settle without letting it swallow them.",
+    "actor_description": "A warmth rises in me, and it hurts at the same time—like pressure behind the eyes paired with a sudden softness in the chest. I catch myself smiling, then feeling the smile wobble at the edges. The ache doesn’t vanish; it just stops being sharp, turning into something I can hold without breaking.",
+    "description_text": "{actor} smiles faintly, but there’s a sheen of ache in it—eyes a touch damp, expression pulled between fondness and pain. Their breathing slows as if they’re letting something tender settle without letting it swallow them.",
     "priority": 71,
     "prerequisites": [
         {
@@ -193,8 +193,9 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a small, involuntary exhale\u2014half laugh, half sigh\u2014like my voice almost wants to say something kind and can\u2019t quite commit.",
+        "auditory": "I hear a small, involuntary exhale—half laugh, half sigh—like my voice almost wants to say something kind and can’t quite commit.",
         "tactile": "The muscles around my mouth tighten into a smile while my throat thickens, like two impulses meeting in the same small space. My face feels warm, and my chest feels oddly tender."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

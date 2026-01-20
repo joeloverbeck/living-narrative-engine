@@ -181,6 +181,6 @@
         "tactile": "The air around them feels tight, like static on skin. Their posture holds tension in the shoulders and throat, as if the body is trying not to buckle and can’t decide where to put the hurt.",
         "limited": "Their expression falters—present, but struck through with quiet pain that won’t let go."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

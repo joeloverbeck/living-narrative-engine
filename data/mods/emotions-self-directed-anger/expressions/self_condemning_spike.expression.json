@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-self-directed-anger:self_condemning_spike",
-    "description": "Self-directed anger\u2014the heat of frustration turns inward and becomes condemnation. The mind stops arguing with the world and starts prosecuting the self, with a harsh, punishing clarity that feels hard to interrupt.",
+    "description": "Self-directed anger—the heat of frustration turns inward and becomes condemnation. The mind stops arguing with the world and starts prosecuting the self, with a harsh, punishing clarity that feels hard to interrupt.",
     "category": "shame",
-    "actor_description": "The anger doesn\u2019t have anywhere to go, so it turns on me. My thoughts sharpen into accusations\u2014too fast, too late, too stupid\u2014like a judge already sure of the verdict. Heat crawls up my neck and my jaw locks, but underneath it is that sinking certainty: I\u2019m the problem and I can\u2019t get out of it. I want to hit something, and the only available target is me.",
-    "description_text": "{actor} goes tense and self-contained\u2014jaw tight, gaze dropping or going unfocused as if turning inward. Their expression hardens into something punishing, and their movements get clipped, like they\u2019re restraining an impulse they don\u2019t want anyone to see.",
+    "actor_description": "The anger doesn’t have anywhere to go, so it turns on me. My thoughts sharpen into accusations—too fast, too late, too stupid—like a judge already sure of the verdict. Heat crawls up my neck and my jaw locks, but underneath it is that sinking certainty: I’m the problem and I can’t get out of it. I want to hit something, and the only available target is me.",
+    "description_text": "{actor} goes tense and self-contained—jaw tight, gaze dropping or going unfocused as if turning inward. Their expression hardens into something punishing, and their movements get clipped, like they’re restraining an impulse they don’t want anyone to see.",
     "priority": 77,
     "prerequisites": [
         {
@@ -17,7 +17,7 @@
                                     {
                                         "var": "emotions.rage"
                                     },
-                                    0.60
+                                    0.6
                                 ]
                             },
                             {
@@ -173,9 +173,10 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "I hear a tight, controlled breath\u2014an exhale pressed through teeth\u2014like someone is swallowing words that would come out too sharp.",
-        "tactile": "The air feels charged around them; their body holds rigid, as if bracing against an impact that\u2019s coming from the inside.",
+        "auditory": "I hear a tight, controlled breath—an exhale pressed through teeth—like someone is swallowing words that would come out too sharp.",
+        "tactile": "The air feels charged around them; their body holds rigid, as if bracing against an impact that’s coming from the inside.",
         "limited": "Something in {actor} tightens and turns inward, their expression sharpening into self-judgment."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0001
 }

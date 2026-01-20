@@ -67,7 +67,7 @@ describe('MonteCarloReportGenerator population metadata', () => {
     const expectedHash = buildPopulationHash(sampleIds, predicate);
 
     expect(report).toContain(
-      `**Population**: stored-mood-regime (predicate: ${predicate}; count: 10; hash: ${expectedHash}).`
+      `**Population**: stored-mood-regime (N=10; predicate: ${predicate}; hash: ${expectedHash}).`
     );
   });
 });

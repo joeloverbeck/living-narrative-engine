@@ -64,6 +64,7 @@ class MonteCarloReportGenerator {
   #nonAxisFeasibilitySectionGenerator;
   #conflictWarningSectionGenerator;
   #actionabilitySectionGenerator;
+  #emotionSimilarityService;
 
   /**
    * @param {object} deps
@@ -88,6 +89,7 @@ class MonteCarloReportGenerator {
    * @param {import('./sectionGenerators/NonAxisFeasibilitySectionGenerator.js').default} [deps.nonAxisFeasibilitySectionGenerator] - Optional non-axis feasibility section generator (created via lazy init if not provided)
    * @param {import('./sectionGenerators/ConflictWarningSectionGenerator.js').default} [deps.conflictWarningSectionGenerator] - Optional conflict warning section generator (created via lazy init if not provided)
    * @param {import('./sectionGenerators/ActionabilitySectionGenerator.js').default} [deps.actionabilitySectionGenerator] - Optional actionability section generator
+   * @param {import('./EmotionSimilarityService.js').default} [deps.emotionSimilarityService] - Optional emotion similarity service for overconstrained detection
    */
   constructor({
     logger,
@@ -111,6 +113,7 @@ class MonteCarloReportGenerator {
     nonAxisFeasibilitySectionGenerator = null,
     conflictWarningSectionGenerator = null,
     actionabilitySectionGenerator = null,
+    emotionSimilarityService = null,
   }) {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -184,6 +187,7 @@ class MonteCarloReportGenerator {
     this.#nonAxisFeasibilitySectionGenerator = nonAxisFeasibilitySectionGenerator;
     this.#conflictWarningSectionGenerator = conflictWarningSectionGenerator;
     this.#actionabilitySectionGenerator = actionabilitySectionGenerator;
+    this.#emotionSimilarityService = emotionSimilarityService;
   }
 
   /**
@@ -304,6 +308,10 @@ class MonteCarloReportGenerator {
         simulationResult,
         summary
       ),
+      this.#coreSectionGenerator.generateSanityBoxSection(
+        simulationResult,
+        blockers
+      ),
       this.#coreSectionGenerator.generateSamplingCoverageSection(
         simulationResult.samplingCoverage,
         simulationResult.samplingMode
@@ -325,6 +333,7 @@ class MonteCarloReportGenerator {
         expressionName,
         prerequisites,
         simulationResult,
+        blockers,
       }),
       this.#generateConditionalPassRatesSection(
         prerequisites,
@@ -1163,9 +1172,10 @@ ${populationLabel}${sections.join('\n')}`;
    * @param {string} params.expressionName
    * @param {Array|null} params.prerequisites
    * @param {object} params.simulationResult
+   * @param {Array} [params.blockers] - Blocker hierarchy for overconstrained detection
    * @returns {string}
    */
-  #generateRecommendationsSection({ expressionName, prerequisites, simulationResult }) {
+  #generateRecommendationsSection({ expressionName, prerequisites, simulationResult, blockers = [] }) {
     if (!simulationResult) {
       return '';
     }
@@ -1175,6 +1185,9 @@ ${populationLabel}${sections.join('\n')}`;
       prerequisites: Array.isArray(prerequisites) ? prerequisites : null,
     };
 
+    // Detect overconstrained conjunctions from blockers
+    const overconstrainedDetails = this.#coreSectionGenerator.detectOverconstrainedConjunctions(blockers);
+
     const factsBuilder = new RecommendationFactsBuilder({
       prototypeConstraintAnalyzer: this.#prototypeConstraintAnalyzer,
       prototypeFitRankingService: this.#prototypeFitRankingService,
@@ -1183,6 +1196,7 @@ ${populationLabel}${sections.join('\n')}`;
     const diagnosticFacts = factsBuilder.build({
       expression,
       simulationResult,
+      overconstrainedDetails,
     });
 
     if (!diagnosticFacts) {
@@ -1203,6 +1217,7 @@ ${populationLabel}${sections.join('\n')}`;
 
     const engine = new RecommendationEngine({
       prototypeSynthesisService: this.#prototypeSynthesisService,
+      emotionSimilarityService: this.#emotionSimilarityService,
     });
     const recommendations = engine.generate(diagnosticFacts);
     if (!Array.isArray(recommendations) || recommendations.length === 0) {
@@ -1262,7 +1277,7 @@ ${cards.join('\n')}
       `- **Type**: ${type}`,
       `- **Severity**: ${severity}`,
       `- **Confidence**: ${confidence}`,
-      `- **Impact (full sample)**: ${impactStr}`,
+      `- **Clause Pass-Rate Impact**: ${impactStr}`,
     ];
 
     if (recommendation.why) {
@@ -1303,6 +1318,16 @@ ${bullets.join('\n')}
     }
 
     return evidence.map((entry) => {
+      // Handle simple label/value format (used by sole-blocker recommendations)
+      if (
+        typeof entry.value === 'string' &&
+        entry.numerator === undefined &&
+        entry.denominator === undefined
+      ) {
+        return `  - ${entry.label}: ${entry.value}`;
+      }
+
+      // Handle complex format with numerator/denominator
       const numerator = this.#formattingService.formatEvidenceCount(entry.numerator);
       const denominator = this.#formattingService.formatEvidenceCount(entry.denominator);
       const ratio = `${numerator}/${denominator}`;
@@ -1323,7 +1348,15 @@ ${bullets.join('\n')}
     if (!Array.isArray(actions) || actions.length === 0) {
       return [];
     }
-    return actions.map((action) => `  - ${action}`);
+    return actions.map((action) => {
+      // Handle object format with label/detail (used by sole-blocker recommendations)
+      if (typeof action === 'object' && action !== null && action.label) {
+        const detail = action.detail ? ` — ${action.detail}` : '';
+        return `  - ${action.label}${detail}`;
+      }
+      // Handle simple string format
+      return `  - ${action}`;
+    });
   }
 
   #formatRecommendationLinks(relatedClauseIds) {

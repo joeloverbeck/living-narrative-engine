@@ -19,13 +19,21 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "emotions.apprehension"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
                                     {
                                         "var": "emotions.unease"
                                     },
-                                    0.35
+                                    0.30
                                 ]
                             },
                             {
@@ -33,7 +41,15 @@
                                     {
                                         "var": "emotions.fear"
                                     },
-                                    0.3
+                                    0.28
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.anxiety"
+                                    },
+                                    0.25
                                 ]
                             }
                         ]
@@ -81,9 +97,57 @@
                     {
                         "<=": [
                             {
+                                "var": "moodAxes.affiliation"
+                            },
+                            20
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -60
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.trusting_surrender"
                             },
                             0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.affection"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
                         ]
                     },
                     {
@@ -112,6 +176,21 @@
                                 ]
                             },
                             {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
                                 "<=": [
                                     {
                                         "-": [
@@ -124,6 +203,21 @@
                                         ]
                                     },
                                     -12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.threat"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.threat"
+                                            }
+                                        ]
+                                    },
+                                    12
                                 ]
                             },
                             {
@@ -145,12 +239,32 @@
                                         ]
                                     }
                                 ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Needs a real submission stance (not just mild agreeableness), paired with unease/fear, grounded in low agency and moderate threat. Adds a restraint/regulation gate (inhibitory_control + baseline self_control) so it reads as measured, controlled compliance rather than chaotic appeasement or impulsive resistance. Blocks warm/safe yielding (trusting_surrender) and 'too offline' detachment (dissociation). Fires only on a submission spike, an agency drop, or a crossing into the submission band."
+            "failure_message": "Deferential yielding is compliance-under-pressure: requires a real submission stance with apprehension as the primary driver (brakes on) plus mild threat-cue support (unease/fear/anxiety). Anchors in low agency and moderate threat, with a restraint clamp (inhibitory_control + baseline self_control). Explicitly blocks warm/safe yielding (trusting_surrender + trust/affection) and blocks fight-pushback (protest_anger/rage). Fires only on fresh submission/apprehension spikes, threat jumps, agency drops, or crossings to avoid steady-state agreeableness."
         }
     ],
     "alternate_descriptions": {
@@ -158,6 +272,6 @@
         "tactile": "Their movements shrink: shoulders draw in, hands stay close, weight shifting as if making room for someone else to take the space.",
         "limited": "{actor} becomes noticeably compliant, giving ground quickly with a guarded, uneasy restraint."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0004
 }

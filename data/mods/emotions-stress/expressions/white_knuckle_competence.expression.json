@@ -15,7 +15,7 @@
                             {
                                 "var": "emotions.executive_focus"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -99,14 +99,6 @@
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.determination"
-                                    },
-                                    0.45
-                                ]
-                            },
-                            {
-                                ">=": [
-                                    {
                                         "var": "emotions.stress_acute"
                                     },
                                     0.42
@@ -115,9 +107,37 @@
                             {
                                 ">=": [
                                     {
+                                        "var": "emotions.apprehension"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
                                         "var": "moodAxes.threat"
                                     },
                                     30
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.determination"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            0.25
+                                        ]
+                                    }
                                 ]
                             }
                         ]
@@ -143,7 +163,7 @@
                             {
                                 "var": "emotions.despair"
                             },
-                            0.4
+                            0.40
                         ]
                     },
                     {
@@ -167,7 +187,7 @@
                             {
                                 "var": "emotions.entranced"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -187,7 +207,7 @@
                                             {
                                                 "var": "previousEmotions.executive_focus"
                                             },
-                                            0.6
+                                            0.60
                                         ]
                                     },
                                     {
@@ -195,7 +215,7 @@
                                             {
                                                 "var": "emotions.executive_focus"
                                             },
-                                            0.6
+                                            0.60
                                         ]
                                     }
                                 ]
@@ -212,7 +232,7 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
                                 ]
                             },
                             {
@@ -242,7 +262,22 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            }
+                                        ]
+                                    },
+                                    0.10
                                 ]
                             },
                             {
@@ -299,7 +334,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires strong executive_focus under load *plus* a real restraint clamp (inhibitory_control) consistent with “white-knuckling.” Trait self_control supports sustained clamping; low-trait actors must be in a higher clamp band to qualify. Keeps it as pressured competence (not trance/flow, not panic/terror) and triggers only on fresh spikes/crossings in focus, load, threat, or inhibitory clamp."
+            "failure_message": "White-knuckle competence is pressure-with-control: requires strong executive_focus under high engagement, high agency, and a hard restraint clamp (inhibitory_control + self_control support). Ensures the 'pressure' is real via stress_acute, apprehension, or a higher threat band (with determination allowed only when some apprehension is present). Blocks panic/terror collapse and blocks flow/trance absorption so it reads as effortful control, not ease. Fires only on fresh spikes/crossings in focus, load markers (stress/apprehension/threat), or clamp changes."
         }
     ],
     "alternate_descriptions": {

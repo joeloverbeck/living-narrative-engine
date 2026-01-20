@@ -32,6 +32,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.apprehension"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.threat"
@@ -53,6 +61,22 @@
                                 "var": "moodAxes.engagement"
                             },
                             15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            85
                         ]
                     },
                     {
@@ -197,7 +221,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires hypervigilance+fear with a true startle spike inside active monitoring. Explicitly excludes strong executive_focus unless executive_focus just dropped hard (organized grip broke). Keeps it as reactive scanning + flinch, not pressured competence."
+            "failure_message": "Hair-trigger flinch while scanning is a high-alert + startle blend. Caps apprehension and strong clamp signatures so highly braced/contained states don’t mis-render as twitchy hypervigilant scanning; the beat remains arousal-driven and reactive."
         }
     ],
     "actor_description": "I'm already sweeping the room—corners, hands, exits—when something twitches wrong and my body flinches hard on its own. Sharp inhale, shoulders up, hands half-raised. Then it's gone, and I'm scanning even faster, jaw tight, trying to prove to myself I didn't miss the real threat.",
@@ -207,6 +231,6 @@
         "tactile": "A jolt of tension ripples through them—an involuntary jump—followed immediately by a sustained, vibrating readiness, like a spring that refuses to settle."
     },
     "category": "threat",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0003
 }

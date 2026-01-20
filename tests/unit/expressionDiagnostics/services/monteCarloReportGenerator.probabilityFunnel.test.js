@@ -41,6 +41,7 @@ const createHierarchy = () => ({
       thresholdValue: 0.5,
       variablePath: 'emotions.joy',
       gatePassInRegimeCount: 120,
+      gatePassAndClausePassInRegimeCount: 60, // 50% of gate-passers also pass threshold
       inRegimeEvaluationCount: 200,
       failureRate: 0.6,
       inRegimeFailureRate: 0.5,
@@ -53,6 +54,7 @@ const createHierarchy = () => ({
       thresholdValue: 0.3,
       variablePath: 'emotions.sadness',
       gatePassInRegimeCount: 80,
+      gatePassAndClausePassInRegimeCount: 56, // 70% of gate-passers also pass threshold
       inRegimeEvaluationCount: 200,
       failureRate: 0.4,
       inRegimeFailureRate: 0.3,
@@ -132,11 +134,18 @@ describe('MonteCarloReportGenerator probability funnel', () => {
     expect(report).toContain('### Probability Funnel');
     expect(report).toContain('- **Full sample**: 1,000');
     expect(report).toContain('- **Mood-regime pass**: 20.00% (200 / 1000)');
+    // New format: separate gate pass and threshold pass lines (Change A)
     expect(report).toContain(
-      '- **Gate pass | mood-pass (`emotions.joy >= 0.5`)**: 60.00% (120 / 200)'
+      '- **Prototype gate pass (`joy`)**: 60.00% (120 / 200)'
     );
     expect(report).toContain(
-      '- **Gate pass | mood-pass (`emotions.sadness >= 0.3`)**: 40.00% (80 / 200)'
+      '- **Threshold pass | gate (`emotions.joy >= 0.5`)**: 50.00% (60 / 120)'
+    );
+    expect(report).toContain(
+      '- **Prototype gate pass (`sadness`)**: 40.00% (80 / 200)'
+    );
+    expect(report).toContain(
+      '- **Threshold pass | gate (`emotions.sadness >= 0.3`)**: 70.00% (56 / 80)'
     );
     expect(report).toContain(
       '- **OR union pass | mood-pass (OR Block #1)**: 40.00% (80 / 200)'

@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-sexual-intimacy-style:dominant_pleasure_hold",
-    "description": "Sexual agency held forward\u2014desire that expresses as calm command rather than hunger or pleading. The body reads self-possessed: choosing, steering, and enjoying the fact of control. Style note: consider adding category 'intimacy_style' for beats that primarily describe *how control is held* (e.g., dominant/submissive/avoidant) rather than the presence of desire itself.",
+    "description": "Sexual agency held forward—desire that expresses as calm command rather than hunger or pleading. The body reads self-possessed: choosing, steering, and enjoying the fact of control. Style note: consider adding category 'intimacy_style' for beats that primarily describe *how control is held* (e.g., dominant/submissive/avoidant) rather than the presence of desire itself.",
     "category": "desire",
     "priority": 76,
     "prerequisites": [
@@ -116,12 +116,13 @@
             "failure_message": "Requires dominant-pleasure to be meaningfully high with real arousal, grounded in high agency_control and steady/positive self_evaluation under low threat. Caps shame/performance anxiety/aroused-with-shame so it stays 'commanding enjoyment' rather than conflicted or self-conscious. Triggers only on an agency crossing into the dominant band or a noticeable spike in sexual_confidence to prevent spam."
         }
     ],
-    "actor_description": "Desire settles into me like a grip I don\u2019t have to tighten. I feel cleanly in charge of my own pace\u2014breath steady, gaze direct, the inside of my chest warm with certainty. There\u2019s a quiet pleasure in choosing what happens next and not flinching from wanting it.",
-    "description_text": "{actor} carries their desire with controlled ease\u2014posture forward, movements deliberate, attention unwavering. Their expression reads self-possessed, as if they\u2019re steering the moment instead of being pulled by it.",
+    "actor_description": "Desire settles into me like a grip I don’t have to tighten. I feel cleanly in charge of my own pace—breath steady, gaze direct, the inside of my chest warm with certainty. There’s a quiet pleasure in choosing what happens next and not flinching from wanting it.",
+    "description_text": "{actor} carries their desire with controlled ease—posture forward, movements deliberate, attention unwavering. Their expression reads self-possessed, as if they’re steering the moment instead of being pulled by it.",
     "alternate_descriptions": {
-        "auditory": "Their voice comes out low and even\u2014no rush, no apology\u2014punctuated by a measured inhale that sounds like decision.",
+        "auditory": "Their voice comes out low and even—no rush, no apology—punctuated by a measured inhale that sounds like decision.",
         "tactile": "The air around them feels steadier, as if their stillness has weight; their movements land with confident precision rather than nervous heat.",
         "limited": "{actor} looks composed and assertive, desire visible as certainty rather than agitation."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0003
 }

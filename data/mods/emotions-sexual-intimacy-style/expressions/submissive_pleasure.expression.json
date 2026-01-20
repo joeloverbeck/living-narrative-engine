@@ -218,5 +218,6 @@
         "olfactory": "I smell warm skin and faint, clean sweat; the air feels close and receptive, not sharp with fear."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0001
 }

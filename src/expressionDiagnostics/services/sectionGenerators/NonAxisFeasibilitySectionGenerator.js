@@ -75,6 +75,63 @@ class NonAxisFeasibilitySectionGenerator {
   }
 
   /**
+   * Build the "previous" version of a variable path for delta expressions.
+   * Transforms "emotions.remorse" to "previousEmotions.remorse".
+   *
+   * @param {string} varPath - The original variable path.
+   * @returns {string} The path prefixed with "previous" and first segment capitalized.
+   */
+  #buildPreviousVarPath(varPath) {
+    if (!varPath || typeof varPath !== 'string') {
+      return 'previous';
+    }
+    const segments = varPath.split('.');
+    if (segments.length === 0) {
+      return 'previous';
+    }
+    const firstSegment = segments[0];
+    const capitalizedFirst =
+      firstSegment.charAt(0).toUpperCase() + firstSegment.slice(1);
+    segments[0] = capitalizedFirst;
+    return `previous${segments.join('.')}`;
+  }
+
+  /**
+   * Render the clause expression, handling delta clauses specially.
+   * Delta clauses render as "(varPath - previousVarPath) operator threshold".
+   * Non-delta clauses render as "operator threshold".
+   *
+   * @param {NonAxisClauseFeasibility} result - The feasibility result.
+   * @returns {string} The rendered clause expression.
+   */
+  #renderClauseExpression(result) {
+    const threshold = this.#formatNumber(result.threshold);
+
+    if (result.signal === 'delta') {
+      const prevPath = this.#buildPreviousVarPath(result.varPath);
+      return `(${result.varPath} - ${prevPath}) ${result.operator} ${threshold}`;
+    }
+
+    return `${result.operator} ${threshold}`;
+  }
+
+  /**
+   * Render the variable display for breakdown headers.
+   * Delta clauses show "(varPath - previousVarPath)".
+   * Non-delta clauses show just the varPath.
+   *
+   * @param {NonAxisClauseFeasibility} result - The feasibility result.
+   * @returns {string} The variable display string (without backticks).
+   */
+  #renderVariableDisplay(result) {
+    if (result.signal === 'delta') {
+      const prevPath = this.#buildPreviousVarPath(result.varPath);
+      return `(${result.varPath} - ${prevPath})`;
+    }
+    return result.varPath;
+  }
+
+  /**
    * Format a single row of the feasibility table.
    *
    * @param {NonAxisClauseFeasibility} result - The feasibility result.
@@ -83,7 +140,7 @@ class NonAxisFeasibilitySectionGenerator {
   #formatTableRow(result) {
     const emoji = this.#getClassificationEmoji(result.classification);
     const varPath = `\`${result.varPath}\``;
-    const clause = `${result.operator} ${this.#formatNumber(result.threshold)}`;
+    const clause = this.#renderClauseExpression(result);
     const passRate = this.#formatPassRate(result.passRate);
     const maxValue = this.#formatNumber(result.maxValue);
     const classification = `${emoji} ${result.classification}`;
@@ -108,7 +165,8 @@ class NonAxisFeasibilitySectionGenerator {
     lines.push('');
 
     for (const result of results) {
-      lines.push(`#### \`${result.varPath}\` ${result.operator} ${this.#formatNumber(result.threshold)}`);
+      const varDisplay = this.#renderVariableDisplay(result);
+      lines.push(`#### \`${varDisplay}\` ${result.operator} ${this.#formatNumber(result.threshold)}`);
       lines.push('');
       lines.push(`- **Clause ID**: \`${result.clauseId}\``);
       lines.push(`- **Pass Rate**: ${this.#formatPassRate(result.passRate)}`);

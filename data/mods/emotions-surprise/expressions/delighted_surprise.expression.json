@@ -189,6 +189,6 @@
         "tactile": "A quick, buoyant energy runs through the air—like someone’s shoulders lifted and then melted into an eager lean."
     },
     "category": "joy",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0012
 }

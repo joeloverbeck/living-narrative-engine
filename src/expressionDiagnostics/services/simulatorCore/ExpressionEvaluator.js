@@ -132,6 +132,12 @@ class ExpressionEvaluator {
 
           if (!currentPassed) {
             currentClause.hierarchicalTree.recordLastMileFail();
+            // Record actual value for sole-blocker percentile analysis
+            const logic = currentClause.hierarchicalTree.logic;
+            const actualValue = this.#extractActualValue(logic, context);
+            if (actualValue !== null) {
+              currentClause.hierarchicalTree.recordSoleBlockerValue(actualValue);
+            }
           }
         }
       }

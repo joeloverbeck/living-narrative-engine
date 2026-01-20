@@ -194,6 +194,6 @@
         "auditory": "I hear a voice go gentler at the edges-same words, different temperature. Even mundane phrases sound like they're meant for someone specific."
     },
     "category": "affection",
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0161
 }

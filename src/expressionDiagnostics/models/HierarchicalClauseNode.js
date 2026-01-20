@@ -151,6 +151,12 @@ class HierarchicalClauseNode {
 
   /** @type {number|null} Lost pass count (raw >= threshold, gated < threshold) within mood regime */
   #lostPassInRegimeCount = null;
+
+  /** @type {number[]} Sole-blocker values for percentile calculation (values at fail when others passed) */
+  #soleBlockerValues = [];
+
+  /** @type {number} Total sole-blocker values observed (including unsampled) */
+  #soleBlockerValueCount = 0;
   /**
    * @param {object} params
    * @param {string} params.id - Path-based ID (e.g., "0.2.1")
@@ -1029,6 +1035,44 @@ class HierarchicalClauseNode {
   }
 
   /**
+   * P50 (median) of sole-blocker values.
+   * Returns the threshold that would pass 50% of sole-blocker samples.
+   *
+   * @returns {number|null}
+   */
+  get soleBlockerP50() {
+    return this.#getSoleBlockerPercentile(0.5);
+  }
+
+  /**
+   * P90 of sole-blocker values.
+   * Returns the threshold that would pass 90% of sole-blocker samples.
+   *
+   * @returns {number|null}
+   */
+  get soleBlockerP90() {
+    return this.#getSoleBlockerPercentile(0.9);
+  }
+
+  /**
+   * Number of sole-blocker values currently stored in the sample reservoir.
+   *
+   * @returns {number}
+   */
+  get soleBlockerSampleCount() {
+    return this.#soleBlockerValues.length;
+  }
+
+  /**
+   * Total sole-blocker value observations (including those evicted from reservoir).
+   *
+   * @returns {number}
+   */
+  get soleBlockerTotalCount() {
+    return this.#soleBlockerValueCount;
+  }
+
+  /**
    * Calculate the percentile of observed values.
    * Uses linear interpolation for non-integer indices.
    *
@@ -1038,6 +1082,41 @@ class HierarchicalClauseNode {
    */
   #getObservedPercentile(p) {
     const values = this.#observedValues;
+
+    if (values.length === 0) {
+      return null;
+    }
+
+    if (values.length === 1) {
+      return values[0];
+    }
+
+    // Sort a copy (don't mutate the original)
+    const sorted = [...values].sort((a, b) => a - b);
+
+    // Calculate index using linear interpolation
+    const index = p * (sorted.length - 1);
+    const lower = Math.floor(index);
+    const upper = Math.ceil(index);
+
+    if (lower === upper) {
+      return sorted[lower];
+    }
+
+    // Linear interpolation between adjacent values
+    const fraction = index - lower;
+    return sorted[lower] * (1 - fraction) + sorted[upper] * fraction;
+  }
+
+  /**
+   * Compute percentile of sole-blocker values.
+   *
+   * @private
+   * @param {number} p - Percentile (0.0 to 1.0)
+   * @returns {number|null} The percentile value or null if no data
+   */
+  #getSoleBlockerPercentile(p) {
+    const values = this.#soleBlockerValues;
 
     if (values.length === 0) {
       return null;
@@ -1142,6 +1221,30 @@ class HierarchicalClauseNode {
     if (value < this.#inRegimeMinObservedValue) {
       this.#inRegimeMinObservedValue = value;
     }
+  }
+
+  /**
+   * Record a sole-blocker value when this clause was the decisive blocker.
+   * This captures the actual emotion/variable value when this clause failed
+   * while all other clauses passed (sole-blocker scenario).
+   *
+   * Used for generating threshold edit recommendations (P50/P90 analysis).
+   *
+   * @param {number} value - The actual value observed when sole-blocking
+   */
+  recordSoleBlockerValue(value) {
+    if (typeof value !== 'number' || isNaN(value)) {
+      return;
+    }
+
+    this.#soleBlockerValueCount++;
+
+    this.#sampleValue(
+      this.#soleBlockerValues,
+      value,
+      advancedMetricsConfig.maxSoleBlockerSampled ?? 2000,
+      this.#soleBlockerValueCount
+    );
   }
 
   /**
@@ -1389,6 +1492,8 @@ class HierarchicalClauseNode {
     this.#gatePassAndClausePassInRegimeCount = 0;
     this.#rawPassInRegimeCount = null;
     this.#lostPassInRegimeCount = null;
+    this.#soleBlockerValues = [];
+    this.#soleBlockerValueCount = 0;
     // Note: Do NOT reset #isSingleClause - it's metadata, not a stat
     for (const child of this.#children) {
       child.resetStats();
@@ -1449,6 +1554,10 @@ class HierarchicalClauseNode {
       lastMileFailCount: this.#lastMileFailCount,
       othersPassedCount: this.#othersPassedCount,
       lastMileFailRate: this.lastMileFailRate,
+      soleBlockerP50: this.soleBlockerP50,
+      soleBlockerP90: this.soleBlockerP90,
+      soleBlockerSampleCount: this.soleBlockerSampleCount,
+      soleBlockerTotalCount: this.soleBlockerTotalCount,
       siblingsPassedCount: this.#siblingsPassedCount,
       siblingConditionedFailCount: this.#siblingConditionedFailCount,
       siblingConditionedFailRate: this.siblingConditionedFailRate,
@@ -1595,6 +1704,9 @@ class HierarchicalClauseNode {
     node.#lostPassInRegimeCount = Number.isFinite(obj.lostPassInRegimeCount)
       ? obj.lostPassInRegimeCount
       : null;
+    if (Number.isFinite(obj.soleBlockerTotalCount)) {
+      node.#soleBlockerValueCount = obj.soleBlockerTotalCount;
+    }
     return node;
   }
 

@@ -225,7 +225,7 @@ class ReportFormattingService {
   // ============================================================================
 
   /**
-   * Format a population header.
+   * Format a population header with explicit population type tag.
    * @param {object} population
    * @returns {string}
    */
@@ -237,12 +237,33 @@ class ReportFormattingService {
     const countStr = this.formatCount(population.count);
     const predicate = population.predicate ?? 'all';
     const hash = population.hash ?? 'unknown';
+    const populationType = this.#getPopulationType(population.name, predicate);
 
-    return `**Population**: ${population.name} (predicate: ${predicate}; count: ${countStr}; hash: ${hash}).\n`;
+    return `**Population**: ${populationType} (N=${countStr}; predicate: ${predicate}; hash: ${hash}).\n`;
   }
 
   /**
-   * Format a stored context population label.
+   * Determine the population type label based on name and predicate.
+   * @param {string} name - Population name
+   * @param {string} predicate - Predicate filter
+   * @returns {string} Clear population type label
+   */
+  #getPopulationType(name, predicate) {
+    if (predicate === 'all' || predicate === 'none') {
+      return 'full';
+    }
+    if (name?.toLowerCase().includes('mood') || name?.toLowerCase().includes('regime')) {
+      return 'stored-mood-regime';
+    }
+    if (name?.toLowerCase().includes('stored')) {
+      return 'stored';
+    }
+    return name || 'unknown';
+  }
+
+  /**
+   * Format a stored context population label with explicit population type tags.
+   * Displays three population layers: full → stored → stored-mood-regime
    * @param {object|null} populationSummary
    * @param {object|null} population
    * @returns {string}
@@ -272,7 +293,15 @@ class ReportFormattingService {
     const limitStr = this.formatCount(storedContextLimit);
     const inRegimeStr = this.formatCount(storedInRegimeCount);
 
-    return `**Population**: stored contexts (${storedStr} of ${totalStr}; limit ${limitStr}; in-regime ${inRegimeStr}).\n`;
+    // Use explicit population type tags for clarity
+    const lines = [
+      `**Population layers**:`,
+      `- full: N=${totalStr}`,
+      `- stored: N=${storedStr} (limit: ${limitStr})`,
+      `- stored-mood-regime: N=${inRegimeStr}`,
+    ];
+
+    return `${lines.join('\n')}\n`;
   }
 
   /**
@@ -397,6 +426,77 @@ class ReportFormattingService {
       default:
         return { loosen: 'unknown', tighten: 'unknown' };
     }
+  }
+
+
+  // ============================================================================
+  // Sanity Box Formatting
+  // ============================================================================
+
+  /**
+   * Format very small probabilities in scientific notation.
+   * @param {number} value - Probability value (0-1)
+   * @param {number} threshold - Use scientific notation below this (default 0.0001)
+   * @returns {string} Formatted string
+   */
+  formatScientificNotation(value, threshold = 0.0001) {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+      return 'N/A';
+    }
+    if (value === 0) return '0';
+    if (value >= threshold) return this.formatPercentage(value);
+    return value.toExponential(2);
+  }
+
+  /**
+   * Format sanity status with descriptive label.
+   * @param {'expected_rare'|'statistically_plausible'|'unexpected_zero'|'normal'} status
+   * @returns {string} Formatted status
+   */
+  formatSanityStatus(status) {
+    const statusMap = {
+      expected_rare: '✅ **Expected Rare**',
+      statistically_plausible: '✅ **Statistically Plausible**',
+      unexpected_zero: '⚠️ **Unexpected Zero**',
+      normal: '✅ **Normal**',
+      large_deviation: '⚠️ **Large Deviation**',
+      data_inconsistency: '❌ **Data Inconsistency**',
+    };
+    return statusMap[status] ?? status;
+  }
+
+
+  /**
+   * Format multiplicative headroom for rarity decomposition analysis.
+   * Shows how much trigger rate would improve if pass rate were lifted to target.
+   * @param {number|null} inRegimeFailureRate - Failure rate within mood regime (0-1)
+   * @param {number} targetPassRate - Target pass rate (default 0.10 = 10%)
+   * @returns {string} Formatted headroom string
+   */
+  formatHeadroomMultiplier(inRegimeFailureRate, targetPassRate = 0.1) {
+    if (
+      inRegimeFailureRate === null ||
+      inRegimeFailureRate === undefined ||
+      typeof inRegimeFailureRate !== 'number' ||
+      isNaN(inRegimeFailureRate)
+    ) {
+      return 'N/A';
+    }
+
+    const currentPassRate = 1 - inRegimeFailureRate;
+
+    // Edge case: pass rate is 0 (always fails)
+    if (currentPassRate <= 0) {
+      return '∞ [blocked]';
+    }
+
+    // Edge case: already at or above target
+    if (currentPassRate >= targetPassRate) {
+      return '—';
+    }
+
+    const headroom = targetPassRate / currentPassRate;
+    return `×${headroom.toFixed(1)}`;
   }
 }
 

@@ -171,6 +171,6 @@
         "limited": "A low-energy slump settles in; attention dulls and movement slows."
     },
     "category": "shutdown",
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0128
 }

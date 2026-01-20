@@ -358,6 +358,6 @@
         "tactile": "The air feels tight around them, controlled—stillness with tension underneath, like a coiled spring that isn’t shaking.",
         "limited": "{actor} becomes intensely deliberate, as if anger has turned into planning."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

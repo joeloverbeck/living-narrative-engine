@@ -207,6 +207,6 @@
         "auditory": "I hear teeth grind and a breath pulled in like a hiss. If they speak, it's low and tight-words forced through a clenched throat."
     },
     "category": "anger",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0001
 }

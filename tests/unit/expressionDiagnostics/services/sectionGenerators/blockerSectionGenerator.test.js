@@ -19,6 +19,7 @@ const createHierarchy = () => ({
       thresholdValue: 0.5,
       variablePath: 'emotions.joy',
       gatePassInRegimeCount: 120,
+      gatePassAndClausePassInRegimeCount: 60, // 50% of gate-passers also pass threshold
       inRegimeEvaluationCount: 200,
       failureRate: 0.6,
       inRegimeFailureRate: 0.5,

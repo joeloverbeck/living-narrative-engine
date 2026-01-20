@@ -159,5 +159,6 @@
         "auditory": "I hear a short, quiet laugh-soft, warm, gone almost immediately-followed by an exhale that makes the air feel less tight."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0014
 }

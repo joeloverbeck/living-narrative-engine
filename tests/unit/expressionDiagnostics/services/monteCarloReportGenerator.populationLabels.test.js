@@ -265,13 +265,16 @@ describe('MonteCarloReportGenerator - Population Labels', () => {
       ],
     });
 
+    // Change C: Population labels now use normalized types
+    // - 'stored-global' becomes 'stored' (contains 'stored' but not 'mood'/'regime')
+    // - 'stored-mood-regime' stays as 'stored-mood-regime' (contains 'mood' or 'regime')
     expect(report).toMatch(/## Conditional Pass Rates[\s\S]*\*\*Population\*\*: stored-mood-regime/);
-    expect(report).toMatch(/## Last-Mile Decomposition[\s\S]*\*\*Population\*\*: stored-global/);
-    expect(report).toMatch(/## Marginal Clause Pass-Rate Sweep[\s\S]*\*\*Population\*\*: stored-global/);
-    expect(report).toMatch(/## Global Expression Sensitivity Analysis[\s\S]*\*\*Population\*\*: stored-global/);
+    expect(report).toMatch(/## Last-Mile Decomposition[\s\S]*\*\*Population\*\*: stored/);
+    expect(report).toMatch(/## Marginal Clause Pass-Rate Sweep[\s\S]*\*\*Population\*\*: stored/);
+    expect(report).toMatch(/## Global Expression Sensitivity Analysis[\s\S]*\*\*Population\*\*: stored/);
     expect(report).toMatch(/## .*Prototype Fit Analysis[\s\S]*\*\*Population\*\*: stored-mood-regime/);
     expect(report).toMatch(/## .*Implied Prototype from Prerequisites[\s\S]*\*\*Population\*\*: stored-mood-regime/);
     expect(report).toMatch(/## .*Prototype Gap Detection[\s\S]*\*\*Population\*\*: stored-mood-regime/);
-    expect(report).toMatch(/#### Prototype Math Analysis[\s\S]*\*\*Population\*\*: stored-global/);
+    expect(report).toMatch(/#### Prototype Math Analysis[\s\S]*\*\*Population\*\*: stored/);
   });
 });
