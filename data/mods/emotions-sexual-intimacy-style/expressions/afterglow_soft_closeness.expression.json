@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-sexual-intimacy-style:afterglow_soft_closeness",
-    "description": "Sexual afterglow: desire softens into warmth and ease\u2014attention turns toward closeness, comfort, and quiet bonding. The body is still lit with pleasure, but the urgency drains away, replaced by a gentle, settling sense of togetherness.",
+    "description": "Sexual afterglow: desire softens into warmth and ease—attention turns toward closeness, comfort, and quiet bonding. The body is still lit with pleasure, but the urgency drains away, replaced by a gentle, settling sense of togetherness.",
     "category": "affection",
     "priority": 73,
     "prerequisites": [
@@ -15,7 +15,7 @@
                                     {
                                         "var": "sexualStates.sexual_sensual_pleasure"
                                     },
-                                    0.60
+                                    0.6
                                 ]
                             },
                             {
@@ -23,7 +23,7 @@
                                     {
                                         "var": "sexualStates.passion"
                                     },
-                                    0.60
+                                    0.6
                                 ]
                             }
                         ]
@@ -33,7 +33,7 @@
                             {
                                 "var": "emotions.release"
                             },
-                            0.30
+                            0.3
                         ]
                     },
                     {
@@ -141,7 +141,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -149,7 +149,7 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.20
+                            0.2
                         ]
                     },
                     {
@@ -192,7 +192,7 @@
                                             {
                                                 "var": "previousEmotions.release"
                                             },
-                                            0.30
+                                            0.3
                                         ]
                                     },
                                     {
@@ -200,7 +200,7 @@
                                             {
                                                 "var": "emotions.release"
                                             },
-                                            0.30
+                                            0.3
                                         ]
                                     }
                                 ]
@@ -217,7 +217,7 @@
                                             }
                                         ]
                                     },
-                                    0.10
+                                    0.1
                                 ]
                             },
                             {
@@ -234,7 +234,7 @@
                                                     }
                                                 ]
                                             },
-                                            0.10
+                                            0.1
                                         ]
                                     },
                                     {
@@ -249,7 +249,7 @@
                                                     }
                                                 ]
                                             },
-                                            0.10
+                                            0.1
                                         ]
                                     }
                                 ]
@@ -261,12 +261,13 @@
             "failure_message": "Requires lingering sensual pleasure (or passion) plus a warmth signature (affection or love_attachment), but keys the afterglow ‘settle’ on emotional release (unclench) rather than purely sexual-state math. Grounds in low threat, high affiliation, engaged attention, and a comedown arousal drop. Blocks shame/fear/performance-anxiety blends and caps craving plus panic/terror/hypervigilance/alarm so it reads as tender settling, not edgy conflict or vigilance. Fires on a release crossing/spike (or arousal drop) to prevent spam."
         }
     ],
-    "actor_description": "The sharp edge of wanting fades and leaves something softer behind. My breathing slows, heat spreading out instead of surging, and I feel my attention drift toward closeness like it\u2019s the obvious place to rest. It\u2019s less hunger now, more a quiet gratitude in my chest\u2014an unguarded, wordless ease that makes me want to stay near.",
-    "description_text": "{actor} visibly settles\u2014breath evening out, posture loosening as the urgency drains from their body. They linger close with a softened gaze and small, unhurried movements that read as comfort rather than pursuit.",
+    "actor_description": "The sharp edge of wanting fades and leaves something softer behind. My breathing slows, heat spreading out instead of surging, and I feel my attention drift toward closeness like it’s the obvious place to rest. It’s less hunger now, more a quiet gratitude in my chest—an unguarded, wordless ease that makes me want to stay near.",
+    "description_text": "{actor} visibly settles—breath evening out, posture loosening as the urgency drains from their body. They linger close with a softened gaze and small, unhurried movements that read as comfort rather than pursuit.",
     "alternate_descriptions": {
-        "auditory": "I hear a slow, satisfied exhale and a gentler cadence in their voice\u2014lower, calmer, as if the room just got safer.",
+        "auditory": "I hear a slow, satisfied exhale and a gentler cadence in their voice—lower, calmer, as if the room just got safer.",
         "tactile": "Warmth lingers on the skin; their movements turn slow and careful, the body sinking into a relaxed closeness instead of reaching.",
-        "limited": "The intensity ebbs. What remains is a quiet, affectionate ease\u2014less drive, more closeness."
+        "limited": "The intensity ebbs. What remains is a quiet, affectionate ease—less drive, more closeness."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0002
 }

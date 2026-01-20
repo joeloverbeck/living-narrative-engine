@@ -256,5 +256,6 @@
         "tactile": "The air feels prickly-restless heat and tension, like someone is bracing and trying not to show it."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0002
 }

@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-shame:defensive_shame_snap",
-    "description": "Shame turns outward for cover\u2014an abrupt, protective bite meant to stop attention from landing. The hostility is reactive and close to the skin: less cruelty than a reflexive 'back off' when being seen feels dangerous.",
+    "description": "Shame turns outward for cover—an abrupt, protective bite meant to stop attention from landing. The hostility is reactive and close to the skin: less cruelty than a reflexive 'back off' when being seen feels dangerous.",
     "category": "anger",
     "priority": 77,
     "prerequisites": [
@@ -164,11 +164,12 @@
             "failure_message": "Defensive snap is shame + threat + arousal, expressed as a brief restraint failure: uses wrath (not rage) as the anger-family driver and requires a wrath spike. Blocks cold cruelty by capping contempt/hatred, and blocks white-knuckle control by requiring low inhibitory_control (with trait self_control modulating likelihood)."
         }
     ],
-    "actor_description": "Heat crawls up my neck and I can feel myself shrinking inside my own skin\u2014like I'm being pinned by attention. Then the next thing out of me is sharp: a snap meant to make the moment back up. It\u2019s not courage; it\u2019s cover. I\u2019m trying to stop the looking before it gets under me.",
-    "description_text": "{actor}'s posture tightens as if bracing, then they lash out with a quick, cutting remark. Their eyes go hard for a beat\u2014less cruel than protective, like they're trying to shove attention away from a sore spot.",
+    "actor_description": "Heat crawls up my neck and I can feel myself shrinking inside my own skin—like I'm being pinned by attention. Then the next thing out of me is sharp: a snap meant to make the moment back up. It’s not courage; it’s cover. I’m trying to stop the looking before it gets under me.",
+    "description_text": "{actor}'s posture tightens as if bracing, then they lash out with a quick, cutting remark. Their eyes go hard for a beat—less cruel than protective, like they're trying to shove attention away from a sore spot.",
     "alternate_descriptions": {
-        "auditory": "The voice comes out clipped and louder than necessary\u2014edges in the consonants, a defensive bite that lands before a softer tone can catch up.",
-        "tactile": "The air around them feels suddenly prickly, like they\u2019ve thrown up invisible elbows; their movements get stiff, fast, and a little too forceful."
+        "auditory": "The voice comes out clipped and louder than necessary—edges in the consonants, a defensive bite that lands before a softer tone can catch up.",
+        "tactile": "The air around them feels suddenly prickly, like they’ve thrown up invisible elbows; their movements get stiff, fast, and a little too forceful."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

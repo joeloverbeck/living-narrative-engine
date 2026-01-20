@@ -177,6 +177,6 @@
         "limited": "Someone feels steady-no jitter in their movements, no tension radiating off them, just a quiet physical ease you can sense in proximity."
     },
     "category": "calm",
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.007
 }

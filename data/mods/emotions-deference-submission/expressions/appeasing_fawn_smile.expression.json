@@ -19,13 +19,21 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "emotions.apprehension"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
                         "or": [
                             {
                                 ">=": [
                                     {
                                         "var": "emotions.anxiety"
                                     },
-                                    0.4
+                                    0.35
                                 ]
                             },
                             {
@@ -33,7 +41,7 @@
                                     {
                                         "var": "emotions.unease"
                                     },
-                                    0.45
+                                    0.40
                                 ]
                             },
                             {
@@ -41,7 +49,7 @@
                                     {
                                         "var": "emotions.stress_acute"
                                     },
-                                    0.45
+                                    0.40
                                 ]
                             }
                         ]
@@ -91,7 +99,7 @@
                             {
                                 "var": "emotions.trust"
                             },
-                            0.4
+                            0.40
                         ]
                     },
                     {
@@ -107,7 +115,7 @@
                             {
                                 "var": "emotions.love_attachment"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -123,13 +131,37 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.2
+                            0.20
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
                         ]
                     },
                     {
                         "<=": [
                             {
                                 "var": "emotions.courage"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
                             },
                             0.35
                         ]
@@ -165,12 +197,74 @@
                                     },
                                     0.12
                                 ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousMoodAxes.affiliation"
+                                            },
+                                            15
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            15
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.affiliation"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.affiliation"
+                                                    }
+                                                ]
+                                            },
+                                            12
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "moodAxes.affiliation"
+                                            },
+                                            15
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a fawn-shaped blend: submission plus anxiety/unease/stress, with elevated threat and low agency, but a deliberately high affiliation signal (outward placation). Adds a regulation gate (inhibitory_control + baseline self_control) so the warmth reads as a managed safety strategy rather than a loose, disinhibited social grin or a panic collapse. Blocks genuine bonding (trust/affection/attachment) and blocks fight/defiance (rage/protest_anger) and bold approach (courage). Triggers only on a threat jump or submission spike to keep it a reflex beat, not a constant personality."
+            "failure_message": "Appeasing fawn smile is friendliness-as-risk-reduction: requires submission with apprehension as the primary driver, supported by anxiety/unease/stress. Grounds in elevated threat, low agency, and a deliberate affiliation signal (placation) under a strong regulation clamp (inhibitory_control + baseline self_control). Blocks genuine bonding (trust/affection/attachment) and blocks fight/defiance (protest_anger/rage) and bold approach (courage). Fires only on threat/submission/apprehension spikes or an affiliation jump/crossing so it reads as a reflex safety move, not a trait."
         }
     ],
     "alternate_descriptions": {
@@ -178,6 +272,6 @@
         "tactile": "The air feels tight against the skin; someone’s shoulders hold a careful tension even while their face stays pleasantly open, like the body is braced under the smile.",
         "limited": "I catch a too-bright smile and unusually accommodating body language—pleasant on the surface, but edged with caution."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

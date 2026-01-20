@@ -133,6 +133,6 @@
         "tactile": "Someone's presence feels grounding-steady and warm, like someone has decided to stay."
     },
     "category": "affection",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0012
 }

@@ -305,7 +305,9 @@ describe('MonteCarloReportGenerator recommendations section', () => {
     });
 
     expect(report).toContain('## Recommendations');
-    expect(report).toContain('Prototype structurally mismatched');
+    // Implementation now uses specific titles via #getMismatchTitle() instead of generic fallback
+    // Scenario: both gateMismatch (50% fail rate > 25%) and thresholdMismatch (2/40 pass|gate < 15%)
+    expect(report).toContain('Prototype gate and threshold both misaligned');
     expect(report).toContain('Gate fail rate: 40/80');
     expect(report).toContain('Pass | gate: 2/40');
     expect(report).toContain('- **Confidence**: low');
@@ -456,7 +458,8 @@ describe('MonteCarloReportGenerator recommendations section', () => {
     expect(report).toContain(
       'Recommendations suppressed: invariant violations detected in diagnostic facts.'
     );
-    expect(report).not.toContain('Recommendation 1: Prototype structurally mismatched');
+    // Verify no recommendation appears when invariants fail
+    expect(report).not.toContain('Recommendation 1: Prototype gate');
   });
 
   describe('prototype_create_suggestion recommendations', () => {

@@ -136,23 +136,43 @@ No blockers identified.
       for (const leaf of keyThresholds) {
         const gatePassCount = leaf.gatePassInRegimeCount;
         const inRegimeEvaluationCount = leaf.inRegimeEvaluationCount;
+        const gatePassAndClausePassCount = leaf.gatePassAndClausePassInRegimeCount;
         const gatePassRate =
           Number.isFinite(gatePassCount) &&
           Number.isFinite(inRegimeEvaluationCount) &&
           inRegimeEvaluationCount > 0
             ? gatePassCount / inRegimeEvaluationCount
             : null;
-        const label = this.#formattingService.formatFunnelClauseLabel(leaf);
+        const thresholdPassGivenGateRate =
+          Number.isFinite(gatePassAndClausePassCount) &&
+          Number.isFinite(gatePassCount) &&
+          gatePassCount > 0
+            ? gatePassAndClausePassCount / gatePassCount
+            : null;
+        const emotionName = this.#extractEmotionName(leaf.variablePath);
+        const fullLabel = this.#formattingService.formatFunnelClauseLabel(leaf);
+
+        // Line 1: Prototype gate pass (non-zero check)
         lines.push(
-          `- **Gate pass | mood-pass (${label})**: ${this.#formattingService.formatRateWithCounts(
+          `- **Prototype gate pass (\`${emotionName}\`)**: ${this.#formattingService.formatRateWithCounts(
             gatePassRate,
             gatePassCount,
             inRegimeEvaluationCount
           )}`
         );
+
+        // Line 2: Threshold pass given gate (actual threshold comparison)
+        lines.push(
+          `- **Threshold pass | gate (${fullLabel})**: ${this.#formattingService.formatRateWithCounts(
+            thresholdPassGivenGateRate,
+            gatePassAndClausePassCount,
+            gatePassCount
+          )}`
+        );
       }
     } else {
-      lines.push('- **Gate pass | mood-pass**: N/A');
+      lines.push('- **Prototype gate pass**: N/A');
+      lines.push('- **Threshold pass | gate**: N/A');
     }
 
     const orBlocks = this.#treeTraversal.collectOrBlocks(blockers);
@@ -201,6 +221,66 @@ No blockers identified.
     );
 
     return `${lines.join('\n')}\n`;
+  }
+
+  /**
+   * Extracts the emotion name from a variable path.
+   * e.g., "emotions.disgust" → "disgust", "state.emotions.joy" → "joy"
+   * @param {string} variablePath - The full variable path
+   * @returns {string} The extracted emotion name or 'unknown'
+   */
+  #extractEmotionName(variablePath) {
+    if (!variablePath || typeof variablePath !== 'string') {
+      return 'unknown';
+    }
+    const parts = variablePath.split('.');
+    // Return the last part (the emotion name)
+    return parts[parts.length - 1] || 'unknown';
+  }
+
+  /**
+   * Categorizes condition leaves by type and returns a breakdown string.
+   * @param {Array} leaves - Array of leaf nodes
+   * @returns {string} Breakdown string like ": 3 mood-axis, 5 emotion thresholds"
+   */
+  #categorizeConditions(leaves) {
+    if (!Array.isArray(leaves) || leaves.length === 0) {
+      return '';
+    }
+
+    const counts = {
+      moodAxis: 0,
+      emotionThreshold: 0,
+      other: 0,
+    };
+
+    for (const leaf of leaves) {
+      const variablePath = leaf?.variablePath ?? '';
+      if (this.#treeTraversal.isEmotionThresholdLeaf(leaf)) {
+        counts.emotionThreshold++;
+      } else if (variablePath.includes('mood') || variablePath.includes('axis')) {
+        counts.moodAxis++;
+      } else {
+        counts.other++;
+      }
+    }
+
+    const parts = [];
+    if (counts.moodAxis > 0) {
+      parts.push(`${counts.moodAxis} mood-axis`);
+    }
+    if (counts.emotionThreshold > 0) {
+      parts.push(`${counts.emotionThreshold} emotion thresholds`);
+    }
+    if (counts.other > 0) {
+      parts.push(`${counts.other} other`);
+    }
+
+    if (parts.length === 0) {
+      return '';
+    }
+
+    return `: ${parts.join(', ')}`;
   }
 
   #selectKeyThresholdClauses({ blockers, clauseFailures, ablationImpact }) {
@@ -534,10 +614,11 @@ ${sections.join('\n\n')}`;
         // Nested AND within OR - group these together
         const nestedLeaves = this.#treeTraversal.flattenLeaves(child.node);
         if (nestedLeaves.length > 0) {
+          const typeBreakdown = this.#categorizeConditions(nestedLeaves);
           entries.push({
             type: 'grouped_and',
             leaves: nestedLeaves,
-            groupLabel: `AND Group (${nestedLeaves.length} conditions - all must pass together)`,
+            groupLabel: `AND Group (${nestedLeaves.length} conditions${typeBreakdown})`,
           });
         }
       } else {
@@ -576,6 +657,7 @@ ${sections.join('\n\n')}`;
       'Redundant (regime)',
       'Clamp-trivial (regime)',
       'Sole-Blocker Rate',
+      'Headroom (10%)',
     ];
     const gateColumns = includeGateMetrics
       ? [
@@ -1137,6 +1219,9 @@ ${sections.join('\n\n')}`;
       lastMileStr = '-';
     }
 
+    // Calculate headroom to 10% (using in-regime failure rate for actionable insights)
+    const headroomStr = this.#formattingService.formatHeadroomMultiplier(inRegimeFailureRate);
+
     let gatePassStr = '';
     let gateClampStr = '';
     let passGivenGateStr = '';
@@ -1176,7 +1261,7 @@ ${sections.join('\n\n')}`;
       }
     }
 
-    const baseRow = `| ${index} | \`${description}\` | ${globalFailStr} | ${inRegimeFailStr} | ${evaluationCount} | ${boundObsStr} | ${thresholdStr} | ${gapStr} | ${tunabilityStr} | ${redundantStr} | ${clampTrivialStr} | ${lastMileStr} |`;
+    const baseRow = `| ${index} | \`${description}\` | ${globalFailStr} | ${inRegimeFailStr} | ${evaluationCount} | ${boundObsStr} | ${thresholdStr} | ${gapStr} | ${tunabilityStr} | ${redundantStr} | ${clampTrivialStr} | ${lastMileStr} | ${headroomStr} |`;
     if (!includeGateMetrics) {
       return baseRow;
     }

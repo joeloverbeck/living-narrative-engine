@@ -110,5 +110,6 @@
         "tactile": "Fidgeting stops. Hands become still or purposeful, shoulders easing into a straighter line as if the body finally found a comfortable, honest stance.",
         "limited": "{actor} gives a small, contained nod and moves on with calm certainty."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0547
 }

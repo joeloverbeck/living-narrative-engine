@@ -3,6 +3,7 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { extractMoodConstraints } from '../utils/moodRegimeUtils.js';
 
 class ReportOrchestrator {
   #logger;
@@ -55,15 +56,30 @@ class ReportOrchestrator {
     }
 
     const storedContexts = simulationResult.storedContexts ?? [];
+    const baselineTriggerRate = simulationResult.triggerRate ?? null;
+
+    // Extract mood constraints for near-miss pool filtering
+    const moodConstraints = extractMoodConstraints(prerequisites, {
+      includeMoodAlias: true,
+      andOnly: true,
+    });
+
+    const sensitivityOptions = {
+      baselineTriggerRate,
+      moodConstraints,
+    };
+
     const sensitivityData = this.#sensitivityAnalyzer.computeSensitivityData(
       storedContexts,
-      blockers
+      blockers,
+      sensitivityOptions
     );
     const globalSensitivityData =
       this.#sensitivityAnalyzer.computeGlobalSensitivityData(
         storedContexts,
         blockers,
-        prerequisites
+        prerequisites,
+        sensitivityOptions
       );
 
     const reportMarkdown = this.#monteCarloReportGenerator.generate({

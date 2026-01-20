@@ -1,277 +1,278 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-sexual-desire:anticipatory_edge",
-  "description": "Approach-oriented anticipation: alert, eager readiness for what's about to happen-waiting becomes charged.",
-  "priority": 74,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "emotions.anticipation"
-              },
-              0.6
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "emotions.interest"
-                  },
-                  0.2
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.lonely_yearning"
-                  },
-                  0.35
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "sexualStates.romantic_yearning"
-                  },
-                  0.35
-                ]
-              }
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              15
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              15
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.agency_control"
-              },
-              -10
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.affiliation"
-              },
-              -15
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              45
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.2
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.fear"
-              },
-              0.45
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.dread"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.terror"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.boredom"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.apathy"
-              },
-              0.45
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.fatigue"
-              },
-              0.65
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.anxiety"
-              },
-              0.65
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.1
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.rage"
-              },
-              0.45
-            ]
-          },
-          {
-            "or": [
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-sexual-desire:anticipatory_edge",
+    "description": "Approach-oriented anticipation: alert, eager readiness for what's about to happen-waiting becomes charged.",
+    "priority": 74,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    "<": [
-                      {
-                        "var": "previousEmotions.anticipation"
-                      },
-                      0.6
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.anticipation"
-                      },
-                      0.6
-                    ]
-                  }
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "emotions.anticipation"
-                      },
-                      {
-                        "var": "previousEmotions.anticipation"
-                      }
-                    ]
-                  },
-                  0.08
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "moodAxes.engagement"
-                      },
-                      {
-                        "var": "previousMoodAxes.engagement"
-                      }
-                    ]
-                  },
-                  12
-                ]
-              },
-              {
-                "and": [
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.lonely_yearning"
-                      },
-                      0.35
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "-": [
-                          {
-                            "var": "emotions.lonely_yearning"
-                          },
-                          {
-                            "var": "previousEmotions.lonely_yearning"
-                          }
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.anticipation"
+                            },
+                            0.6
                         ]
-                      },
-                      0.1
-                    ]
-                  }
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.interest"
+                                    },
+                                    0.2
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.lonely_yearning"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.romantic_yearning"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.agency_control"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.affiliation"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.boredom"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.apathy"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fatigue"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.anticipation"
+                                            },
+                                            0.6
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.anticipation"
+                                            },
+                                            0.6
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.anticipation"
+                                            },
+                                            {
+                                                "var": "previousEmotions.anticipation"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.engagement"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.engagement"
+                                            }
+                                        ]
+                                    },
+                                    12
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.lonely_yearning"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.lonely_yearning"
+                                                    }
+                                                ]
+                                            },
+                                            0.1
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.enthusiasm"
+                            },
+                            0.75
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.euphoria"
+                            },
+                            0.55
+                        ]
+                    }
                 ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.enthusiasm"
-              },
-              0.75
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.euphoria"
-              },
-              0.55
-            ]
-          }
-        ]
-      },
-      "failure_message": "Approach-oriented anticipation with engagement + arousal + enough control to feel ready (not helpless), and not hostile/detached. Interest is the default hook; lonely-yearning or romantic-yearning can also supply the 'charged waiting' tone. Excludes fear-freeze and stays well below panic; change-gate can be anticipation crossing/spike, engagement jump, or a lonely-yearning surge (still requires anticipation >= 0.6)."
-    }
-  ],
-  "actor_description": "The next moment has weight. My attention keeps snapping forward as if it can catch what's coming before it arrives. I feel it in my body: a held breath, fingertips wanting to move, muscles lightly pre-tensed-ready without being afraid. I keep checking small cues, rehearsing the first action like a reflex test. It's not panic. It's timing. Like standing a half-step from a starting line, waiting for the signal that makes the whole world go.",
-  "description_text": "{actor} goes still in a way that isn't restful-weight subtly forward, eyes tracking, attention snagging on every small change. Their hands flex once and settle. Breath runs a little high, controlled. They look prepared, not worried: someone measuring distance and seconds, waiting for the exact moment to move.",
-  "alternate_descriptions": {
-    "auditory": "I hear breathing held, then released in short controlled pulls-someone pacing their oxygen like a runner.",
-    "tactile": "A presence tightens into readiness-minute vibrations of contained motion, like a spring loaded but not released.",
-    "olfactory": "There's a clean edge of adrenaline in the air-sharp and bright, without the sour rot of fear."
-  },
-  "category": "desire",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Approach-oriented anticipation with engagement + arousal + enough control to feel ready (not helpless), and not hostile/detached. Interest is the default hook; lonely-yearning or romantic-yearning can also supply the 'charged waiting' tone. Excludes fear-freeze and stays well below panic; change-gate can be anticipation crossing/spike, engagement jump, or a lonely-yearning surge (still requires anticipation >= 0.6)."
+        }
+    ],
+    "actor_description": "The next moment has weight. My attention keeps snapping forward as if it can catch what's coming before it arrives. I feel it in my body: a held breath, fingertips wanting to move, muscles lightly pre-tensed-ready without being afraid. I keep checking small cues, rehearsing the first action like a reflex test. It's not panic. It's timing. Like standing a half-step from a starting line, waiting for the signal that makes the whole world go.",
+    "description_text": "{actor} goes still in a way that isn't restful-weight subtly forward, eyes tracking, attention snagging on every small change. Their hands flex once and settle. Breath runs a little high, controlled. They look prepared, not worried: someone measuring distance and seconds, waiting for the exact moment to move.",
+    "alternate_descriptions": {
+        "auditory": "I hear breathing held, then released in short controlled pulls-someone pacing their oxygen like a runner.",
+        "tactile": "A presence tightens into readiness-minute vibrations of contained motion, like a spring loaded but not released.",
+        "olfactory": "There's a clean edge of adrenaline in the air-sharp and bright, without the sour rot of fear."
+    },
+    "category": "desire",
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0038
 }

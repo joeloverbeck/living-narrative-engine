@@ -199,6 +199,6 @@
         "auditory": "I hear a slow exhale that sounds earned, followed by a quiet, involuntary sound-half hum, half laugh-kept deliberately small."
     },
     "category": "affection",
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0066
 }

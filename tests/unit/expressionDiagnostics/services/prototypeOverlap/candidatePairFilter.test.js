@@ -1,0 +1,840 @@
+/**
+ * @file Unit tests for CandidatePairFilter
+ * Tests Stage A candidate filtering logic for prototype overlap analysis.
+ */
+
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import CandidatePairFilter from '../../../../../src/expressionDiagnostics/services/prototypeOverlap/CandidatePairFilter.js';
+
+describe('CandidatePairFilter', () => {
+  /**
+   * Create a mock logger for testing.
+   *
+   * @returns {object} Mock logger
+   */
+  const createMockLogger = () => ({
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  });
+
+  /**
+   * Create a test config with adjustable thresholds.
+   *
+   * @param {object} [overrides] - Override specific threshold values
+   * @returns {object} Config object
+   */
+  const createConfig = (overrides = {}) => ({
+    activeAxisEpsilon: 0.08,
+    candidateMinActiveAxisOverlap: 0.6,
+    candidateMinSignAgreement: 0.8,
+    candidateMinCosineSimilarity: 0.85,
+    ...overrides,
+  });
+
+  /**
+   * Create a prototype with specified weights.
+   *
+   * @param {string} id - Prototype ID
+   * @param {object} weights - Axis weights
+   * @returns {object} Prototype object
+   */
+  const createPrototype = (id, weights) => ({
+    id,
+    weights,
+  });
+
+  /**
+   * Create filter instance for testing.
+   *
+   * @param {object} [configOverrides] - Config overrides
+   * @returns {{filter: CandidatePairFilter, logger: object}} Filter and mock logger
+   */
+  const createFilter = (configOverrides = {}) => {
+    const logger = createMockLogger();
+    const config = createConfig(configOverrides);
+    const filter = new CandidatePairFilter({ config, logger });
+    return { filter, logger };
+  };
+
+  describe('constructor', () => {
+    it('should create instance with valid dependencies', () => {
+      const { filter } = createFilter();
+      expect(filter).toBeInstanceOf(CandidatePairFilter);
+    });
+
+    it('should throw when logger is missing', () => {
+      const config = createConfig();
+      expect(() => new CandidatePairFilter({ config, logger: null })).toThrow();
+    });
+
+    it('should throw when logger lacks required methods', () => {
+      const config = createConfig();
+      const invalidLogger = { debug: jest.fn() }; // Missing warn, error
+      expect(
+        () => new CandidatePairFilter({ config, logger: invalidLogger })
+      ).toThrow();
+    });
+
+    it('should throw when config is missing', () => {
+      const logger = createMockLogger();
+      expect(() => new CandidatePairFilter({ config: null, logger })).toThrow();
+    });
+
+    it('should throw when config lacks required thresholds', () => {
+      const logger = createMockLogger();
+      const incompleteConfig = { activeAxisEpsilon: 0.08 }; // Missing others
+      expect(
+        () => new CandidatePairFilter({ config: incompleteConfig, logger })
+      ).toThrow();
+    });
+
+    it('should log error when config threshold is invalid', () => {
+      const logger = createMockLogger();
+      const invalidConfig = {
+        activeAxisEpsilon: 'not a number',
+        candidateMinActiveAxisOverlap: 0.6,
+        candidateMinSignAgreement: 0.8,
+        candidateMinCosineSimilarity: 0.85,
+      };
+      expect(
+        () => new CandidatePairFilter({ config: invalidConfig, logger })
+      ).toThrow();
+      expect(logger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('Active Axis Extraction', () => {
+    it('excludes axes below epsilon from active set', () => {
+      // Set epsilon = 0.1, prototype has weights: {a: 0.05, b: 0.15}
+      // Only 'b' should be active
+      const { filter } = createFilter({ activeAxisEpsilon: 0.1 });
+      const p1 = createPrototype('p1', { a: 0.05, b: 0.15, c: 0.2 });
+      const p2 = createPrototype('p2', { a: 0.05, b: 0.15, c: 0.2 }); // Identical
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      // Should produce a candidate pair (identical prototypes)
+      expect(result.candidates).toHaveLength(1);
+      // Metrics should reflect that 'a' (below 0.1) is excluded from active set
+      // Both have same active axes {b, c}, so Jaccard = 1.0
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
+    });
+
+    it('includes axes at or above epsilon boundary', () => {
+      // epsilon = 0.1, weight = 0.1 should be included
+      const { filter } = createFilter({ activeAxisEpsilon: 0.1 });
+      const p1 = createPrototype('p1', { a: 0.1, b: 0.2 }); // 'a' is exactly at boundary
+      const p2 = createPrototype('p2', { a: 0.1, b: 0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      // Both active sets: {a, b}, Jaccard = 1.0
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
+    });
+
+    it('handles negative weights correctly (absolute value >= epsilon)', () => {
+      const { filter } = createFilter({ activeAxisEpsilon: 0.1 });
+      const p1 = createPrototype('p1', { a: -0.15, b: 0.2 });
+      const p2 = createPrototype('p2', { a: -0.15, b: 0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
+    });
+  });
+
+  describe('Sign Agreement', () => {
+    it('computes sign agreement only for shared active axes', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0, // Allow all through for testing
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      // p1 active: {a, b}, p2 active: {b, c}
+      // Shared: {b}, both have b = +0.2 => sign agreement = 1.0
+      const p1 = createPrototype('p1', { a: 0.2, b: 0.2 });
+      const p2 = createPrototype('p2', { b: 0.2, c: 0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(1);
+    });
+
+    it('returns 0 sign agreement when no shared axes', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0, // Allow through
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      // p1 active: {a}, p2 active: {b} - no overlap
+      const p1 = createPrototype('p1', { a: 0.2 });
+      const p2 = createPrototype('p2', { b: 0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0);
+    });
+
+    it('computes correct ratio for mixed sign agreement', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      // Shared axes: {a, b, c, d}
+      // a: both positive (match), b: both negative (match)
+      // c: opposite signs (no match), d: both positive (match)
+      // Sign agreement = 3/4 = 0.75
+      const p1 = createPrototype('p1', { a: 0.2, b: -0.2, c: 0.2, d: 0.2 });
+      const p2 = createPrototype('p2', { a: 0.2, b: -0.2, c: -0.2, d: 0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0.75);
+    });
+  });
+
+  describe('Cosine Similarity', () => {
+    it('returns ~1 for identical weight vectors', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3, c: -0.2 });
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3, c: -0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
+        1.0,
+        5
+      );
+    });
+
+    it('returns ~0 for orthogonal weight vectors', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.0,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      // Orthogonal vectors: dot product = 0
+      // p1 = (1, 0), p2 = (0, 1) in 2D
+      const p1 = createPrototype('p1', { a: 1.0, b: 0.0 });
+      const p2 = createPrototype('p2', { a: 0.0, b: 1.0 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
+        0.0,
+        5
+      );
+    });
+
+    it('returns ~-1 for opposite weight vectors', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3, c: -0.2 });
+      const p2 = createPrototype('p2', { a: -0.5, b: -0.3, c: 0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
+        -1.0,
+        5
+      );
+    });
+
+    it('handles vectors with different axis sets (missing treated as 0)', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.0,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      // p1 = (0.6, 0.8, 0), p2 = (0.6, 0.8, 0.5)
+      // dot = 0.36 + 0.64 + 0 = 1.0
+      // |p1| = 1.0, |p2| = sqrt(0.36 + 0.64 + 0.25) = sqrt(1.25)
+      // cosine = 1.0 / (1.0 * sqrt(1.25)) = 1/sqrt(1.25)
+      const p1 = createPrototype('p1', { a: 0.6, b: 0.8 });
+      const p2 = createPrototype('p2', { a: 0.6, b: 0.8, c: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      const expected = 1.0 / Math.sqrt(1.25);
+      expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
+        expected,
+        5
+      );
+    });
+  });
+
+  describe('Candidate Gating', () => {
+    let lowOverlapPair;
+    let highOverlapPair;
+
+    beforeEach(() => {
+      // Low overlap pair: different axes
+      lowOverlapPair = {
+        p1: createPrototype('p1', { a: 0.5, b: 0.3 }),
+        p2: createPrototype('p2', { c: 0.5, d: 0.3 }),
+      };
+      // High overlap pair: nearly identical
+      highOverlapPair = {
+        p1: createPrototype('p3', { a: 0.5, b: 0.3, c: 0.2 }),
+        p2: createPrototype('p4', { a: 0.5, b: 0.3, c: 0.2 }),
+      };
+    });
+
+    it('filters out pairs below activeAxisOverlap threshold', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.9, // Very high threshold
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      // Low overlap pair has Jaccard = 0 (no shared axes)
+      const result = filter.filterCandidates([
+        lowOverlapPair.p1,
+        lowOverlapPair.p2,
+      ]);
+
+      expect(result.candidates).toHaveLength(0);
+    });
+
+    it('filters out pairs below signAgreement threshold', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.9, // High threshold
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      // Create pair with opposite signs on all shared axes
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
+      const p2 = createPrototype('p2', { a: -0.5, b: -0.3 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(0);
+    });
+
+    it('filters out pairs below cosineSimilarity threshold', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: 0.95, // Very high threshold
+      });
+
+      // Orthogonal vectors have cosine = 0
+      const p1 = createPrototype('p1', { a: 1.0 });
+      const p2 = createPrototype('p2', { b: 1.0 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(0);
+    });
+
+    it('passes pairs meeting all thresholds', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.6,
+        candidateMinSignAgreement: 0.8,
+        candidateMinCosineSimilarity: 0.85,
+      });
+
+      // Identical prototypes pass all thresholds
+      const result = filter.filterCandidates([
+        highOverlapPair.p1,
+        highOverlapPair.p2,
+      ]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(1);
+      expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
+        1.0,
+        5
+      );
+    });
+
+    it('correctly gates based on exact threshold values', () => {
+      // Test boundary condition: metric exactly equals threshold
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.5, // Threshold
+        candidateMinSignAgreement: 0.5,
+        candidateMinCosineSimilarity: 0.0,
+      });
+
+      // Create pair with exactly 0.5 Jaccard overlap
+      // {a, b} vs {b, c} => intersection {b}, union {a, b, c} => 1/3 = 0.333
+      // Need {a, b} vs {a, c} => intersection {a}, union {a, b, c} => 1/3 still
+      // Try {a, b} vs {a, b, c, d} => intersection {a, b}, union {a, b, c, d} => 2/4 = 0.5
+      const p1 = createPrototype('p1', { a: 0.2, b: 0.2 });
+      const p2 = createPrototype('p2', { a: 0.2, b: 0.2, c: 0.2, d: 0.2 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      // Should pass because >= 0.5
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(0.5);
+    });
+  });
+
+  describe('Symmetry & Deduplication', () => {
+    it('produces symmetric metrics for (A,B) and (B,A)', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3, c: -0.2 });
+      const p2 = createPrototype('p2', { a: 0.4, b: -0.2, c: 0.1, d: 0.3 });
+
+      // Run twice with reversed order
+      const result1 = filter.filterCandidates([p1, p2]);
+      const result2 = filter.filterCandidates([p2, p1]);
+
+      // Metrics should be identical
+      expect(result1.candidates[0].candidateMetrics.activeAxisOverlap).toBe(
+        result2.candidates[0].candidateMetrics.activeAxisOverlap
+      );
+      expect(result1.candidates[0].candidateMetrics.signAgreement).toBe(
+        result2.candidates[0].candidateMetrics.signAgreement
+      );
+      expect(result1.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
+        result2.candidates[0].candidateMetrics.weightCosineSimilarity,
+        10
+      );
+    });
+
+    it('returns only one of (A,B) or (B,A), not both', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { a: 0.5 });
+      const p3 = createPrototype('p3', { a: 0.5 });
+
+      // 3 prototypes => 3 unique pairs: (p1,p2), (p1,p3), (p2,p3)
+      const result = filter.filterCandidates([p1, p2, p3]);
+
+      expect(result.candidates).toHaveLength(3);
+
+      // Verify no duplicate pairs
+      const pairIds = result.candidates.map(
+        (r) => `${r.prototypeA.id}-${r.prototypeB.id}`
+      );
+      const uniquePairIds = new Set(pairIds);
+      expect(uniquePairIds.size).toBe(3);
+    });
+
+    it('excludes self-pairs (A,A)', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+
+      // Single prototype cannot form a pair
+      const result = filter.filterCandidates([p1]);
+
+      expect(result.candidates).toHaveLength(0);
+    });
+
+    it('includes prototype references in result', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { a: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].prototypeA).toBe(p1);
+      expect(result.candidates[0].prototypeB).toBe(p2);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('returns empty array for empty prototype array', () => {
+      const { filter, logger } = createFilter();
+
+      const result = filter.filterCandidates([]);
+
+      expect(result.candidates).toEqual([]);
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Fewer than 2 valid prototypes')
+      );
+    });
+
+    it('returns empty array for single prototype', () => {
+      const { filter, logger } = createFilter();
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const result = filter.filterCandidates([p1]);
+
+      expect(result.candidates).toEqual([]);
+      expect(logger.debug).toHaveBeenCalled();
+    });
+
+    it('returns empty array for null input', () => {
+      const { filter, logger } = createFilter();
+
+      const result = filter.filterCandidates(null);
+
+      expect(result.candidates).toEqual([]);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid input')
+      );
+    });
+
+    it('returns empty array for undefined input', () => {
+      const { filter, logger } = createFilter();
+
+      const result = filter.filterCandidates(undefined);
+
+      expect(result.candidates).toEqual([]);
+      expect(logger.warn).toHaveBeenCalled();
+    });
+
+    it('returns empty array for non-array input', () => {
+      const { filter, logger } = createFilter();
+
+      const result = filter.filterCandidates('not an array');
+
+      expect(result.candidates).toEqual([]);
+      expect(logger.warn).toHaveBeenCalled();
+    });
+
+    it('filters out prototypes with no weights property', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = { id: 'p2' }; // No weights
+      const p3 = createPrototype('p3', { a: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2, p3]);
+
+      // Only p1-p3 pair should form
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].prototypeA.id).toBe('p1');
+      expect(result.candidates[0].prototypeB.id).toBe('p3');
+    });
+
+    it('filters out prototypes with invalid weights (non-object)', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = { id: 'p2', weights: 'invalid' };
+      const p3 = createPrototype('p3', { a: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2, p3]);
+
+      expect(result.candidates).toHaveLength(1);
+    });
+
+    it('filters out prototypes with empty weights object', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', {}); // Empty weights
+      const p3 = createPrototype('p3', { a: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2, p3]);
+
+      expect(result.candidates).toHaveLength(1);
+    });
+
+    it('handles prototypes with non-numeric weight values', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5, b: 'invalid' });
+      const p2 = createPrototype('p2', { a: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      // Should still work, ignoring non-numeric weights
+      expect(result.candidates).toHaveLength(1);
+    });
+
+    it('handles zero-weight vectors (all weights below epsilon)', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.01, b: 0.02 }); // All below epsilon
+      const p2 = createPrototype('p2', { a: 0.01, b: 0.02 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      // Both have empty active sets, Jaccard of empty sets = 0
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(0);
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0);
+      // Cosine similarity still computed on full vectors
+      expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
+        1.0,
+        5
+      );
+    });
+
+    it('handles null prototype entries in array', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p3 = createPrototype('p3', { a: 0.5 });
+
+      const result = filter.filterCandidates([p1, null, p3]);
+
+      expect(result.candidates).toHaveLength(1);
+    });
+  });
+
+  describe('Integration scenarios', () => {
+    it('handles typical emotion prototype comparison', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.08,
+        candidateMinActiveAxisOverlap: 0.6,
+        candidateMinSignAgreement: 0.8,
+        candidateMinCosineSimilarity: 0.85,
+      });
+
+      // Similar emotions (joy and contentment) - should be candidates
+      const joy = createPrototype('joy', {
+        valence: 0.8,
+        arousal: 0.5,
+        dominance: 0.3,
+        novelty: 0.2,
+      });
+      const contentment = createPrototype('contentment', {
+        valence: 0.7,
+        arousal: 0.3,
+        dominance: 0.2,
+        novelty: 0.1,
+      });
+
+      // Different emotion (anger) - should not match joy/contentment
+      const anger = createPrototype('anger', {
+        valence: -0.7,
+        arousal: 0.8,
+        dominance: 0.6,
+        novelty: 0.3,
+      });
+
+      const result = filter.filterCandidates([joy, contentment, anger]);
+
+      // Joy and contentment should be candidates (similar positive emotions)
+      // Anger should not match either due to opposite valence sign
+      const joyContentmentPair = result.candidates.find(
+        (r) =>
+          (r.prototypeA.id === 'joy' && r.prototypeB.id === 'contentment') ||
+          (r.prototypeA.id === 'contentment' && r.prototypeB.id === 'joy')
+      );
+      expect(joyContentmentPair).toBeDefined();
+
+      // Anger pairs should be filtered out due to sign disagreement
+      const angerPairs = result.candidates.filter(
+        (r) => r.prototypeA.id === 'anger' || r.prototypeB.id === 'anger'
+      );
+      expect(angerPairs).toHaveLength(0);
+    });
+
+    it('produces summary debug log', () => {
+      const { filter, logger } = createFilter();
+
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
+      const p3 = createPrototype('p3', { c: 0.5, d: 0.3 }); // Different
+
+      filter.filterCandidates([p1, p2, p3]);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('candidate pairs')
+      );
+    });
+  });
+
+  describe('Metric range invariants', () => {
+    it('activeAxisOverlap is always in [0, 1]', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const testCases = [
+        // Identical
+        [
+          createPrototype('a', { x: 0.5 }),
+          createPrototype('b', { x: 0.5 }),
+        ],
+        // Disjoint
+        [
+          createPrototype('a', { x: 0.5 }),
+          createPrototype('b', { y: 0.5 }),
+        ],
+        // Partial overlap
+        [
+          createPrototype('a', { x: 0.5, y: 0.3 }),
+          createPrototype('b', { y: 0.5, z: 0.3 }),
+        ],
+      ];
+
+      for (const [p1, p2] of testCases) {
+        const result = filter.filterCandidates([p1, p2]);
+        const overlap = result.candidates[0].candidateMetrics.activeAxisOverlap;
+        expect(overlap).toBeGreaterThanOrEqual(0);
+        expect(overlap).toBeLessThanOrEqual(1);
+      }
+    });
+
+    it('signAgreement is always in [0, 1]', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0, // Allow all through
+        candidateMinCosineSimilarity: -1.1, // Allow negative cosine through
+      });
+
+      const testCases = [
+        // All matching signs
+        [
+          createPrototype('a', { x: 0.5, y: 0.3 }),
+          createPrototype('b', { x: 0.5, y: 0.3 }),
+        ],
+        // All opposite signs
+        [
+          createPrototype('a', { x: 0.5, y: 0.3 }),
+          createPrototype('b', { x: -0.5, y: -0.3 }),
+        ],
+        // Mixed
+        [
+          createPrototype('a', { x: 0.5, y: 0.3, z: -0.2 }),
+          createPrototype('b', { x: 0.5, y: -0.3, z: 0.2 }),
+        ],
+      ];
+
+      for (const [p1, p2] of testCases) {
+        const result = filter.filterCandidates([p1, p2]);
+        expect(result.candidates).toHaveLength(1);
+        const signAgreement = result.candidates[0].candidateMetrics.signAgreement;
+        expect(signAgreement).toBeGreaterThanOrEqual(0);
+        expect(signAgreement).toBeLessThanOrEqual(1);
+      }
+    });
+
+    it('weightCosineSimilarity is always in [-1, 1]', () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.1, // Allow all through including negative
+      });
+
+      const testCases = [
+        // Identical (cosine = 1)
+        [
+          createPrototype('a', { x: 0.5, y: 0.3 }),
+          createPrototype('b', { x: 0.5, y: 0.3 }),
+        ],
+        // Opposite (cosine = -1)
+        [
+          createPrototype('a', { x: 0.5, y: 0.3 }),
+          createPrototype('b', { x: -0.5, y: -0.3 }),
+        ],
+        // Orthogonal (cosine = 0)
+        [
+          createPrototype('a', { x: 1.0 }),
+          createPrototype('b', { y: 1.0 }),
+        ],
+        // Random
+        [
+          createPrototype('a', { x: 0.3, y: -0.7, z: 0.1 }),
+          createPrototype('b', { x: 0.5, y: 0.2, z: -0.8 }),
+        ],
+      ];
+
+      for (const [p1, p2] of testCases) {
+        const result = filter.filterCandidates([p1, p2]);
+        expect(result.candidates).toHaveLength(1);
+        const cosine = result.candidates[0].candidateMetrics.weightCosineSimilarity;
+        // Use tolerance for floating point comparison
+        expect(cosine).toBeGreaterThanOrEqual(-1 - 1e-10);
+        expect(cosine).toBeLessThanOrEqual(1 + 1e-10);
+      }
+    });
+  });
+});

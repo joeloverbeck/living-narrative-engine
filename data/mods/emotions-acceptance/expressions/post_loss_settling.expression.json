@@ -211,5 +211,5 @@
         "tactile": "{actor}'s tension shifts: not gone, but redistributed—hands unclench slightly, shoulders drop a fraction, and the air around them feels less braced."
     },
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0037
+    "triggerRate": 0.0038
 }

@@ -20,33 +20,17 @@
                     {
                         ">=": [
                             {
-                                "var": "moodAxes.engagement"
+                                "var": "emotions.apprehension"
                             },
-                            25
+                            0.42
                         ]
                     },
                     {
                         ">=": [
                             {
-                                "var": "moodAxes.arousal"
+                                "var": "moodAxes.engagement"
                             },
-                            0
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            45
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.valence"
-                            },
-                            20
+                            25
                         ]
                     },
                     {
@@ -63,6 +47,38 @@
                                 "var": "moodAxes.threat"
                             },
                             60
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            -15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            12
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            25
                         ]
                     },
                     {
@@ -102,7 +118,7 @@
                             {
                                 "var": "emotions.hatred"
                             },
-                            0.2
+                            0.20
                         ]
                     },
                     {
@@ -118,7 +134,7 @@
                             {
                                 "var": "emotions.panic"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -126,7 +142,15 @@
                             {
                                 "var": "emotions.terror"
                             },
-                            0.3
+                            0.30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.62
                         ]
                     },
                     {
@@ -134,7 +158,7 @@
                             {
                                 "var": "emotions.hypervigilance"
                             },
-                            0.7
+                            0.70
                         ]
                     },
                     {
@@ -142,7 +166,7 @@
                             {
                                 "var": "emotions.anxiety"
                             },
-                            0.65
+                            0.60
                         ]
                     },
                     {
@@ -150,7 +174,7 @@
                             {
                                 "var": "emotions.dread"
                             },
-                            0.6
+                            0.60
                         ]
                     },
                     {
@@ -174,7 +198,7 @@
                             {
                                 "var": "emotions.release"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -182,7 +206,7 @@
                             {
                                 "var": "previousEmotions.release"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -243,7 +267,7 @@
                                             {
                                                 "var": "previousEmotions.suspicion"
                                             },
-                                            0.4
+                                            0.40
                                         ]
                                     },
                                     {
@@ -252,6 +276,41 @@
                                                 "var": "emotions.suspicion"
                                             },
                                             0.52
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            },
+                                            0.42
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            0.42
                                         ]
                                     }
                                 ]
@@ -287,7 +346,7 @@
                     }
                 ]
             },
-            "failure_message": "Wary suspicion must stay threat-toned, not hostile: caps smoldering_anger and other anger drivers so the beat remains interpretive vigilance. Keeps panic/terror low and enforces the strict low+stable release guard. Fires on suspicion/threat deltas so it reads as a sharpening of attention, not a sustained mood."
+            "failure_message": "Wary suspicion is interpretive vigilance with braced restraint: requires strong suspicion plus apprehension (the bodily 'not willing to relax'), grounded in engaged, moderate threat with capped arousal and an inhibition floor. Caps hostility/terror/panic so it stays skeptical rather than combative or acute-fear. Enforces low+stable release and fires only on suspicion/apprehension/threat deltas so it reads as a sharpening, not a steady mood."
         }
     ],
     "alternate_descriptions": {
@@ -296,6 +355,6 @@
         "limited": "{actor} looks guarded and watchful, attention repeatedly returning to the same details."
     },
     "category": "threat",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0001
 }

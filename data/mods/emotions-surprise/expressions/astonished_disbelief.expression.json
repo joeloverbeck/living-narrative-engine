@@ -208,6 +208,6 @@
         "tactile": "The air feels suddenly sharper against my skin; my hands hover mid-gesture, tingling with the urge to do something before I know what.",
         "limited": "I freeze in stunned focus for a beat, then snap back with a startled, incredulous look."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0002
 }

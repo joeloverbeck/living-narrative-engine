@@ -107,6 +107,6 @@
         "limited": "{actor} looks overwhelmed—present, caring, and strained, as if they're fighting to keep it together."
     },
     "category": "affection",
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

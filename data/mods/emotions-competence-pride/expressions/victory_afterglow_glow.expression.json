@@ -4,7 +4,7 @@
     "description": "Victory afterglow: the win stays in the system as a warm, capable glow—confidence spreads, breathing steadies, and the body keeps the uplift without the explosive release.",
     "priority": 75,
     "category": "agency",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "prerequisites": [
         {
             "logic": {

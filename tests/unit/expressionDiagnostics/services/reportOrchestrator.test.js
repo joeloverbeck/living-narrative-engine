@@ -43,14 +43,16 @@ describe('ReportOrchestrator', () => {
     expect(report).toBe('# Report');
     expect(sensitivityAnalyzer.computeSensitivityData).toHaveBeenCalledWith(
       simulationResult.storedContexts,
-      blockers
+      blockers,
+      { baselineTriggerRate: null, moodConstraints: [] }
     );
     expect(
       sensitivityAnalyzer.computeGlobalSensitivityData
     ).toHaveBeenCalledWith(
       simulationResult.storedContexts,
       blockers,
-      prerequisites
+      prerequisites,
+      { baselineTriggerRate: null, moodConstraints: [] }
     );
     expect(reportGenerator.generate).toHaveBeenCalledWith({
       expressionName: 'Test Expression',

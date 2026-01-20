@@ -47,6 +47,30 @@ OR-only blocker scenario
 
 ---
 
+## Independence Baseline Comparison
+
+This section compares Monte Carlo results against naive probability estimates (assuming clause independence) to identify correlation effects. Deviations indicate clauses are not statistically independent.
+
+| Metric | Value |
+|--------|-------|
+| Naive probability (product of pass rates) | 100.00% |
+| Expected hits per 10,000 samples | 10000.00 |
+| Actual hits | 1500 |
+| P(0 hits \\| expected=10000.00) | 0 |
+
+### Interpretation
+
+✅ **Normal**: Actual hits (1500) align with expected (10000.0).
+
+### Clause Pass Rate Factors
+
+| Clause | Pass Rate (in-regime) |
+|--------|------------------------|
+| emotions.joy | 100.00% |
+| emotions.curiosity | 100.00% |
+
+---
+
 ## Sampling Coverage
 
 **Sampling Mode**: static
@@ -98,7 +122,8 @@ Signal: final (gate-clamped intensity).
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
-- **Gate pass | mood-pass**: N/A
+- **Prototype gate pass**: N/A
+- **Threshold pass | gate**: N/A
 - **OR union pass | mood-pass**: N/A
 - **Final trigger**: 15.00% (1500 / 10000)
 
@@ -552,6 +577,32 @@ Snapshot test summary for refactoring safety
 
 ---
 
+## Independence Baseline Comparison
+
+This section compares Monte Carlo results against naive probability estimates (assuming clause independence) to identify correlation effects. Deviations indicate clauses are not statistically independent.
+
+| Metric | Value |
+|--------|-------|
+| Naive probability (product of pass rates) | 100.00% |
+| Expected hits per 10,000 samples | 10000.00 |
+| Actual hits | 1500 |
+| P(0 hits \\| expected=10000.00) | 0 |
+
+### Interpretation
+
+✅ **Normal**: Actual hits (1500) align with expected (10000.0).
+
+### Clause Pass Rate Factors
+
+| Clause | Pass Rate (in-regime) |
+|--------|------------------------|
+| emotions.joy | 100.00% |
+| emotions.fear | 100.00% |
+| emotions.joy | 100.00% |
+| emotions.curiosity | 100.00% |
+
+---
+
 ## Sampling Coverage
 
 **Sampling Mode**: static
@@ -603,7 +654,8 @@ Signal: final (gate-clamped intensity).
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
-- **Gate pass | mood-pass**: N/A
+- **Prototype gate pass**: N/A
+- **Threshold pass | gate**: N/A
 - **OR union pass | mood-pass**: N/A
 - **Final trigger**: 15.00% (1500 / 10000)
 
@@ -867,6 +919,32 @@ Zero trigger rate scenario
 
 ---
 
+## Independence Baseline Comparison
+
+This section compares Monte Carlo results against naive probability estimates (assuming clause independence) to identify correlation effects. Deviations indicate clauses are not statistically independent.
+
+| Metric | Value |
+|--------|-------|
+| Naive probability (product of pass rates) | 100.00% |
+| Expected hits per 10,000 samples | 10000.00 |
+| Actual hits | 0 |
+| P(0 hits \\| expected=10000.00) | 0 |
+
+### Interpretation
+
+⚠️ **Unexpected Zero**: Zero hits is surprising (p=0). Clause correlations may amplify blocking effects.
+
+### Clause Pass Rate Factors
+
+| Clause | Pass Rate (in-regime) |
+|--------|------------------------|
+| emotions.joy | 100.00% |
+| emotions.fear | 100.00% |
+| emotions.joy | 100.00% |
+| emotions.curiosity | 100.00% |
+
+---
+
 ## Ground-Truth Witnesses
 
 No triggering states found during simulation.
@@ -882,7 +960,8 @@ Signal: final (gate-clamped intensity).
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
-- **Gate pass | mood-pass**: N/A
+- **Prototype gate pass**: N/A
+- **Threshold pass | gate**: N/A
 - **OR union pass | mood-pass**: N/A
 - **Final trigger**: 0.00% (0 / 10000)
 
@@ -1159,6 +1238,32 @@ Prototype fit snapshot test
 
 ---
 
+## Independence Baseline Comparison
+
+This section compares Monte Carlo results against naive probability estimates (assuming clause independence) to identify correlation effects. Deviations indicate clauses are not statistically independent.
+
+| Metric | Value |
+|--------|-------|
+| Naive probability (product of pass rates) | 100.00% |
+| Expected hits per 10,000 samples | 10000.00 |
+| Actual hits | 1500 |
+| P(0 hits \\| expected=10000.00) | 0 |
+
+### Interpretation
+
+✅ **Normal**: Actual hits (1500) align with expected (10000.0).
+
+### Clause Pass Rate Factors
+
+| Clause | Pass Rate (in-regime) |
+|--------|------------------------|
+| emotions.joy | 100.00% |
+| emotions.fear | 100.00% |
+| emotions.joy | 100.00% |
+| emotions.curiosity | 100.00% |
+
+---
+
 ## Sampling Coverage
 
 **Sampling Mode**: static
@@ -1210,7 +1315,8 @@ Signal: final (gate-clamped intensity).
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
-- **Gate pass | mood-pass**: N/A
+- **Prototype gate pass**: N/A
+- **Threshold pass | gate**: N/A
 - **OR union pass | mood-pass**: N/A
 - **Final trigger**: 15.00% (1500 / 10000)
 
@@ -1233,7 +1339,7 @@ None
 
 #### Prototype Math Analysis
 
-**Population**: stored-global (predicate: all; count: 4; hash: c48b20d4).
+**Population**: full (N=4; predicate: all; hash: c48b20d4).
 ##### 🧠 joy >= 0.50 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
@@ -1320,7 +1426,7 @@ None
 
 #### Prototype Math Analysis
 
-**Population**: stored-global (predicate: all; count: 4; hash: c48b20d4).
+**Population**: full (N=4; predicate: all; hash: c48b20d4).
 ##### 🧠 fear <= 0.30 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
@@ -1451,7 +1557,7 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
 > **[AXIS-ONLY FIT]** **[IN-REGIME]**
 > *Computed from mood-regime axis constraints only (emotion clauses not enforced).*
 
-**Population**: stored-mood-regime (predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; count: 3; hash: 441edcdd).
+**Population**: stored-mood-regime (N=3; predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; hash: 441edcdd).
 | Rank | Prototype | Gate Pass | P(I≥t) | Conflict | Composite |
 |------|-----------|-----------|--------|----------|-----------|
 | 1 | **joy** | 0.00% | 0.00% | 0.00% | 0.35 |
@@ -1489,7 +1595,7 @@ No non-axis clauses found in prerequisites.
 
 Analysis of which prototypes best match the expression's constraint pattern.
 
-**Population**: stored-mood-regime (predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; count: 3; hash: 441edcdd).
+**Population**: stored-mood-regime (N=3; predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; hash: 441edcdd).
 
 ### Target Signature
 
@@ -1529,7 +1635,7 @@ Analysis of which prototypes best match the expression's constraint pattern.
 
 Analysis of prototype coverage in "prototype space".
 
-**Population**: stored-mood-regime (predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; count: 3; hash: 441edcdd).
+**Population**: stored-mood-regime (N=3; predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; hash: 441edcdd).
 
 ### ✅ Good Coverage
 
@@ -1666,6 +1772,32 @@ Sensitivity analysis snapshot test
 
 ---
 
+## Independence Baseline Comparison
+
+This section compares Monte Carlo results against naive probability estimates (assuming clause independence) to identify correlation effects. Deviations indicate clauses are not statistically independent.
+
+| Metric | Value |
+|--------|-------|
+| Naive probability (product of pass rates) | 100.00% |
+| Expected hits per 10,000 samples | 10000.00 |
+| Actual hits | 1500 |
+| P(0 hits \\| expected=10000.00) | 0 |
+
+### Interpretation
+
+✅ **Normal**: Actual hits (1500) align with expected (10000.0).
+
+### Clause Pass Rate Factors
+
+| Clause | Pass Rate (in-regime) |
+|--------|------------------------|
+| emotions.joy | 100.00% |
+| emotions.fear | 100.00% |
+| emotions.joy | 100.00% |
+| emotions.curiosity | 100.00% |
+
+---
+
 ## Sampling Coverage
 
 **Sampling Mode**: static
@@ -1717,7 +1849,8 @@ Signal: final (gate-clamped intensity).
 ### Probability Funnel
 - **Full sample**: 10,000
 - **Mood-regime pass**: N/A
-- **Gate pass | mood-pass**: N/A
+- **Prototype gate pass**: N/A
+- **Threshold pass | gate**: N/A
 - **OR union pass | mood-pass**: N/A
 - **Final trigger**: 15.00% (1500 / 10000)
 
@@ -1876,7 +2009,7 @@ None
 This section shows how adjusting thresholds affects the **entire expression trigger rate**, not just individual clause pass rates.
 This is the key metric for tuning—it answers "What actually happens to the expression if I change this?"
 **Baseline (full sample)**: 15.00% | **Baseline (stored contexts)**: 15.00%
-**Population**: stored-global (predicate: all; count: 4; hash: c48b20d4).
+**Population**: full (N=4; predicate: all; hash: c48b20d4).
 ### 🎯 Global Expression Sensitivity: emotions.joy >= [threshold]
 
 
@@ -1895,7 +2028,7 @@ This is the key metric for tuning—it answers "What actually happens to the exp
 
 This sweep shows how adjusting thresholds changes marginal clause pass rates across stored contexts.
 It does **not** estimate overall expression trigger rate.
-**Population**: stored-global (predicate: all; count: 4; hash: c48b20d4).
+**Population**: full (N=4; predicate: all; hash: c48b20d4).
 ### Marginal Clause Pass-Rate Sweep: emotions.joy >= [threshold]
 
 

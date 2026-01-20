@@ -236,6 +236,6 @@
         "tactile": "The air feels less tight. Movements stop being braced; there's a subtle loosening in the shoulders and hands, like the body has decided it can unclench.",
         "limited": "Something settles between us. The guardedness eases and a warmer, steadier connection returns."
     },
-    "diagnosticStatus": "normal",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0053
 }

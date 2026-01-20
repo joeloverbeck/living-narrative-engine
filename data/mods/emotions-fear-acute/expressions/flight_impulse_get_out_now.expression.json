@@ -189,6 +189,6 @@
         "tactile": "The air feels tense around them—muscles coiled, hands restless, a jittery readiness like they might bolt if anything shifts wrong.",
         "limited": "{actor} looks suddenly urgent and keyed-up, attention locked on getting away."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

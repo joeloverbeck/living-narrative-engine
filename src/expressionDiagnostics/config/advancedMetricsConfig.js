@@ -28,10 +28,12 @@
  * @property {NearMissEpsilonConfig} nearMissEpsilon - Epsilon values by domain
  * @property {number} maxViolationsSampled - Memory optimization limit
  * @property {number} maxObservedSampled - Memory optimization limit for observed values
+ * @property {number} maxSoleBlockerSampled - Memory optimization limit for sole-blocker values
  * @property {boolean} includePercentiles - Include percentile metrics
  * @property {boolean} includeNearMiss - Include near-miss metrics
  * @property {boolean} includeLastMile - Include last-mile metrics
  * @property {boolean} includeMaxObserved - Include max observed metrics
+ * @property {boolean} includeSoleBlockerPercentiles - Include sole-blocker percentile metrics
  * @property {GateClassificationThresholds} gateClassificationThresholds - Heuristic thresholds for gate vs threshold badges
  */
 
@@ -65,6 +67,7 @@ export const advancedMetricsConfig = {
    */
   maxViolationsSampled: 2000,
   maxObservedSampled: 2000,
+  maxSoleBlockerSampled: 2000,
 
   /**
    * Which metrics to include in output
@@ -73,6 +76,7 @@ export const advancedMetricsConfig = {
   includeNearMiss: true,
   includeLastMile: true,
   includeMaxObserved: true,
+  includeSoleBlockerPercentiles: true,
 
   /**
    * Heuristic thresholds for UI gate/threshold classification badges.
@@ -80,6 +84,30 @@ export const advancedMetricsConfig = {
   gateClassificationThresholds: {
     gateClampRateHigh: 0.5,
     passGivenGateLow: 0.2,
+  },
+
+  /**
+   * Configuration for near-miss importance sampling in zero-baseline scenarios.
+   * When baseline trigger rate is 0%, this enables filtering stored contexts
+   * to a "near-miss pool" that passes all conditions except top blockers.
+   */
+  nearMissSensitivity: {
+    /**
+     * Enable near-miss pool filtering for zero-baseline sensitivity analysis.
+     */
+    enabled: true,
+
+    /**
+     * Number of top blockers to exclude when building near-miss pool.
+     * Contexts must pass all OTHER blocker conditions.
+     */
+    excludeTopBlockerCount: 2,
+
+    /**
+     * Minimum pool size required to use near-miss pool.
+     * Falls back to original behavior if pool is smaller.
+     */
+    minPoolSize: 50,
   },
 };
 

@@ -30,6 +30,30 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.apprehension"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            75
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.panic"
                             },
                             0.25
@@ -197,7 +221,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires sustained anxiety/unease with restless arousal/engagement while staying pre-panic and non-shutdown. Explicitly blocks release spikes/crossings so this doesn’t narrate as an unclench/settle beat in the threat-overlap band."
+            "failure_message": "Restless anxiety is fidgety, mobilized unease—not braced restraint. Caps apprehension and strong clamp signatures (inhibitory_control/self_control) so high ‘brakes-on’ contexts route to contained beats instead. Keeps pre-panic / non-shutdown exclusions and the no-release-spike guard."
         }
     ],
     "actor_description": "I can't get comfortable. My body keeps trying to do something-shift, check, adjust-like motion might keep the worry from landing. My thoughts don't sprint; they circle. The same few possibilities, each one sharpening a little as it comes around again. I notice my jaw set, my hands busy with nothing, my breath stuck high in my chest. Even when I tell myself it's fine, my nervous system doesn't believe me. I keep scanning for a problem I can fix, because the feeling itself won't sit still long enough to name.",
@@ -208,6 +232,6 @@
         "tactile": "Someone's presence vibrates with contained tension-micro-movements, a restless shifting that you can feel through the air and proximity."
     },
     "category": "threat",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0008
 }

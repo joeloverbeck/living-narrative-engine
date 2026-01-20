@@ -1,191 +1,192 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-sexual-conflict:sexual_frustration",
-  "description": "High arousal with negative valence: desire persists, but it curdles into irritation/anger from lack of satisfaction or repeated thwarting.",
-  "priority": 76,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            ">=": [
-              {
-                "var": "sexualStates.sexual_frustration"
-              },
-              0.55
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "sexualArousal"
-              },
-              0.35
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.25
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "sexualStates.sexual_lust"
-                  },
-                  0.35
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-sexual-conflict:sexual_frustration",
+    "description": "High arousal with negative valence: desire persists, but it curdles into irritation/anger from lack of satisfaction or repeated thwarting.",
+    "priority": 76,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualStates.sexual_frustration"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.sexual_lust"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.sexual_craving"
+                                    },
+                                    0.3
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.passion"
+                                    },
+                                    0.28
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_indifference"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_repulsion"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.aroused_with_disgust"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.valence"
+                            },
+                            -10
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            10
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.irritation"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.frustration"
+                                    },
+                                    0.45
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.rage"
+                                    },
+                                    0.45
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.18
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "sexualStates.sexual_frustration"
+                                    },
+                                    {
+                                        "var": "previousSexualStates.sexual_frustration"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "previousSexualStates.sexual_frustration"
+                            },
+                            0.6
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "sexualStates.sexual_craving"
-                  },
-                  0.3
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "sexualStates.passion"
-                  },
-                  0.28
-                ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.sexual_indifference"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.sexual_repulsion"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.aroused_with_disgust"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.valence"
-              },
-              -10
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              10
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "emotions.irritation"
-                  },
-                  0.35
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.frustration"
-                  },
-                  0.45
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "emotions.rage"
-                  },
-                  0.45
-                ]
-              }
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.terror"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.fear"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.18
-            ]
-          },
-          {
-            ">=": [
-              {
-                "-": [
-                  {
-                    "var": "sexualStates.sexual_frustration"
-                  },
-                  {
-                    "var": "previousSexualStates.sexual_frustration"
-                  }
-                ]
-              },
-              0.1
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "previousSexualStates.sexual_frustration"
-              },
-              0.6
-            ]
-          }
-        ]
-      },
-      "failure_message": "Pent-up desire expressed as restless irritation; capped below panic so it stays 'thwarted wanting,' not threat-driven spiraling."
-    }
-  ],
-  "actor_description": "The want is there-bright, physical-but it keeps hitting a wall. My body leans forward and gets yanked back. I can feel the tension pooling low in me, not resolving, just tightening: breath a little too deep, jaw a little too clenched, hands not quite knowing what to do with themselves. The irritation isn't only in my thoughts-it's in my muscles, in the way I can't settle. I keep reaching for relief and finding nothing but more heat.",
-  "description_text": "{actor} can't get comfortable. They shift and reset their posture as if their own skin doesn't sit right. Their jaw works; their breathing deepens and then catches. Their attention lingers-too long-then snaps away, and their movements carry a clipped edge, like they're holding something back by force.",
-  "alternate_descriptions": {
-    "auditory": "I hear a hard exhale that turns into a swallowed groan, followed by the restless rustle of fabric-someone shifting again, and again.",
-    "tactile": "A body radiates contained energy-muscles tight, movements small but impatient, like a spring kept compressed.",
-    "olfactory": "The air carries warm sweat threaded with something sharper-arousal tangled with agitation, close and unsettled."
-  },
-  "category": "desire",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "Pent-up desire expressed as restless irritation; capped below panic so it stays 'thwarted wanting,' not threat-driven spiraling."
+        }
+    ],
+    "actor_description": "The want is there-bright, physical-but it keeps hitting a wall. My body leans forward and gets yanked back. I can feel the tension pooling low in me, not resolving, just tightening: breath a little too deep, jaw a little too clenched, hands not quite knowing what to do with themselves. The irritation isn't only in my thoughts-it's in my muscles, in the way I can't settle. I keep reaching for relief and finding nothing but more heat.",
+    "description_text": "{actor} can't get comfortable. They shift and reset their posture as if their own skin doesn't sit right. Their jaw works; their breathing deepens and then catches. Their attention lingers-too long-then snaps away, and their movements carry a clipped edge, like they're holding something back by force.",
+    "alternate_descriptions": {
+        "auditory": "I hear a hard exhale that turns into a swallowed groan, followed by the restless rustle of fabric-someone shifting again, and again.",
+        "tactile": "A body radiates contained energy-muscles tight, movements small but impatient, like a spring kept compressed.",
+        "olfactory": "The air carries warm sweat threaded with something sharper-arousal tangled with agitation, close and unsettled."
+    },
+    "category": "desire",
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0001
 }

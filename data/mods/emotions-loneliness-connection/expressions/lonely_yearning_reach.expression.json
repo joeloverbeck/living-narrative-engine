@@ -114,6 +114,6 @@
         "tactile": "There's a restless, careful motion—fingers rubbing a thumb, a hand hovering near a phone or sleeve, shoulders drawing in and then easing as if trying to be held without anyone there.",
         "limited": "{actor} looks caught on something internal—gentle, aching, and quietly reaching."
     },
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0008
 }

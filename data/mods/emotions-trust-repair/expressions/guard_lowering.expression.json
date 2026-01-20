@@ -244,6 +244,6 @@
         "limited": "I can't name why, but the tension drains out of me and I stop bracing for impact."
     },
     "category": "affection",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0011
 }

@@ -230,6 +230,6 @@
         "tactile": "Someone's presence feels weighted and still, like someone holding something they can't set down."
     },
     "category": "loss",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0021
 }

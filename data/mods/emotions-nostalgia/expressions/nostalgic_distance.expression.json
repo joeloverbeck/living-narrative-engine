@@ -192,5 +192,6 @@
         "limited": "{actor} seems distracted, attention turned inward for a moment."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0003
 }

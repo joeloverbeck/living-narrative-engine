@@ -38,6 +38,30 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.apprehension"
+                            },
+                            0.50
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            80
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.threat"
@@ -238,7 +262,7 @@
                     }
                 ]
             },
-            "failure_message": "Alarm is acute mobilization: it won’t fire during strong executive_focus unless executive_focus just collapsed. Also requires an alarm/threat jump (or fear/vigilance spike), keeping it distinct from steady pressured competence. Very low inhibitory_control (especially with low trait self_control) is treated as more likely to spill into panic/rashness than coordinated readiness."
+            "failure_message": "Alarm surge is acute mobilization; strong braced apprehension would read as contained caution instead. Caps apprehension and high clamp signatures so alarm doesn’t misfire in ‘brakes-on’ states, while keeping the core arousal/threat + delta signature intact."
         }
     ],
     "alternate_descriptions": {
@@ -246,6 +270,6 @@
         "tactile": "The air feels tight and charged; there's a restless micro-tremor in their stillness, like a coiled spring held in place."
     },
     "category": "threat",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0018
 }

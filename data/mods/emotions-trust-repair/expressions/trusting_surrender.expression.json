@@ -153,6 +153,6 @@
         "tactile": "The tension around {actor} changes—less rigid, less guarded. It feels like a door left unlatched: not thrown open, just no longer held shut.",
         "limited": "{actor} relaxes in a way that looks like a choice, letting their guard fall without the jitter of fear."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

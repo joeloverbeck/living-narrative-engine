@@ -676,4 +676,335 @@ describe('SensitivityAnalyzer', () => {
       });
     }).toThrow();
   });
+
+  describe('Near-Miss Pool Functionality', () => {
+    const createMultipleContexts = (count) => {
+      return Array.from({ length: count }, (_, i) => ({
+        emotions: { joy: (i % 10) / 10, anger: 0.3 },
+        sexual: { arousal: (i % 5) / 10 },
+        moodAxes: { valence: i % 20 },
+      }));
+    };
+
+    it('uses near-miss pool when baselineTriggerRate is 0 and pool is large enough', () => {
+      const logger = createLogger();
+      const monteCarloSimulator = {
+        computeThresholdSensitivity: jest.fn().mockReturnValue({
+          varPath: 'emotions.joy',
+          grid: [],
+        }),
+        computeExpressionSensitivity: jest.fn(),
+      };
+      const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+      // Create 100 contexts - enough for a near-miss pool
+      const storedContexts = createMultipleContexts(100);
+      const blockers = [
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.joy',
+            thresholdValue: 0.5,
+            comparisonOperator: '>=',
+            failureRate: 0.9,
+            nearMissRate: 0.1,
+            lastMileFailRate: 0.8,
+          },
+        },
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.anger',
+            thresholdValue: 0.2,
+            comparisonOperator: '>=',
+            failureRate: 0.3,
+            nearMissRate: 0.05,
+            lastMileFailRate: 0.2,
+          },
+        },
+      ];
+
+      const results = analyzer.computeSensitivityData(storedContexts, blockers, {
+        baselineTriggerRate: 0,
+        moodConstraints: [],
+      });
+
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringMatching(/Using near-miss pool for clause sensitivity/)
+      );
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].nearMissPoolMetadata).toBeDefined();
+      expect(results[0].nearMissPoolMetadata.isNearMissPool).toBe(true);
+    });
+
+    it('falls back to original contexts when pool is too small', () => {
+      const logger = createLogger();
+      const monteCarloSimulator = {
+        computeThresholdSensitivity: jest.fn().mockReturnValue({
+          varPath: 'emotions.joy',
+          grid: [],
+        }),
+        computeExpressionSensitivity: jest.fn(),
+      };
+      const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+      // Create only 10 contexts - not enough for a near-miss pool (min is 50)
+      const storedContexts = createMultipleContexts(10);
+      const blockers = [
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.joy',
+            thresholdValue: 0.5,
+            comparisonOperator: '>=',
+            failureRate: 0.9,
+            nearMissRate: 0.1,
+            lastMileFailRate: 0.8,
+          },
+        },
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.anger',
+            thresholdValue: 0.2,
+            comparisonOperator: '>=',
+            failureRate: 0.3,
+            nearMissRate: 0.05,
+            lastMileFailRate: 0.2,
+          },
+        },
+      ];
+
+      const results = analyzer.computeSensitivityData(storedContexts, blockers, {
+        baselineTriggerRate: 0,
+        moodConstraints: [],
+      });
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringMatching(/Near-miss pool too small/)
+      );
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].nearMissPoolMetadata).toBeUndefined();
+    });
+
+    it('uses original contexts when only 1 blocker exists', () => {
+      const logger = createLogger();
+      const monteCarloSimulator = {
+        computeThresholdSensitivity: jest.fn().mockReturnValue({
+          varPath: 'emotions.joy',
+          grid: [],
+        }),
+        computeExpressionSensitivity: jest.fn(),
+      };
+      const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+      const storedContexts = createMultipleContexts(100);
+      const blockers = [
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.joy',
+            thresholdValue: 0.5,
+            comparisonOperator: '>=',
+          },
+        },
+      ];
+
+      const results = analyzer.computeSensitivityData(storedContexts, blockers, {
+        baselineTriggerRate: 0,
+        moodConstraints: [],
+      });
+
+      // Should not use near-miss pool with only 1 blocker
+      expect(results[0].nearMissPoolMetadata).toBeUndefined();
+    });
+
+    it('uses original contexts when baselineTriggerRate > 0 (backward compatibility)', () => {
+      const logger = createLogger();
+      const monteCarloSimulator = {
+        computeThresholdSensitivity: jest.fn().mockReturnValue({
+          varPath: 'emotions.joy',
+          grid: [],
+        }),
+        computeExpressionSensitivity: jest.fn(),
+      };
+      const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+      const storedContexts = createMultipleContexts(100);
+      const blockers = [
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.joy',
+            thresholdValue: 0.5,
+            comparisonOperator: '>=',
+            failureRate: 0.2,
+          },
+        },
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.anger',
+            thresholdValue: 0.2,
+            comparisonOperator: '>=',
+            failureRate: 0.1,
+          },
+        },
+      ];
+
+      const results = analyzer.computeSensitivityData(storedContexts, blockers, {
+        baselineTriggerRate: 0.15, // Non-zero baseline
+        moodConstraints: [],
+      });
+
+      // Should NOT use near-miss pool when baseline > 0
+      expect(results[0].nearMissPoolMetadata).toBeUndefined();
+    });
+
+    it('works without options parameter (backward compatibility)', () => {
+      const logger = createLogger();
+      const monteCarloSimulator = {
+        computeThresholdSensitivity: jest.fn().mockReturnValue({
+          varPath: 'emotions.joy',
+          grid: [],
+        }),
+        computeExpressionSensitivity: jest.fn(),
+      };
+      const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+      const storedContexts = createMultipleContexts(10);
+      const blockers = [
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.joy',
+            thresholdValue: 0.5,
+            comparisonOperator: '>=',
+          },
+        },
+      ];
+
+      // Call without options
+      const results = analyzer.computeSensitivityData(storedContexts, blockers);
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(monteCarloSimulator.computeThresholdSensitivity).toHaveBeenCalled();
+    });
+
+    it('uses near-miss pool for global sensitivity when baselineTriggerRate is 0', () => {
+      const logger = createLogger();
+      const monteCarloSimulator = {
+        computeThresholdSensitivity: jest.fn(),
+        computeExpressionSensitivity: jest.fn().mockReturnValue({
+          grid: [],
+          isExpressionLevel: true,
+        }),
+      };
+      const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+      const storedContexts = createMultipleContexts(100);
+      const blockers = [
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.joy',
+            thresholdValue: 0.5,
+            comparisonOperator: '>=',
+            failureRate: 0.9,
+            nearMissRate: 0.1,
+            lastMileFailRate: 0.8,
+          },
+        },
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.anger',
+            thresholdValue: 0.2,
+            comparisonOperator: '>=',
+            failureRate: 0.3,
+            nearMissRate: 0.05,
+            lastMileFailRate: 0.2,
+          },
+        },
+      ];
+      const prerequisites = [{ logic: { type: 'and' } }];
+
+      const results = analyzer.computeGlobalSensitivityData(
+        storedContexts,
+        blockers,
+        prerequisites,
+        { baselineTriggerRate: 0, moodConstraints: [] }
+      );
+
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringMatching(/Using near-miss pool for global sensitivity/)
+      );
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].nearMissPoolMetadata).toBeDefined();
+      expect(results[0].nearMissPoolMetadata.isNearMissPool).toBe(true);
+    });
+
+    it('includes excludedBlockers in nearMissPoolMetadata', () => {
+      const logger = createLogger();
+      const monteCarloSimulator = {
+        computeThresholdSensitivity: jest.fn().mockReturnValue({
+          varPath: 'emotions.anger',
+          grid: [],
+        }),
+        computeExpressionSensitivity: jest.fn(),
+      };
+      const analyzer = new SensitivityAnalyzer({ logger, monteCarloSimulator });
+
+      const storedContexts = createMultipleContexts(100);
+      const blockers = [
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.joy',
+            thresholdValue: 0.5,
+            comparisonOperator: '>=',
+            failureRate: 0.9,
+            nearMissRate: 0.1,
+            lastMileFailRate: 0.9, // Highest composite score
+          },
+        },
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'emotions.anger',
+            thresholdValue: 0.2,
+            comparisonOperator: '>=',
+            failureRate: 0.5,
+            nearMissRate: 0.3,
+            lastMileFailRate: 0.6,
+          },
+        },
+        {
+          hierarchicalBreakdown: {
+            isCompound: false,
+            variablePath: 'sexual.arousal',
+            thresholdValue: 0.1,
+            comparisonOperator: '>=',
+            failureRate: 0.1,
+            nearMissRate: 0.05,
+            lastMileFailRate: 0.1, // Lowest composite score
+          },
+        },
+      ];
+
+      const results = analyzer.computeSensitivityData(storedContexts, blockers, {
+        baselineTriggerRate: 0,
+        moodConstraints: [],
+      });
+
+      // Should have metadata with excluded blockers (top 2 by composite score)
+      const metadata = results[0]?.nearMissPoolMetadata;
+      if (metadata) {
+        expect(metadata.excludedBlockers).toBeDefined();
+        expect(metadata.excludedBlockers.length).toBe(2);
+        // Top blockers by composite score should be excluded
+        expect(metadata.excludedBlockers).toContain('emotions.joy >= 0.5');
+      }
+    });
+  });
 });

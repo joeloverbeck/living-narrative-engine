@@ -113,6 +113,13 @@
               <span class="button-icon" aria-hidden="true">🔬</span>
               <span class="button-text">Expression Diagnostics</span>
             </button>
+            <button
+              id="prototype-analysis-button"
+              class="menu-button nav-button nav-button--blue"
+            >
+              <span class="button-icon" aria-hidden="true">🧬</span>
+              <span class="button-text">Prototype Overlap Analysis</span>
+            </button>
           </div>
         </section>
 
@@ -284,6 +291,11 @@
         .getElementById('expression-diagnostics-button')
         .addEventListener('click', () => {
           window.location.href = 'expression-diagnostics.html';
+        });
+      document
+        .getElementById('prototype-analysis-button')
+        .addEventListener('click', () => {
+          window.location.href = 'prototype-analysis.html';
         });
       document
         .getElementById('character-concepts-button')

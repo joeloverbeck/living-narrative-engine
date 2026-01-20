@@ -167,6 +167,6 @@
         "tactile": "There’s a tiny warmth in the face and a quick loosening in the chest, followed by a tightening at the jaw as the reaction gets reined back in.",
         "limited": "A brief lift of the mouth—gone fast—like a private win."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

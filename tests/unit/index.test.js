@@ -123,6 +123,7 @@ describe('Index.html - Main Menu', () => {
         'Damage Simulator',
         'Expressions Simulator',
         'Expression Diagnostics',
+        'Prototype Overlap Analysis',
         'Change LLM',
         'Character Concepts Manager',
         'Thematic Direction Generator',
@@ -151,6 +152,10 @@ describe('Index.html - Main Menu', () => {
         {
           id: 'expression-diagnostics-button',
           text: 'Expression Diagnostics',
+        },
+        {
+          id: 'prototype-analysis-button',
+          text: 'Prototype Overlap Analysis',
         },
         { id: 'change-llm-button', text: 'Change LLM' },
         { id: 'character-concepts-button', text: 'Character Concepts Manager' },
@@ -197,6 +202,10 @@ describe('Index.html - Main Menu', () => {
         {
           id: 'expressions-simulator-button',
           href: 'expressions-simulator.html',
+        },
+        {
+          id: 'prototype-analysis-button',
+          href: 'prototype-analysis.html',
         },
         {
           id: 'character-concepts-button',

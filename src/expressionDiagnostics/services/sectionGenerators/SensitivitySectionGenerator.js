@@ -250,6 +250,7 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
     const { conditionPath, operator, originalThreshold, grid } = result;
     const isIntegerDomain = result?.isIntegerDomain === true;
     const sampleCount = grid?.[0]?.sampleCount ?? 0;
+    const nearMissPoolMetadata = result?.nearMissPoolMetadata ?? null;
 
     const lines = [
       `### 🟡 Zero-Hit Analysis: ${conditionPath} ${operator} [threshold]`,
@@ -258,6 +259,12 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
       `> Traditional sensitivity sweeps showing "+∞" changes are not informative in this case.`,
       '',
     ];
+
+    // Add near-miss pool methodology note if applicable
+    const poolMetadataSection = this.#formatNearMissPoolMetadata(nearMissPoolMetadata);
+    if (poolMetadataSection) {
+      lines.push(poolMetadataSection);
+    }
 
     // Add threshold distribution from grid
     lines.push('#### Pass Rate by Threshold');
@@ -295,6 +302,7 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
     const { varPath, operator, originalThreshold, grid } = result;
     const isIntegerDomain = result?.isIntegerDomain === true;
     const sampleCount = grid?.[0]?.sampleCount ?? 0;
+    const nearMissPoolMetadata = result?.nearMissPoolMetadata ?? null;
 
     const lines = [
       `### 🎯🟡 Zero-Hit Global Analysis: ${varPath} ${operator} [threshold]`,
@@ -305,6 +313,12 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
       `> Traditional sensitivity sweeps cannot estimate expression trigger rate in this case.`,
       '',
     ];
+
+    // Add near-miss pool methodology note if applicable
+    const poolMetadataSection = this.#formatNearMissPoolMetadata(nearMissPoolMetadata);
+    if (poolMetadataSection) {
+      lines.push(poolMetadataSection);
+    }
 
     // Add trigger rate distribution from grid
     lines.push('#### Trigger Rate by Threshold');
@@ -334,6 +348,41 @@ ${disclaimerLine}${populationLabel}${sections.join('\n\n')}`;
       lines.push('- More extreme threshold changes');
       lines.push('- Addressing other blocking conditions');
       lines.push('- Reviewing the overall expression logic');
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Format near-miss pool metadata section for zero-hit scenarios.
+   * Explains that sensitivity analysis used importance sampling.
+   * @param {object} metadata - Near-miss pool metadata
+   * @returns {string}
+   */
+  #formatNearMissPoolMetadata(metadata) {
+    if (!metadata?.isNearMissPool) {
+      return '';
+    }
+
+    const lines = [
+      '#### 🎲 Near-Miss Importance Sampling',
+      '',
+      '> **Methodology**: This analysis uses targeted "near-miss" sampling.',
+      `> We filtered ${metadata.originalSize.toLocaleString()} stored contexts down to **${metadata.poolSize.toLocaleString()}** that pass all conditions except the top blockers.`,
+      '',
+    ];
+
+    if (metadata.excludedBlockers?.length > 0) {
+      lines.push('**Relaxed Conditions** (top blockers excluded from filtering):');
+      for (const blocker of metadata.excludedBlockers) {
+        lines.push(`- \`${blocker}\``);
+      }
+      lines.push('');
+    }
+
+    if (metadata.moodConstraintCount > 0) {
+      lines.push(`*Mood regime constraints applied: ${metadata.moodConstraintCount}*`);
+      lines.push('');
     }
 
     return lines.join('\n');

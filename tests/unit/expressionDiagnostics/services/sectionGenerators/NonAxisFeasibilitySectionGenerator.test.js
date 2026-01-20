@@ -542,6 +542,113 @@ describe('NonAxisFeasibilitySectionGenerator', () => {
   });
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Delta clause rendering tests (Bug A fix)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('delta clause rendering', () => {
+    it('renders delta clauses with full delta expression format in table', () => {
+      const generator = new NonAxisFeasibilitySectionGenerator();
+      const result = createNonAxisClauseFeasibility({
+        clauseId: 'delta_clause_001',
+        varPath: 'emotions.remorse',
+        threshold: 0.12,
+        operator: '>=',
+        classification: 'IMPOSSIBLE',
+        passRate: 0,
+        maxValue: 0.05,
+        signal: 'delta',
+      });
+      const output = generator.generate([result]);
+
+      // Should render as (current - previous) format, not just the varPath
+      expect(output).toContain(
+        '(emotions.remorse - previousEmotions.remorse) >= 0.120'
+      );
+      // Should NOT render as the misleading short format
+      expect(output).not.toMatch(/\| >= 0\.120 \|/);
+    });
+
+    it('renders final clauses with simple format in table', () => {
+      const generator = new NonAxisFeasibilitySectionGenerator();
+      const result = createNonAxisClauseFeasibility({
+        clauseId: 'final_clause_001',
+        varPath: 'emotions.joy',
+        threshold: 0.5,
+        operator: '>=',
+        classification: 'OK',
+        passRate: 0.25,
+        maxValue: 0.9,
+        signal: 'final',
+      });
+      const output = generator.generate([result]);
+
+      // Should render with simple operator and threshold
+      expect(output).toContain('>= 0.500');
+      // Should NOT include previousEmotions
+      expect(output).not.toContain('previousEmotions');
+    });
+
+    it('renders delta clauses with full expression in breakdown section', () => {
+      const generator = new NonAxisFeasibilitySectionGenerator();
+      const result = createNonAxisClauseFeasibility({
+        clauseId: 'delta_rare_001',
+        varPath: 'sexual.arousal',
+        threshold: 0.08,
+        operator: '>=',
+        classification: 'RARE',
+        passRate: 0.0005,
+        maxValue: 0.09,
+        signal: 'delta',
+      });
+      const output = generator.generate([result]);
+
+      // Breakdown section header should use delta format
+      expect(output).toContain(
+        '#### `(sexual.arousal - previousSexual.arousal)` >= 0.080'
+      );
+    });
+
+    it('handles raw signal same as final signal', () => {
+      const generator = new NonAxisFeasibilitySectionGenerator();
+      const result = createNonAxisClauseFeasibility({
+        clauseId: 'raw_clause_001',
+        varPath: 'emotions.anger',
+        threshold: 0.3,
+        operator: '>=',
+        classification: 'OK',
+        passRate: 0.4,
+        maxValue: 0.8,
+        signal: 'raw',
+      });
+      const output = generator.generate([result]);
+
+      // Raw signal should render without previousEmotions
+      expect(output).not.toContain('previousEmotions');
+      expect(output).toContain('>= 0.300');
+    });
+
+    it('correctly capitalizes nested path for previousEmotions', () => {
+      const generator = new NonAxisFeasibilitySectionGenerator();
+      const result = createNonAxisClauseFeasibility({
+        clauseId: 'delta_nested_001',
+        varPath: 'emotions.joy.intensity',
+        threshold: 0.2,
+        operator: '>=',
+        classification: 'IMPOSSIBLE',
+        passRate: 0,
+        maxValue: 0.1,
+        signal: 'delta',
+      });
+      const output = generator.generate([result]);
+
+      // Should capitalize first segment correctly
+      expect(output).toContain(
+        '(emotions.joy.intensity - previousEmotions.joy.intensity) >= 0.200'
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Logger integration tests
   // ─────────────────────────────────────────────────────────────────────────
 

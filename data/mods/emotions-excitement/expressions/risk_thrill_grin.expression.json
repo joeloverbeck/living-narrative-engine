@@ -154,6 +154,6 @@
         "tactile": "The air feels charged; there’s a faint tremor in stillness, like someone holding themselves ready to spring.",
         "limited": "{actor} seems energized and sharply focused, carrying a contained excitement that reads as deliberate rather than reckless."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0003
 }

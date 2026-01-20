@@ -246,9 +246,9 @@ describe('ExpressionDiagnosticsController recommendations UI', () => {
 
     const card = document.querySelector('.recommendation-card');
     expect(card).not.toBeNull();
-    expect(card.textContent).toContain('Prototype structurally mismatched');
+    expect(card.textContent).toContain('Prototype gate suppresses emotion in this regime');
     expect(card.textContent).toContain('Confidence: low');
-    expect(card.textContent).toContain('Impact (full sample): +25.00 pp');
+    expect(card.textContent).toContain('Clause Pass-Rate Impact: +25.00 pp');
 
     const chokeRankCell = document.querySelector('.choke-rank');
     expect(chokeRankCell).not.toBeNull();

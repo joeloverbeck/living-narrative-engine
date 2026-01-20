@@ -37,9 +37,10 @@ class RecommendationFactsBuilder {
    * @param {object} params
    * @param {object} params.expression
    * @param {import('./MonteCarloSimulator.js').SimulationResult} params.simulationResult
+   * @param {Array<import('./sectionGenerators/CoreSectionGenerator.js').OverconstrainedConjunctionInfo>} [params.overconstrainedDetails]
    * @returns {object|null}
    */
-  build({ expression, simulationResult }) {
+  build({ expression, simulationResult, overconstrainedDetails = [] }) {
     if (!simulationResult) {
       return null;
     }
@@ -107,6 +108,7 @@ class RecommendationFactsBuilder {
       clauses: clauseFacts,
       prototypes: prototypeFacts,
       invariants: [],
+      overconstrainedDetails,
     };
 
     diagnosticFacts.invariants =
@@ -195,6 +197,18 @@ class RecommendationFactsBuilder {
               ? leaf.lostPassRateInRegime
               : null,
           gateClampRegimePermissive,
+          lastMileFailRate:
+            typeof leaf.lastMileFailRate === 'number'
+              ? leaf.lastMileFailRate
+              : null,
+          soleBlockerP50:
+            typeof leaf.soleBlockerP50 === 'number' ? leaf.soleBlockerP50 : null,
+          soleBlockerP90:
+            typeof leaf.soleBlockerP90 === 'number' ? leaf.soleBlockerP90 : null,
+          soleBlockerSampleCount:
+            typeof leaf.soleBlockerSampleCount === 'number'
+              ? leaf.soleBlockerSampleCount
+              : 0,
         });
       }
     }

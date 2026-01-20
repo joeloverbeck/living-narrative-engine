@@ -157,5 +157,6 @@
         "limited": "Their energy dips and their expression dulls, the kind of quiet low that makes everything feel harder."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0038
 }

@@ -205,5 +205,6 @@
         "limited": "{actor} seems briefly preoccupied, attention drifting to something internal."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0003
 }

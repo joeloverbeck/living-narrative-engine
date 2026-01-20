@@ -199,5 +199,6 @@
         "limited": "{actor} looks unimpressed, attention sliding away as if the topic isn’t worth holding."
     },
     "category": "anger",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0003
 }

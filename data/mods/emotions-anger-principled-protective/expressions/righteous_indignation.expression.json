@@ -256,6 +256,6 @@
         "tactile": "The air feels charged and tight; there's a contained tremor in stillness, like the body is holding back a bigger motion on purpose.",
         "limited": "{actor} looks intensely engaged and visibly irritated, as if ready to challenge something they find unacceptable."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.00002
 }

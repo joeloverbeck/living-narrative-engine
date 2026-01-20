@@ -27,11 +27,35 @@
                         ]
                     },
                     {
+                        ">=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            8
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            10
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.focused_absorption"
                             },
-                            0.4
+                            0.40
                         ]
                     },
                     {
@@ -47,7 +71,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            -5
+                            -10
                         ]
                     },
                     {
@@ -65,17 +89,45 @@
                                     {
                                         "var": "emotions.confusion"
                                     },
-                                    0.5
+                                    0.48
                                 ]
                             },
                             {
                                 ">=": [
                                     {
-                                        "var": "emotions.anxiety"
+                                        "var": "emotions.apprehension"
                                     },
-                                    0.45
+                                    0.40
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.anxiety"
+                                            },
+                                            0.40
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            0.30
+                                        ]
+                                    }
                                 ]
                             }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.70
                         ]
                     },
                     {
@@ -84,6 +136,14 @@
                                 "var": "emotions.panic"
                             },
                             0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.60
                         ]
                     },
                     {
@@ -107,7 +167,7 @@
                             {
                                 "var": "emotions.small_victory"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -115,7 +175,7 @@
                             {
                                 "var": "emotions.executive_focus"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -151,13 +211,43 @@
                                 ]
                             },
                             {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "moodAxes.inhibitory_control"
+                                            },
+                                            {
+                                                "var": "previousMoodAxes.inhibitory_control"
+                                            }
+                                        ]
+                                    },
+                                    10
+                                ]
+                            },
+                            {
                                 "and": [
                                     {
                                         ">=": [
                                             {
                                                 "var": "previousEmotions.executive_focus"
                                             },
-                                            0.6
+                                            0.60
                                         ]
                                     },
                                     {
@@ -165,7 +255,7 @@
                                             {
                                                 "var": "emotions.executive_focus"
                                             },
-                                            0.4
+                                            0.40
                                         ]
                                     }
                                 ]
@@ -189,13 +279,13 @@
                     }
                 ]
             },
-            "failure_message": "Choice paralysis is engaged indecision with slipping agency. Explicitly excludes strong executive_focus unless executive_focus just collapsed (organized grip broke into hesitation)."
+            "failure_message": "Choice paralysis is engaged indecision with slipping agency and a brake-on feel: requires low agency_control, sustained engagement, moderate threat, and an inhibition floor. Primary drivers are confusion or apprehension (risk-sensitive hesitation), with bounded anxiety allowed but not required. Excludes panic/dissociation/numbness and blocks organized task-grip (executive_focus) unless it just collapsed. Fires on agency drop, confusion/apprehension spike, inhibitory-control jump, or executive_focus collapse to avoid steady-state spam."
         }
     ],
     "alternate_descriptions": {
         "auditory": "I hear small, repeated catches in breathing-half-inhales that almost become words, then don't. A faint click of tongue or teeth, once, then again. It's the sound of someone starting a sentence and swallowing it back, trying to commit and finding the words stick. The pattern loops: breath, click, silence. Breath, click, silence.",
         "tactile": "Someone's muscles bunch and release in waves-shoulders tightening, fingers curling into readiness, then letting go without completing the gesture. It's a restless stillness: the body coils to move, then unspools without launching. Tension pools in the hands, the jaw, flickering on and off like an engine that won't turn over. Each almost-movement leaves a faint ache from"
     },
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0016
 }

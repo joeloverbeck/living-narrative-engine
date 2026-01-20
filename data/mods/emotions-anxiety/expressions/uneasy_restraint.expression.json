@@ -24,7 +24,7 @@
                                     {
                                         "var": "emotions.suspicion"
                                     },
-                                    0.3
+                                    0.28
                                 ]
                             },
                             {
@@ -32,15 +32,27 @@
                                     {
                                         "var": "emotions.unease"
                                     },
-                                    0.38
+                                    0.35
                                 ]
                             },
                             {
-                                ">=": [
+                                "and": [
                                     {
-                                        "var": "emotions.anxiety"
+                                        ">=": [
+                                            {
+                                                "var": "emotions.anxiety"
+                                            },
+                                            0.28
+                                        ]
                                     },
-                                    0.28
+                                    {
+                                        "<=": [
+                                            {
+                                                "var": "emotions.anxiety"
+                                            },
+                                            0.60
+                                        ]
+                                    }
                                 ]
                             }
                         ]
@@ -66,7 +78,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            -20
+                            -25
                         ]
                     },
                     {
@@ -74,7 +86,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            45
+                            40
                         ]
                     },
                     {
@@ -150,7 +162,7 @@
                             {
                                 "var": "emotions.freeze"
                             },
-                            0.2
+                            0.20
                         ]
                     },
                     {
@@ -174,7 +186,7 @@
                             {
                                 "var": "emotions.hypervigilance"
                             },
-                            0.55
+                            0.50
                         ]
                     },
                     {
@@ -182,7 +194,7 @@
                             {
                                 "var": "emotions.alarm"
                             },
-                            0.55
+                            0.50
                         ]
                     },
                     {
@@ -242,7 +254,7 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
                                 ]
                             },
                             {
@@ -277,7 +289,7 @@
                                             }
                                         ]
                                     },
-                                    0.1
+                                    0.10
                                 ]
                             },
                             {
@@ -287,7 +299,7 @@
                                             {
                                                 "var": "previousEmotions.suspicion"
                                             },
-                                            0.3
+                                            0.28
                                         ]
                                     },
                                     {
@@ -295,7 +307,7 @@
                                             {
                                                 "var": "emotions.suspicion"
                                             },
-                                            0.3
+                                            0.28
                                         ]
                                     }
                                 ]
@@ -354,7 +366,7 @@
                     }
                 ]
             },
-            "failure_message": "Quiet, controlled threat awareness with deliberate restraint: requires apprehension (controlled tension) plus a situational cue (suspicion/unease/anxiety), threat grounding, capped arousal, and a positive inhibitory-control clamp. Explicitly excludes dissociation and pre-panic extremes, and keeps release low+stable so this doesn’t fire in relief/release overlap."
+            "failure_message": "Quiet, controlled threat awareness with deliberate restraint: requires apprehension as the primary driver plus a cue (suspicion/unease or bounded anxiety), grounded in moderate threat with capped arousal and intact agency. Enforces a strong inhibition/self-control clamp, excludes dissociation/panic/freeze extremes, and keeps release low+stable. Fires on apprehension/suspicion/threat/inhibitory-control deltas to avoid spam."
         }
     ],
     "alternate_descriptions": {
@@ -363,6 +375,6 @@
         "limited": "I sense someone going watchful and contained, movements smaller and more deliberate, holding their reactions on a short leash."
     },
     "category": "threat",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0003
 }

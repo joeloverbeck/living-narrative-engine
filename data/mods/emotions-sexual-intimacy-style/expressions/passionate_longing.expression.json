@@ -226,5 +226,6 @@
         "tactile": "I sense a warm orientation nearby-someone's whole presence subtly angled toward someone else, like a held-in step forward."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0001
 }

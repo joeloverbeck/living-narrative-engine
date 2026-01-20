@@ -142,6 +142,6 @@
         "tactile": "The tension doesn't vanish; it shifts. Like a hand unclenching partway—ready to pull back, but choosing not to, for now.",
         "limited": "{actor} offers a small, cautious opening—trust testing the line while caution stays close."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

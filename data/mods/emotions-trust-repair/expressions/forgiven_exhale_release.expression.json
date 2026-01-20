@@ -161,6 +161,6 @@
         "tactile": "The room seems to unclench with them: shoulders lowering, hands loosening, the body's weight settling back down as if it no longer needs to hover on alert.",
         "limited": "Relief shows first, then trust—{actor} relaxes visibly, as though a heavy expectation just lifted."
     },
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0003
 }

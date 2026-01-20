@@ -51,6 +51,9 @@ export const diagnosticsTokens = freeze({
   // Prototype Synthesis (PROCRESUGREC-002)
   IPrototypeSynthesisService: 'IPrototypeSynthesisService',
 
+  // Emotion Similarity (Overconstrained conjunction detection)
+  IEmotionSimilarityService: 'IEmotionSimilarityService',
+
   // Sensitivity Analysis (EXPDIAMONCARREFREP-008)
   ISensitivityAnalyzer: 'ISensitivityAnalyzer',
 
@@ -79,6 +82,21 @@ export const diagnosticsTokens = freeze({
   IEditSetGenerator: 'IEditSetGenerator',
   IImportanceSamplingValidator: 'IImportanceSamplingValidator',
   IActionabilitySectionGenerator: 'IActionabilitySectionGenerator',
+
+  // Recommendation Builders (RECENGREFANA series)
+  IPrototypeCreateSuggestionBuilder: 'IPrototypeCreateSuggestionBuilder',
+  IGateClampRecommendationBuilder: 'IGateClampRecommendationBuilder',
+  IAxisConflictAnalyzer: 'IAxisConflictAnalyzer',
+  IOverconstrainedConjunctionBuilder: 'IOverconstrainedConjunctionBuilder',
+  ISoleBlockerRecommendationBuilder: 'ISoleBlockerRecommendationBuilder',
+
+  // Prototype Overlap Analysis (PROOVEANA series)
+  ICandidatePairFilter: 'ICandidatePairFilter',
+  IBehavioralOverlapEvaluator: 'IBehavioralOverlapEvaluator',
+  IOverlapClassifier: 'IOverlapClassifier',
+  IOverlapRecommendationBuilder: 'IOverlapRecommendationBuilder',
+  IPrototypeOverlapAnalyzer: 'IPrototypeOverlapAnalyzer',
+  IPrototypeAnalysisController: 'IPrototypeAnalysisController',
 });
 
 export default diagnosticsTokens;

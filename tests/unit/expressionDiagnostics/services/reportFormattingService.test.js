@@ -259,7 +259,7 @@ describe('ReportFormattingService', () => {
       };
       const result = service.formatPopulationHeader(population);
       expect(result).toBe(
-        '**Population**: test-population (predicate: test-predicate; count: 1,000; hash: abc123).\n'
+        '**Population**: test-population (N=1,000; predicate: test-predicate; hash: abc123).\n'
       );
     });
 
@@ -492,6 +492,139 @@ describe('ReportFormattingService', () => {
     it('returns unknown for unrecognized operators', () => {
       const result = service.formatTuningDirection('==');
       expect(result).toEqual({ loosen: 'unknown', tighten: 'unknown' });
+    });
+  });
+
+  // ============================================================================
+  // Sanity Box Formatting (Expected Trigger Rate feature)
+  // ============================================================================
+
+  describe('formatScientificNotation', () => {
+    it('returns 0 for zero value', () => {
+      expect(service.formatScientificNotation(0)).toBe('0');
+    });
+
+    it('returns percentage for values >= threshold (default 0.0001)', () => {
+      expect(service.formatScientificNotation(0.5)).toBe('50.00%');
+      expect(service.formatScientificNotation(0.15)).toBe('15.00%');
+      expect(service.formatScientificNotation(0.001)).toBe('0.10%');
+      // 0.0001 * 100 = 0.01%, which is at the boundary (>= 0.01), so 2 decimal places
+      expect(service.formatScientificNotation(0.0001)).toBe('0.01%');
+    });
+
+    it('returns scientific notation for values below threshold', () => {
+      const result = service.formatScientificNotation(0.00001);
+      expect(result).toMatch(/^\d\.\d+e[+-]\d+$/);
+    });
+
+    it('respects custom threshold', () => {
+      // With threshold 0.01, 0.001 should use scientific notation
+      const result = service.formatScientificNotation(0.001, 0.01);
+      expect(result).toMatch(/^\d\.\d+e[+-]\d+$/);
+    });
+
+    it('returns N/A for null', () => {
+      expect(service.formatScientificNotation(null)).toBe('N/A');
+    });
+
+    it('returns N/A for undefined', () => {
+      expect(service.formatScientificNotation(undefined)).toBe('N/A');
+    });
+
+    it('returns N/A for NaN', () => {
+      expect(service.formatScientificNotation(NaN)).toBe('N/A');
+    });
+
+    it('returns N/A for non-number values', () => {
+      expect(service.formatScientificNotation('0.001')).toBe('N/A');
+      expect(service.formatScientificNotation({})).toBe('N/A');
+    });
+
+    it('handles very small probabilities', () => {
+      const result = service.formatScientificNotation(1e-10);
+      expect(result).toMatch(/e-10$/);
+    });
+  });
+
+  describe('formatSanityStatus', () => {
+    it('formats expected_rare status with checkmark', () => {
+      const result = service.formatSanityStatus('expected_rare');
+      expect(result).toContain('Expected Rare');
+      expect(result).toContain('✅');
+    });
+
+    it('formats statistically_plausible status with checkmark', () => {
+      const result = service.formatSanityStatus('statistically_plausible');
+      expect(result).toContain('Statistically Plausible');
+      expect(result).toContain('✅');
+    });
+
+    it('formats unexpected_zero status with warning', () => {
+      const result = service.formatSanityStatus('unexpected_zero');
+      expect(result).toContain('Unexpected Zero');
+      expect(result).toContain('⚠️');
+    });
+
+    it('formats normal status with checkmark', () => {
+      const result = service.formatSanityStatus('normal');
+      expect(result).toContain('Normal');
+      expect(result).toContain('✅');
+    });
+
+    it('returns unknown status as-is', () => {
+      expect(service.formatSanityStatus('unknown_status')).toBe('unknown_status');
+    });
+
+    it('handles null by returning null', () => {
+      expect(service.formatSanityStatus(null)).toBe(null);
+    });
+
+    it('handles undefined by returning undefined', () => {
+      expect(service.formatSanityStatus(undefined)).toBe(undefined);
+    });
+  });
+
+  // ============================================================================
+  // Headroom Formatting (Rarity Decomposition feature)
+  // ============================================================================
+
+  describe('formatHeadroomMultiplier', () => {
+    it('returns N/A for null failure rate', () => {
+      expect(service.formatHeadroomMultiplier(null)).toBe('N/A');
+    });
+
+    it('returns N/A for undefined failure rate', () => {
+      expect(service.formatHeadroomMultiplier(undefined)).toBe('N/A');
+    });
+
+    it('returns N/A for NaN failure rate', () => {
+      expect(service.formatHeadroomMultiplier(NaN)).toBe('N/A');
+    });
+
+    it('returns ∞ [blocked] for 100% failure rate', () => {
+      expect(service.formatHeadroomMultiplier(1.0)).toBe('∞ [blocked]');
+    });
+
+    it('returns em-dash for pass rate >= 10%', () => {
+      // Note: Use 0.89 to get pass rate > 10% (0.11) due to floating point precision
+      expect(service.formatHeadroomMultiplier(0.89)).toBe('—'); // 11% pass
+      expect(service.formatHeadroomMultiplier(0.85)).toBe('—'); // 15% pass
+      expect(service.formatHeadroomMultiplier(0.0)).toBe('—'); // 100% pass
+    });
+
+    it('calculates correct headroom for typical failure rates', () => {
+      expect(service.formatHeadroomMultiplier(0.99)).toBe('×10.0'); // 1% pass
+      // 1.35% pass → 0.10 / 0.0135 ≈ 7.4
+      expect(service.formatHeadroomMultiplier(0.9865)).toBe('×7.4');
+      expect(service.formatHeadroomMultiplier(0.95)).toBe('×2.0'); // 5% pass
+    });
+
+    it('handles very small pass rates', () => {
+      expect(service.formatHeadroomMultiplier(0.999)).toBe('×100.0'); // 0.1% pass
+    });
+
+    it('respects custom target pass rate', () => {
+      expect(service.formatHeadroomMultiplier(0.95, 0.2)).toBe('×4.0'); // 5% pass, 20% target
     });
   });
 });

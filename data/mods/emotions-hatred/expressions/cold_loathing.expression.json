@@ -320,6 +320,6 @@
         "tactile": "The air feels colder around my skin; my hands stay steady, grip firm, as if my body has decided to conserve heat and mercy at the same time.",
         "limited": "I withdraw whatever openness I had—expression set, attention narrowed, patience gone."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

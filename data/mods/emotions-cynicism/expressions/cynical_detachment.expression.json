@@ -233,6 +233,6 @@
         "limited": "{actor}'s expression hardens into skepticism—present, reactive, but unwilling to believe in the best version of anything."
     },
     "category": "anger",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0001
 }

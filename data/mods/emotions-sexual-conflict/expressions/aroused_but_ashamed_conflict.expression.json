@@ -202,5 +202,6 @@
         "olfactory": "I smell warm skin and nervous sweat-clean heat edged with anxiety, like embarrassment made physical."
     },
     "category": "shame",
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

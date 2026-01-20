@@ -154,6 +154,6 @@
         "tactile": "It feels like pressure under my ribs—tight, tender, persistent—paired with restless hands that keep opening and closing with nothing to hold.",
         "limited": "{actor} seems strained with a quiet, lingering ache—present, attentive, but wounded in a way that doesn’t turn sharp."
     },
-    "diagnosticStatus": "unobserved",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0
 }

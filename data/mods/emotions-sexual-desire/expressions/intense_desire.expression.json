@@ -1,236 +1,237 @@
 {
-  "$schema": "schema://living-narrative-engine/expression.schema.json",
-  "id": "emotions-sexual-desire:intense_desire",
-  "description": "Strong romantic or sexual desire - high arousal wanting state.",
-  "priority": 77,
-  "prerequisites": [
-    {
-      "logic": {
-        "and": [
-          {
-            "!=": [
-              {
-                "var": "sexualArousal"
-              },
-              null
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "sexualArousal"
-              },
-              0.5
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.arousal"
-              },
-              45
-            ]
-          },
-          {
-            ">=": [
-              {
-                "var": "moodAxes.engagement"
-              },
-              15
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "var": "sexualStates.sexual_lust"
-                  },
-                  0.6
-                ]
-              },
-              {
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-sexual-desire:intense_desire",
+    "description": "Strong romantic or sexual desire - high arousal wanting state.",
+    "priority": 77,
+    "prerequisites": [
+        {
+            "logic": {
                 "and": [
-                  {
-                    ">=": [
-                      {
-                        "var": "sexualStates.passion"
-                      },
-                      0.55
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.love_attachment"
-                      },
-                      0.35
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "<": [
-              {
-                "var": "emotions.freeze"
-              },
-              0.2
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "moodAxes.threat"
-              },
-              55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.fear"
-              },
-              0.5
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.terror"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.disgust"
-              },
-              0.35
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.shame"
-              },
-              0.55
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.sexual_repulsion"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.sexual_indifference"
-              },
-              0.25
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "sexualStates.sexual_performance_anxiety"
-              },
-              0.45
-            ]
-          },
-          {
-            "<=": [
-              {
-                "var": "emotions.panic"
-              },
-              0.12
-            ]
-          },
-          {
-            "or": [
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "sexualStates.sexual_lust"
-                      },
-                      {
-                        "var": "previousSexualStates.sexual_lust"
-                      }
-                    ]
-                  },
-                  0.08
-                ]
-              },
-              {
-                ">=": [
-                  {
-                    "-": [
-                      {
-                        "var": "sexualStates.passion"
-                      },
-                      {
-                        "var": "previousSexualStates.passion"
-                      }
-                    ]
-                  },
-                  0.06
-                ]
-              },
-              {
-                "and": [
-                  {
-                    ">=": [
-                      {
-                        "var": "emotions.lonely_yearning"
-                      },
-                      0.35
-                    ]
-                  },
-                  {
-                    ">=": [
-                      {
-                        "-": [
-                          {
-                            "var": "emotions.lonely_yearning"
-                          },
-                          {
-                            "var": "previousEmotions.lonely_yearning"
-                          }
+                    {
+                        "!=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            null
                         ]
-                      },
-                      0.08
-                    ]
-                  }
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "sexualArousal"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.arousal"
+                            },
+                            45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "moodAxes.engagement"
+                            },
+                            15
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.sexual_lust"
+                                    },
+                                    0.6
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "sexualStates.passion"
+                                            },
+                                            0.55
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.love_attachment"
+                                            },
+                                            0.35
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.disgust"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.shame"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_repulsion"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_indifference"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_performance_anxiety"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "sexualStates.sexual_lust"
+                                            },
+                                            {
+                                                "var": "previousSexualStates.sexual_lust"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "sexualStates.passion"
+                                            },
+                                            {
+                                                "var": "previousSexualStates.passion"
+                                            }
+                                        ]
+                                    },
+                                    0.06
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.lonely_yearning"
+                                            },
+                                            0.35
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "emotions.lonely_yearning"
+                                                    },
+                                                    {
+                                                        "var": "previousEmotions.lonely_yearning"
+                                                    }
+                                                ]
+                                            },
+                                            0.08
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "sexualStates.sexual_lust"
+                                    },
+                                    0.85
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              },
-              {
-                ">=": [
-                  {
-                    "var": "sexualStates.sexual_lust"
-                  },
-                  0.85
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "failure_message": "High wanting state: strong sexual arousal + high mood arousal + approach engagement. Allows either lust-dominant or passion+attachment. Lonely-yearning can intensify/trigger (flavor) via a spike, without replacing the need for real arousal/wanting. Capped below panic/freeze so it reads as desire, not escape-loop hijack."
-    }
-  ],
-  "actor_description": "The desire hits like a switch flipping—one moment I'm fine, the next my whole body is awake and pulled tight toward the idea of it. I want. Sharp and insistent, low in my belly, spreading heat through my thighs and chest until I can feel my pulse everywhere. My thoughts keep circling back, and it's not subtle: skin too tight, breath coming deeper, every shift of weight a reminder. I'm tracking them—or it, or the possibility—like prey I'm too hungry to ignore. It's almost intrusive, how much space it takes up in my head, how my body's already leaning in before I've decided anything.",
-  "description_text": "{actor}'s attention locks on with visible intensity—gaze steady and hungry, following movement with predatory focus. Their body language shifts: posture opening and leaning forward, weight subtly pressing toward the object of desire. Breathing changes, deeper and more deliberate. Restlessness in small movements—adjusting position, hands finding excuses to touch themselves, fidgeting that suggests barely-suppressed impulse to close distance.",
-  "alternate_descriptions": {
-    "auditory": "Someone's breathing deepens audibly—slower, fuller, with occasional catches or sighs that sound almost involuntary. Small constant movements: fabric shifting as they adjust repeatedly, weight transferring, fingers drumming or tapping with impatient energy. The quality of their voice might drop or roughen slightly if they speak, words coming slower as if their attention is divided.",
-    "tactile": "The air feels warmer, charged. Someone's body radiates focused tension—not anxiety, but coiled readiness, muscle tone suggesting forward motion barely held in check. If you're close enough, you might sense the micro-adjustments, the restless energy of someone trying to stay still while everything in them wants to move closer."
-  },
-  "category": "desire",
-  "diagnosticStatus": "unknown"
+            },
+            "failure_message": "High wanting state: strong sexual arousal + high mood arousal + approach engagement. Allows either lust-dominant or passion+attachment. Lonely-yearning can intensify/trigger (flavor) via a spike, without replacing the need for real arousal/wanting. Capped below panic/freeze so it reads as desire, not escape-loop hijack."
+        }
+    ],
+    "actor_description": "The desire hits like a switch flipping—one moment I'm fine, the next my whole body is awake and pulled tight toward the idea of it. I want. Sharp and insistent, low in my belly, spreading heat through my thighs and chest until I can feel my pulse everywhere. My thoughts keep circling back, and it's not subtle: skin too tight, breath coming deeper, every shift of weight a reminder. I'm tracking them—or it, or the possibility—like prey I'm too hungry to ignore. It's almost intrusive, how much space it takes up in my head, how my body's already leaning in before I've decided anything.",
+    "description_text": "{actor}'s attention locks on with visible intensity—gaze steady and hungry, following movement with predatory focus. Their body language shifts: posture opening and leaning forward, weight subtly pressing toward the object of desire. Breathing changes, deeper and more deliberate. Restlessness in small movements—adjusting position, hands finding excuses to touch themselves, fidgeting that suggests barely-suppressed impulse to close distance.",
+    "alternate_descriptions": {
+        "auditory": "Someone's breathing deepens audibly—slower, fuller, with occasional catches or sighs that sound almost involuntary. Small constant movements: fabric shifting as they adjust repeatedly, weight transferring, fingers drumming or tapping with impatient energy. The quality of their voice might drop or roughen slightly if they speak, words coming slower as if their attention is divided.",
+        "tactile": "The air feels warmer, charged. Someone's body radiates focused tension—not anxiety, but coiled readiness, muscle tone suggesting forward motion barely held in check. If you're close enough, you might sense the micro-adjustments, the restless energy of someone trying to stay still while everything in them wants to move closer."
+    },
+    "category": "desire",
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

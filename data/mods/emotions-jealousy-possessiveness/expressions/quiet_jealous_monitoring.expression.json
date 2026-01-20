@@ -1,7 +1,7 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-jealousy-possessiveness:quiet_jealous_monitoring",
-    "description": "Quiet jealous monitoring\u2014cold vigilance and comparison. Attention narrows into measuring, tracking, and subtle control impulses without overt fluster or explosion; the mind stays sharp, watchful, and privately possessive.",
+    "description": "Quiet jealous monitoring—cold vigilance and comparison. Attention narrows into measuring, tracking, and subtle control impulses without overt fluster or explosion; the mind stays sharp, watchful, and privately possessive.",
     "category": "threat",
     "actor_description": "My attention goes cold and tight, like a lens clicking into focus. I start measuring—who stands where, how long a laugh lasts, the angle of a glance. Everything becomes data I can't stop collecting, numbers in a ledger I didn't ask to keep. My breathing stays even, face stays blank, but underneath my muscles are wired and my mind won't stop calculating distances, cataloging every small shift like I'm preparing for something I refuse to name.",
     "description_text": "{actor}'s stillness takes on a watchful quality—eyes tracking with precision, expression carefully neutral but jaw subtly tight. Their gaze lingers a beat too long on movements and proximities, as if running calculations, checking and re-checking variables in an equation only they can see. Nothing seems to escape their peripheral vision.",
@@ -21,7 +21,7 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.suspicion"
+                                "var": "emotions.apprehension"
                             },
                             0.45
                         ]
@@ -29,9 +29,25 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.suspicion"
+                            },
+                            0.40
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "emotions.smoldering_anger"
                             },
-                            0.35
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.65
                         ]
                     },
                     {
@@ -95,7 +111,7 @@
                             {
                                 "var": "moodAxes.arousal"
                             },
-                            45
+                            40
                         ]
                     },
                     {
@@ -103,7 +119,7 @@
                             {
                                 "var": "emotions.rage"
                             },
-                            0.3
+                            0.30
                         ]
                     },
                     {
@@ -125,6 +141,14 @@
                     {
                         "<=": [
                             {
+                                "var": "emotions.terror"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
                                 "var": "emotions.joy"
                             },
                             0.45
@@ -140,6 +164,41 @@
                     },
                     {
                         "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            }
+                                        ]
+                                    },
+                                    0.10
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        "<": [
+                                            {
+                                                "var": "previousEmotions.apprehension"
+                                            },
+                                            0.45
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            0.45
+                                        ]
+                                    }
+                                ]
+                            },
                             {
                                 ">=": [
                                     {
@@ -197,7 +256,7 @@
                                             {
                                                 "var": "previousEmotions.smoldering_anger"
                                             },
-                                            0.35
+                                            0.25
                                         ]
                                     },
                                     {
@@ -205,7 +264,7 @@
                                             {
                                                 "var": "emotions.smoldering_anger"
                                             },
-                                            0.35
+                                            0.25
                                         ]
                                     }
                                 ]
@@ -229,7 +288,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires jealous vigilance (jealousy + suspicion) plus a cold, controlled edge (smoldering anger) so it reads as measuring/monitoring with subtle control impulses rather than overt fluster or explosion. Anchors in engaged threat with negative affiliation and non-collapsed agency, while keeping arousal below ‘explosive’ territory. Adds a composure gate via inhibitory_control and baseline self_control so the jealousy stays quiet/managed. Caps panic/freeze for steadiness, and caps rage so it remains watchful. Triggers only on suspicion jump, jealousy+affiliation drop, or smoldering rise to prevent spam."
+            "failure_message": "Quiet jealous monitoring is controlled, possessive vigilance: requires jealousy plus suspicion, with apprehension as the threat-management driver (braced restraint) and a bounded smoldering edge (cold control impulse without explosion). Anchors in engaged moderate threat with negative affiliation, intact agency, and a strong inhibition/self-control clamp. Caps panic/freeze/rage and keeps arousal below 'flare' territory. Triggers only on rises/crossings (apprehension/suspicion/jealousy or smoldering) to prevent spam."
         }
     ],
     "alternate_descriptions": {
@@ -237,5 +296,6 @@
         "tactile": "The air around someone feels calibrated—a held stillness with wire-taut edges beneath it, like vigilance compressed into something narrower and colder than ordinary attention.",
         "limited": "I sense someone going still and watchful, tracking things with sharp, quiet attention—outwardly composed, inwardly wired."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0
 }

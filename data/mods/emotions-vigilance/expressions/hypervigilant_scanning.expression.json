@@ -24,6 +24,14 @@
                         ]
                     },
                     {
+                        "<=": [
+                            {
+                                "var": "emotions.apprehension"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
                         ">=": [
                             {
                                 "var": "moodAxes.threat"
@@ -45,6 +53,22 @@
                                 "var": "moodAxes.engagement"
                             },
                             15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.inhibitory_control"
+                            },
+                            35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "affectTraits.self_control"
+                            },
+                            85
                         ]
                     },
                     {
@@ -143,7 +167,7 @@
                     }
                 ]
             },
-            "failure_message": "Requires emotion conditions (hypervigilance, fear, dissociation, panic, freeze, numbness, executive_focus); mood axes (threat, arousal, engagement, agency_control); state change detection from previous values."
+            "failure_message": "Hypervigilant scanning is high-alert, higher-arousal monitoring, not braced inhibition. Caps apprehension and clamp signatures so ‘uneasy restraint’ doesn’t masquerade as rapid scanning unless you explicitly design a blended beat."
         }
     ],
     "actor_description": "My attention won't settle—it keeps snagging on everything, pulling tight. Every sound sharpens into a question mark: footsteps, doors, voices dropping. My eyes track movement before I decide to look, scanning doorways, hands, exits in loops I can't stop running. My chest stays tight, breath never quite deep enough, muscles coiled like I'm about to need them. It's exhausting, but the exhaustion doesn't matter—stopping feels like lowering my guard right before the hit comes. If I just scan one more time, maybe I'll catch it. Maybe I'll be ready.",
@@ -153,6 +177,6 @@
         "tactile": "Even without looking, I can feel the surveillance radiating off someone—the way they hold space like they're tracking everything at once. Their presence feels wound-up, tightly gathered, like standing near a spring that's been compressed and won't release."
     },
     "category": "threat",
-    "diagnosticStatus": "uncommon",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0007
 }

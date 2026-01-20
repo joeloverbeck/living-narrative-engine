@@ -218,6 +218,6 @@
         "tactile": "I sense a tense, vibrating stillness in someone's posture-like a coiled spring you can feel in the air."
     },
     "category": "anger",
-    "diagnosticStatus": "rare",
+    "diagnosticStatus": "unknown",
     "triggerRate": 0.0002
 }

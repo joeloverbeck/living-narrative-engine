@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-sexual-repulsion:hard_no_recoil_boundary",
-    "description": "A hard internal stop: attraction slams shut and the body pulls back to re-establish a safety boundary. Attention narrows, contact feels wrong, and the impulse is to create distance immediately\u2014by freezing, pushing away, or cutting the moment clean.",
+    "description": "A hard internal stop: attraction slams shut and the body pulls back to re-establish a safety boundary. Attention narrows, contact feels wrong, and the impulse is to create distance immediately—by freezing, pushing away, or cutting the moment clean.",
     "category": "threat",
-    "actor_description": "A cold, absolute no drops through me\u2014no question, no hesitation. My stomach turns, my skin crawls, and every nerve insists on distance like it's a survival reflex. My chest tightens, breath going shallow and sharp. Thoughts narrow to one clear signal: stop, boundary, now. My body is already pulling back\u2014freezing or bracing to push away\u2014before I've even formed the words.",
-    "description_text": "{actor} recoils sharply\u2014posture pulling back, shoulders drawing in, face tightening into something closed and flat. Their attention snaps narrow and fixed, body language suddenly protective: arms crossing, distance created, contact refused. The shift is immediate and absolute, a boundary reasserted without negotiation.",
+    "actor_description": "A cold, absolute no drops through me—no question, no hesitation. My stomach turns, my skin crawls, and every nerve insists on distance like it's a survival reflex. My chest tightens, breath going shallow and sharp. Thoughts narrow to one clear signal: stop, boundary, now. My body is already pulling back—freezing or bracing to push away—before I've even formed the words.",
+    "description_text": "{actor} recoils sharply—posture pulling back, shoulders drawing in, face tightening into something closed and flat. Their attention snaps narrow and fixed, body language suddenly protective: arms crossing, distance created, contact refused. The shift is immediate and absolute, a boundary reasserted without negotiation.",
     "priority": 79,
     "prerequisites": [
         {
@@ -174,8 +174,9 @@
         }
     ],
     "alternate_descriptions": {
-        "auditory": "Someone's voice goes clipped and cold\u2014short words, hard edges\u2014or drops to nothing at all.",
-        "limited": "I sense someone's sharp recoil\u2014body pulling back, posture closed, boundary snapping into place."
+        "auditory": "Someone's voice goes clipped and cold—short words, hard edges—or drops to nothing at all.",
+        "limited": "I sense someone's sharp recoil—body pulling back, posture closed, boundary snapping into place."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0017
 }

@@ -1,10 +1,10 @@
 {
     "$schema": "schema://living-narrative-engine/expression.schema.json",
     "id": "emotions-social-anxiety:spotlight_dread",
-    "description": "Spotlight dread\u2014social performance anxiety where attention narrows into self-monitoring. The body stays alert and present, but every gesture feels audited, as if a small mistake would be permanently legible.",
+    "description": "Spotlight dread—social performance anxiety where attention narrows into self-monitoring. The body stays alert and present, but every gesture feels audited, as if a small mistake would be permanently legible.",
     "category": "threat",
-    "actor_description": "It\u2019s like a light clicks on inside my skull and suddenly I can\u2019t stop watching myself from the outside. My heart speeds up, my face feels too warm, and every word I consider gets weighed for how it will land. I\u2019m present\u2014too present\u2014but my control feels thin, like I\u2019m balancing on a narrow edge while everyone can see the wobble.",
-    "description_text": "{actor} grows tightly self-conscious\u2014posture a little rigid, eyes flicking as if tracking reactions. Their voice or movements turn careful, measured, like they're trying not to give anything away.",
+    "actor_description": "It’s like a light clicks on inside my skull and suddenly I can’t stop watching myself from the outside. My heart speeds up, my face feels too warm, and every word I consider gets weighed for how it will land. I’m present—too present—but my control feels thin, like I’m balancing on a narrow edge while everyone can see the wobble.",
+    "description_text": "{actor} grows tightly self-conscious—posture a little rigid, eyes flicking as if tracking reactions. Their voice or movements turn careful, measured, like they're trying not to give anything away.",
     "priority": 76,
     "prerequisites": [
         {
@@ -13,9 +13,17 @@
                     {
                         ">=": [
                             {
+                                "var": "emotions.apprehension"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
                                 "var": "emotions.anxiety"
                             },
-                            0.55
+                            0.45
                         ]
                     },
                     {
@@ -25,7 +33,7 @@
                                     {
                                         "var": "emotions.embarrassment"
                                     },
-                                    0.4
+                                    0.38
                                 ]
                             },
                             {
@@ -33,7 +41,7 @@
                                     {
                                         "var": "emotions.awkwardness"
                                     },
-                                    0.45
+                                    0.42
                                 ]
                             }
                         ]
@@ -43,7 +51,15 @@
                             {
                                 "var": "moodAxes.threat"
                             },
-                            35
+                            30
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "moodAxes.threat"
+                            },
+                            70
                         ]
                     },
                     {
@@ -67,7 +83,27 @@
                             {
                                 "var": "moodAxes.agency_control"
                             },
-                            10
+                            12
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "moodAxes.inhibitory_control"
+                                    },
+                                    10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "affectTraits.self_control"
+                                    },
+                                    40
+                                ]
+                            }
                         ]
                     },
                     {
@@ -76,6 +112,14 @@
                                 "var": "emotions.rage"
                             },
                             0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.smoldering_anger"
+                            },
+                            0.45
                         ]
                     },
                     {
@@ -95,55 +139,121 @@
                         ]
                     },
                     {
-                        "and": [
+                        "<=": [
                             {
-                                ">=": [
-                                    {
-                                        "-": [
-                                            {
-                                                "var": "moodAxes.threat"
-                                            },
-                                            {
-                                                "var": "previousMoodAxes.threat"
-                                            }
-                                        ]
-                                    },
-                                    12
-                                ]
+                                "var": "emotions.panic"
                             },
+                            0.22
+                        ]
+                    },
+                    {
+                        "<=": [
                             {
-                                ">=": [
-                                    {
-                                        "var": "moodAxes.engagement"
-                                    },
-                                    20
-                                ]
+                                "var": "emotions.terror"
                             },
+                            0.55
+                        ]
+                    },
+                    {
+                        "or": [
                             {
-                                ">=": [
+                                "and": [
                                     {
-                                        "-": [
+                                        ">=": [
                                             {
                                                 "var": "moodAxes.engagement"
                                             },
+                                            20
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
                                             {
-                                                "var": "previousMoodAxes.engagement"
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.engagement"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.engagement"
+                                                    }
+                                                ]
+                                            },
+                                            6
+                                        ]
+                                    },
+                                    {
+                                        ">=": [
+                                            {
+                                                "-": [
+                                                    {
+                                                        "var": "moodAxes.threat"
+                                                    },
+                                                    {
+                                                        "var": "previousMoodAxes.threat"
+                                                    }
+                                                ]
+                                            },
+                                            12
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.apprehension"
+                                            },
+                                            {
+                                                "var": "previousEmotions.apprehension"
                                             }
                                         ]
                                     },
-                                    6
+                                    0.10
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.embarrassment"
+                                            },
+                                            {
+                                                "var": "previousEmotions.embarrassment"
+                                            }
+                                        ]
+                                    },
+                                    0.12
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.awkwardness"
+                                            },
+                                            {
+                                                "var": "previousEmotions.awkwardness"
+                                            }
+                                        ]
+                                    },
+                                    0.12
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a spotlight-style lock-in: strong anxiety plus embarrassment/awkwardness, grounded in high threat, negative self-evaluation, and high engagement (hyper-self-monitoring) with somewhat reduced control. Caps anger to avoid defensiveness, and caps dissociation/numbness so it stays present and keyed-up. Triggers only when threat spikes alongside engagement staying high and rising (the spotlight 'clicks on')."
+            "failure_message": "Spotlight dread is braced self-monitoring: requires apprehension (controlled bracing) plus high anxiety and embarrassment/awkwardness, grounded in elevated threat and high engagement with negative self-evaluation and thinned agency. Keeps it present (caps dissociation/numbness) and non-explosive (caps rage/smolder). Triggers on the spotlight 'click' via threat+engagement spike or a sharp rise in apprehension/embarrassment/awkwardness."
         }
     ],
     "alternate_descriptions": {
-        "auditory": "Their voice tightens slightly\u2014shorter phrases, careful pacing, small pauses that feel like recalculation mid-sentence.",
-        "tactile": "There\u2019s a faint tremor in their hands or jaw, the kind that comes from holding still on purpose while the body wants to fidget."
+        "auditory": "Their voice tightens slightly—shorter phrases, careful pacing, small pauses that feel like recalculation mid-sentence.",
+        "tactile": "There’s a faint tremor in their hands or jaw, the kind that comes from holding still on purpose while the body wants to fidget."
     },
-    "diagnosticStatus": "unknown"
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0002
 }

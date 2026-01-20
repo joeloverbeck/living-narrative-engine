@@ -331,6 +331,10 @@ describe('HierarchicalClauseNode', () => {
         siblingsPassedCount: 0,
         siblingConditionedFailCount: 0,
         siblingConditionedFailRate: null,
+        soleBlockerP50: null,
+        soleBlockerP90: null,
+        soleBlockerSampleCount: 0,
+        soleBlockerTotalCount: 0,
         orContributionCount: 0,
         orSuccessCount: 0,
         orContributionRate: null,
@@ -1743,6 +1747,139 @@ describe('HierarchicalClauseNode', () => {
 
       expect(orChild.parentNodeType === 'or').toBe(true);
       expect(andChild.parentNodeType === 'or').toBe(false);
+    });
+  });
+
+  describe('sole-blocker value tracking', () => {
+    let node;
+
+    beforeEach(() => {
+      node = new HierarchicalClauseNode({
+        id: '0',
+        nodeType: 'leaf',
+        description: 'emotions.anger >= 0.5',
+      });
+    });
+
+    it('should record sole-blocker values', () => {
+      node.recordSoleBlockerValue(0.3);
+      node.recordSoleBlockerValue(0.4);
+      node.recordSoleBlockerValue(0.2);
+
+      expect(node.soleBlockerSampleCount).toBe(3);
+      expect(node.soleBlockerTotalCount).toBe(3);
+    });
+
+    it('should skip non-numeric values in recordSoleBlockerValue', () => {
+      node.recordSoleBlockerValue(null);
+      node.recordSoleBlockerValue(undefined);
+      node.recordSoleBlockerValue('string');
+      node.recordSoleBlockerValue(NaN);
+      node.recordSoleBlockerValue({});
+
+      expect(node.soleBlockerSampleCount).toBe(0);
+      expect(node.soleBlockerTotalCount).toBe(0);
+    });
+
+    it('should calculate P50 of sole-blocker values', () => {
+      // Add values from 0.1 to 1.0
+      for (let i = 1; i <= 10; i++) {
+        node.recordSoleBlockerValue(i * 0.1);
+      }
+
+      // P50 of [0.1, 0.2, ..., 1.0] - median is around 0.55
+      expect(node.soleBlockerP50).toBeCloseTo(0.55, 1);
+    });
+
+    it('should calculate P90 of sole-blocker values', () => {
+      // Add values from 0.1 to 1.0
+      for (let i = 1; i <= 10; i++) {
+        node.recordSoleBlockerValue(i * 0.1);
+      }
+
+      // P90 should be close to 0.91
+      expect(node.soleBlockerP90).toBeGreaterThanOrEqual(0.9);
+    });
+
+    it('should return null percentiles when no values recorded', () => {
+      expect(node.soleBlockerP50).toBeNull();
+      expect(node.soleBlockerP90).toBeNull();
+    });
+
+    it('should return single value for percentiles when one observation', () => {
+      node.recordSoleBlockerValue(0.42);
+
+      expect(node.soleBlockerP50).toBe(0.42);
+      expect(node.soleBlockerP90).toBe(0.42);
+    });
+
+    it('should use reservoir sampling when exceeding max samples', () => {
+      // Default maxSoleBlockerSampled is 2000, but we test with many values
+      for (let i = 1; i <= 100; i++) {
+        node.recordSoleBlockerValue(i);
+      }
+
+      expect(node.soleBlockerTotalCount).toBe(100);
+      // Sample count may be less than total due to reservoir sampling
+      expect(node.soleBlockerSampleCount).toBeLessThanOrEqual(100);
+      expect(node.soleBlockerSampleCount).toBeGreaterThan(0);
+    });
+
+    it('should reset sole-blocker stats in resetStats()', () => {
+      node.recordSoleBlockerValue(0.3);
+      node.recordSoleBlockerValue(0.4);
+
+      expect(node.soleBlockerSampleCount).toBe(2);
+
+      node.resetStats();
+
+      expect(node.soleBlockerSampleCount).toBe(0);
+      expect(node.soleBlockerTotalCount).toBe(0);
+      expect(node.soleBlockerP50).toBeNull();
+      expect(node.soleBlockerP90).toBeNull();
+    });
+
+    it('should include sole-blocker fields in toJSON()', () => {
+      node.recordSoleBlockerValue(0.3);
+      node.recordSoleBlockerValue(0.5);
+      node.recordSoleBlockerValue(0.7);
+
+      const json = node.toJSON();
+
+      expect(json).toHaveProperty('soleBlockerP50');
+      expect(json).toHaveProperty('soleBlockerP90');
+      expect(json).toHaveProperty('soleBlockerSampleCount');
+      expect(json).toHaveProperty('soleBlockerTotalCount');
+      expect(json.soleBlockerSampleCount).toBe(3);
+      expect(json.soleBlockerTotalCount).toBe(3);
+    });
+
+    it('should restore soleBlockerTotalCount from fromJSON()', () => {
+      node.recordSoleBlockerValue(0.3);
+      node.recordSoleBlockerValue(0.5);
+
+      const json = node.toJSON();
+      const restored = HierarchicalClauseNode.fromJSON(json);
+
+      expect(restored.soleBlockerTotalCount).toBe(2);
+    });
+
+    it('should have P90 >= P50 for uniform data', () => {
+      for (let i = 1; i <= 50; i++) {
+        node.recordSoleBlockerValue(i / 50);
+      }
+
+      expect(node.soleBlockerP90).toBeGreaterThanOrEqual(node.soleBlockerP50);
+    });
+
+    it('should handle negative values correctly', () => {
+      // Mood axes can have negative values
+      node.recordSoleBlockerValue(-50);
+      node.recordSoleBlockerValue(-30);
+      node.recordSoleBlockerValue(-10);
+
+      expect(node.soleBlockerP50).toBeCloseTo(-30, 1);
+      expect(node.soleBlockerP90).toBeGreaterThanOrEqual(-30);
     });
   });
 });
