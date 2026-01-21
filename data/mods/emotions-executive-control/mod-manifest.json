@@ -8,7 +8,6 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "choice_paralysis_hesitation.expression.json",
       "determined_focus.expression.json"
     ]
   }

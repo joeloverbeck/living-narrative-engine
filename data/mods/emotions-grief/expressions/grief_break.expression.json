@@ -221,6 +221,6 @@
         "tactile": "Someone starts to shake in waves-small at first, then unstoppable. Their body has that unmistakable grief rhythm: tight, trembling pulses like the whole frame is trying to hold itself together."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0073
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0091
 }

@@ -173,6 +173,6 @@
         "limited": "Something in {actor} goes quiet and flat, like the emotional signal has been dampened."
     },
     "category": "shutdown",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0063
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0067
 }

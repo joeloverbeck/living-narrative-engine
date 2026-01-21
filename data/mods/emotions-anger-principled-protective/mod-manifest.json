@@ -8,9 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "hurt_anger.expression.json",
-      "protective_anger.expression.json",
-      "righteous_indignation.expression.json"
+      "protective_anger.expression.json"
     ]
   }
 }

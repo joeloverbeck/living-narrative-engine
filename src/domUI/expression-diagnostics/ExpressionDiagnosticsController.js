@@ -3677,7 +3677,7 @@ class ExpressionDiagnosticsController {
 
     if (selectableExpressions.length === 0) {
       this.#problematicPillsContainer.innerHTML =
-        '<p class="no-problems">All expressions have normal or frequent status.</p>';
+        '<p class="no-problems">All expressions have uncommon, normal, or frequent status.</p>';
       return;
     }
 

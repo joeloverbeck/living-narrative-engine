@@ -216,6 +216,6 @@
         "tactile": "Someone's presence feels heavy and withdrawn, like someone has stepped back from the moment without moving their feet."
     },
     "category": "attention",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0131
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0133
 }

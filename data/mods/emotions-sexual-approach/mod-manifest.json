@@ -5,7 +5,6 @@
   "dependencies": [],
   "content": {
     "expressions": [
-      "flirtatious_playfulness.expression.json",
       "seductive_confidence.expression.json"
     ]
   }

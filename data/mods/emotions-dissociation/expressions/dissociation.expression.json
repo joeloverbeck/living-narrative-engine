@@ -189,6 +189,6 @@
         "auditory": "The voice I hear is oddly flat-too even, too quiet, like someone reading their lines without being in the scene."
     },
     "category": "shutdown",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0001
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0005
 }

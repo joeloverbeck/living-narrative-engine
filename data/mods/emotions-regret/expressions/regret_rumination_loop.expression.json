@@ -140,6 +140,6 @@
         "tactile": "There's a restless stillness to them—jaw working, fingers worrying at fabric or skin, like their body is trying to scrub the moment clean."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0014
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0009
 }

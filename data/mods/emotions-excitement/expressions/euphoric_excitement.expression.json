@@ -106,6 +106,6 @@
         "olfactory": "I smell warm breath, a hint of sweat, and that clean edge of adrenaline-energy turning outward."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0039
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.004
 }

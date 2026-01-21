@@ -8,10 +8,8 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "flight_impulse_get_out_now.expression.json",
       "freeze_response.expression.json",
-      "panic_onset.expression.json",
-      "terror_spike.expression.json"
+      "panic_onset.expression.json"
     ]
   }
 }

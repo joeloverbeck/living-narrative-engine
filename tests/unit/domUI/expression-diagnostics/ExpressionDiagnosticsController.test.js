@@ -4171,7 +4171,7 @@ describe('ExpressionDiagnosticsController', () => {
       await controller.initialize();
 
       const pillsContainer = document.getElementById('problematic-pills-container');
-      expect(pillsContainer.innerHTML).toContain('All expressions have normal or frequent status');
+      expect(pillsContainer.innerHTML).toContain('All expressions have uncommon, normal, or frequent status');
     });
 
     it('clicking pill selects expression in dropdown', async () => {
@@ -4282,7 +4282,7 @@ describe('ExpressionDiagnosticsController', () => {
       const pill = pillsContainer.querySelector('.expression-pill');
       expect(pill).toBeNull();
       expect(pillsContainer.innerHTML).toContain(
-        'All expressions have normal or frequent status.'
+        'All expressions have uncommon, normal, or frequent status.'
       );
     });
 
@@ -4572,10 +4572,10 @@ describe('ExpressionDiagnosticsController', () => {
         expect.stringContaining('using registry fallback')
       );
 
-      // Should NOT show "All expressions have normal or frequent status"
+      // Should NOT show "All expressions have uncommon, normal, or frequent status"
       const pillsContainer = document.getElementById('problematic-pills-container');
       expect(pillsContainer.innerHTML).not.toContain(
-        'All expressions have normal or frequent status'
+        'All expressions have uncommon, normal, or frequent status'
       );
 
       // Should show pills for expressions with unknown status

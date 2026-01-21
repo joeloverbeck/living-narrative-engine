@@ -185,6 +185,6 @@
         "tactile": "Someone's energy feels quick and buoyant-close one moment, gone the next-like someone circling for an opening."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0128
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0095
 }

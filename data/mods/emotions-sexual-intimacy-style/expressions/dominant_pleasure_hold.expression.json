@@ -123,6 +123,6 @@
         "tactile": "The air around them feels steadier, as if their stillness has weight; their movements land with confident precision rather than nervous heat.",
         "limited": "{actor} looks composed and assertive, desire visible as certainty rather than agitation."
     },
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0003
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.001
 }

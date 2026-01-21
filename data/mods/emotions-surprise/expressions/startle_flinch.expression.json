@@ -146,6 +146,6 @@
         "auditory": "A sharp, involuntary gasp cuts the air—then a sudden scrape or shuffle of feet jerking position, maybe the thud of a hand hitting wall or furniture. Quick, tactile sounds of a body moving without permission."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0241
+    "diagnosticStatus": "frequent",
+    "triggerRate": 0.0283
 }

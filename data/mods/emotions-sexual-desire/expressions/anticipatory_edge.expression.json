@@ -273,6 +273,6 @@
         "olfactory": "There's a clean edge of adrenaline in the air-sharp and bright, without the sour rot of fear."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0038
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0037
 }

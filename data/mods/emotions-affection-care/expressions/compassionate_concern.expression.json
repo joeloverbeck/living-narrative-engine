@@ -226,6 +226,6 @@
         "auditory": "A voice drops in volume and sharpness-questions asked gently, pauses left open on purpose. The words sound arranged around someone else's fragility."
     },
     "category": "affection",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0022
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0027
 }

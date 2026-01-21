@@ -177,6 +177,6 @@
         "auditory": "Someone's voice goes clipped and cold—short words, hard edges—or drops to nothing at all.",
         "limited": "I sense someone's sharp recoil—body pulling back, posture closed, boundary snapping into place."
     },
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0017
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0014
 }

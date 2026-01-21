@@ -165,6 +165,6 @@
         "tactile": "The air feels oddly heavy around them; there’s a faint tremor in their hands, but their posture holds like a brace they haven’t noticed adopting.",
         "limited": "{actor} looks dazed and distant for a beat, as if processing something too big to take in all at once."
     },
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0045
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0042
 }

@@ -127,6 +127,6 @@
         "olfactory": "The air around someone is less stale with stress-less sharp sweat, more dry warmth, like a person who's stopped bracing and started moving again."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0101
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0097
 }

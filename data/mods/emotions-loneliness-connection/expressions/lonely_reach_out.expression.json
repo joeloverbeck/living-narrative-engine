@@ -157,6 +157,6 @@
         "auditory": "A quiet inhale like someone gathering nerve, followed by a small, tentative sound—throat cleared, a half-start of words, a voice softened before it fully arrives.",
         "tactile": "There's a faint tremor in the stillness—hands hovering, shoulders held as if bracing for rejection while still edging closer."
     },
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0012
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.00075
 }
