@@ -9,9 +9,7 @@
   "content": {
     "expressions": [
       "earned_satisfaction_settle.expression.json",
-      "quiet_pride.expression.json",
-      "triumphant_release.expression.json",
-      "victory_afterglow_glow.expression.json"
+      "quiet_pride.expression.json"
     ]
   }
 }

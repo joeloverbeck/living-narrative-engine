@@ -164,6 +164,6 @@
         "auditory": "I hear the faintest sound of controlled breathing, like someone is trying to make their lungs quieter."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0042
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0037
 }

@@ -180,6 +180,6 @@
         "limited": "{actor} visibly shakes as they try to steady themselves, letting out a thin laugh or a choked breath."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.005
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0056
 }

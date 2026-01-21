@@ -177,6 +177,6 @@
         "tactile": "Even without looking, I can feel the surveillance radiating off someone—the way they hold space like they're tracking everything at once. Their presence feels wound-up, tightly gathered, like standing near a spring that's been compressed and won't release."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0007
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0006
 }

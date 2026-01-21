@@ -175,6 +175,6 @@
         "auditory": "I hear a slow breath that sounds far away."
     },
     "category": "loss",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0013
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0015
 }

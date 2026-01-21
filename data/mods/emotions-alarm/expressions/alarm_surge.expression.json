@@ -42,7 +42,7 @@
                             {
                                 "var": "emotions.apprehension"
                             },
-                            0.50
+                            0.5
                         ]
                     },
                     {
@@ -270,6 +270,6 @@
         "tactile": "The air feels tight and charged; there's a restless micro-tremor in their stillness, like a coiled spring held in place."
     },
     "category": "threat",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0018
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0006
 }

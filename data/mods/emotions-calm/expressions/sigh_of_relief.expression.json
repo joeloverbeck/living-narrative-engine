@@ -194,6 +194,6 @@
         "tactile": "The tension of someone eases abruptly, as if a coiled spring just let go."
     },
     "category": "calm",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0022
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.002
 }

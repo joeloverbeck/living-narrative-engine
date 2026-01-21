@@ -145,6 +145,6 @@
         "olfactory": "The air catches a warmer human note-less sharp stress-sweat, more ordinary breath and skin."
     },
     "category": "calm",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0526
+    "diagnosticStatus": "frequent",
+    "triggerRate": 0.047
 }

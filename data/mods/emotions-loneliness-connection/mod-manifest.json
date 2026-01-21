@@ -9,8 +9,7 @@
   "content": {
     "expressions": [
       "lonely_isolation.expression.json",
-      "lonely_reach_out.expression.json",
-      "lonely_yearning_reach.expression.json"
+      "lonely_reach_out.expression.json"
     ]
   }
 }

@@ -121,6 +121,6 @@
         "tactile": "Someone close shifts with an easy looseness-breath deepening, tension leaving their body like a held string finally released."
     },
     "category": "joy",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0036
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0034
 }

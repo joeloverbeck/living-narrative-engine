@@ -8,7 +8,6 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "hair_trigger_flinch_while_scanning.expression.json",
       "hypervigilant_scanning.expression.json"
     ]
   }

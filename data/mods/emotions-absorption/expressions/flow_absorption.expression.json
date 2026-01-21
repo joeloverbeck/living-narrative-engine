@@ -291,5 +291,5 @@
     },
     "category": "attention",
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0026
+    "triggerRate": 0.002
 }

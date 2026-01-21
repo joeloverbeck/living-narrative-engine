@@ -134,6 +134,6 @@
         "olfactory": "I smell clean warmth-skin, faint fragrance, and the quiet certainty of someone comfortable being desired."
     },
     "category": "desire",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0007
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0005
 }

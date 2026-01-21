@@ -126,6 +126,6 @@
         "tactile": "Someone's movements turn snappier-small motions a bit harder, gestures more abrupt, like irritation leaking into the body."
     },
     "category": "anger",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.002
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0016
 }

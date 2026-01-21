@@ -5,9 +5,7 @@
   "dependencies": [],
   "content": {
     "expressions": [
-      "cognitive_overload_stall.expression.json",
-      "confused_frown.expression.json",
-      "insight_click.expression.json"
+      "confused_frown.expression.json"
     ]
   }
 }

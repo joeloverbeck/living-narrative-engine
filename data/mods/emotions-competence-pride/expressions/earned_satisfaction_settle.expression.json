@@ -181,6 +181,6 @@
         "tactile": "The tension in the room changes: hands unclench, shoulders drop, and movement gets looser—as if the body just set something heavy down.",
         "limited": "My pace slows. I look steadier, less driven, like whatever I was holding in my head has finally been put away."
     },
-    "diagnosticStatus": "unknown",
+    "diagnosticStatus": "uncommon",
     "triggerRate": 0.0006
 }

@@ -208,6 +208,6 @@
         "limited": "A subdued, checked-out quiet settles over them, with minimal movement and reduced responsiveness."
     },
     "category": "shutdown",
-    "diagnosticStatus": "unknown",
+    "diagnosticStatus": "uncommon",
     "triggerRate": 0.0017
 }

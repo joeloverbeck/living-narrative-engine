@@ -203,6 +203,6 @@
         "auditory": "I hear a long exhale—unforced, almost shaky at the end—like the sound of finally letting something go.",
         "tactile": "The air feels less tight around them; their movements stop hitching, hands loosening as if they’d been gripping an invisible handle."
     },
-    "diagnosticStatus": "unknown",
+    "diagnosticStatus": "uncommon",
     "triggerRate": 0.001
 }

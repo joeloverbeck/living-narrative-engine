@@ -213,6 +213,6 @@
         "tactile": "The space beside jitters-sudden movements, heat, a bristling energy that makes stillness feel unsafe."
     },
     "category": "anger",
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0001
+    "diagnosticStatus": "uncommon",
+    "triggerRate": 0.0005
 }

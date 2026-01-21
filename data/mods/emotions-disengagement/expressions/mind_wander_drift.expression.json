@@ -144,6 +144,6 @@
         "tactile": "The moment feels slightly less sharp; movements turn a touch automatic, as if they’re operating on gentle autopilot.",
         "limited": "For a brief stretch, {actor} seems mentally elsewhere—present in body, but attention drifting."
     },
-    "diagnosticStatus": "unknown",
-    "triggerRate": 0.0092
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0093
 }

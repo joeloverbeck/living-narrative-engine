@@ -188,6 +188,6 @@
         "auditory": "A short burst of laughter slips out—half a chuckle, half an exhale—followed by a breath that finally sounds unforced.",
         "tactile": "The air around them seems to loosen; you can almost feel the tension leaving their shoulders in a quick ripple, like a knot giving up."
     },
-    "diagnosticStatus": "unknown",
+    "diagnosticStatus": "uncommon",
     "triggerRate": 0.0007
 }

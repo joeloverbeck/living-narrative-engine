@@ -8,9 +8,6 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "defensive_shame_snap.expression.json",
-      "imposter_doubt.expression.json",
-      "resigned_shame.expression.json",
       "shame_spike.expression.json"
     ]
   }

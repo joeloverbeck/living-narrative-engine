@@ -8,8 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "assertive_boundary_no.expression.json",
-      "confident_composure.expression.json"
+      "assertive_boundary_no.expression.json"
     ]
   }
 }
