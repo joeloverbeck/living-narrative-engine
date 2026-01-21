@@ -105,6 +105,7 @@ class OverlapRecommendationBuilder {
    * @param {object} candidateMetrics - From CandidatePairFilter
    * @param {object} behaviorMetrics - From BehavioralOverlapEvaluator
    * @param {Array<DivergenceExample>} divergenceExamples - Top K divergence examples
+   * @param {Array<object>} [bandingSuggestions] - Gate banding suggestions from GateBandingSuggestionBuilder
    * @param {'emotion'|'sexual'} [prototypeFamily] - Family of prototypes being analyzed
    * @returns {OverlapRecommendation} Complete recommendation
    */
@@ -115,12 +116,18 @@ class OverlapRecommendationBuilder {
     candidateMetrics,
     behaviorMetrics,
     divergenceExamples,
+    bandingSuggestions = [],
     prototypeFamily = 'emotion'
   ) {
     const type = this.#mapClassificationToType(classification);
     const severity = this.#computeSeverity(classification, behaviorMetrics);
     const confidence = this.#computeConfidence(behaviorMetrics);
-    const actions = this.#buildActions(classification, prototypeA, prototypeB);
+    const actions = this.#buildActions(
+      classification,
+      prototypeA,
+      prototypeB,
+      bandingSuggestions
+    );
     const evidence = this.#buildEvidence(
       prototypeA,
       prototypeB,
@@ -131,9 +138,15 @@ class OverlapRecommendationBuilder {
     const flatBehaviorMetrics = this.#flattenBehaviorMetrics(behaviorMetrics);
     const thresholdAnalysis = this.#buildThresholdAnalysis(classification);
 
+    // Normalize banding suggestions to an array
+    const normalizedBandingSuggestions = Array.isArray(bandingSuggestions)
+      ? bandingSuggestions
+      : [];
+
     this.#logger.debug(
       `OverlapRecommendationBuilder: Built ${type} recommendation - ` +
-        `severity=${severity.toFixed(3)}, confidence=${confidence.toFixed(3)}`
+        `severity=${severity.toFixed(3)}, confidence=${confidence.toFixed(3)}, ` +
+        `suggestedGateBands=${normalizedBandingSuggestions.length}`
     );
 
     return {
@@ -154,6 +167,7 @@ class OverlapRecommendationBuilder {
       behaviorMetrics: flatBehaviorMetrics,
       evidence,
       thresholdAnalysis,
+      suggestedGateBands: normalizedBandingSuggestions,
     };
   }
 
@@ -317,14 +331,34 @@ class OverlapRecommendationBuilder {
    * @param {object} classification - Classification result
    * @returns {'prototype_merge_suggestion'|'prototype_subsumption_suggestion'|'prototype_overlap_info'} Recommendation type
    */
+  /**
+   * Map classification type to recommendation type.
+   *
+   * @param {object} classification - Classification result
+   * @returns {string} Recommendation type
+   */
   #mapClassificationToType(classification) {
     const classType = classification?.type ?? 'not_redundant';
 
     switch (classType) {
+      // v1 types (backward compatible)
       case 'merge':
+      case 'merge_recommended':
         return 'prototype_merge_suggestion';
       case 'subsumed':
+      case 'subsumed_recommended':
         return 'prototype_subsumption_suggestion';
+
+      // v2 types
+      case 'nested_siblings':
+        return 'prototype_nested_siblings';
+      case 'needs_separation':
+        return 'prototype_needs_separation';
+      case 'keep_distinct':
+        return 'prototype_distinct_info';
+      case 'convert_to_expression':
+        return 'prototype_expression_conversion';
+
       default:
         return 'prototype_overlap_info';
     }
@@ -351,7 +385,9 @@ class OverlapRecommendationBuilder {
     let severity = 0;
 
     switch (classType) {
-      case 'merge': {
+      // v1 and v2 merge types use the same severity formula
+      case 'merge':
+      case 'merge_recommended': {
         const correlation = this.#safeNumber(intensity.pearsonCorrelation, 0);
         const onEither = this.#safeNumber(gateOverlap.onEitherRate, 0);
         const onBoth = this.#safeNumber(gateOverlap.onBothRate, 0);
@@ -361,7 +397,9 @@ class OverlapRecommendationBuilder {
         severity = (correlation + gateOverlapRatio) / 2 - meanAbsDiff;
         break;
       }
-      case 'subsumed': {
+      // v1 and v2 subsumption types use the same severity formula
+      case 'subsumed':
+      case 'subsumed_recommended': {
         const dominanceP = this.#safeNumber(intensity.dominanceP, 0);
         const dominanceQ = this.#safeNumber(intensity.dominanceQ, 0);
         severity = Math.max(dominanceP, dominanceQ);
@@ -416,33 +454,98 @@ class OverlapRecommendationBuilder {
    * @param {object} classification - Classification result
    * @param {object} prototypeA - First prototype
    * @param {object} prototypeB - Second prototype
+   * @param {Array<object>} [bandingSuggestions] - Gate banding suggestions
    * @returns {string[]} Suggested actions
    */
-  #buildActions(classification, prototypeA, prototypeB) {
+  #buildActions(classification, prototypeA, prototypeB, bandingSuggestions = []) {
     const classType = classification?.type ?? 'not_redundant';
     const nameA = prototypeA?.id ?? 'prototype A';
     const nameB = prototypeB?.id ?? 'prototype B';
 
+    // Build base actions based on classification type
+    let actions = [];
+
     switch (classType) {
+      // v1 types (backward compatible)
       case 'merge':
-        return [
+      case 'merge_recommended':
+        actions = [
           `Consider merging "${nameA}" and "${nameB}" — they behave nearly identically`,
           `Alias one to the other to reduce redundancy`,
         ];
-      case 'subsumed': {
+        break;
+
+      case 'subsumed':
+      case 'subsumed_recommended': {
         const subsumed = classification?.subsumedPrototype ?? 'a';
         const subsumedName = subsumed === 'a' ? nameA : nameB;
         const dominantName = subsumed === 'a' ? nameB : nameA;
-        return [
+        actions = [
           `Consider removing "${subsumedName}" — it's effectively a subset of "${dominantName}"`,
           `Tighten "${subsumedName}"'s gates to differentiate it from "${dominantName}"`,
         ];
+        break;
       }
+
+      // v2 types
+      case 'nested_siblings': {
+        const nestingDirection = classification?.nestingDirection ?? 'unknown';
+        const outerName = nestingDirection === 'A_contains_B' ? nameA : nameB;
+        const innerName = nestingDirection === 'A_contains_B' ? nameB : nameA;
+        actions = [
+          `"${innerName}" appears to be a specialized version of "${outerName}"`,
+          `Consider making "${innerName}" inherit from or reference "${outerName}"`,
+          `Verify that the nesting relationship is intentional`,
+        ];
+        break;
+      }
+
+      case 'convert_to_expression': {
+        const conversionHint =
+          classification?.conversionHint ?? 'expression-based definition';
+        actions = [
+          `Consider converting one prototype to an expression: ${conversionHint}`,
+          `The prototypes may be better expressed as a single parameterized definition`,
+        ];
+        break;
+      }
+
+      case 'needs_separation':
+        actions = [
+          `"${nameA}" and "${nameB}" overlap significantly but serve different purposes`,
+          `Tighten gate conditions to reduce overlap`,
+          `Add discriminating conditions to clarify when each should apply`,
+        ];
+        break;
+
+      case 'keep_distinct':
+        actions = [
+          `No action needed — "${nameA}" and "${nameB}" are correctly distinct`,
+          `Their structural similarity is appropriate for their different use cases`,
+        ];
+        break;
+
       default:
-        return [
+        actions = [
           'No action needed — prototypes are structurally similar but behaviorally distinct',
         ];
     }
+
+    // Append gate-specific actions from banding suggestions
+    if (Array.isArray(bandingSuggestions) && bandingSuggestions.length > 0) {
+      for (const suggestion of bandingSuggestions) {
+        if (suggestion.type === 'gate_band' && suggestion.message) {
+          actions.push(suggestion.message);
+        } else if (
+          suggestion.type === 'expression_suppression' &&
+          suggestion.suggestedAction
+        ) {
+          actions.push(suggestion.suggestedAction);
+        }
+      }
+    }
+
+    return actions;
   }
 
   /**
@@ -451,6 +554,16 @@ class OverlapRecommendationBuilder {
    * @param {object} prototypeA - First prototype
    * @param {object} prototypeB - Second prototype
    * @param {object} behaviorMetrics - Behavioral metrics
+   * @param {Array<DivergenceExample>} divergenceExamples - Top K divergence examples
+   * @returns {OverlapEvidence} Evidence structure
+   */
+  /**
+   * Build evidence structure with shared drivers, differentiators, divergence examples,
+   * and v2 behavioral metrics.
+   *
+   * @param {object} prototypeA - First prototype
+   * @param {object} prototypeB - Second prototype
+   * @param {object} behaviorMetrics - Behavioral metrics from evaluator
    * @param {Array<DivergenceExample>} divergenceExamples - Top K divergence examples
    * @returns {OverlapEvidence} Evidence structure
    */
@@ -469,10 +582,61 @@ class OverlapRecommendationBuilder {
       ? divergenceExamples
       : [];
 
+    // Extract v2 behavioral metrics
+    const gateOverlap = behaviorMetrics?.gateOverlap ?? {};
+    const intensity = behaviorMetrics?.intensity ?? {};
+    const passRates = behaviorMetrics?.passRates ?? {};
+    const highCoactivation = behaviorMetrics?.highCoactivation ?? {};
+    const gateImplication = behaviorMetrics?.gateImplication ?? null;
+
     return {
+      // v1 fields (backward compatible)
       sharedDrivers,
       keyDifferentiators,
       divergenceExamples: validDivergence,
+
+      // v2 fields - correlation
+      pearsonCorrelation: this.#safeNumber(intensity.pearsonCorrelation, NaN),
+
+      // v2 fields - gate overlap structure
+      gateOverlap: {
+        onEitherRate: this.#safeNumber(gateOverlap.onEitherRate, NaN),
+        onBothRate: this.#safeNumber(gateOverlap.onBothRate, NaN),
+        jaccard: this.#safeNumber(gateOverlap.jaccard, NaN),
+      },
+
+      // v2 fields - pass rates with conditionals
+      passRates: {
+        pA_given_B: this.#safeNumber(passRates.pA_given_B, NaN),
+        pB_given_A: this.#safeNumber(passRates.pB_given_A, NaN),
+        coPassCount: this.#safeNumber(passRates.coPassCount, 0),
+      },
+
+      // v2 fields - intensity similarity
+      intensitySimilarity: {
+        rmse: this.#safeNumber(intensity.rmse, NaN),
+        pctWithinEps: this.#safeNumber(intensity.pctWithinEps, NaN),
+      },
+
+      // v2 fields - high coactivation thresholds
+      highCoactivation: {
+        thresholds: Array.isArray(highCoactivation.thresholds)
+          ? highCoactivation.thresholds.map((t) => ({
+              threshold: this.#safeNumber(t?.threshold, NaN),
+              coactivationRate: this.#safeNumber(t?.coactivationRate, NaN),
+            }))
+          : [],
+      },
+
+      // v2 fields - gate implication (may be null)
+      gateImplication: gateImplication
+        ? {
+            direction: gateImplication.direction ?? null,
+            confidence: this.#safeNumber(gateImplication.confidence, NaN),
+            implyingPrototype: gateImplication.implyingPrototype ?? null,
+            impliedPrototype: gateImplication.impliedPrototype ?? null,
+          }
+        : null,
     };
   }
 

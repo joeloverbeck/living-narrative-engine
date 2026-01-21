@@ -82,6 +82,17 @@ describe('PrototypeOverlapAnalyzer', () => {
           dominanceP: 0.3,
           dominanceQ: 0.3,
         },
+        passRates: {
+          passRateA: 0.85,
+          passRateB: 0.82,
+          coPassRate: 0.78,
+        },
+        highCoactivation: {
+          count: 5,
+          threshold: 0.8,
+          ratio: 0.05,
+        },
+        gateImplication: null,
         divergenceExamples: [],
       }
     ),
@@ -121,8 +132,19 @@ describe('PrototypeOverlapAnalyzer', () => {
         candidateMetrics: {},
         behaviorMetrics: {},
         evidence: {},
+        suggestedGateBands: [],
       }
     ),
+  });
+
+  /**
+   * Create a mock gate banding suggestion builder.
+   *
+   * @param {Array<object>} [suggestions] - Suggestions to return
+   * @returns {object} Mock builder
+   */
+  const createMockGateBandingSuggestionBuilder = (suggestions = []) => ({
+    buildSuggestions: jest.fn().mockReturnValue(suggestions),
   });
 
   /**
@@ -177,6 +199,9 @@ describe('PrototypeOverlapAnalyzer', () => {
     const overlapRecommendationBuilder =
       overrides.overlapRecommendationBuilder ??
       createMockOverlapRecommendationBuilder();
+    const gateBandingSuggestionBuilder =
+      overrides.gateBandingSuggestionBuilder ??
+      createMockGateBandingSuggestionBuilder();
 
     const analyzer = new PrototypeOverlapAnalyzer({
       prototypeRegistryService,
@@ -184,6 +209,7 @@ describe('PrototypeOverlapAnalyzer', () => {
       behavioralOverlapEvaluator,
       overlapClassifier,
       overlapRecommendationBuilder,
+      gateBandingSuggestionBuilder,
       config,
       logger,
     });
@@ -197,6 +223,7 @@ describe('PrototypeOverlapAnalyzer', () => {
       behavioralOverlapEvaluator,
       overlapClassifier,
       overlapRecommendationBuilder,
+      gateBandingSuggestionBuilder,
     };
   };
 
@@ -410,7 +437,8 @@ describe('PrototypeOverlapAnalyzer', () => {
       const overlapClassifier = {
         classify: jest.fn(() => {
           callOrder.push('classify');
-          return { type: 'merge', thresholds: {}, metrics: {} };
+          // Use v2 classification type
+          return { type: 'merge_recommended', thresholds: {}, metrics: {} };
         }),
       };
       const overlapRecommendationBuilder = {
@@ -521,16 +549,20 @@ describe('PrototypeOverlapAnalyzer', () => {
       );
     });
 
-    it('passes classification to recommendationBuilder when not not_redundant', async () => {
+    it('passes classification to recommendationBuilder when redundant (v2 type)', async () => {
       const protoA = createPrototype('proto_a');
       const protoB = createPrototype('proto_b');
       const candidatePair = createCandidatePair(protoA, protoB);
       const behaviorResult = {
         gateOverlap: { onEitherRate: 0.3, onBothRate: 0.28, pOnlyRate: 0.01, qOnlyRate: 0.01 },
         intensity: { pearsonCorrelation: 0.99, meanAbsDiff: 0.02, dominanceP: 0.3, dominanceQ: 0.3 },
+        passRates: { passRateA: 0.9, passRateB: 0.88, coPassRate: 0.85 },
+        highCoactivation: { count: 3, threshold: 0.8, ratio: 0.03 },
+        gateImplication: { A_implies_B: true, B_implies_A: false, evidence: [] },
         divergenceExamples: [{ context: {}, intensityA: 0.5, intensityB: 0.6, absDiff: 0.1 }],
       };
-      const classification = { type: 'merge', thresholds: {}, metrics: {} };
+      // Use v2 classification type
+      const classification = { type: 'merge_recommended', thresholds: {}, metrics: {} };
 
       const prototypeRegistryService = createMockRegistryService([
         protoA,
@@ -558,8 +590,64 @@ describe('PrototypeOverlapAnalyzer', () => {
         protoB,
         classification,
         candidatePair.candidateMetrics,
-        { gateOverlap: behaviorResult.gateOverlap, intensity: behaviorResult.intensity },
+        {
+          gateOverlap: behaviorResult.gateOverlap,
+          intensity: behaviorResult.intensity,
+          passRates: behaviorResult.passRates,
+          highCoactivation: behaviorResult.highCoactivation,
+          gateImplication: behaviorResult.gateImplication,
+        },
         behaviorResult.divergenceExamples,
+        [], // bandingSuggestions - empty for merge_recommended (not in BANDING_TYPES)
+        'emotion'
+      );
+    });
+
+    it('passes null gateImplication to recommendationBuilder when not available', async () => {
+      const protoA = createPrototype('proto_a');
+      const protoB = createPrototype('proto_b');
+      const candidatePair = createCandidatePair(protoA, protoB);
+      // behaviorResult with null gateImplication (default from createMockBehavioralOverlapEvaluator)
+      const behaviorResult = {
+        gateOverlap: { onEitherRate: 0.3, onBothRate: 0.28, pOnlyRate: 0.01, qOnlyRate: 0.01 },
+        intensity: { pearsonCorrelation: 0.99, meanAbsDiff: 0.02, dominanceP: 0.3, dominanceQ: 0.3 },
+        passRates: { passRateA: 0.9, passRateB: 0.88, coPassRate: 0.85 },
+        highCoactivation: { count: 3, threshold: 0.8, ratio: 0.03 },
+        gateImplication: null, // Explicitly null - gates unparseable or not present
+        divergenceExamples: [],
+      };
+      const classification = { type: 'subsumed_recommended', thresholds: {}, metrics: {} };
+
+      const prototypeRegistryService = createMockRegistryService([protoA, protoB]);
+      const candidatePairFilter = createMockCandidatePairFilter([candidatePair]);
+      const behavioralOverlapEvaluator = createMockBehavioralOverlapEvaluator(behaviorResult);
+      const overlapClassifier = createMockOverlapClassifier(classification);
+      const overlapRecommendationBuilder = createMockOverlapRecommendationBuilder();
+
+      const { analyzer } = createAnalyzer({
+        prototypeRegistryService,
+        candidatePairFilter,
+        behavioralOverlapEvaluator,
+        overlapClassifier,
+        overlapRecommendationBuilder,
+      });
+
+      await analyzer.analyze({ prototypeFamily: 'emotion' });
+
+      expect(overlapRecommendationBuilder.build).toHaveBeenCalledWith(
+        protoA,
+        protoB,
+        classification,
+        candidatePair.candidateMetrics,
+        {
+          gateOverlap: behaviorResult.gateOverlap,
+          intensity: behaviorResult.intensity,
+          passRates: behaviorResult.passRates,
+          highCoactivation: behaviorResult.highCoactivation,
+          gateImplication: null, // Verify null is passed, not omitted
+        },
+        behaviorResult.divergenceExamples,
+        [], // bandingSuggestions - empty for subsumed_recommended (not in BANDING_TYPES)
         'emotion'
       );
     });
@@ -732,8 +820,9 @@ describe('PrototypeOverlapAnalyzer', () => {
         protoC,
       ]);
       const candidatePairFilter = createMockCandidatePairFilter([pair1, pair2]);
+      // Use v2 classification type
       const overlapClassifier = createMockOverlapClassifier({
-        type: 'merge',
+        type: 'merge_recommended',
         thresholds: {},
         metrics: {},
       });
@@ -775,13 +864,14 @@ describe('PrototypeOverlapAnalyzer', () => {
       ]);
       const candidatePairFilter = createMockCandidatePairFilter([pair1, pair2]);
 
-      // First pair is merge, second is not_redundant
+      // First pair is merge_recommended (v2), second is keep_distinct
       let classifyCallCount = 0;
       const overlapClassifier = {
         classify: jest.fn(() => {
           classifyCallCount++;
           return {
-            type: classifyCallCount === 1 ? 'merge' : 'not_redundant',
+            // Use v2 classification types
+            type: classifyCallCount === 1 ? 'merge_recommended' : 'keep_distinct',
             thresholds: {},
             metrics: {},
           };
@@ -804,7 +894,7 @@ describe('PrototypeOverlapAnalyzer', () => {
       expect(result.metadata.sampleCountPerPair).toBe(config.sampleCountPerPair);
     });
 
-    it('filters out not_redundant classifications from recommendations', async () => {
+    it('filters out non-redundant classifications from recommendations (v2 types)', async () => {
       const protoA = createPrototype('proto_a');
       const protoB = createPrototype('proto_b');
       const protoC = createPrototype('proto_c');
@@ -823,12 +913,13 @@ describe('PrototypeOverlapAnalyzer', () => {
         pair3,
       ]);
 
-      // Alternate between merge and not_redundant
+      // Alternate between v2 types: merge_recommended, keep_distinct, subsumed_recommended
       let classifyCallCount = 0;
       const overlapClassifier = {
         classify: jest.fn(() => {
           classifyCallCount++;
-          const types = ['merge', 'not_redundant', 'subsumed'];
+          // Use v2 classification types
+          const types = ['merge_recommended', 'keep_distinct', 'subsumed_recommended'];
           return {
             type: types[(classifyCallCount - 1) % 3],
             thresholds: {},
@@ -854,7 +945,7 @@ describe('PrototypeOverlapAnalyzer', () => {
 
       const result = await analyzer.analyze();
 
-      // Only merge (1st) and subsumed (3rd) should be included
+      // Only merge_recommended (1st) and subsumed_recommended (3rd) should be included
       expect(result.recommendations.length).toBe(2);
       expect(overlapRecommendationBuilder.build).toHaveBeenCalledTimes(2);
     });

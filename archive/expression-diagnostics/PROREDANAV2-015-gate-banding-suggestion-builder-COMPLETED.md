@@ -1,5 +1,7 @@
 # PROREDANAV2-015: Create GateBandingSuggestionBuilder Service (D2)
 
+## Status: COMPLETED
+
 ## Description
 
 Create a service that generates gate banding suggestions for nested siblings and needs separation cases. This helps users understand how to differentiate overlapping prototypes.
@@ -205,3 +207,38 @@ npm run test:unit -- --testPathPattern=prototypeOverlapRegistrations
 # Lint
 npx eslint src/expressionDiagnostics/services/prototypeOverlap/GateBandingSuggestionBuilder.js
 ```
+
+## Implementation Notes
+
+### Discrepancy from Original Ticket
+
+The actual `ImplicationResult` structure from `GateImplicationEvaluator` differs from the ticket's assumed structure:
+
+**Actual structure:**
+```javascript
+{
+  A_implies_B: boolean,
+  B_implies_A: boolean,
+  counterExampleAxes: string[],
+  evidence: Array<{
+    axis: string,
+    intervalA: { lower: number|null, upper: number|null, unsatisfiable: boolean },
+    intervalB: { lower: number|null, upper: number|null, unsatisfiable: boolean },
+    A_subset_B: boolean,
+    B_subset_A: boolean
+  }>,
+  relation: 'equal' | 'narrower' | 'wider' | 'disjoint' | 'overlapping'
+}
+```
+
+**Key adaptations made:**
+1. Uses `intervalA`/`intervalB` instead of `A`/`B`
+2. Handles `null` as unbounded (converts to `±Infinity` for comparison)
+3. Derives per-axis relation from `A_subset_B`/`B_subset_A` flags
+4. Top-level `relation` is not used per-axis
+
+### Final Test Results
+
+- 36 unit tests pass
+- 17 DI registration tests pass
+- ESLint passes for all new/modified files

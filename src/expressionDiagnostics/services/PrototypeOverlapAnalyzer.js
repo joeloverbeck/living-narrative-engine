@@ -39,6 +39,7 @@ class PrototypeOverlapAnalyzer {
   #behavioralOverlapEvaluator;
   #overlapClassifier;
   #overlapRecommendationBuilder;
+  #gateBandingSuggestionBuilder;
   #config;
   #logger;
 
@@ -51,6 +52,7 @@ class PrototypeOverlapAnalyzer {
    * @param {object} deps.behavioralOverlapEvaluator - IBehavioralOverlapEvaluator with evaluate()
    * @param {object} deps.overlapClassifier - IOverlapClassifier with classify()
    * @param {object} deps.overlapRecommendationBuilder - IOverlapRecommendationBuilder with build()
+   * @param {object} deps.gateBandingSuggestionBuilder - IGateBandingSuggestionBuilder with buildSuggestions()
    * @param {object} deps.config - PROTOTYPE_OVERLAP_CONFIG with maxCandidatePairs, sampleCountPerPair
    * @param {import('../../interfaces/coreServices.js').ILogger} deps.logger - ILogger
    */
@@ -60,6 +62,7 @@ class PrototypeOverlapAnalyzer {
     behavioralOverlapEvaluator,
     overlapClassifier,
     overlapRecommendationBuilder,
+    gateBandingSuggestionBuilder,
     config,
     logger,
   }) {
@@ -96,6 +99,13 @@ class PrototypeOverlapAnalyzer {
       { requiredMethods: ['build'] }
     );
 
+    validateDependency(
+      gateBandingSuggestionBuilder,
+      'IGateBandingSuggestionBuilder',
+      logger,
+      { requiredMethods: ['buildSuggestions'] }
+    );
+
     this.#validateConfig(config, logger);
 
     this.#prototypeRegistryService = prototypeRegistryService;
@@ -103,6 +113,7 @@ class PrototypeOverlapAnalyzer {
     this.#behavioralOverlapEvaluator = behavioralOverlapEvaluator;
     this.#overlapClassifier = overlapClassifier;
     this.#overlapRecommendationBuilder = overlapRecommendationBuilder;
+    this.#gateBandingSuggestionBuilder = gateBandingSuggestionBuilder;
     this.#config = config;
     this.#logger = logger;
   }
@@ -160,16 +171,21 @@ class PrototypeOverlapAnalyzer {
     const nearMisses = [];
     const totalPairs = pairsToEvaluate.length;
 
-    // Track classification breakdown
+    // Track classification breakdown (v2 types)
     const classificationBreakdown = {
-      merge: 0,
-      subsumed: 0,
-      notRedundant: 0,
+      mergeRecommended: 0,
+      subsumedRecommended: 0,
+      nestedSiblings: 0,
+      needsSeparation: 0,
+      convertToExpression: 0,
+      keepDistinct: 0,
     };
 
-    // Track closest pair for summary insight
+    // Track closest pair for summary insight using composite score
+    // Composite score addresses selection bias by weighting gate overlap,
+    // correlation, and global output similarity together
     let closestPair = null;
-    let highestCorrelation = -Infinity;
+    let highestCompositeScore = -Infinity;
 
     for (let i = 0; i < totalPairs; i++) {
       const { prototypeA, prototypeB, candidateMetrics } = pairsToEvaluate[i];
@@ -192,42 +208,93 @@ class PrototypeOverlapAnalyzer {
       // Stage C: Classification
       const classification = this.#overlapClassifier.classify(
         candidateMetrics,
-        { gateOverlap: behaviorResult.gateOverlap, intensity: behaviorResult.intensity }
+        {
+          gateOverlap: behaviorResult.gateOverlap,
+          intensity: behaviorResult.intensity,
+          passRates: behaviorResult.passRates,
+          gateImplication: behaviorResult.gateImplication,
+        }
       );
 
-      // Update classification breakdown
-      if (classification.type === 'merge') {
-        classificationBreakdown.merge++;
-      } else if (classification.type === 'subsumed') {
-        classificationBreakdown.subsumed++;
-      } else {
-        classificationBreakdown.notRedundant++;
+      // Update classification breakdown (v2 types)
+      switch (classification.type) {
+        case 'merge_recommended':
+          classificationBreakdown.mergeRecommended++;
+          break;
+        case 'subsumed_recommended':
+          classificationBreakdown.subsumedRecommended++;
+          break;
+        case 'nested_siblings':
+          classificationBreakdown.nestedSiblings++;
+          break;
+        case 'needs_separation':
+          classificationBreakdown.needsSeparation++;
+          break;
+        case 'convert_to_expression':
+          classificationBreakdown.convertToExpression++;
+          break;
+        default:
+          classificationBreakdown.keepDistinct++;
       }
 
-      // Track closest pair for summary insight
-      const correlation = classification.metrics?.pearsonCorrelation ?? -Infinity;
+      // Track closest pair for summary insight using composite score
+      const metrics = classification.metrics ?? {};
+      const compositeScore = this.#computeCompositeScore(
+        metrics.gateOverlapRatio ?? 0,
+        metrics.pearsonCorrelation ?? NaN,
+        metrics.globalMeanAbsDiff ?? NaN
+      );
+
       if (
-        !Number.isNaN(correlation) &&
-        correlation > highestCorrelation
+        Number.isFinite(compositeScore) &&
+        compositeScore > highestCompositeScore
       ) {
-        highestCorrelation = correlation;
+        highestCompositeScore = compositeScore;
         closestPair = {
           prototypeA: prototypeA.id,
           prototypeB: prototypeB.id,
-          correlation,
-          gateOverlapRatio: classification.metrics?.gateOverlapRatio ?? 0,
+          correlation: metrics.pearsonCorrelation ?? NaN,
+          gateOverlapRatio: metrics.gateOverlapRatio ?? 0,
+          compositeScore,
+          globalMeanAbsDiff: metrics.globalMeanAbsDiff ?? NaN,
+          globalL2Distance: metrics.globalL2Distance ?? NaN,
+          globalOutputCorrelation: metrics.globalOutputCorrelation ?? NaN,
         };
       }
 
-      // Build recommendations for redundant pairs
-      if (classification.type !== 'not_redundant') {
+      // Build recommendations for pairs that need action (v2 types)
+      const RECOMMENDATION_TYPES = [
+        'merge_recommended',
+        'subsumed_recommended',
+        'nested_siblings',
+        'needs_separation',
+        'convert_to_expression',
+      ];
+
+      if (RECOMMENDATION_TYPES.includes(classification.type)) {
+        // Generate banding suggestions for nested_siblings and needs_separation
+        const BANDING_TYPES = ['nested_siblings', 'needs_separation'];
+        const bandingSuggestions = BANDING_TYPES.includes(classification.type)
+          ? this.#gateBandingSuggestionBuilder.buildSuggestions(
+              behaviorResult.gateImplication,
+              classification.type
+            )
+          : [];
+
         const recommendation = this.#overlapRecommendationBuilder.build(
           prototypeA,
           prototypeB,
           classification,
           candidateMetrics,
-          { gateOverlap: behaviorResult.gateOverlap, intensity: behaviorResult.intensity },
+          {
+            gateOverlap: behaviorResult.gateOverlap,
+            intensity: behaviorResult.intensity,
+            passRates: behaviorResult.passRates,
+            highCoactivation: behaviorResult.highCoactivation,
+            gateImplication: behaviorResult.gateImplication,
+          },
           behaviorResult.divergenceExamples,
+          bandingSuggestions,
           prototypeFamily
         );
         recommendations.push(recommendation);
@@ -329,9 +396,12 @@ class PrototypeOverlapAnalyzer {
           prototypesWithValidWeights: totalPrototypes,
         },
         classificationBreakdown: {
-          merge: 0,
-          subsumed: 0,
-          notRedundant: 0,
+          mergeRecommended: 0,
+          subsumedRecommended: 0,
+          nestedSiblings: 0,
+          needsSeparation: 0,
+          convertToExpression: 0,
+          keepDistinct: 0,
         },
         summaryInsight: {
           status: 'insufficient_data',
@@ -353,7 +423,7 @@ class PrototypeOverlapAnalyzer {
    * @param {number} redundantCount - Number of redundant pairs found
    * @param {number} nearMissCount - Number of near-miss pairs found
    * @param {object|null} closestPair - Info about the closest pair
-   * @param {object} classificationBreakdown - Breakdown of merge/subsumed/notRedundant
+   * @param {object} classificationBreakdown - Breakdown of v2 classification types
    * @returns {object} Summary insight object
    */
   #generateSummaryInsight(
@@ -373,10 +443,10 @@ class PrototypeOverlapAnalyzer {
       };
     }
 
-    // Case 2: Found redundant pairs
+    // Case 2: Found redundant pairs (v2 types)
     if (redundantCount > 0) {
-      const mergeCount = classificationBreakdown.merge;
-      const subsumedCount = classificationBreakdown.subsumed;
+      const mergeCount = classificationBreakdown.mergeRecommended;
+      const subsumedCount = classificationBreakdown.subsumedRecommended;
       let message = `Found ${redundantCount} redundant pair(s)`;
       if (mergeCount > 0 && subsumedCount > 0) {
         message += ` (${mergeCount} merge, ${subsumedCount} subsumed)`;
@@ -409,6 +479,52 @@ class PrototypeOverlapAnalyzer {
       message: `All ${totalPairsEvaluated} structurally similar pairs were behaviorally distinct. Your prototypes are well-differentiated.`,
       closestPair,
     };
+  }
+
+  /**
+   * Compute composite score for closest pair ranking.
+   * Addresses selection bias by weighting gate overlap, correlation,
+   * and global output similarity together.
+   *
+   * Formula: gateOverlapRatio × 0.5 + normalizedCorrelation × 0.3 + (1 - globalMeanAbsDiff) × 0.2
+   *
+   * @param {number} gateOverlapRatio - Ratio of co-pass to either-pass [0, 1]
+   * @param {number} correlation - Pearson correlation (co-pass only) [-1, 1] or NaN
+   * @param {number} globalMeanAbsDiff - Mean absolute difference over ALL samples [0, 1] or NaN
+   * @returns {number} Composite score [0, 1] or NaN if insufficient data
+   */
+  #computeCompositeScore(gateOverlapRatio, correlation, globalMeanAbsDiff) {
+    // All inputs must be valid numbers for a meaningful composite score
+    if (
+      !Number.isFinite(gateOverlapRatio) ||
+      !Number.isFinite(correlation) ||
+      !Number.isFinite(globalMeanAbsDiff)
+    ) {
+      // Fallback: if we have gateOverlapRatio and correlation but missing global,
+      // use a simplified formula (legacy behavior compatible)
+      if (Number.isFinite(gateOverlapRatio) && Number.isFinite(correlation)) {
+        // Normalize correlation from [-1, 1] to [0, 1]
+        const normalizedCorr = (correlation + 1) / 2;
+        return gateOverlapRatio * 0.6 + normalizedCorr * 0.4;
+      }
+      return NaN;
+    }
+
+    // Normalize correlation from [-1, 1] to [0, 1]
+    const normalizedCorr = (correlation + 1) / 2;
+
+    // Clamp globalMeanAbsDiff to [0, 1] for safety
+    const clampedGlobalDiff = Math.max(0, Math.min(1, globalMeanAbsDiff));
+
+    // Composite formula: higher is "closer" / more similar
+    // - gateOverlapRatio: how often both fire together (50% weight)
+    // - normalizedCorr: how correlated intensities are when both fire (30% weight)
+    // - (1 - globalMeanAbsDiff): low global difference = high similarity (20% weight)
+    return (
+      gateOverlapRatio * 0.5 +
+      normalizedCorr * 0.3 +
+      (1 - clampedGlobalDiff) * 0.2
+    );
   }
 
   /**

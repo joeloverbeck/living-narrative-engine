@@ -2,8 +2,10 @@
  * @file CandidatePairFilter - Stage A candidate filtering for prototype overlap analysis
  * @description Identifies potentially overlapping prototype pairs based on structural
  * similarity metrics (active axis overlap, sign agreement, cosine similarity) before
- * expensive behavioral sampling.
+ * expensive behavioral sampling. Supports multi-route filtering (v2.1) via optional
+ * Route B (gate similarity) and Route C (behavioral prescan) filters.
  * @see specs/prototype-overlap-analyzer.md
+ * @see specs/prototype-redundancy-analyzer-v2.md
  */
 
 import { validateDependency } from '../../../utils/dependencyUtils.js';
@@ -20,6 +22,17 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * @property {object} prototypeA - First prototype
  * @property {object} prototypeB - Second prototype
  * @property {CandidateMetrics} candidateMetrics - Computed similarity metrics
+ * @property {'routeA' | 'routeB' | 'routeC'} [selectedBy] - Route that selected this pair (v2.1)
+ * @property {object} [routeMetrics] - Route-specific selection metrics (v2.1)
+ */
+
+/**
+ * @typedef {object} RouteStats
+ * @property {number} passed - Number of pairs that passed this route
+ * @property {number} rejected - Number of pairs rejected by this route
+ * @property {number} [skipped] - Number of pairs skipped (Route C safety limit)
+ * @property {number} [byImplication] - Pairs selected by gate implication (Route B)
+ * @property {number} [byOverlap] - Pairs selected by gate overlap (Route B)
  */
 
 /**
@@ -28,10 +41,17 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * Stage A of the Prototype Overlap Analyzer pipeline.
  * Uses fast structural metrics to prune the O(n^2) pair space before
  * expensive behavioral sampling in Stage B.
+ *
+ * v2.1: Supports multi-route filtering to improve candidate coverage:
+ * - Route A: Weight-vector similarity (original filtering)
+ * - Route B: Gate-based similarity (optional, via gateSimilarityFilter)
+ * - Route C: Behavioral prescan (optional, via behavioralPrescanFilter)
  */
 class CandidatePairFilter {
   #config;
   #logger;
+  #gateSimilarityFilter;
+  #behavioralPrescanFilter;
 
   /**
    * Constructs a new CandidatePairFilter instance.
@@ -39,8 +59,15 @@ class CandidatePairFilter {
    * @param {object} deps - Dependencies for the filter
    * @param {object} deps.config - Configuration with Stage A thresholds
    * @param {import('../../../interfaces/coreServices.js').ILogger} deps.logger - Logger instance
+   * @param {object} [deps.gateSimilarityFilter] - Optional Route B filter (v2.1)
+   * @param {object} [deps.behavioralPrescanFilter] - Optional Route C filter (v2.1)
    */
-  constructor({ config, logger }) {
+  constructor({
+    config,
+    logger,
+    gateSimilarityFilter = null,
+    behavioralPrescanFilter = null,
+  }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error'],
     });
@@ -50,17 +77,43 @@ class CandidatePairFilter {
       throw new Error('CandidatePairFilter requires a valid config object');
     }
 
+    // Validate optional Route B filter if provided
+    if (gateSimilarityFilter !== null) {
+      validateDependency(gateSimilarityFilter, 'IGateSimilarityFilter', logger, {
+        requiredMethods: ['filterPairs'],
+      });
+    }
+
+    // Validate optional Route C filter if provided
+    if (behavioralPrescanFilter !== null) {
+      validateDependency(
+        behavioralPrescanFilter,
+        'IBehavioralPrescanFilter',
+        logger,
+        {
+          requiredMethods: ['filterPairs'],
+        }
+      );
+    }
+
     this.#validateConfigThresholds(config, logger);
 
     this.#config = config;
     this.#logger = logger;
+    this.#gateSimilarityFilter = gateSimilarityFilter;
+    this.#behavioralPrescanFilter = behavioralPrescanFilter;
   }
 
   /**
    * Filter prototypes to candidate pairs based on structural similarity.
    *
+   * When enableMultiRouteFiltering is true (v2.1), uses three routes:
+   * - Route A: Weight-vector similarity (original)
+   * - Route B: Gate-based similarity (requires gateSimilarityFilter)
+   * - Route C: Behavioral prescan (requires behavioralPrescanFilter)
+   *
    * @param {Array<object>} prototypes - Array of prototype objects with weights property
-   * @returns {Array<CandidatePair>} Candidate pairs meeting all thresholds
+   * @returns {{candidates: Array<CandidatePair>, stats: object}} Candidate pairs with filtering statistics
    */
   filterCandidates(prototypes) {
     // Defensive: handle invalid input
@@ -70,14 +123,7 @@ class CandidatePairFilter {
       );
       return {
         candidates: [],
-        stats: {
-          totalPossiblePairs: 0,
-          passedFiltering: 0,
-          rejectedByActiveAxisOverlap: 0,
-          rejectedBySignAgreement: 0,
-          rejectedByCosineSimilarity: 0,
-          prototypesWithValidWeights: 0,
-        },
+        stats: this.#buildEmptyStats(),
       };
     }
 
@@ -91,32 +137,124 @@ class CandidatePairFilter {
       return {
         candidates: [],
         stats: {
-          totalPossiblePairs: 0,
-          passedFiltering: 0,
-          rejectedByActiveAxisOverlap: 0,
-          rejectedBySignAgreement: 0,
-          rejectedByCosineSimilarity: 0,
+          ...this.#buildEmptyStats(),
           prototypesWithValidWeights: validPrototypes.length,
         },
       };
     }
 
+    // Compute total possible pairs
+    const totalPossiblePairs =
+      (validPrototypes.length * (validPrototypes.length - 1)) / 2;
+
+    // Route A: Weight-vector similarity (original filtering)
+    const routeAResult = this.#filterByWeightSimilarity(validPrototypes);
+
+    // If multi-route filtering is disabled, return Route A results only
+    if (!this.#config.enableMultiRouteFiltering) {
+      return {
+        candidates: routeAResult.candidates,
+        stats: {
+          totalPossiblePairs,
+          passedFiltering: routeAResult.candidates.length,
+          rejectedByActiveAxisOverlap: routeAResult.rejectedByActiveAxisOverlap,
+          rejectedBySignAgreement: routeAResult.rejectedBySignAgreement,
+          rejectedByCosineSimilarity: routeAResult.rejectedByCosineSimilarity,
+          prototypesWithValidWeights: validPrototypes.length,
+        },
+      };
+    }
+
+    // Multi-route filtering (v2.1)
+    // Get pairs rejected by Route A for Route B and C processing
+    const routeARejectedPairs = this.#getRejectedPairs(
+      validPrototypes,
+      routeAResult.passedPairKeys
+    );
+
+    // Route B: Gate-based similarity (if filter provided)
+    let routeBResult = { candidates: [], stats: { passed: 0, rejected: 0 } };
+    if (this.#gateSimilarityFilter !== null) {
+      routeBResult = this.#gateSimilarityFilter.filterPairs(routeARejectedPairs);
+    }
+
+    // Route C: Behavioral prescan (if filter provided)
+    // Only process pairs that failed both Route A and Route B
+    let routeCResult = { candidates: [], stats: { passed: 0, rejected: 0, skipped: 0 } };
+    if (this.#behavioralPrescanFilter !== null) {
+      const routeBPassedKeys = new Set(
+        routeBResult.candidates.map((c) => this.#makePairKey(c.prototypeA, c.prototypeB))
+      );
+      const routeCInputPairs = routeARejectedPairs.filter(
+        (p) => !routeBPassedKeys.has(this.#makePairKey(p.prototypeA, p.prototypeB))
+      );
+      routeCResult = this.#behavioralPrescanFilter.filterPairs(routeCInputPairs);
+    }
+
+    // Merge and deduplicate candidates from all routes
+    const mergedCandidates = this.#mergeCandidates(
+      routeAResult.candidates,
+      routeBResult.candidates,
+      routeCResult.candidates
+    );
+
+    this.#logger.debug(
+      `CandidatePairFilter: Multi-route results - Route A: ${routeAResult.candidates.length}, ` +
+        `Route B: ${routeBResult.candidates.length}, Route C: ${routeCResult.candidates.length}, ` +
+        `Total: ${mergedCandidates.length}`
+    );
+
+    return {
+      candidates: mergedCandidates,
+      stats: {
+        totalPossiblePairs,
+        passedFiltering: mergedCandidates.length,
+        rejectedByActiveAxisOverlap: routeAResult.rejectedByActiveAxisOverlap,
+        rejectedBySignAgreement: routeAResult.rejectedBySignAgreement,
+        rejectedByCosineSimilarity: routeAResult.rejectedByCosineSimilarity,
+        prototypesWithValidWeights: validPrototypes.length,
+        routeStats: {
+          routeA: {
+            passed: routeAResult.candidates.length,
+            rejected:
+              routeAResult.rejectedByActiveAxisOverlap +
+              routeAResult.rejectedBySignAgreement +
+              routeAResult.rejectedByCosineSimilarity,
+          },
+          routeB: {
+            passed: routeBResult.stats.passed,
+            rejected: routeBResult.stats.rejected,
+            byImplication: routeBResult.stats.byImplication || 0,
+            byOverlap: routeBResult.stats.byOverlap || 0,
+          },
+          routeC: {
+            passed: routeCResult.stats.passed,
+            rejected: routeCResult.stats.rejected,
+            skipped: routeCResult.stats.skipped || 0,
+          },
+        },
+      },
+    };
+  }
+
+  /**
+   * Filter prototypes using Route A (weight-vector similarity).
+   *
+   * @param {Array<object>} validPrototypes - Prototypes with valid weights
+   * @returns {object} Route A results with candidates and rejection counts
+   */
+  #filterByWeightSimilarity(validPrototypes) {
     const candidates = [];
+    const passedPairKeys = new Set();
     const {
       candidateMinActiveAxisOverlap,
       candidateMinSignAgreement,
       candidateMinCosineSimilarity,
     } = this.#config;
 
-    // Track rejection statistics
     let rejectedByActiveAxisOverlap = 0;
     let rejectedBySignAgreement = 0;
     let rejectedByCosineSimilarity = 0;
-
-    // Generate all unique pairs (i, j) where i < j
-    // This ensures no duplicates and no self-pairs
-    const totalPossiblePairs =
-      (validPrototypes.length * (validPrototypes.length - 1)) / 2;
 
     for (let i = 0; i < validPrototypes.length; i++) {
       for (let j = i + 1; j < validPrototypes.length; j++) {
@@ -125,8 +263,6 @@ class CandidatePairFilter {
 
         const metrics = this.#computePairMetrics(prototypeA, prototypeB);
 
-        // Track rejections by threshold - check in order, track first failure
-        // Note: A pair failing multiple thresholds is only counted once (first failure)
         if (metrics.activeAxisOverlap < candidateMinActiveAxisOverlap) {
           rejectedByActiveAxisOverlap++;
           continue;
@@ -142,31 +278,148 @@ class CandidatePairFilter {
           continue;
         }
 
-        // Passed all thresholds
+        const pairKey = this.#makePairKey(prototypeA, prototypeB);
+        passedPairKeys.add(pairKey);
+
         candidates.push({
           prototypeA,
           prototypeB,
           candidateMetrics: metrics,
+          selectedBy: 'routeA',
+          routeMetrics: {
+            activeAxisOverlap: metrics.activeAxisOverlap,
+            signAgreement: metrics.signAgreement,
+            weightCosineSimilarity: metrics.weightCosineSimilarity,
+          },
         });
       }
     }
 
     this.#logger.debug(
-      `CandidatePairFilter: Found ${candidates.length} candidate pairs from ${validPrototypes.length} prototypes ` +
-        `(rejected: ${rejectedByActiveAxisOverlap} axis overlap, ${rejectedBySignAgreement} sign agreement, ${rejectedByCosineSimilarity} cosine sim)`
+      `CandidatePairFilter Route A: ${candidates.length} passed ` +
+        `(rejected: ${rejectedByActiveAxisOverlap} axis, ${rejectedBySignAgreement} sign, ${rejectedByCosineSimilarity} cosine)`
     );
 
     return {
       candidates,
-      stats: {
-        totalPossiblePairs,
-        passedFiltering: candidates.length,
-        rejectedByActiveAxisOverlap,
-        rejectedBySignAgreement,
-        rejectedByCosineSimilarity,
-        prototypesWithValidWeights: validPrototypes.length,
-      },
+      passedPairKeys,
+      rejectedByActiveAxisOverlap,
+      rejectedBySignAgreement,
+      rejectedByCosineSimilarity,
     };
+  }
+
+  /**
+   * Get pairs rejected by Route A for processing by Routes B and C.
+   *
+   * @param {Array<object>} validPrototypes - All valid prototypes
+   * @param {Set<string>} passedPairKeys - Keys of pairs that passed Route A
+   * @returns {Array<{prototypeA: object, prototypeB: object, candidateMetrics: object}>} Rejected pairs
+   */
+  #getRejectedPairs(validPrototypes, passedPairKeys) {
+    const rejectedPairs = [];
+
+    for (let i = 0; i < validPrototypes.length; i++) {
+      for (let j = i + 1; j < validPrototypes.length; j++) {
+        const prototypeA = validPrototypes[i];
+        const prototypeB = validPrototypes[j];
+        const pairKey = this.#makePairKey(prototypeA, prototypeB);
+
+        if (!passedPairKeys.has(pairKey)) {
+          const metrics = this.#computePairMetrics(prototypeA, prototypeB);
+          rejectedPairs.push({
+            prototypeA,
+            prototypeB,
+            candidateMetrics: metrics,
+          });
+        }
+      }
+    }
+
+    return rejectedPairs;
+  }
+
+  /**
+   * Merge candidates from all routes, ensuring no duplicates.
+   *
+   * @param {Array<object>} routeACandidates - Candidates from Route A
+   * @param {Array<object>} routeBCandidates - Candidates from Route B
+   * @param {Array<object>} routeCCandidates - Candidates from Route C
+   * @returns {Array<object>} Deduplicated merged candidates
+   */
+  #mergeCandidates(routeACandidates, routeBCandidates, routeCCandidates) {
+    // Route A candidates have priority (they passed the original, stricter filter)
+    const seen = new Set();
+    const merged = [];
+
+    // Add Route A candidates first
+    for (const candidate of routeACandidates) {
+      const key = this.#makePairKey(candidate.prototypeA, candidate.prototypeB);
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(candidate);
+      }
+    }
+
+    // Add Route B candidates
+    for (const candidate of routeBCandidates) {
+      const key = this.#makePairKey(candidate.prototypeA, candidate.prototypeB);
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(candidate);
+      }
+    }
+
+    // Add Route C candidates
+    for (const candidate of routeCCandidates) {
+      const key = this.#makePairKey(candidate.prototypeA, candidate.prototypeB);
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(candidate);
+      }
+    }
+
+    return merged;
+  }
+
+  /**
+   * Create a unique key for a prototype pair (order-independent).
+   *
+   * @param {object} prototypeA - First prototype
+   * @param {object} prototypeB - Second prototype
+   * @returns {string} Unique pair key
+   */
+  #makePairKey(prototypeA, prototypeB) {
+    const idA = prototypeA?.id || '';
+    const idB = prototypeB?.id || '';
+    // Ensure consistent ordering for the key
+    return idA < idB ? `${idA}|${idB}` : `${idB}|${idA}`;
+  }
+
+  /**
+   * Build empty stats object for edge cases.
+   *
+   * @returns {object} Empty statistics object
+   */
+  #buildEmptyStats() {
+    const baseStats = {
+      totalPossiblePairs: 0,
+      passedFiltering: 0,
+      rejectedByActiveAxisOverlap: 0,
+      rejectedBySignAgreement: 0,
+      rejectedByCosineSimilarity: 0,
+      prototypesWithValidWeights: 0,
+    };
+
+    if (this.#config.enableMultiRouteFiltering) {
+      baseStats.routeStats = {
+        routeA: { passed: 0, rejected: 0 },
+        routeB: { passed: 0, rejected: 0, byImplication: 0, byOverlap: 0 },
+        routeC: { passed: 0, rejected: 0, skipped: 0 },
+      };
+    }
+
+    return baseStats;
   }
 
   /**

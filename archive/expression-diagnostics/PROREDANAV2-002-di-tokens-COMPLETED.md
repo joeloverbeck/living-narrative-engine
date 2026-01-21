@@ -1,5 +1,7 @@
 # PROREDANAV2-002: Add DI Tokens for New Services
 
+## Status: COMPLETED
+
 ## Description
 
 Add DI tokens for the three new services required by the v2 specification: GateConstraintExtractor, GateImplicationEvaluator, and GateBandingSuggestionBuilder.
@@ -63,5 +65,31 @@ npm run typecheck
 npx eslint src/dependencyInjection/tokens/tokens-diagnostics.js
 
 # Run DI registration tests to ensure no breakage
-npm run test:unit -- --testPathPattern=registrations
+npm run test:unit -- --testPathPatterns=registrations
 ```
+
+---
+
+## Outcome
+
+### What was Changed
+- Added 3 new DI tokens to `src/dependencyInjection/tokens/tokens-diagnostics.js`:
+  - `IGateConstraintExtractor: 'IGateConstraintExtractor'`
+  - `IGateImplicationEvaluator: 'IGateImplicationEvaluator'`
+  - `IGateBandingSuggestionBuilder: 'IGateBandingSuggestionBuilder'`
+- Organized tokens under new comment sections:
+  - "Gate Structure Analysis (PROREDANAV2 series)"
+  - "Recommendation Enhancement (PROREDANAV2 series)"
+
+### Verification Results
+- **Lint**: Passed - no ESLint errors in tokens-diagnostics.js
+- **Typecheck**: Passed (pre-existing errors in unrelated files only)
+- **DI registration tests**: All 397 tests passed
+- **Prototype overlap registration tests**: All 12 tests passed
+- **Token uniqueness**: Verified - no duplicate token string values
+
+### Changes vs Original Plan
+Implementation matched the original plan exactly. No discrepancies were found between the ticket assumptions and the actual codebase state.
+
+### New/Modified Tests
+None required - this ticket only added tokens (string constants), which are verified through existing DI registration tests that validate the token exports are accessible.

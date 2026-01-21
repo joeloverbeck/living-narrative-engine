@@ -97,6 +97,17 @@ export const diagnosticsTokens = freeze({
   IOverlapRecommendationBuilder: 'IOverlapRecommendationBuilder',
   IPrototypeOverlapAnalyzer: 'IPrototypeOverlapAnalyzer',
   IPrototypeAnalysisController: 'IPrototypeAnalysisController',
+
+  // Gate Structure Analysis (PROREDANAV2 series)
+  IGateConstraintExtractor: 'IGateConstraintExtractor',
+  IGateImplicationEvaluator: 'IGateImplicationEvaluator',
+
+  // Recommendation Enhancement (PROREDANAV2 series)
+  IGateBandingSuggestionBuilder: 'IGateBandingSuggestionBuilder',
+
+  // Multi-Route Candidate Filtering (PROREDANAV2.1 series)
+  IGateSimilarityFilter: 'IGateSimilarityFilter',
+  IBehavioralPrescanFilter: 'IBehavioralPrescanFilter',
 });
 
 export default diagnosticsTokens;

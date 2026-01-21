@@ -4,6 +4,22 @@
  */
 
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import {
+  MOOD_AXES_SET,
+  AFFECT_TRAITS_SET,
+} from '../../../constants/moodAffectConstants.js';
+
+/**
+ * Set of known sexual axis names for context value resolution.
+ *
+ * @type {Set<string>}
+ */
+const SEXUAL_AXIS_NAMES = new Set([
+  'sex_excitation',
+  'sex_inhibition',
+  'sexual_inhibition',
+  'baseline_libido',
+]);
 
 /**
  * Number of samples to process per chunk before yielding to the event loop.
@@ -23,8 +39,13 @@ const CHUNK_SIZE = 500;
  * @typedef {object} IntensityStats
  * @property {number} pearsonCorrelation - Correlation of intensities [-1, 1] or NaN if insufficient data
  * @property {number} meanAbsDiff - Mean |intensityA - intensityB|, or NaN if no joint samples
+ * @property {number} rmse - Root mean squared error sqrt(mean(sqDiff)), or NaN if coPassCount < minCoPassSamples
+ * @property {number} pctWithinEps - Fraction of samples with |diff| <= intensityEps, or NaN if coPassCount < minCoPassSamples
  * @property {number} dominanceP - P(intensityA > intensityB + delta)
  * @property {number} dominanceQ - P(intensityB > intensityA + delta)
+ * @property {number} globalMeanAbsDiff - Mean |outA - outB| over ALL samples (not just co-pass)
+ * @property {number} globalL2Distance - RMSE of (outA - outB) over ALL samples (not just co-pass)
+ * @property {number} globalOutputCorrelation - Pearson correlation of outputs over ALL samples (not just co-pass)
  */
 
 /**
@@ -33,6 +54,59 @@ const CHUNK_SIZE = 500;
  * @property {number} intensityA - Intensity for prototype A
  * @property {number} intensityB - Intensity for prototype B
  * @property {number} absDiff - |intensityA - intensityB|
+ * @property {number} intensityDifference - UI-compatible alias for absDiff
+ * @property {string} contextSummary - Human-readable summary of top context values
+ */
+
+/**
+ * @typedef {object} PassRates
+ * @property {number} passARate - P(gatesA pass) = (onBothCount + pOnlyCount) / sampleCount
+ * @property {number} passBRate - P(gatesB pass) = (onBothCount + qOnlyCount) / sampleCount
+ * @property {number} pA_given_B - P(gatesA pass | gatesB pass) = onBothCount / passBCount, or NaN if passBCount < minPassSamplesForConditional
+ * @property {number} pB_given_A - P(gatesB pass | gatesA pass) = onBothCount / passACount, or NaN if passACount < minPassSamplesForConditional
+ * @property {number} coPassCount - Number of contexts where both prototypes passed gates.
+ *   When coPassCount < config.minCoPassSamples, intensity metrics (pearsonCorrelation, meanAbsDiff)
+ *   are set to NaN to prevent false conclusions from sparse data.
+ * @property {number} passACount - Total samples where prototype A passed (for transparency/debugging)
+ * @property {number} passBCount - Total samples where prototype B passed (for transparency/debugging)
+ */
+
+/**
+ * @typedef {object} HighCoactivationEntry
+ * @property {number} t - Intensity threshold value
+ * @property {number} pHighA - P(gatedIntensityA >= t | either passes) over onEitherCount samples
+ * @property {number} pHighB - P(gatedIntensityB >= t | either passes) over onEitherCount samples
+ * @property {number} pHighBoth - P(both >= t | either passes) over onEitherCount samples
+ * @property {number} highJaccard - highBothCount / eitherHighCount, or 0 if eitherHighCount=0
+ * @property {number} highAgreement - P(highA === highB | either passes) over onEitherCount samples
+ */
+
+/**
+ * @typedef {object} HighCoactivation
+ * @property {Array<HighCoactivationEntry>} thresholds - High-activation metrics per configured threshold
+ */
+
+/**
+ * @typedef {object} GateImplicationResult
+ * @property {boolean} A_implies_B - True if A's gates imply B's gates
+ * @property {boolean} B_implies_A - True if B's gates imply A's gates
+ * @property {string[]} counterExampleAxes - Axes where implication fails
+ * @property {Array<object>} evidence - Per-axis comparison details
+ * @property {'equal'|'narrower'|'wider'|'disjoint'|'overlapping'} relation - Overall relationship
+ */
+
+/**
+ * @typedef {object} GateParsePrototypeInfo
+ * @property {'complete'|'partial'|'failed'} parseStatus - Parse status for this prototype's gates
+ * @property {number} parsedGateCount - Number of gates successfully parsed
+ * @property {number} totalGateCount - Total number of gates
+ * @property {string[]} unparsedGates - List of gates that could not be parsed
+ */
+
+/**
+ * @typedef {object} GateParseInfo
+ * @property {GateParsePrototypeInfo} prototypeA - Parse info for prototype A
+ * @property {GateParsePrototypeInfo} prototypeB - Parse info for prototype B
  */
 
 /**
@@ -40,6 +114,10 @@ const CHUNK_SIZE = 500;
  * @property {GateOverlapStats} gateOverlap - Gate overlap statistics
  * @property {IntensityStats} intensity - Intensity similarity statistics
  * @property {Array<DivergenceExample>} divergenceExamples - Top-K examples with highest divergence
+ * @property {PassRates} passRates - Unconditional pass rates and conditional probabilities
+ * @property {HighCoactivation} highCoactivation - High-intensity co-activation metrics per threshold
+ * @property {GateImplicationResult|null} gateImplication - Gate implication analysis result, or null if parsing incomplete
+ * @property {GateParseInfo} gateParseInfo - Parse coverage information for UI transparency
  */
 
 /**
@@ -53,6 +131,8 @@ class BehavioralOverlapEvaluator {
   #randomStateGenerator;
   #contextBuilder;
   #prototypeGateChecker;
+  #gateConstraintExtractor;
+  #gateImplicationEvaluator;
   #config;
   #logger;
 
@@ -64,6 +144,8 @@ class BehavioralOverlapEvaluator {
    * @param {object} deps.randomStateGenerator - IRandomStateGenerator with generate()
    * @param {object} deps.contextBuilder - IContextBuilder with buildContext()
    * @param {object} deps.prototypeGateChecker - IPrototypeGateChecker with checkAllGatesPass()
+   * @param {object} deps.gateConstraintExtractor - IGateConstraintExtractor with extract()
+   * @param {object} deps.gateImplicationEvaluator - IGateImplicationEvaluator with evaluate()
    * @param {object} deps.config - Configuration with sampleCountPerPair, divergenceExamplesK, dominanceDelta
    * @param {import('../../../interfaces/coreServices.js').ILogger} deps.logger - ILogger
    */
@@ -72,6 +154,8 @@ class BehavioralOverlapEvaluator {
     randomStateGenerator,
     contextBuilder,
     prototypeGateChecker,
+    gateConstraintExtractor,
+    gateImplicationEvaluator,
     config,
     logger,
   }) {
@@ -98,12 +182,28 @@ class BehavioralOverlapEvaluator {
       requiredMethods: ['checkAllGatesPass'],
     });
 
+    validateDependency(
+      gateConstraintExtractor,
+      'IGateConstraintExtractor',
+      logger,
+      { requiredMethods: ['extract'] }
+    );
+
+    validateDependency(
+      gateImplicationEvaluator,
+      'IGateImplicationEvaluator',
+      logger,
+      { requiredMethods: ['evaluate'] }
+    );
+
     this.#validateConfig(config, logger);
 
     this.#prototypeIntensityCalculator = prototypeIntensityCalculator;
     this.#randomStateGenerator = randomStateGenerator;
     this.#contextBuilder = contextBuilder;
     this.#prototypeGateChecker = prototypeGateChecker;
+    this.#gateConstraintExtractor = gateConstraintExtractor;
+    this.#gateImplicationEvaluator = gateImplicationEvaluator;
     this.#config = config;
     this.#logger = logger;
   }
@@ -138,8 +238,27 @@ class BehavioralOverlapEvaluator {
     let dominancePCount = 0;
     let dominanceQCount = 0;
 
+    // Global output tracking (over ALL samples, not just co-pass)
+    // Addresses selection bias critique: co-pass correlation can be misleading
+    // when gateOverlapRatio is low (e.g., 5% co-pass with 0.99 correlation)
+    const globalOutputsA = [];
+    const globalOutputsB = [];
+    let globalSumAbsDiff = 0;
+    let globalSumSqDiff = 0;
+
     // Top-K divergence examples (min-heap by absDiff)
     const divergenceHeap = [];
+
+    // High-intensity co-activation counters per threshold
+    const highThresholds = this.#config.highThresholds ?? [0.4, 0.6, 0.75];
+    const thresholdCounters = highThresholds.map((t) => ({
+      t,
+      highACount: 0,
+      highBCount: 0,
+      highBothCount: 0,
+      eitherHighCount: 0,
+      agreementCount: 0,
+    }));
 
     const gatesA = prototypeA?.gates ?? [];
     const gatesB = prototypeB?.gates ?? [];
@@ -172,9 +291,53 @@ class BehavioralOverlapEvaluator {
           context
         );
 
+        // Compute gated intensities once per sample (0 when gate fails)
+        // These are reused for both high-threshold tracking and co-pass metrics
+        let gatedIntensityA = 0;
+        let gatedIntensityB = 0;
+
+        if (passA) {
+          gatedIntensityA =
+            this.#prototypeIntensityCalculator.computeIntensity(
+              weightsA,
+              context
+            );
+        }
+        if (passB) {
+          gatedIntensityB =
+            this.#prototypeIntensityCalculator.computeIntensity(
+              weightsB,
+              context
+            );
+        }
+
+        // Track global outputs for ALL samples (not just co-pass)
+        // outX = passX ? intensityX : 0 captures behavioral divergence
+        // when prototypes have non-overlapping gate regions
+        const outA = passA ? gatedIntensityA : 0;
+        const outB = passB ? gatedIntensityB : 0;
+        globalOutputsA.push(outA);
+        globalOutputsB.push(outB);
+        const globalDiff = outA - outB;
+        globalSumAbsDiff += Math.abs(globalDiff);
+        globalSumSqDiff += globalDiff * globalDiff;
+
         // Track gate overlap stats
         if (passA || passB) {
           onEitherCount++;
+
+          // Track high-intensity counts per threshold using gated intensities
+          for (const counter of thresholdCounters) {
+            const highA = gatedIntensityA >= counter.t;
+            const highB = gatedIntensityB >= counter.t;
+
+            if (highA) counter.highACount++;
+            if (highB) counter.highBCount++;
+            if (highA && highB) counter.highBothCount++;
+            if (highA || highB) counter.eitherHighCount++;
+            // Agreement: both high or both low (neither high)
+            if (highA === highB) counter.agreementCount++;
+          }
         }
         if (passA && passB) {
           onBothCount++;
@@ -186,35 +349,32 @@ class BehavioralOverlapEvaluator {
           qOnlyCount++;
         }
 
-        // When both pass, compute intensities and track correlation/divergence
+        // When both pass, track correlation/divergence using already-computed intensities
         if (passA && passB) {
-          const intensityA =
-            this.#prototypeIntensityCalculator.computeIntensity(
-              weightsA,
-              context
-            );
-          const intensityB =
-            this.#prototypeIntensityCalculator.computeIntensity(
-              weightsB,
-              context
-            );
-
-          intensitiesA.push(intensityA);
-          intensitiesB.push(intensityB);
+          intensitiesA.push(gatedIntensityA);
+          intensitiesB.push(gatedIntensityB);
 
           // Dominance tracking
-          if (intensityA > intensityB + dominanceDelta) {
+          if (gatedIntensityA > gatedIntensityB + dominanceDelta) {
             dominancePCount++;
           }
-          if (intensityB > intensityA + dominanceDelta) {
+          if (gatedIntensityB > gatedIntensityA + dominanceDelta) {
             dominanceQCount++;
           }
 
           // Track top-K divergence examples
-          const absDiff = Math.abs(intensityA - intensityB);
+          const absDiff = Math.abs(gatedIntensityA - gatedIntensityB);
           this.#updateTopKDivergence(
             divergenceHeap,
-            { context, intensityA, intensityB, absDiff },
+            {
+              context,
+              intensityA: gatedIntensityA,
+              intensityB: gatedIntensityB,
+              absDiff,
+              // UI-compatible fields (PROREDANAV2 fix)
+              intensityDifference: absDiff,
+              contextSummary: this.#formatContextSummary(context, weightsA, weightsB, gatesA, gatesB),
+            },
             divergenceK
           );
         }
@@ -240,25 +400,95 @@ class BehavioralOverlapEvaluator {
     };
 
     const jointCount = intensitiesA.length;
-    const pearsonCorrelation = this.#computePearsonCorrelation(
-      intensitiesA,
-      intensitiesB
-    );
+    const meetsMinCoPass = jointCount >= (this.#config.minCoPassSamples ?? 1);
 
+    let pearsonCorrelation = NaN;
     let meanAbsDiff = NaN;
-    if (jointCount > 0) {
-      let sumAbsDiff = 0;
-      for (let i = 0; i < jointCount; i++) {
-        sumAbsDiff += Math.abs(intensitiesA[i] - intensitiesB[i]);
+    let rmse = NaN;
+    let pctWithinEps = NaN;
+
+    if (meetsMinCoPass) {
+      pearsonCorrelation = this.#computePearsonCorrelation(
+        intensitiesA,
+        intensitiesB
+      );
+
+      if (jointCount > 0) {
+        const intensityEps = this.#config.intensityEps ?? 0.05;
+        let sumAbsDiff = 0;
+        let sumSqDiff = 0;
+        let withinEpsCount = 0;
+
+        for (let i = 0; i < jointCount; i++) {
+          const diff = intensitiesA[i] - intensitiesB[i];
+          const absDiff = Math.abs(diff);
+          sumAbsDiff += absDiff;
+          sumSqDiff += diff * diff;
+          if (absDiff <= intensityEps) {
+            withinEpsCount++;
+          }
+        }
+
+        meanAbsDiff = sumAbsDiff / jointCount;
+        rmse = Math.sqrt(sumSqDiff / jointCount);
+        pctWithinEps = withinEpsCount / jointCount;
       }
-      meanAbsDiff = sumAbsDiff / jointCount;
     }
+
+    // Compute global output metrics over ALL samples (not just co-pass)
+    // These metrics address selection bias when gateOverlapRatio is low
+    const globalMeanAbsDiff =
+      resolvedSampleCount > 0 ? globalSumAbsDiff / resolvedSampleCount : NaN;
+    const globalL2Distance =
+      resolvedSampleCount > 0
+        ? Math.sqrt(globalSumSqDiff / resolvedSampleCount)
+        : NaN;
+    const globalOutputCorrelation = this.#computePearsonCorrelation(
+      globalOutputsA,
+      globalOutputsB
+    );
 
     const intensity = {
       pearsonCorrelation,
       meanAbsDiff,
+      rmse,
+      pctWithinEps,
       dominanceP: jointCount > 0 ? dominancePCount / jointCount : 0,
       dominanceQ: jointCount > 0 ? dominanceQCount / jointCount : 0,
+      globalMeanAbsDiff,
+      globalL2Distance,
+      globalOutputCorrelation,
+    };
+
+    // Compute pass rates and conditional probabilities
+    const passACount = onBothCount + pOnlyCount;
+    const passBCount = onBothCount + qOnlyCount;
+    // Apply guardrail: conditional probabilities require minimum pass samples
+    // to prevent statistically unreliable nesting/subsumption conclusions
+    const minPassForConditional = this.#config.minPassSamplesForConditional ?? 200;
+    const passRates = {
+      passARate:
+        resolvedSampleCount > 0 ? passACount / resolvedSampleCount : 0,
+      passBRate:
+        resolvedSampleCount > 0 ? passBCount / resolvedSampleCount : 0,
+      pA_given_B: passBCount >= minPassForConditional ? onBothCount / passBCount : NaN,
+      pB_given_A: passACount >= minPassForConditional ? onBothCount / passACount : NaN,
+      coPassCount: onBothCount,
+      passACount,
+      passBCount,
+    };
+
+    // Compute high-intensity co-activation metrics per threshold
+    const highCoactivation = {
+      thresholds: thresholdCounters.map((c) => ({
+        t: c.t,
+        pHighA: onEitherCount > 0 ? c.highACount / onEitherCount : 0,
+        pHighB: onEitherCount > 0 ? c.highBCount / onEitherCount : 0,
+        pHighBoth: onEitherCount > 0 ? c.highBothCount / onEitherCount : 0,
+        highJaccard:
+          c.eitherHighCount > 0 ? c.highBothCount / c.eitherHighCount : 0,
+        highAgreement: onEitherCount > 0 ? c.agreementCount / onEitherCount : 0,
+      })),
     };
 
     // Extract divergence examples from heap, sorted by absDiff descending
@@ -266,13 +496,55 @@ class BehavioralOverlapEvaluator {
       .sort((a, b) => b.absDiff - a.absDiff)
       .slice(0, divergenceK);
 
+    // Extract gate intervals and compute implication (PROREDANAV2-012)
+    const intervalsA = this.#gateConstraintExtractor.extract(gatesA);
+    const intervalsB = this.#gateConstraintExtractor.extract(gatesB);
+
+    let gateImplication = null;
+    // Only evaluate gate implication when BOTH prototypes have complete parse status.
+    // Partial parses would lead to false deterministic nesting claims based on incomplete data.
+    if (
+      intervalsA.parseStatus === 'complete' &&
+      intervalsB.parseStatus === 'complete'
+    ) {
+      gateImplication = this.#gateImplicationEvaluator.evaluate(
+        intervalsA.intervals,
+        intervalsB.intervals
+      );
+    }
+
+    // Build gateParseInfo for UI transparency about parse coverage
+    const gateParseInfo = {
+      prototypeA: {
+        parseStatus: intervalsA.parseStatus,
+        parsedGateCount: gatesA.length - (intervalsA.unparsedGates?.length ?? 0),
+        totalGateCount: gatesA.length,
+        unparsedGates: intervalsA.unparsedGates ?? [],
+      },
+      prototypeB: {
+        parseStatus: intervalsB.parseStatus,
+        parsedGateCount: gatesB.length - (intervalsB.unparsedGates?.length ?? 0),
+        totalGateCount: gatesB.length,
+        unparsedGates: intervalsB.unparsedGates ?? [],
+      },
+    };
+
     this.#logger.debug(
       `BehavioralOverlapEvaluator: Completed ${resolvedSampleCount} samples, ` +
         `onBothRate=${gateOverlap.onBothRate.toFixed(4)}, ` +
-        `correlation=${Number.isNaN(pearsonCorrelation) ? 'NaN' : pearsonCorrelation.toFixed(4)}`
+        `correlation=${Number.isNaN(pearsonCorrelation) ? 'NaN' : pearsonCorrelation.toFixed(4)}, ` +
+        `gateImplication=${gateImplication ? gateImplication.relation : 'none'}`
     );
 
-    return { gateOverlap, intensity, divergenceExamples };
+    return {
+      gateOverlap,
+      intensity,
+      divergenceExamples,
+      passRates,
+      highCoactivation,
+      gateImplication,
+      gateParseInfo,
+    };
   }
 
   /**
@@ -464,6 +736,141 @@ class BehavioralOverlapEvaluator {
         );
       }
     }
+  }
+
+  /**
+   * Get the set of axes that are relevant to either prototype.
+   * Includes axes from weights and gates of both prototypes.
+   *
+   * @param {object} weightsA - Weights from prototype A
+   * @param {object} weightsB - Weights from prototype B
+   * @param {string[]} gatesA - Gates from prototype A
+   * @param {string[]} gatesB - Gates from prototype B
+   * @returns {Set<string>} Set of relevant axis names
+   */
+  #getRelevantAxes(weightsA, weightsB, gatesA, gatesB) {
+    const axes = new Set();
+
+    // Add weight axes from both prototypes
+    for (const key of Object.keys(weightsA ?? {})) {
+      axes.add(key);
+    }
+    for (const key of Object.keys(weightsB ?? {})) {
+      axes.add(key);
+    }
+
+    // Add gate axes (parse gate strings to extract axis names)
+    for (const gate of gatesA ?? []) {
+      const axis = this.#extractAxisFromGate(gate);
+      if (axis) axes.add(axis);
+    }
+    for (const gate of gatesB ?? []) {
+      const axis = this.#extractAxisFromGate(gate);
+      if (axis) axes.add(axis);
+    }
+
+    return axes;
+  }
+
+  /**
+   * Extract the axis name from a gate string.
+   * Uses the same regex pattern as GateConstraintExtractor.
+   *
+   * @param {string} gate - Gate condition string (e.g., "threat <= 0.20")
+   * @returns {string|null} Axis name or null if unparseable
+   */
+  #extractAxisFromGate(gate) {
+    if (typeof gate !== 'string') {
+      return null;
+    }
+    // Reuse pattern from GateConstraintExtractor.GATE_PATTERN
+    const match = gate.match(/^(\w+)\s*(>=|>|<=|<)\s*(-?\d+\.?\d*)$/);
+    return match ? match[1] : null;
+  }
+
+  /**
+   * Resolve the context value for a given axis name.
+   * Mirrors ContextBuilder.#resolveGateAxisRawValue() for consistent lookups.
+   *
+   * @param {object} context - The built context object
+   * @param {string} axis - The axis name to look up
+   * @returns {number|null} The axis value or null if not found
+   */
+  #resolveContextValue(context, axis) {
+    if (!context || typeof axis !== 'string') {
+      return null;
+    }
+
+    // Mood axes (valence, arousal, etc.)
+    if (MOOD_AXES_SET.has(axis)) {
+      return context?.moodAxes?.[axis] ?? context?.mood?.[axis] ?? null;
+    }
+
+    // Affect traits (affective_empathy, etc.)
+    if (AFFECT_TRAITS_SET.has(axis)) {
+      return context?.affectTraits?.[axis] ?? null;
+    }
+
+    // Sexual arousal scalar
+    if (axis === 'sexual_arousal') {
+      return context?.sexualArousal ?? null;
+    }
+
+    // Sexual axes (sex_excitation, sex_inhibition, baseline_libido)
+    if (SEXUAL_AXIS_NAMES.has(axis)) {
+      const sexualAxes = context?.sexualAxes ?? context?.sexual ?? {};
+      if (axis === 'sexual_inhibition' || axis === 'sex_inhibition') {
+        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
+      }
+      return sexualAxes[axis] ?? null;
+    }
+
+    return null;
+  }
+
+  /**
+   * Format a context object into a human-readable summary string.
+   * Extracts top attribute names and values for concise display.
+   * Only includes axes that are relevant to the prototypes being compared.
+   *
+   * @param {object} context - The sampled context object
+   * @param {object} weightsA - Weights from prototype A
+   * @param {object} weightsB - Weights from prototype B
+   * @param {string[]} gatesA - Gates from prototype A
+   * @param {string[]} gatesB - Gates from prototype B
+   * @returns {string} Formatted summary (e.g., "arousal: 0.70, valence: -0.30")
+   */
+  #formatContextSummary(context, weightsA, weightsB, gatesA, gatesB) {
+    if (!context || typeof context !== 'object') {
+      return '';
+    }
+
+    const relevantAxes = this.#getRelevantAxes(weightsA, weightsB, gatesA, gatesB);
+
+    // If no relevant axes, return empty (edge case: both prototypes have no weights/gates)
+    if (relevantAxes.size === 0) {
+      return '';
+    }
+
+    // Extract values only for relevant axes
+    /** @type {Array<[string, number]>} */
+    const entries = [];
+    for (const axis of relevantAxes) {
+      const value = this.#resolveContextValue(context, axis);
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        entries.push([axis, value]);
+      }
+    }
+
+    // Sort by absolute value (most impactful first) and take top 3
+    entries.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    const top3 = entries.slice(0, 3);
+
+    if (top3.length === 0) {
+      return '';
+    }
+
+    return top3.map(([key, value]) => `${key}: ${value.toFixed(2)}`).join(', ');
   }
 }
 

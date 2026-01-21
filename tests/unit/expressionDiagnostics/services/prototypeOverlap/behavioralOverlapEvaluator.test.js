@@ -12,6 +12,8 @@ describe('BehavioralOverlapEvaluator', () => {
   let mockRandomStateGenerator;
   let mockContextBuilder;
   let mockGateChecker;
+  let mockGateConstraintExtractor;
+  let mockGateImplicationEvaluator;
   let mockConfig;
 
   /**
@@ -96,6 +98,24 @@ describe('BehavioralOverlapEvaluator', () => {
     mockContextBuilder = createMockContextBuilder();
     mockGateChecker = createMockGateChecker();
     mockIntensityCalculator = createMockIntensityCalculator();
+
+    // Gate constraint and implication mocks (added for PROREDANAV2)
+    mockGateConstraintExtractor = {
+      extract: jest.fn(() => ({
+        parseStatus: 'complete',
+        intervals: {},
+      })),
+    };
+
+    mockGateImplicationEvaluator = {
+      evaluate: jest.fn(() => ({
+        A_implies_B: false,
+        B_implies_A: false,
+        counterExampleAxes: [],
+        evidence: [],
+        relation: 'overlapping',
+      })),
+    };
   });
 
   // ==========================================================================
@@ -108,6 +128,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -122,6 +144,8 @@ describe('BehavioralOverlapEvaluator', () => {
           randomStateGenerator: mockRandomStateGenerator,
           contextBuilder: mockContextBuilder,
           prototypeGateChecker: mockGateChecker,
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
           config: mockConfig,
           logger: null,
         });
@@ -135,6 +159,8 @@ describe('BehavioralOverlapEvaluator', () => {
           randomStateGenerator: mockRandomStateGenerator,
           contextBuilder: mockContextBuilder,
           prototypeGateChecker: mockGateChecker,
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
           config: mockConfig,
           logger: mockLogger,
         });
@@ -148,6 +174,8 @@ describe('BehavioralOverlapEvaluator', () => {
           randomStateGenerator: {},
           contextBuilder: mockContextBuilder,
           prototypeGateChecker: mockGateChecker,
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
           config: mockConfig,
           logger: mockLogger,
         });
@@ -161,6 +189,8 @@ describe('BehavioralOverlapEvaluator', () => {
           randomStateGenerator: mockRandomStateGenerator,
           contextBuilder: {},
           prototypeGateChecker: mockGateChecker,
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
           config: mockConfig,
           logger: mockLogger,
         });
@@ -174,6 +204,8 @@ describe('BehavioralOverlapEvaluator', () => {
           randomStateGenerator: mockRandomStateGenerator,
           contextBuilder: mockContextBuilder,
           prototypeGateChecker: {},
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
           config: mockConfig,
           logger: mockLogger,
         });
@@ -187,6 +219,8 @@ describe('BehavioralOverlapEvaluator', () => {
           randomStateGenerator: mockRandomStateGenerator,
           contextBuilder: mockContextBuilder,
           prototypeGateChecker: mockGateChecker,
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
           config: { sampleCountPerPair: 100 }, // Missing divergenceExamplesK and dominanceDelta
           logger: mockLogger,
         });
@@ -200,6 +234,8 @@ describe('BehavioralOverlapEvaluator', () => {
           randomStateGenerator: mockRandomStateGenerator,
           contextBuilder: mockContextBuilder,
           prototypeGateChecker: mockGateChecker,
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
           config: null,
           logger: mockLogger,
         });
@@ -222,6 +258,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -253,6 +291,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -279,6 +319,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -305,6 +347,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -336,6 +380,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -379,6 +425,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -408,6 +456,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: { ...mockConfig, dominanceDelta: 0.05 },
         logger: mockLogger,
       });
@@ -439,6 +489,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: { ...mockConfig, dominanceDelta: 0.05 },
         logger: mockLogger,
       });
@@ -467,6 +519,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -518,6 +572,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: { ...mockConfig, divergenceExamplesK: 3 },
         logger: mockLogger,
       });
@@ -553,6 +609,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -572,6 +630,62 @@ describe('BehavioralOverlapEvaluator', () => {
       expect(typeof example.intensityA).toBe('number');
       expect(typeof example.intensityB).toBe('number');
       expect(typeof example.absDiff).toBe('number');
+    });
+
+    it('includes UI-compatible fields intensityDifference and contextSummary', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      // Context builder that returns moodAxes for contextSummary formatting
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          moodAxes: {
+            arousal: 0.75,
+            valence: -0.3,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Use prototypes with arousal and valence weights so they appear in contextSummary
+      const protoA = { gates: [], weights: { arousal: 1.0, valence: 0.5 } };
+      const protoB = { gates: [], weights: { arousal: 0.8, valence: 0.6 } };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+
+      const example = result.divergenceExamples[0];
+
+      // Verify UI-compatible fields exist
+      expect(example).toHaveProperty('intensityDifference');
+      expect(example).toHaveProperty('contextSummary');
+
+      // intensityDifference should equal absDiff
+      expect(example.intensityDifference).toBe(example.absDiff);
+
+      // contextSummary should be a string
+      expect(typeof example.contextSummary).toBe('string');
+
+      // contextSummary should contain formatted values for relevant axes from prototype weights
+      expect(example.contextSummary).toMatch(/arousal: 0\.75/);
     });
 
     it('produces stable examples with same random seed (deterministic inputs)', async () => {
@@ -602,6 +716,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: stateGen1,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -625,6 +741,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: stateGen2,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -661,6 +779,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -684,6 +804,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -718,6 +840,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -746,6 +870,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -779,6 +905,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -803,6 +931,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -827,6 +957,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: { ...mockConfig, divergenceExamplesK: k },
         logger: mockLogger,
       });
@@ -855,6 +987,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -883,6 +1017,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: { ...mockConfig, sampleCountPerPair: 10 },
         logger: mockLogger,
       });
@@ -905,6 +1041,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: { ...mockConfig, sampleCountPerPair: 5 },
         logger: mockLogger,
       });
@@ -926,6 +1064,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -950,6 +1090,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -970,6 +1112,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -989,6 +1133,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: { ...mockConfig, divergenceExamplesK: 0 },
         logger: mockLogger,
       });
@@ -1036,6 +1182,8 @@ describe('BehavioralOverlapEvaluator', () => {
         randomStateGenerator: mockRandomStateGenerator,
         contextBuilder: mockContextBuilder,
         prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
         config: mockConfig,
         logger: mockLogger,
       });
@@ -1062,6 +1210,339 @@ describe('BehavioralOverlapEvaluator', () => {
 
       // Debug logging should have been called
       expect(mockLogger.debug).toHaveBeenCalled();
+    });
+  });
+
+  // ==========================================================================
+  // formatContextSummary relevance filtering tests (bug fix verification)
+  // ==========================================================================
+  describe('formatContextSummary relevance filtering', () => {
+    it('contextSummary only includes axes from prototype weights', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      // Context with sexualArousal, previousSexualArousal, AND mood axes
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          sexualArousal: 0.95,
+          previousSexualArousal: 0.90,
+          moodAxes: {
+            valence: 0.5,
+            arousal: 0.6,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Emotion prototypes with only mood weights - no sexual axes
+      const protoA = { gates: [], weights: { valence: 0.8, arousal: 0.6 } };
+      const protoB = { gates: [], weights: { valence: 0.7, arousal: 0.5 } };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+      const example = result.divergenceExamples[0];
+
+      // contextSummary should contain valence/arousal, NOT sexualArousal
+      expect(example.contextSummary).toMatch(/valence/);
+      expect(example.contextSummary).toMatch(/arousal/);
+      expect(example.contextSummary).not.toMatch(/sexualArousal/);
+      expect(example.contextSummary).not.toMatch(/previousSexualArousal/);
+    });
+
+    it('contextSummary includes gate axes even without weights', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          moodAxes: {
+            threat: 0.15,
+            valence: 0.4,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Prototype A has threat gate but no threat weight
+      const protoA = { gates: ['threat <= 0.20'], weights: { valence: 0.5 } };
+      const protoB = { gates: [], weights: { valence: 0.6 } };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+      const example = result.divergenceExamples[0];
+
+      // threat should appear because it's a gate axis
+      expect(example.contextSummary).toMatch(/threat/);
+      expect(example.contextSummary).toMatch(/valence/);
+    });
+
+    it('contextSummary handles union of axes from both prototypes', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          moodAxes: {
+            valence: 0.5,
+            arousal: 0.6,
+            engagement: 0.7,
+            threat: 0.15,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Different weights and gates between prototypes
+      const protoA = { gates: ['arousal >= -0.20'], weights: { valence: 0.5 } };
+      const protoB = { gates: ['threat <= 0.30'], weights: { engagement: 0.7 } };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+      const example = result.divergenceExamples[0];
+
+      // Summary can contain any of the four relevant axes (valence, arousal, engagement, threat)
+      // At least some should appear (top 3 by absolute value)
+      expect(example.contextSummary.length).toBeGreaterThan(0);
+      expect(typeof example.contextSummary).toBe('string');
+    });
+
+    it('contextSummary excludes sexualArousal for emotion prototypes (bug fix verification)', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      // Context mimicking real ContextBuilder output with sexual state
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          sexualArousal: 0.0,
+          previousSexualArousal: 0.0,
+          moodAxes: {
+            valence: 0.2,
+            arousal: 0.8,
+            threat: 0.1,
+          },
+          sexualAxes: {
+            sex_excitation: 0.3,
+            sex_inhibition: 0.5,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Emotion-like prototypes (rage vs wrath) - only mood weights
+      const protoA = { gates: ['arousal >= 0.5'], weights: { valence: -0.8, arousal: 0.9 } };
+      const protoB = { gates: ['arousal >= 0.6'], weights: { valence: -0.9, arousal: 0.85 } };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+      const example = result.divergenceExamples[0];
+
+      // THE BUG FIX: sexualArousal should NOT appear for emotion prototypes
+      expect(example.contextSummary).not.toMatch(/sexualArousal/);
+      expect(example.contextSummary).not.toMatch(/previousSexualArousal/);
+      expect(example.contextSummary).not.toMatch(/sex_excitation/);
+      expect(example.contextSummary).not.toMatch(/sex_inhibition/);
+
+      // Should show mood axes instead
+      expect(example.contextSummary).toMatch(/arousal/);
+    });
+
+    it('contextSummary includes sexual axes for sexual prototypes', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          sexualArousal: 0.8,
+          moodAxes: {
+            valence: 0.5,
+          },
+          sexualAxes: {
+            sex_excitation: 0.7,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Sexual prototypes with sexual_arousal weight
+      const protoA = { gates: [], weights: { sexual_arousal: 0.9, valence: 0.3 } };
+      const protoB = { gates: [], weights: { sexual_arousal: 0.8, valence: 0.2 } };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+      const example = result.divergenceExamples[0];
+
+      // Sexual axes should appear for sexual prototypes
+      expect(example.contextSummary).toMatch(/sexual_arousal|valence/);
+    });
+
+    it('contextSummary handles empty weights gracefully', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => 0.5),
+      };
+
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          moodAxes: { valence: 0.5 },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Both prototypes have empty weights and no gates
+      const protoA = { gates: [], weights: {} };
+      const protoB = { gates: [], weights: {} };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      // Should not throw, divergenceExamples should have empty contextSummary
+      for (const example of result.divergenceExamples) {
+        expect(example.contextSummary).toBe('');
+      }
+    });
+
+    it('contextSummary handles unparseable gates gracefully', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          moodAxes: {
+            valence: 0.5,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // Malformed gates that can't be parsed
+      const protoA = { gates: ['invalid gate format', 'also bad'], weights: { valence: 0.5 } };
+      const protoB = { gates: [], weights: { valence: 0.6 } };
+
+      // Should not throw
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+      const example = result.divergenceExamples[0];
+
+      // Should still include valence from weights
+      expect(example.contextSummary).toMatch(/valence/);
     });
   });
 });
