@@ -1119,4 +1119,401 @@ describe('PrototypeAnalysisController', () => {
       expect(card.textContent).toContain('<script>alert("xss")</script>');
     });
   });
+
+  describe('v2 recommendation format (OverlapRecommendationBuilder output)', () => {
+    it('should render prototype names from nested prototypes object', async () => {
+      // This is the actual format returned by OverlapRecommendationBuilder.build()
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [
+          {
+            type: 'prototype_nested_siblings',
+            prototypeFamily: 'emotion',
+            prototypes: {
+              a: 'joy_intense',
+              b: 'happiness_mild',
+            },
+            severity: 0.75,
+            confidence: 0.85,
+            actions: [
+              '"happiness_mild" appears to be a specialized version of "joy_intense"',
+              'Consider making "happiness_mild" inherit from "joy_intense"',
+            ],
+            candidateMetrics: {
+              activeAxisOverlap: 0.8,
+              signAgreement: 0.9,
+              weightCosineSimilarity: 0.85,
+            },
+            behaviorMetrics: {
+              onEitherRate: 0.3,
+              onBothRate: 0.25,
+              pOnlyRate: 0.05,
+              qOnlyRate: 0.0,
+              pearsonCorrelation: 0.92,
+              meanAbsDiff: 0.08,
+              dominanceP: 0.85,
+              dominanceQ: 0.15,
+            },
+            evidence: {
+              sharedDrivers: [{ axis: 'valence', weightA: 0.8, weightB: 0.75 }],
+              keyDifferentiators: [{ axis: 'arousal', reason: 'only_in_A' }],
+              divergenceExamples: [
+                { intensityDifference: 0.12, contextSummary: 'High energy context' },
+              ],
+            },
+          },
+        ],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 50,
+          candidatePairsFound: 100,
+          candidatePairsEvaluated: 100,
+          redundantPairsFound: 1,
+          sampleCountPerPair: 8000,
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const card = document.querySelector('.recommendation-card');
+      expect(card).not.toBeNull();
+      expect(card.textContent).toContain('joy_intense');
+      expect(card.textContent).toContain('happiness_mild');
+    });
+
+    it('should render actions array as actionable insight', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [
+          {
+            type: 'prototype_merge_suggestion',
+            prototypeFamily: 'emotion',
+            prototypes: { a: 'proto_a', b: 'proto_b' },
+            severity: 0.85,
+            confidence: 0.9,
+            actions: [
+              'Consider merging these prototypes',
+              'Alias one to the other',
+            ],
+            candidateMetrics: {},
+            behaviorMetrics: {},
+            evidence: { divergenceExamples: [] },
+          },
+        ],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 10,
+          candidatePairsFound: 5,
+          candidatePairsEvaluated: 5,
+          redundantPairsFound: 1,
+          sampleCountPerPair: 8000,
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Expand the card to see the actionable insight
+      const expander = document.querySelector('.rec-expander');
+      expander.click();
+
+      const insightSection = document.querySelector('.rec-insight');
+      expect(insightSection.textContent).toContain('Consider merging these prototypes');
+      expect(insightSection.textContent).toContain('Alias one to the other');
+    });
+
+    it('should handle missing prototypes object gracefully', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [
+          {
+            type: 'prototype_overlap_info',
+            severity: 0.5,
+            confidence: 0.7,
+            actions: ['Some action'],
+            evidence: { divergenceExamples: [] },
+            // prototypes object is missing
+          },
+        ],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 10,
+          candidatePairsFound: 5,
+          candidatePairsEvaluated: 5,
+          redundantPairsFound: 1,
+          sampleCountPerPair: 8000,
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const card = document.querySelector('.recommendation-card');
+      expect(card).not.toBeNull();
+      // Should show fallback text without crashing
+      expect(card.textContent).toContain('Unknown A');
+      expect(card.textContent).toContain('Unknown B');
+    });
+
+    it('should handle empty actions array gracefully', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [
+          {
+            type: 'prototype_distinct_info',
+            prototypes: { a: 'alpha', b: 'beta' },
+            severity: 0.2,
+            confidence: 0.8,
+            actions: [],
+            evidence: { divergenceExamples: [] },
+          },
+        ],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 10,
+          candidatePairsFound: 5,
+          candidatePairsEvaluated: 5,
+          redundantPairsFound: 1,
+          sampleCountPerPair: 8000,
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Expand to see actionable insight
+      const expander = document.querySelector('.rec-expander');
+      expander.click();
+
+      const insightSection = document.querySelector('.rec-insight');
+      expect(insightSection.textContent).toContain('No specific actions recommended');
+    });
+
+    it('should extract divergenceExamples from evidence object', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [
+          {
+            type: 'prototype_needs_separation',
+            prototypes: { a: 'anger', b: 'frustration' },
+            severity: 0.6,
+            confidence: 0.8,
+            actions: ['Tighten gate conditions'],
+            evidence: {
+              sharedDrivers: [],
+              keyDifferentiators: [],
+              divergenceExamples: [
+                { intensityDifference: 0.25, contextSummary: 'Work stress context' },
+                { intensityDifference: 0.18, contextSummary: 'Social conflict' },
+              ],
+            },
+          },
+        ],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 10,
+          candidatePairsFound: 5,
+          candidatePairsEvaluated: 5,
+          redundantPairsFound: 1,
+          sampleCountPerPair: 8000,
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Expand to see divergence examples
+      const expander = document.querySelector('.rec-expander');
+      expander.click();
+
+      const divergenceSection = document.querySelector('.rec-divergence');
+      expect(divergenceSection).not.toBeNull();
+      expect(divergenceSection.textContent).toContain('Work stress context');
+      expect(divergenceSection.textContent).toContain('Social conflict');
+    });
+  });
+
+  describe('v2 classificationBreakdown rendering', () => {
+    it('should render classification breakdown with correct v2 property names', async () => {
+      // This test verifies the fix for the "Classification: undefined merge | undefined subsumed"
+      // bug caused by property name mismatch between analyzer and UI
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 50,
+          candidatePairsFound: 100,
+          candidatePairsEvaluated: 100,
+          redundantPairsFound: 5,
+          sampleCountPerPair: 8000,
+          // v2 property names from PrototypeOverlapAnalyzer
+          classificationBreakdown: {
+            mergeRecommended: 2,
+            subsumedRecommended: 1,
+            nestedSiblings: 1,
+            needsSeparation: 0,
+            convertToExpression: 1,
+            keepDistinct: 0,
+          },
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const metadata = document.getElementById('results-metadata');
+      const metadataText = metadata.textContent;
+
+      // Should display actual numbers, not "undefined"
+      expect(metadataText).not.toContain('undefined');
+
+      // Should contain v2 classification type counts
+      expect(metadataText).toContain('2 merge');
+      expect(metadataText).toContain('1 subsumed');
+      expect(metadataText).toContain('1 nested');
+      expect(metadataText).toContain('0 separation');
+      expect(metadataText).toContain('1 expression');
+      expect(metadataText).toContain('0 distinct');
+    });
+
+    it('should handle missing classificationBreakdown gracefully', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 50,
+          candidatePairsFound: 100,
+          candidatePairsEvaluated: 100,
+          redundantPairsFound: 0,
+          sampleCountPerPair: 8000,
+          // No classificationBreakdown provided
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const metadata = document.getElementById('results-metadata');
+
+      // Should not crash and should not show "undefined"
+      expect(metadata.textContent).not.toContain('undefined');
+      // Should not show classification section at all when breakdown is missing
+      expect(metadata.innerHTML).not.toContain('classification-merge');
+    });
+  });
+
+  describe('v2 type label formatting', () => {
+    const v2TypeCases = [
+      {
+        type: 'prototype_merge_suggestion',
+        expected: 'Merge Suggestion',
+      },
+      {
+        type: 'prototype_subsumption_suggestion',
+        expected: 'Subsumption Suggestion',
+      },
+      {
+        type: 'prototype_overlap_info',
+        expected: 'Overlap Info',
+      },
+      {
+        type: 'prototype_nested_siblings',
+        expected: 'Nested Siblings',
+      },
+      {
+        type: 'prototype_needs_separation',
+        expected: 'Needs Separation',
+      },
+      {
+        type: 'prototype_distinct_info',
+        expected: 'Distinct',
+      },
+      {
+        type: 'prototype_expression_conversion',
+        expected: 'Expression Conversion',
+      },
+    ];
+
+    v2TypeCases.forEach(({ type, expected }) => {
+      it(`should format v2 type ${type} as "${expected}"`, async () => {
+        mockAnalyzer.analyze.mockResolvedValue({
+          recommendations: [
+            {
+              prototypes: { a: 'x', b: 'y' },
+              severity: 0.5,
+              type,
+              actions: ['Test action'],
+              evidence: { divergenceExamples: [] },
+            },
+          ],
+          metadata: {
+            prototypeFamily: 'emotion',
+            totalPrototypes: 10,
+            candidatePairsFound: 5,
+            candidatePairsEvaluated: 5,
+            redundantPairsFound: 1,
+            sampleCountPerPair: 8000,
+          },
+        });
+
+        const controller = new PrototypeAnalysisController({
+          logger: mockLogger,
+          prototypeOverlapAnalyzer: mockAnalyzer,
+        });
+
+        await controller.initialize();
+
+        document.getElementById('run-analysis-btn').click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const typeBadge = document.querySelector('.type-badge');
+        expect(typeBadge.textContent).toBe(expected);
+      });
+    });
+  });
 });

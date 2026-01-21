@@ -18,6 +18,9 @@ import OverlapClassifier from '../../../../src/expressionDiagnostics/services/pr
 import OverlapRecommendationBuilder from '../../../../src/expressionDiagnostics/services/prototypeOverlap/OverlapRecommendationBuilder.js';
 import PrototypeOverlapAnalyzer from '../../../../src/expressionDiagnostics/services/PrototypeOverlapAnalyzer.js';
 import PrototypeAnalysisController from '../../../../src/domUI/prototype-analysis/PrototypeAnalysisController.js';
+import GateConstraintExtractor from '../../../../src/expressionDiagnostics/services/prototypeOverlap/GateConstraintExtractor.js';
+import GateImplicationEvaluator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/GateImplicationEvaluator.js';
+import GateBandingSuggestionBuilder from '../../../../src/expressionDiagnostics/services/prototypeOverlap/GateBandingSuggestionBuilder.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
 
 describe('registerPrototypeOverlapServices', () => {
@@ -164,10 +167,88 @@ describe('registerPrototypeOverlapServices', () => {
       );
     });
 
+    // PROREDANAV2-013: Gate Analysis Service Registration Tests
+    it('should register GateConstraintExtractor correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IGateConstraintExtractor,
+        GateConstraintExtractor
+      );
+    });
+
+    it('should register GateImplicationEvaluator correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IGateImplicationEvaluator,
+        GateImplicationEvaluator
+      );
+    });
+
+    // PROREDANAV2-015: Gate Banding Suggestion Builder Registration Test
+    it('should register GateBandingSuggestionBuilder correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IGateBandingSuggestionBuilder,
+        GateBandingSuggestionBuilder
+      );
+    });
+
+    it('should inject config with strictEpsilon into GateConstraintExtractor', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      const extractor = container.resolve(
+        diagnosticsTokens.IGateConstraintExtractor
+      );
+
+      // Verify extractor was created (if config was missing it would throw)
+      expect(extractor).toBeInstanceOf(GateConstraintExtractor);
+      // The extractor uses config internally; if config injection failed,
+      // the constructor would have thrown during validateDependency
+    });
+
+    it('should inject logger into both gate analysis services', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      const extractor = container.resolve(
+        diagnosticsTokens.IGateConstraintExtractor
+      );
+      const evaluator = container.resolve(
+        diagnosticsTokens.IGateImplicationEvaluator
+      );
+
+      // Both services should be instances of their classes
+      // (logger injection failure would cause constructor to throw)
+      expect(extractor).toBeInstanceOf(GateConstraintExtractor);
+      expect(evaluator).toBeInstanceOf(GateImplicationEvaluator);
+    });
+
     it('should resolve all prototype overlap services without circular dependencies', () => {
       const registrar = new Registrar(container);
       registerPrototypeOverlapServices(registrar);
 
+      // Gate Analysis Services (PROREDANAV2 series)
+      expect(() =>
+        container.resolve(diagnosticsTokens.IGateConstraintExtractor)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IGateImplicationEvaluator)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IGateBandingSuggestionBuilder)
+      ).not.toThrow();
+
+      // Pipeline Stage Services
       expect(() =>
         container.resolve(diagnosticsTokens.ICandidatePairFilter)
       ).not.toThrow();

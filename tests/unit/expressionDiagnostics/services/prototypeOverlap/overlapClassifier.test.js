@@ -159,7 +159,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('merge');
+      expect(result.type).toBe('merge_recommended');
       expect(result.subsumedPrototype).toBeUndefined();
     });
 
@@ -184,7 +184,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('does NOT classify as merge when gateOverlapRatio too low', () => {
@@ -208,7 +208,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('does NOT classify as merge when correlation too low', () => {
@@ -232,13 +232,14 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
-    it('does NOT classify as merge when meanAbsDiff too high', () => {
+    it('does NOT classify as merge when meanAbsDiff too high (classified as needs_separation)', () => {
       const { classifier } = createClassifier();
       const candidateMetrics = createCandidateMetrics();
-      // High mean absolute difference
+      // High mean absolute difference with high correlation and gate overlap
+      // This triggers needs_separation: high overlap + high correlation + high meanAbsDiff
       const behaviorMetrics = createBehaviorMetrics({
         gateOverlap: {
           onEitherRate: 0.3,
@@ -256,7 +257,8 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      // Now correctly classified as needs_separation (high overlap + high correlation + not merge-worthy)
+      expect(result.type).toBe('needs_separation');
     });
 
     it('does NOT classify as merge when one dominance is overwhelming', () => {
@@ -280,8 +282,8 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      // Should be subsumed instead of merge (B is subsumed by A)
-      expect(result.type).toBe('subsumed');
+      // Should be subsumed_recommended instead of merge_recommended (B is subsumed by A)
+      expect(result.type).toBe('subsumed_recommended');
     });
   });
 
@@ -307,7 +309,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('subsumed');
+      expect(result.type).toBe('subsumed_recommended');
       expect(result.subsumedPrototype).toBe('a');
     });
 
@@ -332,7 +334,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('subsumed');
+      expect(result.type).toBe('subsumed_recommended');
       expect(result.subsumedPrototype).toBe('b');
     });
 
@@ -403,7 +405,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
   });
 
@@ -429,7 +431,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
       expect(result.subsumedPrototype).toBeUndefined();
     });
 
@@ -459,7 +461,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
   });
 
@@ -485,7 +487,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('handles NaN pearsonCorrelation as failure for merge', () => {
@@ -508,7 +510,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('handles NaN pearsonCorrelation as failure for subsumption', () => {
@@ -531,7 +533,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('handles NaN meanAbsDiff as failure for merge', () => {
@@ -554,7 +556,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('handles zero onEitherRate safely (division by zero)', () => {
@@ -577,7 +579,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
       // Should not throw due to division by zero
     });
 
@@ -595,7 +597,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('handles missing intensity gracefully', () => {
@@ -612,7 +614,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('handles null candidateMetrics gracefully', () => {
@@ -635,7 +637,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(null, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
       // Verify metrics were extracted safely with defaults for null candidate
       expect(result.metrics.activeAxisOverlap).toBe(0);
     });
@@ -646,7 +648,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, null);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
   });
 
@@ -679,7 +681,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('merge');
+      expect(result.type).toBe('merge_recommended');
     });
 
     it('does not classify as merge when just below onEitherRate threshold', () => {
@@ -702,7 +704,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('not_redundant');
+      expect(result.type).toBe('keep_distinct');
     });
 
     it('classifies as subsumed at exact threshold boundaries', () => {
@@ -730,7 +732,7 @@ describe('OverlapClassifier', () => {
 
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      expect(result.type).toBe('subsumed');
+      expect(result.type).toBe('subsumed_recommended');
       expect(result.subsumedPrototype).toBe('a');
     });
   });
@@ -821,7 +823,7 @@ describe('OverlapClassifier', () => {
         },
       });
       const mergeResult = classifier.classify(candidateMetrics, mergeMetrics);
-      expect(mergeResult.type).toBe('merge');
+      expect(mergeResult.type).toBe('merge_recommended');
       expect(mergeResult.subsumedPrototype).toBeUndefined();
 
       // Test not_redundant
@@ -843,7 +845,7 @@ describe('OverlapClassifier', () => {
         candidateMetrics,
         notRedundantMetrics
       );
-      expect(notRedundantResult.type).toBe('not_redundant');
+      expect(notRedundantResult.type).toBe('keep_distinct');
       expect(notRedundantResult.subsumedPrototype).toBeUndefined();
 
       // Test subsumed
@@ -865,7 +867,7 @@ describe('OverlapClassifier', () => {
         candidateMetrics,
         subsumedMetrics
       );
-      expect(subsumedResult.type).toBe('subsumed');
+      expect(subsumedResult.type).toBe('subsumed_recommended');
       expect(subsumedResult.subsumedPrototype).toBeDefined();
     });
   });
@@ -892,7 +894,7 @@ describe('OverlapClassifier', () => {
       classifier.classify(candidateMetrics, behaviorMetrics);
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('MERGE')
+        expect.stringContaining('MERGE_RECOMMENDED')
       );
     });
 
@@ -917,7 +919,7 @@ describe('OverlapClassifier', () => {
       classifier.classify(candidateMetrics, behaviorMetrics);
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('SUBSUMED')
+        expect.stringContaining('SUBSUMED_RECOMMENDED')
       );
     });
 
@@ -942,8 +944,498 @@ describe('OverlapClassifier', () => {
       classifier.classify(candidateMetrics, behaviorMetrics);
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('NOT_REDUNDANT')
+        expect.stringContaining('KEEP_DISTINCT')
       );
+    });
+  });
+
+  describe('Nested siblings classification', () => {
+    /**
+     * Create behavioral metrics with passRates for nested siblings tests.
+     *
+     * @param {object} [overrides] - Override specific values
+     * @returns {object} Behavioral metrics with passRates
+     */
+    const createBehaviorMetricsWithPassRates = (overrides = {}) => {
+      const gateOverlap = {
+        onEitherRate: 0.3,
+        onBothRate: 0.2,
+        pOnlyRate: 0.05,
+        qOnlyRate: 0.05,
+        ...(overrides.gateOverlap || {}),
+      };
+      const intensity = {
+        pearsonCorrelation: 0.8,
+        meanAbsDiff: 0.1,
+        dominanceP: 0.4,
+        dominanceQ: 0.4,
+        ...(overrides.intensity || {}),
+      };
+      const passRates = {
+        passARate: 0.25,
+        passBRate: 0.25,
+        pA_given_B: 0.8,
+        pB_given_A: 0.8,
+        coPassCount: 500,
+        ...(overrides.passRates || {}),
+      };
+      return { gateOverlap, intensity, passRates };
+    };
+
+    it('classifies as nested_siblings when pB_given_A is high but pA_given_B is low', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      // A implies B: when A fires, B almost always fires too (pB_given_A high)
+      // But B can fire without A (pA_given_B low)
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        passRates: {
+          pA_given_B: 0.6, // Low: B fires even when A doesn't
+          pB_given_A: 0.98, // High: A implies B
+          coPassCount: 500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('nested_siblings');
+      expect(result.narrowerPrototype).toBe('a'); // A is narrower (implies B)
+    });
+
+    it('classifies as nested_siblings when pA_given_B is high but pB_given_A is low (reverse)', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      // B implies A: when B fires, A almost always fires too
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        passRates: {
+          pA_given_B: 0.98, // High: B implies A
+          pB_given_A: 0.6, // Low: A can fire without B
+          coPassCount: 500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('nested_siblings');
+      expect(result.narrowerPrototype).toBe('b'); // B is narrower (implies A)
+    });
+
+    it('does NOT classify as nested_siblings when both conditionals are high (symmetric)', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      // Both high - they're equivalent, not nested
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        passRates: {
+          pA_given_B: 0.98,
+          pB_given_A: 0.98,
+          coPassCount: 500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('nested_siblings');
+    });
+
+    it('does NOT classify as nested_siblings when both conditionals are low', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      // Both low - no nesting relationship
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        passRates: {
+          pA_given_B: 0.6,
+          pB_given_A: 0.6,
+          coPassCount: 500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('nested_siblings');
+    });
+
+    it('does NOT classify as nested_siblings when passRates is null', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics(); // No passRates
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('nested_siblings');
+    });
+
+    it('does NOT classify as nested_siblings when conditionals are NaN', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        passRates: {
+          pA_given_B: NaN,
+          pB_given_A: 0.98,
+          coPassCount: 0,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('nested_siblings');
+    });
+
+    it('classifies nested_siblings at exactly the threshold boundary', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        passRates: {
+          pA_given_B: 0.5, // Low
+          pB_given_A: 0.97, // Exactly at threshold
+          coPassCount: 500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('nested_siblings');
+    });
+
+    it('logs debug message for nested_siblings classification', () => {
+      const { classifier, logger } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        passRates: {
+          pA_given_B: 0.5,
+          pB_given_A: 0.98,
+          coPassCount: 500,
+        },
+      });
+
+      classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('NESTED_SIBLINGS')
+      );
+    });
+  });
+
+  describe('Needs separation classification', () => {
+    /**
+     * Create behavioral metrics with passRates for needs separation tests.
+     *
+     * @param {object} [overrides] - Override specific values
+     * @returns {object} Behavioral metrics with passRates
+     */
+    const createBehaviorMetricsWithPassRates = (overrides = {}) => {
+      const gateOverlap = {
+        onEitherRate: 0.4,
+        onBothRate: 0.32, // gateOverlapRatio = 0.8
+        pOnlyRate: 0.04,
+        qOnlyRate: 0.04,
+        ...(overrides.gateOverlap || {}),
+      };
+      const intensity = {
+        pearsonCorrelation: 0.9,
+        meanAbsDiff: 0.1, // Above merge threshold (0.03)
+        dominanceP: 0.4,
+        dominanceQ: 0.4,
+        ...(overrides.intensity || {}),
+      };
+      const passRates = {
+        passARate: 0.36,
+        passBRate: 0.36,
+        pA_given_B: 0.7, // Not nested
+        pB_given_A: 0.7, // Not nested
+        coPassCount: 500,
+        ...(overrides.passRates || {}),
+      };
+      return { gateOverlap, intensity, passRates };
+    };
+
+    it('classifies as needs_separation when overlap is high, correlation is high, but meanAbsDiff is high', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4, // gateOverlapRatio = 0.8 >= 0.70
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.85, // High correlation >= 0.80
+          meanAbsDiff: 0.1, // Above merge threshold (0.03)
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+        passRates: {
+          pA_given_B: 0.7, // Not nested (< 0.97)
+          pB_given_A: 0.7, // Not nested (< 0.97)
+          coPassCount: 500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('needs_separation');
+    });
+
+    it('does NOT classify as needs_separation when gateOverlapRatio < 0.70', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.3, // gateOverlapRatio = 0.6 < 0.70
+          pOnlyRate: 0.1,
+          qOnlyRate: 0.1,
+        },
+        intensity: {
+          pearsonCorrelation: 0.9,
+          meanAbsDiff: 0.1,
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('needs_separation');
+    });
+
+    it('does NOT classify as needs_separation when correlation < 0.80', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4, // gateOverlapRatio = 0.8
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.7, // Too low < 0.80
+          meanAbsDiff: 0.1,
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('needs_separation');
+    });
+
+    it('does NOT classify as needs_separation when correlation is NaN', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4,
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: NaN,
+          meanAbsDiff: 0.1,
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('needs_separation');
+    });
+
+    it('does NOT classify as needs_separation when meanAbsDiff is within merge threshold', () => {
+      const { classifier } = createClassifier({
+        maxMeanAbsDiffForMerge: 0.03,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4,
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.9,
+          meanAbsDiff: 0.02, // Within merge threshold
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).not.toBe('needs_separation');
+    });
+
+    it('does NOT classify as needs_separation when nested (pB_given_A >= threshold)', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4,
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.9,
+          meanAbsDiff: 0.1,
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+        passRates: {
+          pA_given_B: 0.5,
+          pB_given_A: 0.98, // Nested
+          coPassCount: 500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      // Should be nested_siblings, not needs_separation
+      expect(result.type).toBe('nested_siblings');
+    });
+
+    it('logs debug message for needs_separation classification', () => {
+      const { classifier, logger } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetricsWithPassRates({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4,
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.85,
+          meanAbsDiff: 0.1,
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+        passRates: {
+          pA_given_B: 0.7,
+          pB_given_A: 0.7,
+          coPassCount: 500,
+        },
+      });
+
+      classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('NEEDS_SEPARATION')
+      );
+    });
+  });
+
+  describe('Classification priority order', () => {
+    it('nested_siblings takes priority over needs_separation', () => {
+      const { classifier } = createClassifier({
+        nestedConditionalThreshold: 0.97,
+      });
+      const candidateMetrics = createCandidateMetrics();
+      // Metrics that would qualify for both nested_siblings AND needs_separation
+      const behaviorMetrics = {
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4, // gateOverlapRatio = 0.8 (qualifies for needs_separation)
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.9, // High correlation (qualifies for needs_separation)
+          meanAbsDiff: 0.1, // Above merge threshold
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+        passRates: {
+          pA_given_B: 0.5,
+          pB_given_A: 0.98, // Nested (qualifies for nested_siblings)
+          coPassCount: 500,
+        },
+      };
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      // nested_siblings should win due to priority
+      expect(result.type).toBe('nested_siblings');
+    });
+
+    it('needs_separation takes priority over keep_distinct', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      // Metrics that qualify for needs_separation but not nested_siblings
+      const behaviorMetrics = {
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.4, // gateOverlapRatio = 0.8
+          pOnlyRate: 0.05,
+          qOnlyRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.85,
+          meanAbsDiff: 0.1,
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+        passRates: {
+          pA_given_B: 0.6,
+          pB_given_A: 0.6, // Not nested
+          coPassCount: 500,
+        },
+      };
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('needs_separation');
+    });
+
+    it('keep_distinct is the fallback when no other classification matches', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      // Metrics that don't qualify for any specific classification
+      const behaviorMetrics = {
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.1, // Low gateOverlapRatio = 0.33
+          pOnlyRate: 0.1,
+          qOnlyRate: 0.1,
+        },
+        intensity: {
+          pearsonCorrelation: 0.5, // Low correlation
+          meanAbsDiff: 0.2,
+          dominanceP: 0.4,
+          dominanceQ: 0.4,
+        },
+        passRates: {
+          pA_given_B: 0.5,
+          pB_given_A: 0.5, // Not nested
+          coPassCount: 500,
+        },
+      };
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('keep_distinct');
     });
   });
 });

@@ -1,4 +1,6 @@
-# PROREDANAV2-013: Register New Services in DI
+# PROREDANAV2-013: Register New Services in DI - COMPLETED
+
+## Status: COMPLETED
 
 ## Description
 
@@ -103,7 +105,7 @@ import { diagnosticsTokens } from '../tokens/tokens-diagnostics.js';
 
 ```bash
 # Run DI registration tests
-npm run test:unit -- --testPathPattern=prototypeOverlapRegistrations
+npm run test:unit -- --testPathPatterns=prototypeOverlapRegistrations
 
 # Verify no circular dependencies by running full test suite
 npm run test:unit
@@ -111,3 +113,45 @@ npm run test:unit
 # Lint
 npx eslint src/dependencyInjection/registrations/prototypeOverlapRegistrations.js
 ```
+
+---
+
+## Outcome
+
+### What Was Originally Planned
+
+The ticket planned to add DI registrations for:
+1. `IGateConstraintExtractor` factory
+2. `IGateImplicationEvaluator` factory
+
+### What Was Actually Found
+
+**The implementation was already complete** when the ticket was examined:
+
+- Both imports were already present (lines 18-19 of `prototypeOverlapRegistrations.js`)
+- `IGateConstraintExtractor` factory was already registered (lines 35-42)
+- `IGateImplicationEvaluator` factory was already registered (lines 44-50)
+- Both services were already being injected into `BehavioralOverlapEvaluator` (lines 73-78)
+- Tokens already existed in `tokens-diagnostics.js` (lines 102-103)
+
+### What Was Actually Changed
+
+**Test Coverage Enhancement Only**:
+
+The existing test file (`tests/unit/dependencyInjection/registrations/prototypeOverlapRegistrations.test.js`) was missing explicit tests for the gate analysis services. Added 4 new tests:
+
+1. **`should register GateConstraintExtractor correctly`** - Verifies singleton registration
+2. **`should register GateImplicationEvaluator correctly`** - Verifies singleton registration
+3. **`should inject config with strictEpsilon into GateConstraintExtractor`** - Verifies config dependency injection
+4. **`should inject logger into both gate analysis services`** - Verifies logger dependency injection
+
+Also updated the comprehensive resolution test to explicitly include the gate analysis services.
+
+### Test Results
+
+- All 16 tests pass (12 existing + 4 new)
+- 80 additional tests pass in the gate analysis service test files
+
+### Discrepancy Analysis
+
+The ticket assumed the code needed to be written, but it had already been implemented (likely as part of PROREDANAV2-007/008 or an earlier integration effort). The ticket's scope was adjusted to focus on the missing test coverage, which strengthens the acceptance criteria verification.

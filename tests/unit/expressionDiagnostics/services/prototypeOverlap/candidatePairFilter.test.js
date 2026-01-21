@@ -720,8 +720,9 @@ describe('CandidatePairFilter', () => {
 
       filter.filterCandidates([p1, p2, p3]);
 
+      // Verify debug log mentions Route A results
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('candidate pairs')
+        expect.stringContaining('Route A')
       );
     });
   });
@@ -835,6 +836,325 @@ describe('CandidatePairFilter', () => {
         expect(cosine).toBeGreaterThanOrEqual(-1 - 1e-10);
         expect(cosine).toBeLessThanOrEqual(1 + 1e-10);
       }
+    });
+  });
+
+  describe('Multi-Route Filtering (v2.1)', () => {
+    /**
+     * Create a mock GateSimilarityFilter.
+     *
+     * @param {Array} candidates - Candidates to return
+     * @returns {object} Mock filter
+     */
+    const createMockGateSimilarityFilter = (candidates = []) => ({
+      filterPairs: jest.fn().mockReturnValue({
+        candidates,
+        stats: {
+          passed: candidates.length,
+          rejected: 0,
+          byImplication: 0,
+          byOverlap: candidates.length,
+        },
+      }),
+    });
+
+    /**
+     * Create a mock BehavioralPrescanFilter.
+     *
+     * @param {Array} candidates - Candidates to return
+     * @returns {object} Mock filter
+     */
+    const createMockBehavioralPrescanFilter = (candidates = []) => ({
+      filterPairs: jest.fn().mockReturnValue({
+        candidates,
+        stats: {
+          passed: candidates.length,
+          rejected: 0,
+          skipped: 0,
+        },
+      }),
+    });
+
+    /**
+     * Create filter with multi-route dependencies.
+     *
+     * @param {object} options - Options
+     * @returns {object} Filter and mocks
+     */
+    const createMultiRouteFilter = (options = {}) => {
+      const logger = createMockLogger();
+      const config = createConfig({
+        enableMultiRouteFiltering: true,
+        ...options.configOverrides,
+      });
+      const gateSimilarityFilter =
+        options.gateSimilarityFilter || createMockGateSimilarityFilter();
+      const behavioralPrescanFilter =
+        options.behavioralPrescanFilter || createMockBehavioralPrescanFilter();
+
+      const filter = new CandidatePairFilter({
+        config,
+        logger,
+        gateSimilarityFilter,
+        behavioralPrescanFilter,
+      });
+
+      return { filter, logger, gateSimilarityFilter, behavioralPrescanFilter };
+    };
+
+    it('should work without optional dependencies (backward compatibility)', () => {
+      const logger = createMockLogger();
+      const config = createConfig({ enableMultiRouteFiltering: true });
+
+      // No optional dependencies provided
+      const filter = new CandidatePairFilter({ config, logger });
+
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      // Should still work with Route A only
+      expect(result.candidates).toHaveLength(1);
+    });
+
+    it('should skip multi-route when enableMultiRouteFiltering is false', () => {
+      const { filter, gateSimilarityFilter, behavioralPrescanFilter } =
+        createMultiRouteFilter({
+          configOverrides: { enableMultiRouteFiltering: false },
+        });
+
+      // Create prototypes that pass Route A
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
+
+      filter.filterCandidates([p1, p2]);
+
+      // Route B and C should not be called
+      expect(gateSimilarityFilter.filterPairs).not.toHaveBeenCalled();
+      expect(behavioralPrescanFilter.filterPairs).not.toHaveBeenCalled();
+    });
+
+    it('should call Route B with pairs rejected by Route A', () => {
+      const { filter, gateSimilarityFilter } = createMultiRouteFilter();
+
+      // Create prototypes that fail Route A (different axes)
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { b: 0.5 });
+      const p3 = createPrototype('p3', { c: 0.5 });
+
+      filter.filterCandidates([p1, p2, p3]);
+
+      // Route B should receive rejected pairs
+      expect(gateSimilarityFilter.filterPairs).toHaveBeenCalled();
+      const routeBInput = gateSimilarityFilter.filterPairs.mock.calls[0][0];
+      expect(routeBInput.length).toBeGreaterThan(0);
+    });
+
+    it('should call Route C with pairs rejected by both Routes A and B', () => {
+      const { filter, behavioralPrescanFilter } = createMultiRouteFilter();
+
+      // Create prototypes that fail Route A
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { b: 0.5 });
+
+      filter.filterCandidates([p1, p2]);
+
+      // Route C should be called
+      expect(behavioralPrescanFilter.filterPairs).toHaveBeenCalled();
+    });
+
+    it('should mark Route A candidates with selectedBy: routeA', () => {
+      const { filter } = createMultiRouteFilter();
+
+      // Prototypes that pass Route A
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0].selectedBy).toBe('routeA');
+    });
+
+    it('should include Route B candidates with routeB provenance', () => {
+      const routeBCandidate = {
+        prototypeA: createPrototype('rb1', { x: 0.5 }),
+        prototypeB: createPrototype('rb2', { y: 0.5 }),
+        selectedBy: 'routeB',
+        routeMetrics: { reason: 'gate_implication' },
+        candidateMetrics: {},
+      };
+
+      const { filter } = createMultiRouteFilter({
+        gateSimilarityFilter: createMockGateSimilarityFilter([routeBCandidate]),
+      });
+
+      // Prototypes that fail Route A
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { b: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2, routeBCandidate.prototypeA, routeBCandidate.prototypeB]);
+
+      const routeBCandidates = result.candidates.filter(
+        (c) => c.selectedBy === 'routeB'
+      );
+      expect(routeBCandidates.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should include Route C candidates with routeC provenance', () => {
+      const routeCCandidate = {
+        prototypeA: createPrototype('rc1', { x: 0.5 }),
+        prototypeB: createPrototype('rc2', { y: 0.5 }),
+        selectedBy: 'routeC',
+        routeMetrics: { gateOverlapRatio: 0.7 },
+        candidateMetrics: {},
+      };
+
+      const { filter } = createMultiRouteFilter({
+        gateSimilarityFilter: createMockGateSimilarityFilter([]),
+        behavioralPrescanFilter: createMockBehavioralPrescanFilter([routeCCandidate]),
+      });
+
+      // Prototypes that fail Route A
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { b: 0.5 });
+
+      const result = filter.filterCandidates([p1, p2, routeCCandidate.prototypeA, routeCCandidate.prototypeB]);
+
+      const routeCCandidates = result.candidates.filter(
+        (c) => c.selectedBy === 'routeC'
+      );
+      expect(routeCCandidates.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should track route-specific stats when multi-route is enabled', () => {
+      const { filter } = createMultiRouteFilter();
+
+      // Mix of prototypes
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 }); // Will pass Route A with p2
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
+      const p3 = createPrototype('p3', { c: 0.5 }); // Will be rejected by Route A
+
+      const result = filter.filterCandidates([p1, p2, p3]);
+
+      // Should have routeStats in the result
+      expect(result.stats.routeStats).toBeDefined();
+      expect(result.stats.routeStats.routeA).toBeDefined();
+      expect(result.stats.routeStats.routeA.passed).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should deduplicate candidates across routes', () => {
+      // Create a pair that passes both Route A and Route B
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
+
+      // Route B also returns this same pair
+      const routeBCandidate = {
+        prototypeA: p1,
+        prototypeB: p2,
+        selectedBy: 'routeB',
+        routeMetrics: {},
+        candidateMetrics: {},
+      };
+
+      const { filter } = createMultiRouteFilter({
+        gateSimilarityFilter: createMockGateSimilarityFilter([routeBCandidate]),
+      });
+
+      const result = filter.filterCandidates([p1, p2]);
+
+      // Should only have one candidate for this pair (Route A wins)
+      const p1p2Candidates = result.candidates.filter(
+        (c) =>
+          (c.prototypeA.id === 'p1' && c.prototypeB.id === 'p2') ||
+          (c.prototypeA.id === 'p2' && c.prototypeB.id === 'p1')
+      );
+      expect(p1p2Candidates).toHaveLength(1);
+      // Route A should have priority
+      expect(p1p2Candidates[0].selectedBy).toBe('routeA');
+    });
+
+    it('should handle case where Route B filter is null', () => {
+      const logger = createMockLogger();
+      const config = createConfig({ enableMultiRouteFiltering: true });
+
+      const filter = new CandidatePairFilter({
+        config,
+        logger,
+        gateSimilarityFilter: null,
+        behavioralPrescanFilter: createMockBehavioralPrescanFilter(),
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { b: 0.5 });
+
+      // Should not throw
+      const result = filter.filterCandidates([p1, p2]);
+      expect(result).toBeDefined();
+    });
+
+    it('should handle case where Route C filter is null', () => {
+      const logger = createMockLogger();
+      const config = createConfig({ enableMultiRouteFiltering: true });
+
+      const filter = new CandidatePairFilter({
+        config,
+        logger,
+        gateSimilarityFilter: createMockGateSimilarityFilter(),
+        behavioralPrescanFilter: null,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.5 });
+      const p2 = createPrototype('p2', { b: 0.5 });
+
+      // Should not throw
+      const result = filter.filterCandidates([p1, p2]);
+      expect(result).toBeDefined();
+    });
+
+    it('should merge candidates from all routes correctly', () => {
+      // Route A passes p1-p2
+      const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
+      const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
+
+      // Route B finds p3-p4
+      const p3 = createPrototype('p3', { x: 0.5 });
+      const p4 = createPrototype('p4', { y: 0.5 });
+      const routeBCandidate = {
+        prototypeA: p3,
+        prototypeB: p4,
+        selectedBy: 'routeB',
+        routeMetrics: { reason: 'gate_overlap' },
+        candidateMetrics: {},
+      };
+
+      // Route C finds p5-p6
+      const p5 = createPrototype('p5', { m: 0.5 });
+      const p6 = createPrototype('p6', { n: 0.5 });
+      const routeCCandidate = {
+        prototypeA: p5,
+        prototypeB: p6,
+        selectedBy: 'routeC',
+        routeMetrics: { gateOverlapRatio: 0.6 },
+        candidateMetrics: {},
+      };
+
+      const { filter } = createMultiRouteFilter({
+        gateSimilarityFilter: createMockGateSimilarityFilter([routeBCandidate]),
+        behavioralPrescanFilter: createMockBehavioralPrescanFilter([routeCCandidate]),
+      });
+
+      const result = filter.filterCandidates([p1, p2, p3, p4, p5, p6]);
+
+      // Should have candidates from all routes
+      const routeACount = result.candidates.filter((c) => c.selectedBy === 'routeA').length;
+      const routeBCount = result.candidates.filter((c) => c.selectedBy === 'routeB').length;
+      const routeCCount = result.candidates.filter((c) => c.selectedBy === 'routeC').length;
+
+      expect(routeACount).toBeGreaterThanOrEqual(1);
+      expect(routeBCount).toBeGreaterThanOrEqual(1);
+      expect(routeCCount).toBeGreaterThanOrEqual(1);
     });
   });
 });

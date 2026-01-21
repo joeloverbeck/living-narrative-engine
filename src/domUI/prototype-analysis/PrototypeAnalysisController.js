@@ -494,14 +494,17 @@ class PrototypeAnalysisController {
          </div>`
       : '';
 
-    // Build classification breakdown text
+    // Build classification breakdown text (v2 property names)
     const classBreakdown = classificationBreakdown
       ? `<div class="metadata-detail">
            <span class="detail-label">Classification:</span>
            <span class="detail-value">
-             <span class="classification-merge">${classificationBreakdown.merge} merge</span> |
-             <span class="classification-subsumed">${classificationBreakdown.subsumed} subsumed</span> |
-             <span class="classification-not-redundant">${classificationBreakdown.notRedundant} not redundant</span>
+             <span class="classification-merge">${classificationBreakdown.mergeRecommended} merge</span> |
+             <span class="classification-subsumed">${classificationBreakdown.subsumedRecommended} subsumed</span> |
+             <span class="classification-nested">${classificationBreakdown.nestedSiblings} nested</span> |
+             <span class="classification-separation">${classificationBreakdown.needsSeparation} separation</span> |
+             <span class="classification-expression">${classificationBreakdown.convertToExpression} expression</span> |
+             <span class="classification-distinct">${classificationBreakdown.keepDistinct} distinct</span>
            </span>
          </div>`
       : '';
@@ -513,9 +516,22 @@ class PrototypeAnalysisController {
            ${
              summaryInsight.closestPair
                ? `<div class="closest-pair">
-                    Closest pair: <em>${this.#escapeHtml(summaryInsight.closestPair.prototypeA)}</em> ↔ 
+                    Closest pair: <em>${this.#escapeHtml(summaryInsight.closestPair.prototypeA)}</em> ↔
                     <em>${this.#escapeHtml(summaryInsight.closestPair.prototypeB)}</em>
-                    (correlation: ${summaryInsight.closestPair.correlation.toFixed(3)})
+                    <div class="closest-pair-metrics">
+                      <span title="Composite score: weighted combination of gate overlap (50%), correlation (30%), and global similarity (20%)">
+                        composite: <strong>${this.#formatMetric(summaryInsight.closestPair.compositeScore)}</strong>
+                      </span> |
+                      <span title="Proportion of contexts where both prototypes fire">
+                        gate overlap: ${this.#formatMetric(summaryInsight.closestPair.gateOverlapRatio)}
+                      </span> |
+                      <span title="Pearson correlation when both prototypes fire (co-pass only)">
+                        correlation: ${this.#formatMetric(summaryInsight.closestPair.correlation)}
+                      </span> |
+                      <span title="Mean absolute output difference over ALL samples (not just co-pass)">
+                        global diff: ${this.#formatMetric(summaryInsight.closestPair.globalMeanAbsDiff)}
+                      </span>
+                    </div>
                   </div>`
                : ''
            }
@@ -566,6 +582,9 @@ class PrototypeAnalysisController {
   /**
    * Render a single recommendation card.
    *
+   * Handles both v1 format (prototypeA, prototypeB, actionableInsight, divergenceExamples)
+   * and v2 format (prototypes: {a, b}, actions: [], evidence: {divergenceExamples}).
+   *
    * @param {object} recommendation - Recommendation object
    * @param {number} index - Card index for unique IDs
    * @private
@@ -574,14 +593,40 @@ class PrototypeAnalysisController {
     if (!this.#recommendationsContainer) return;
 
     const {
-      prototypeA,
-      prototypeB,
-      severity,
-      type,
+      // v1 fields (backward compatible)
+      prototypeA: v1ProtoA,
+      prototypeB: v1ProtoB,
       summary,
       actionableInsight,
-      divergenceExamples,
+      divergenceExamples: v1Divergence,
+      // v2 fields
+      prototypes,
+      actions,
+      evidence,
+      // Common fields
+      severity,
+      type,
     } = recommendation;
+
+    // Extract prototype names: prefer v2 nested format, fall back to v1, then fallback text
+    const prototypeA = prototypes?.a ?? v1ProtoA ?? 'Unknown A';
+    const prototypeB = prototypes?.b ?? v1ProtoB ?? 'Unknown B';
+
+    // Build actionable insight: prefer v2 actions array, fall back to v1 string
+    let actionText;
+    if (Array.isArray(actions) && actions.length > 0) {
+      actionText = actions.join(' • ');
+    } else if (actionableInsight) {
+      actionText = actionableInsight;
+    } else {
+      actionText = 'No specific actions recommended.';
+    }
+
+    // Extract divergence examples: prefer v2 evidence.divergenceExamples, fall back to v1
+    const divergenceExamples = evidence?.divergenceExamples ?? v1Divergence ?? [];
+
+    // Build summary text: use v1 summary if available, otherwise derive from type
+    const summaryText = summary ?? this.#deriveSummaryFromType(type);
 
     const severityClass = this.#getSeverityClass(severity);
     const typeLabel = this.#formatType(type);
@@ -605,7 +650,7 @@ class PrototypeAnalysisController {
         </div>
       </header>
       <div class="rec-summary">
-        <p>${this.#escapeHtml(summary)}</p>
+        <p>${this.#escapeHtml(summaryText)}</p>
       </div>
       <button class="rec-expander" aria-expanded="false" aria-controls="${detailsId}">
         Show Details
@@ -613,7 +658,7 @@ class PrototypeAnalysisController {
       <div id="${detailsId}" class="rec-details" hidden>
         <div class="rec-insight">
           <h4>Actionable Insight</h4>
-          <p>${this.#escapeHtml(actionableInsight)}</p>
+          <p>${this.#escapeHtml(actionText)}</p>
         </div>
         ${this.#renderDivergenceExamples(divergenceExamples)}
       </div>
@@ -632,6 +677,40 @@ class PrototypeAnalysisController {
     });
 
     this.#recommendationsContainer.appendChild(card);
+  }
+
+  /**
+   * Derive a summary from the recommendation type when summary is not provided.
+   *
+   * @param {string} type - Recommendation type
+   * @returns {string} Derived summary text
+   * @private
+   */
+  #deriveSummaryFromType(type) {
+    const summaries = {
+      prototype_merge_suggestion:
+        'These prototypes behave nearly identically and may be candidates for merging.',
+      prototype_subsumption_suggestion:
+        'One prototype appears to be a behavioral subset of the other.',
+      prototype_overlap_info:
+        'These prototypes share significant structural similarity.',
+      prototype_nested_siblings:
+        'These prototypes have a nested relationship where one contains the other.',
+      prototype_needs_separation:
+        'These prototypes overlap significantly but serve different purposes.',
+      prototype_distinct_info:
+        'These prototypes are correctly distinct despite structural similarity.',
+      prototype_expression_conversion:
+        'These prototypes may be better expressed as a single parameterized definition.',
+      // v1 types
+      structurally_redundant:
+        'These prototypes share significant structural overlap.',
+      behaviorally_redundant:
+        'These prototypes produce similar behavioral responses.',
+      high_overlap: 'These prototypes have high overlap but are behaviorally distinct.',
+      not_redundant: 'These prototypes are sufficiently distinct.',
+    };
+    return summaries[type] ?? 'Prototype overlap detected.';
   }
 
   /**
@@ -688,16 +767,28 @@ class PrototypeAnalysisController {
   /**
    * Format classification type for display.
    *
+   * Handles both v1 types (structurally_redundant, etc.) and
+   * v2 types (prototype_merge_suggestion, prototype_nested_siblings, etc.).
+   *
    * @param {string} type - Classification type
    * @returns {string} Human-readable label
    * @private
    */
   #formatType(type) {
     const typeLabels = {
+      // v1 types (backward compatible)
       structurally_redundant: 'Structurally Redundant',
       behaviorally_redundant: 'Behaviorally Redundant',
       high_overlap: 'High Overlap',
       not_redundant: 'Not Redundant',
+      // v2 types
+      prototype_merge_suggestion: 'Merge Suggestion',
+      prototype_subsumption_suggestion: 'Subsumption Suggestion',
+      prototype_overlap_info: 'Overlap Info',
+      prototype_nested_siblings: 'Nested Siblings',
+      prototype_needs_separation: 'Needs Separation',
+      prototype_distinct_info: 'Distinct',
+      prototype_expression_conversion: 'Expression Conversion',
     };
     return typeLabels[type] ?? type;
   }
@@ -743,6 +834,24 @@ class PrototypeAnalysisController {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Format a numeric metric for display.
+   * Handles NaN, undefined, and formats numbers to 3 decimal places.
+   *
+   * @param {number|undefined} value - Metric value
+   * @returns {string} Formatted metric string
+   * @private
+   */
+  #formatMetric(value) {
+    if (value === undefined || value === null || Number.isNaN(value)) {
+      return 'N/A';
+    }
+    if (!Number.isFinite(value)) {
+      return 'N/A';
+    }
+    return value.toFixed(3);
   }
 }
 

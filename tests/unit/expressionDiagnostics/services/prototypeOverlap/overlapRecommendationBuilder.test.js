@@ -268,6 +268,40 @@ describe('OverlapRecommendationBuilder', () => {
       expect(result.type).toBe('prototype_overlap_info');
     });
 
+    it('maps merge_recommended classification to prototype_merge_suggestion', () => {
+      const { builder } = createBuilder();
+      const classification = createClassification('merge_recommended');
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        classification,
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        []
+      );
+
+      expect(result.type).toBe('prototype_merge_suggestion');
+    });
+
+    it('maps subsumed_recommended classification to prototype_subsumption_suggestion', () => {
+      const { builder } = createBuilder();
+      const classification = createClassification('subsumed_recommended', {
+        subsumedPrototype: 'b',
+      });
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        classification,
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        []
+      );
+
+      expect(result.type).toBe('prototype_subsumption_suggestion');
+    });
+
     it('includes correct prototype IDs', () => {
       const { builder } = createBuilder();
       const prototypeA = createPrototype('emotion:happy');
@@ -310,7 +344,8 @@ describe('OverlapRecommendationBuilder', () => {
         createClassification('merge'),
         createCandidateMetrics(),
         createBehaviorMetrics(),
-        [],
+        [], // divergenceExamples
+        [], // bandingSuggestions
         'sexual'
       );
 
@@ -414,6 +449,46 @@ describe('OverlapRecommendationBuilder', () => {
 
       // not_redundant severity = cosineSim * 0.3 = 0.5 * 0.3 = 0.15
       expect(result.severity).toBeLessThan(0.5);
+    });
+
+    it('uses merge severity formula for merge_recommended type', () => {
+      const { builder } = createBuilder();
+      const highCorrelationMetrics = createBehaviorMetrics({
+        gateOverlap: { onEitherRate: 0.3, onBothRate: 0.28 },
+        intensity: { pearsonCorrelation: 0.99, meanAbsDiff: 0.02 },
+      });
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge_recommended'),
+        createCandidateMetrics(),
+        highCorrelationMetrics,
+        []
+      );
+
+      // Merge severity formula: (correlation + gateOverlapRatio) / 2 - meanAbsDiff
+      // = (0.99 + (0.28/0.3)) / 2 - 0.02 = (0.99 + 0.933) / 2 - 0.02 ≈ 0.94
+      expect(result.severity).toBeGreaterThan(0.8);
+    });
+
+    it('uses subsumption severity formula for subsumed_recommended type', () => {
+      const { builder } = createBuilder();
+      const highDominanceMetrics = createBehaviorMetrics({
+        intensity: { dominanceP: 0.95, dominanceQ: 0.02 },
+      });
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('subsumed_recommended', { subsumedPrototype: 'b' }),
+        createCandidateMetrics(),
+        highDominanceMetrics,
+        []
+      );
+
+      // Subsumption severity = max(dominanceP, dominanceQ) = 0.95
+      expect(result.severity).toBeGreaterThan(0.9);
     });
   });
 
@@ -628,6 +703,43 @@ describe('OverlapRecommendationBuilder', () => {
 
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0]).toContain('No action needed');
+    });
+
+    it('suggests merge/alias actions for merge_recommended type', () => {
+      const { builder } = createBuilder();
+
+      const result = builder.build(
+        createPrototype('emotion:numbness'),
+        createPrototype('emotion:apathy'),
+        createClassification('merge_recommended'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        []
+      );
+
+      expect(result.actions).toHaveLength(2);
+      expect(result.actions[0]).toContain('merging');
+      expect(result.actions[0]).toContain('emotion:numbness');
+      expect(result.actions[0]).toContain('emotion:apathy');
+      expect(result.actions[1]).toContain('Alias');
+    });
+
+    it('suggests remove/tighten actions for subsumed_recommended type', () => {
+      const { builder } = createBuilder();
+
+      const result = builder.build(
+        createPrototype('emotion:calm'),
+        createPrototype('emotion:relaxed'),
+        createClassification('subsumed_recommended', { subsumedPrototype: 'b' }),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        []
+      );
+
+      expect(result.actions).toHaveLength(2);
+      expect(result.actions[0]).toContain('removing');
+      expect(result.actions[0]).toContain('emotion:relaxed');
+      expect(result.actions[1]).toContain('Tighten');
     });
   });
 

@@ -15,6 +15,11 @@ import OverlapClassifier from '../../expressionDiagnostics/services/prototypeOve
 import OverlapRecommendationBuilder from '../../expressionDiagnostics/services/prototypeOverlap/OverlapRecommendationBuilder.js';
 import PrototypeOverlapAnalyzer from '../../expressionDiagnostics/services/PrototypeOverlapAnalyzer.js';
 import PrototypeAnalysisController from '../../domUI/prototype-analysis/PrototypeAnalysisController.js';
+import GateConstraintExtractor from '../../expressionDiagnostics/services/prototypeOverlap/GateConstraintExtractor.js';
+import GateImplicationEvaluator from '../../expressionDiagnostics/services/prototypeOverlap/GateImplicationEvaluator.js';
+import GateBandingSuggestionBuilder from '../../expressionDiagnostics/services/prototypeOverlap/GateBandingSuggestionBuilder.js';
+import GateSimilarityFilter from '../../expressionDiagnostics/services/prototypeOverlap/GateSimilarityFilter.js';
+import BehavioralPrescanFilter from '../../expressionDiagnostics/services/prototypeOverlap/BehavioralPrescanFilter.js';
 
 /**
  * Register Prototype Overlap Analysis services.
@@ -29,13 +34,72 @@ import PrototypeAnalysisController from '../../domUI/prototype-analysis/Prototyp
  * @param {Registrar} registrar - The DI registrar instance
  */
 export function registerPrototypeOverlapServices(registrar) {
-  // Stage A: Candidate filtering
+  // Gate Analysis Services (PROREDANAV2 series - dependencies for Stage B)
+  registrar.singletonFactory(
+    diagnosticsTokens.IGateConstraintExtractor,
+    (c) =>
+      new GateConstraintExtractor({
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IGateImplicationEvaluator,
+    (c) =>
+      new GateImplicationEvaluator({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IGateBandingSuggestionBuilder,
+    (c) =>
+      new GateBandingSuggestionBuilder({
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // Multi-Route Candidate Filtering Services (PROREDANAV2.1 series)
+  registrar.singletonFactory(
+    diagnosticsTokens.IGateSimilarityFilter,
+    (c) =>
+      new GateSimilarityFilter({
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+        gateConstraintExtractor: c.resolve(
+          diagnosticsTokens.IGateConstraintExtractor
+        ),
+        gateImplicationEvaluator: c.resolve(
+          diagnosticsTokens.IGateImplicationEvaluator
+        ),
+      })
+  );
+
+  registrar.singletonFactory(
+    diagnosticsTokens.IBehavioralPrescanFilter,
+    (c) =>
+      new BehavioralPrescanFilter({
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+        randomStateGenerator: c.resolve(diagnosticsTokens.IRandomStateGenerator),
+        contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
+        prototypeGateChecker: c.resolve(diagnosticsTokens.IPrototypeGateChecker),
+      })
+  );
+
+  // Stage A: Candidate filtering (with optional multi-route dependencies)
   registrar.singletonFactory(
     diagnosticsTokens.ICandidatePairFilter,
     (c) =>
       new CandidatePairFilter({
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
+        gateSimilarityFilter: c.resolve(diagnosticsTokens.IGateSimilarityFilter),
+        behavioralPrescanFilter: c.resolve(
+          diagnosticsTokens.IBehavioralPrescanFilter
+        ),
       })
   );
 
@@ -50,6 +114,12 @@ export function registerPrototypeOverlapServices(registrar) {
         randomStateGenerator: c.resolve(diagnosticsTokens.IRandomStateGenerator),
         contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
         prototypeGateChecker: c.resolve(diagnosticsTokens.IPrototypeGateChecker),
+        gateConstraintExtractor: c.resolve(
+          diagnosticsTokens.IGateConstraintExtractor
+        ),
+        gateImplicationEvaluator: c.resolve(
+          diagnosticsTokens.IGateImplicationEvaluator
+        ),
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
       })
@@ -90,6 +160,9 @@ export function registerPrototypeOverlapServices(registrar) {
         overlapClassifier: c.resolve(diagnosticsTokens.IOverlapClassifier),
         overlapRecommendationBuilder: c.resolve(
           diagnosticsTokens.IOverlapRecommendationBuilder
+        ),
+        gateBandingSuggestionBuilder: c.resolve(
+          diagnosticsTokens.IGateBandingSuggestionBuilder
         ),
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
