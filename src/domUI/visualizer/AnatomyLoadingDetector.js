@@ -12,7 +12,7 @@ import { ENTITY_CREATED_ID } from '../../constants/eventIds.js';
  * @readonly
  */
 const DEFAULT_CONFIG = {
-  timeout: 10000, // 10 seconds max wait - matches VisualizerStateController usage
+  timeout: 30000, // 30 seconds max wait - allows for mod loading + anatomy + description
   retryInterval: 100, // Start with 100ms
   maxRetries: 20,
   useExponentialBackoff: true,

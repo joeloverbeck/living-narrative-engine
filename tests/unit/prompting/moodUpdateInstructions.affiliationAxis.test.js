@@ -127,9 +127,9 @@ describe('mood component schema alignment', () => {
     expect(required).toContain('affiliation');
   });
 
-  test('mood component should define 9 axes total', () => {
+  test('mood component should define 10 axes total', () => {
     const required = moodComponentSchema.dataSchema.required;
-    expect(required.length).toBe(9);
+    expect(required.length).toBe(10);
     expect(required).toEqual(
       expect.arrayContaining([
         'valence',
@@ -141,6 +141,7 @@ describe('mood component schema alignment', () => {
         'self_evaluation',
         'affiliation',
         'inhibitory_control',
+        'uncertainty',
       ])
     );
   });

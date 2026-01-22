@@ -19,8 +19,8 @@ import {
 
 describe('moodAffectConstants', () => {
   describe('MOOD_AXES', () => {
-    it('contains exactly 9 mood axes', () => {
-      expect(MOOD_AXES).toHaveLength(9);
+    it('contains exactly 10 mood axes', () => {
+      expect(MOOD_AXES).toHaveLength(10);
     });
 
     it('contains all expected mood axes in the correct order', () => {
@@ -34,6 +34,7 @@ describe('moodAffectConstants', () => {
         'self_evaluation',
         'affiliation',
         'inhibitory_control',
+        'uncertainty',
       ]);
     });
 
@@ -132,7 +133,7 @@ describe('moodAffectConstants', () => {
     });
 
     it('contains all mood axes', () => {
-      expect(MOOD_AXES_SET.size).toBe(9);
+      expect(MOOD_AXES_SET.size).toBe(10);
       for (const axis of MOOD_AXES) {
         expect(MOOD_AXES_SET.has(axis)).toBe(true);
       }
@@ -175,6 +176,7 @@ describe('moodAffectConstants', () => {
       expect(isMoodAxis('self_evaluation')).toBe(true);
       expect(isMoodAxis('affiliation')).toBe(true);
       expect(isMoodAxis('inhibitory_control')).toBe(true);
+      expect(isMoodAxis('uncertainty')).toBe(true);
     });
 
     it('returns false for invalid mood axes', () => {

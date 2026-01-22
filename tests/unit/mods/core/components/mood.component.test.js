@@ -1,6 +1,6 @@
 /**
  * @file Tests for the core:mood component schema validation
- * @description Validates the 9-axis emotional/regulatory state model with integer ranges [-100, 100]
+ * @description Validates the 10-axis emotional/regulatory state model with integer ranges [-100, 100]
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -31,6 +31,7 @@ describe('core:mood component schema', () => {
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
+        uncertainty: 0,
       });
       expect(result.isValid).toBe(true);
     });
@@ -46,6 +47,7 @@ describe('core:mood component schema', () => {
         self_evaluation: -100,
         affiliation: -100,
         inhibitory_control: -100,
+        uncertainty: -100,
       });
       expect(result.isValid).toBe(true);
     });
@@ -61,6 +63,7 @@ describe('core:mood component schema', () => {
         self_evaluation: 100,
         affiliation: 100,
         inhibitory_control: 100,
+        uncertainty: 100,
       });
       expect(result.isValid).toBe(true);
     });
@@ -76,6 +79,7 @@ describe('core:mood component schema', () => {
         self_evaluation: 90,
         affiliation: -45,
         inhibitory_control: 0,
+        uncertainty: 40,
       });
       expect(result.isValid).toBe(true);
     });
@@ -92,6 +96,7 @@ describe('core:mood component schema', () => {
       'self_evaluation',
       'affiliation',
       'inhibitory_control',
+      'uncertainty',
     ];
 
     requiredFields.forEach((field) => {
@@ -106,6 +111,7 @@ describe('core:mood component schema', () => {
           self_evaluation: 0,
           affiliation: 0,
           inhibitory_control: 0,
+          uncertainty: 0,
         };
         delete data[field];
         const result = validate(data);
@@ -125,6 +131,7 @@ describe('core:mood component schema', () => {
       'self_evaluation',
       'affiliation',
       'inhibitory_control',
+      'uncertainty',
     ];
 
     axes.forEach((axis) => {
@@ -139,6 +146,7 @@ describe('core:mood component schema', () => {
           self_evaluation: 0,
           affiliation: 0,
           inhibitory_control: 0,
+          uncertainty: 0,
         };
         data[axis] = -101;
         const result = validate(data);
@@ -156,6 +164,7 @@ describe('core:mood component schema', () => {
           self_evaluation: 0,
           affiliation: 0,
           inhibitory_control: 0,
+          uncertainty: 0,
         };
         data[axis] = 101;
         const result = validate(data);
@@ -176,6 +185,7 @@ describe('core:mood component schema', () => {
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
+        uncertainty: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -191,6 +201,7 @@ describe('core:mood component schema', () => {
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
+        uncertainty: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -206,6 +217,7 @@ describe('core:mood component schema', () => {
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
+        uncertainty: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -223,6 +235,7 @@ describe('core:mood component schema', () => {
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
+        uncertainty: 0,
         unknown_property: 42,
       });
       expect(result.isValid).toBe(false);
@@ -246,8 +259,107 @@ describe('core:mood component schema', () => {
         self_evaluation: -100,
         affiliation: 100,
         inhibitory_control: -100,
+        uncertainty: 100,
       });
       expect(result.isValid).toBe(true);
+    });
+  });
+
+  describe('uncertainty axis specific tests', () => {
+    it('should accept uncertainty at 0 (neutral cognitive state)', () => {
+      const result = validate({
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: 0,
+        inhibitory_control: 0,
+        uncertainty: 0,
+      });
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept high uncertainty (+100 = highly uncertain / cannot integrate)', () => {
+      const result = validate({
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: 0,
+        inhibitory_control: 0,
+        uncertainty: 100,
+      });
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept low uncertainty (-100 = highly certain / coherent model)', () => {
+      const result = validate({
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: 0,
+        inhibitory_control: 0,
+        uncertainty: -100,
+      });
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should reject uncertainty value of -101', () => {
+      const result = validate({
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: 0,
+        inhibitory_control: 0,
+        uncertainty: -101,
+      });
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should reject uncertainty value of 101', () => {
+      const result = validate({
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: 0,
+        inhibitory_control: 0,
+        uncertainty: 101,
+      });
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should reject floating point uncertainty values', () => {
+      const result = validate({
+        valence: 0,
+        arousal: 0,
+        agency_control: 0,
+        threat: 0,
+        engagement: 0,
+        future_expectancy: 0,
+        self_evaluation: 0,
+        affiliation: 0,
+        inhibitory_control: 0,
+        uncertainty: 50.5,
+      });
+      expect(result.isValid).toBe(false);
     });
   });
 });

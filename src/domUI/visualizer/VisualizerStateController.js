@@ -148,7 +148,7 @@ class VisualizerStateController {
             await this.#anatomyLoadingDetector.waitForEntityWithAnatomy(
               entityId,
               {
-                timeout: 10000, // 10 second timeout
+                timeout: 30000, // 30 second timeout for mod loading + anatomy generation
                 retryInterval: 100,
                 useExponentialBackoff: true,
               }

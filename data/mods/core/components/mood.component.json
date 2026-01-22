@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:mood",
-  "description": "Tracks the 9 mood axes that define a character's current affective/regulatory state. Each axis ranges from -100 to +100.",
+  "description": "Tracks the 10 mood axes that define a character's current affective/regulatory state. Each axis ranges from -100 to +100.",
   "dataSchema": {
     "type": "object",
     "properties": {
@@ -67,6 +67,13 @@
         "maximum": 100,
         "default": 0,
         "description": "Momentary restraint/response inhibition. +100=tightly restrained/white-knuckling; 0=baseline; -100=disinhibited/impulsive."
+      },
+      "uncertainty": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Model fit / cognitive clarity. +100 = highly uncertain / cannot integrate; -100 = highly certain / coherent model."
       }
     },
     "required": [
@@ -78,7 +85,8 @@
       "future_expectancy",
       "self_evaluation",
       "affiliation",
-      "inhibitory_control"
+      "inhibitory_control",
+      "uncertainty"
     ],
     "additionalProperties": false
   }
