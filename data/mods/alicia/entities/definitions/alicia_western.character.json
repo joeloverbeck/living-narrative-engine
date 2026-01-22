@@ -513,7 +513,8 @@
             "future_expectancy": -96,
             "self_evaluation": -24,
             "affiliation": -80,
-            "inhibitory_control": 70
+            "inhibitory_control": 70,
+            "uncertainty": 65
         },
         "core:sexual_state": {
             "sex_excitation": 4,

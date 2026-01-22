@@ -144,8 +144,8 @@ describe('Axis Registry Audit (B1)', () => {
       expect(AFFECT_TRAITS).not.toContain('inhibitory_control');
     });
 
-    it('should have exactly 9 mood axes', () => {
-      expect(MOOD_AXES).toHaveLength(9);
+    it('should have exactly 10 mood axes', () => {
+      expect(MOOD_AXES).toHaveLength(10);
       expect(MOOD_AXES).toContain('valence');
       expect(MOOD_AXES).toContain('arousal');
       expect(MOOD_AXES).toContain('agency_control');
@@ -155,6 +155,7 @@ describe('Axis Registry Audit (B1)', () => {
       expect(MOOD_AXES).toContain('self_evaluation');
       expect(MOOD_AXES).toContain('affiliation');
       expect(MOOD_AXES).toContain('inhibitory_control');
+      expect(MOOD_AXES).toContain('uncertainty');
     });
 
     it('should have exactly 4 affect traits', () => {

@@ -28,6 +28,7 @@ const MOOD_AXES_KEYS = [
   'self_evaluation',
   'affiliation',
   'inhibitory_control',
+  'uncertainty',
 ];
 
 const SEXUAL_DESIRE_DIR = path.resolve(

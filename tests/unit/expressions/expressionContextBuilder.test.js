@@ -110,6 +110,7 @@ describe('ExpressionContextBuilder', () => {
           self_evaluation: 0,
           affiliation: 0,
           inhibitory_control: 0,
+          uncertainty: 0,
         },
       })
     );
@@ -166,6 +167,7 @@ describe('ExpressionContextBuilder', () => {
       self_evaluation: 60,
       affiliation: 35,
       inhibitory_control: 20,
+      uncertainty: 15,
     };
 
     const result = builder.buildContext(
@@ -230,6 +232,7 @@ describe('ExpressionContextBuilder', () => {
       self_evaluation: 0,
       affiliation: 0,
       inhibitory_control: 0,
+      uncertainty: 0,
     });
   });
 
@@ -250,6 +253,7 @@ describe('ExpressionContextBuilder', () => {
         self_evaluation: 6,
         affiliation: 7,
         inhibitory_control: 8,
+        uncertainty: 9,
       },
     };
 
@@ -332,6 +336,7 @@ describe('ExpressionContextBuilder', () => {
       self_evaluation: 0,
       affiliation: 0,
       inhibitory_control: 0,
+      uncertainty: 0,
     });
   });
 
@@ -452,6 +457,7 @@ describe('ExpressionContextBuilder', () => {
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
+        uncertainty: 0,
       },
     };
 
@@ -482,6 +488,7 @@ describe('ExpressionContextBuilder', () => {
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
+        uncertainty: 0,
         extra_axis: 5,
       },
     };
@@ -497,7 +504,7 @@ describe('ExpressionContextBuilder', () => {
   });
 
   // ============================================
-  // Mood Axes Tests (all 9 canonical axes)
+  // Mood Axes Tests (all 10 canonical axes)
   // ============================================
 
   describe('affiliation axis support', () => {
@@ -536,6 +543,7 @@ describe('ExpressionContextBuilder', () => {
           self_evaluation: 6,
           affiliation: 15,
           inhibitory_control: 9,
+          uncertainty: 10,
         },
       };
 

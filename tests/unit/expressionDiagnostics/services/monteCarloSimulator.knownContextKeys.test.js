@@ -213,9 +213,10 @@ describe('MonteCarloSimulator - Known Context Keys Validation', () => {
       expect(result.unseededVarWarnings).toEqual([]);
     });
 
-    it('should verify MOOD_AXES has 9 entries including inhibitory_control', () => {
-      expect(MOOD_AXES).toHaveLength(9);
+    it('should verify MOOD_AXES has 10 entries including inhibitory_control and uncertainty', () => {
+      expect(MOOD_AXES).toHaveLength(10);
       expect(MOOD_AXES).toContain('inhibitory_control');
+      expect(MOOD_AXES).toContain('uncertainty');
     });
 
     it('should verify AFFECT_TRAITS has 4 entries including self_control', () => {

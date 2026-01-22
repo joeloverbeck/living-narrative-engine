@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const REPO_ROOT = process.cwd();
 const WAIT_INTERVAL_MS = 10; // Reduced from 25ms for faster polling
-const DEFAULT_TIMEOUT_MS = 10000; // Reduced from 120s - 10s is plenty for E2E tests
+const DEFAULT_TIMEOUT_MS = 30000; // 30s - allows for mod loading + anatomy + description generation
 
 /**
  * Waits until the provided condition evaluates to true or the timeout elapses.
@@ -78,6 +78,7 @@ export function createFileFetchMock(explicitMods = null) {
         // for anatomy visualizer tests. This makes tests independent of
         // whatever game.json may contain, preventing test failures when
         // game.json is modified by other tests or users.
+        // NOTE: alicia mod requires many dependencies for character entities to load
         const defaultTestMods = [
           'core',
           'anatomy',
@@ -86,7 +87,22 @@ export function createFileFetchMock(explicitMods = null) {
           'outer-clothing',
           'underwear',
           'items',
-          'alicia', // Required for test entities
+          // alicia dependencies (required for character entity loading)
+          'furniture',
+          'accessories',
+          'descriptors',
+          'inventory',
+          'movement',
+          'music',
+          'sitting',
+          'skills',
+          'bending',
+          'containers-core',
+          'items-core',
+          'locations',
+          'lying',
+          'reading',
+          'alicia', // Required for test entities - must come after its dependencies
         ];
 
         const testMods = (explicitMods || defaultTestMods).filter((modId) =>
