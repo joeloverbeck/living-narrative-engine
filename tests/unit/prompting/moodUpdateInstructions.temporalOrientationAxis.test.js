@@ -123,9 +123,9 @@ describe('mood component schema alignment for temporal_orientation', () => {
     expect(required).toContain('temporal_orientation');
   });
 
-  test('mood component should define 11 axes total', () => {
+  test('mood component should define 14 axes total', () => {
     const required = moodComponentSchema.dataSchema.required;
-    expect(required.length).toBe(11);
+    expect(required.length).toBe(14);
     expect(required).toEqual(
       expect.arrayContaining([
         'valence',
@@ -139,6 +139,9 @@ describe('mood component schema alignment for temporal_orientation', () => {
         'affiliation',
         'inhibitory_control',
         'uncertainty',
+        'contamination_salience',
+        'rumination',
+        'evaluation_pressure',
       ])
     );
   });

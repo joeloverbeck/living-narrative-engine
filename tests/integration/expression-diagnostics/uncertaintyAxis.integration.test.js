@@ -28,7 +28,7 @@ describe('Uncertainty Axis Integration', () => {
   describe('MOOD_AXES Constant', () => {
     it('should include uncertainty as the 11th axis', () => {
       expect(MOOD_AXES).toContain('uncertainty');
-      expect(MOOD_AXES).toHaveLength(11);
+      expect(MOOD_AXES).toHaveLength(14);
       expect(MOOD_AXES[10]).toBe('uncertainty');
     });
   });
@@ -141,12 +141,12 @@ describe('Uncertainty Axis Integration', () => {
       expect(context.moodAxes.uncertainty).toBeLessThanOrEqual(1);
     });
 
-    it('should maintain 11-axis count through pipeline', () => {
+    it('should maintain 14-axis count through pipeline', () => {
       const state = randomStateGenerator.generate('uniform', 'static');
       const normalizedMood = normalizeMoodAxes(state.current.mood);
 
-      expect(Object.keys(state.current.mood)).toHaveLength(11);
-      expect(Object.keys(normalizedMood)).toHaveLength(11);
+      expect(Object.keys(state.current.mood)).toHaveLength(14);
+      expect(Object.keys(normalizedMood)).toHaveLength(14);
     });
   });
 });

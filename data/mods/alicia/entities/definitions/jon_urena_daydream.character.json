@@ -66,7 +66,19 @@
             "affiliation": 35,
             "inhibitory_control": 45,
             "uncertainty": 20,
-            "temporal_orientation": 35
+            "temporal_orientation": 35,
+            "contamination_salience": -30,
+            "rumination": -50,
+            "evaluation_pressure": 30
+        },
+        "core:affect_traits": {
+            "affective_empathy": 30,
+            "cognitive_empathy": 65,
+            "harm_aversion": 40,
+            "self_control": 75,
+            "disgust_sensitivity": 70,
+            "ruminative_tendency": 65,
+            "evaluation_sensitivity": 25
         },
         "core:sexual_state": {
             "sex_excitation": 15,

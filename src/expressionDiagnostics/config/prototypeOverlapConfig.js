@@ -85,6 +85,7 @@
  * @property {boolean} enableAxisGapDetection - Enable axis gap detection in pipeline
  * @property {number} pcaResidualVarianceThreshold - PCA residual variance threshold
  * @property {number} pcaKaiserThreshold - Kaiser criterion eigenvalue threshold
+ * @property {'broken-stick'|'kaiser'} pcaComponentSignificanceMethod - Method for determining significant PCA components
  * @property {number} hubMinDegree - Minimum overlap connections for hub detection
  * @property {number} hubMaxEdgeWeight - Maximum edge weight (exclude near-duplicates)
  * @property {number} hubMinNeighborhoodDiversity - Minimum clusters in neighborhood
@@ -589,8 +590,16 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
 
   /**
    * Eigenvalue threshold for Kaiser significance check.
+   * Only used when pcaComponentSignificanceMethod is 'kaiser'.
    */
   pcaKaiserThreshold: 1.0,
+
+  /**
+   * Method for determining significant PCA components.
+   * - 'broken-stick': Uses broken-stick distribution (recommended for standardized data)
+   * - 'kaiser': Uses eigenvalue >= 1.0 threshold (traditional but problematic with normalized data)
+   */
+  pcaComponentSignificanceMethod: 'broken-stick',
 
   /**
    * Minimum overlap connections for hub prototype detection.

@@ -38,25 +38,45 @@ describe('MultiAxisConflictDetector', () => {
   });
 
   describe('detect - empty/invalid inputs', () => {
-    it('should return empty array for null', () => {
-      expect(detector.detect(null)).toEqual([]);
+    it('should return empty result object for null', () => {
+      const result = detector.detect(null);
+      expect(result).toEqual({
+        conflicts: [],
+        highAxisLoadings: [],
+        signTensions: [],
+      });
     });
 
-    it('should return empty array for undefined', () => {
-      expect(detector.detect(undefined)).toEqual([]);
+    it('should return empty result object for undefined', () => {
+      const result = detector.detect(undefined);
+      expect(result).toEqual({
+        conflicts: [],
+        highAxisLoadings: [],
+        signTensions: [],
+      });
     });
 
-    it('should return empty array for empty array', () => {
-      expect(detector.detect([])).toEqual([]);
+    it('should return empty result object for empty array', () => {
+      const result = detector.detect([]);
+      expect(result).toEqual({
+        conflicts: [],
+        highAxisLoadings: [],
+        signTensions: [],
+      });
     });
 
-    it('should return empty array for single prototype', () => {
-      expect(detector.detect([{ id: 'a', weights: { x: 1 } }])).toEqual([]);
+    it('should return empty result object for single prototype', () => {
+      const result = detector.detect([{ id: 'a', weights: { x: 1 } }]);
+      expect(result).toEqual({
+        conflicts: [],
+        highAxisLoadings: [],
+        signTensions: [],
+      });
     });
   });
 
   describe('detect - combined results', () => {
-    it('should combine high axis loadings and sign tensions', () => {
+    it('should return structured result with separate arrays', () => {
       // Create prototypes where one has high axis loading, another has sign tension
       const prototypes = [
         { id: 'normal1', weights: { a: 1 } },
@@ -67,13 +87,26 @@ describe('MultiAxisConflictDetector', () => {
 
       const results = detector.detect(prototypes);
 
-      expect(results.length).toBeGreaterThanOrEqual(0);
-      // Results should be deduplicated
-      const ids = results.map((r) => r.prototypeId);
-      expect(new Set(ids).size).toBe(ids.length);
+      // Verify structure
+      expect(results).toHaveProperty('conflicts');
+      expect(results).toHaveProperty('highAxisLoadings');
+      expect(results).toHaveProperty('signTensions');
+      expect(Array.isArray(results.conflicts)).toBe(true);
+      expect(Array.isArray(results.highAxisLoadings)).toBe(true);
+      expect(Array.isArray(results.signTensions)).toBe(true);
+
+      // Check for deduplication within each array
+      const conflictIds = results.conflicts.map((r) => r.prototypeId);
+      expect(new Set(conflictIds).size).toBe(conflictIds.length);
+
+      const highAxisIds = results.highAxisLoadings.map((r) => r.prototypeId);
+      expect(new Set(highAxisIds).size).toBe(highAxisIds.length);
+
+      const signTensionIds = results.signTensions.map((r) => r.prototypeId);
+      expect(new Set(signTensionIds).size).toBe(signTensionIds.length);
     });
 
-    it('should merge reasons when prototype flagged by both detectors', () => {
+    it('should categorize detections into appropriate arrays', () => {
       // Create prototype that triggers both conditions
       const prototypes = Array.from({ length: 10 }, (_, i) => ({
         id: `proto${i}`,
@@ -88,11 +121,20 @@ describe('MultiAxisConflictDetector', () => {
 
       const results = detector.detect(prototypes);
 
-      // If proto0 is flagged by both, it should have additionalFlagReason
-      const proto0 = results.find((r) => r.prototypeId === 'proto0');
-      if (proto0 && results.length > 0) {
-        expect(proto0.flagReason).toBeDefined();
-      }
+      // Verify the structured result contains proper arrays
+      expect(results).toHaveProperty('conflicts');
+      expect(results).toHaveProperty('highAxisLoadings');
+      expect(results).toHaveProperty('signTensions');
+
+      // All flagged items should have flagReason property
+      const allFlagged = [
+        ...results.conflicts,
+        ...results.highAxisLoadings,
+        ...results.signTensions,
+      ];
+      allFlagged.forEach((item) => {
+        expect(item.flagReason).toBeDefined();
+      });
     });
   });
 

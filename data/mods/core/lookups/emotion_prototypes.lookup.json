@@ -108,6 +108,36 @@
             "type": "number",
             "minimum": -1,
             "maximum": 1
+          },
+          "contamination_salience": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "rumination": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "evaluation_pressure": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "disgust_sensitivity": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "ruminative_tendency": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "evaluation_sensitivity": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
           }
         },
         "additionalProperties": false
@@ -567,6 +597,8 @@
         "arousal": -0.3,
         "engagement": 0.6,
         "temporal_orientation": -0.6,
+        "rumination": 0.6,
+        "ruminative_tendency": 0.5,
         "agency_control": -0.4
       },
       "gates": [
@@ -1131,7 +1163,8 @@
         "temporal_orientation": -0.6,
         "self_evaluation": -0.2,
         "engagement": 0.55,
-        "threat": 0.1,
+        "rumination": 0.8,
+        "ruminative_tendency": 0.5,
         "inhibitory_control": 0.3,
         "self_control": 0.4
       },
@@ -1140,7 +1173,8 @@
         "agency_control <= 0.10",
         "engagement >= 0.15",
         "arousal <= 0.60",
-        "future_expectancy <= 0.20"
+        "future_expectancy <= 0.20",
+        "rumination >= 0.20"
       ]
     },
     "contempt": {
@@ -1163,13 +1197,15 @@
         "valence": -0.9,
         "arousal": 0.4,
         "engagement": -0.3,
-        "threat": 0.2,
-        "affiliation": -0.6,
+        "contamination_salience": 1.0,
+        "disgust_sensitivity": 0.5,
         "inhibitory_control": -0.2,
         "self_control": -0.3
       },
       "gates": [
-        "valence <= -0.25"
+        "valence <= -0.25",
+        "contamination_salience >= 0.20",
+        "disgust_sensitivity >= 0.10"
       ]
     },
     "cynicism": {
@@ -1242,7 +1278,8 @@
         "self_evaluation": -1.0,
         "agency_control": -0.5,
         "valence": -0.4,
-        "threat": 0.2,
+        "evaluation_pressure": 0.3,
+        "evaluation_sensitivity": 0.4,
         "self_control": 0.3,
         "inhibitory_control": 0.0
       },
@@ -1254,21 +1291,24 @@
       "weights": {
         "self_evaluation": -0.7,
         "arousal": 0.5,
-        "threat": 0.6,
         "valence": -0.3,
+        "evaluation_pressure": 0.8,
+        "evaluation_sensitivity": 0.5,
         "self_control": 0.3,
         "inhibitory_control": 0.0
       },
       "gates": [
         "self_evaluation <= -0.10",
-        "threat >= 0.20"
+        "evaluation_pressure >= 0.20",
+        "evaluation_sensitivity >= 0.10"
       ]
     },
     "awkwardness": {
       "weights": {
         "valence": -0.25,
         "arousal": 0.35,
-        "threat": 0.55,
+        "evaluation_pressure": 0.5,
+        "evaluation_sensitivity": 0.5,
         "agency_control": -0.25,
         "engagement": 0.10,
         "self_evaluation": -0.10,
@@ -1276,12 +1316,13 @@
         "inhibitory_control": 0.0
       },
       "gates": [
-        "threat >= 0.20",
+        "evaluation_pressure >= 0.20",
         "arousal >= 0.05",
         "arousal <= 0.60",
         "self_evaluation >= -0.35",
         "valence >= -0.50",
-        "valence <= 0.10"
+        "valence <= 0.10",
+        "evaluation_sensitivity >= 0.10"
       ]
     },
     "guilt": {
@@ -1291,6 +1332,8 @@
         "agency_control": 0.2,
         "engagement": 0.2,
         "temporal_orientation": -0.3,
+        "rumination": 0.5,
+        "ruminative_tendency": 0.5,
         "affective_empathy": 0.45,
         "harm_aversion": 0.55,
         "cognitive_empathy": 0.4,
@@ -1312,7 +1355,8 @@
         "engagement": 0.35,
         "temporal_orientation": -0.5,
         "affiliation": 0.25,
-        "threat": 0.1,
+        "rumination": 0.8,
+        "ruminative_tendency": 0.5,
         "affective_empathy": 0.55,
         "cognitive_empathy": 0.35,
         "harm_aversion": 0.7,
@@ -1322,9 +1366,7 @@
       "gates": [
         "harm_aversion >= 0.20",
         "affective_empathy >= 0.15",
-        "cognitive_empathy >= 0.10",
-        "self_evaluation <= 0.55",
-        "valence <= 0.55"
+        "cognitive_empathy >= 0.10"
       ]
     },
     "regret": {
@@ -1332,6 +1374,8 @@
         "valence": -0.7,
         "self_evaluation": -0.8,
         "temporal_orientation": -0.7,
+        "rumination": 0.8,
+        "ruminative_tendency": 0.5,
         "arousal": 0.2,
         "self_control": 0.3,
         "inhibitory_control": 0.0
@@ -1345,15 +1389,17 @@
       "weights": {
         "self_evaluation": -1.0,
         "arousal": 0.7,
-        "threat": 0.6,
-        "agency_control": -0.4,
         "valence": -0.5,
+        "agency_control": -0.4,
+        "evaluation_pressure": 1.0,
+        "evaluation_sensitivity": 0.5,
         "self_control": 0.4,
         "inhibitory_control": 0.0
       },
       "gates": [
         "self_evaluation <= -0.25",
-        "threat >= 0.30"
+        "evaluation_pressure >= 0.30",
+        "evaluation_sensitivity >= 0.10"
       ]
     },
     "submission": {

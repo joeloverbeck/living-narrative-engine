@@ -2,10 +2,7 @@
 // --- FILE START ---
 import { BaseOpenRouterStrategy } from './base/baseOpenRouterStrategy.js';
 import { LLMStrategyError } from '../errors/LLMStrategyError.js';
-import {
-  OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA, // Still needed for the parameters schema
-  OPENROUTER_DEFAULT_TOOL_DESCRIPTION, // Can still be used for description
-} from '../constants/llmConstants.js';
+import { OPENROUTER_DEFAULT_TOOL_DESCRIPTION } from '../constants/llmConstants.js';
 import { getLlmId } from '../utils/llmUtils.js';
 import { DefaultToolSchemaHandler } from './toolSchemaHandlers/defaultToolSchemaHandler.js';
 
@@ -207,27 +204,23 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
       throw new LLMStrategyError(errorMsg, llmId);
     }
 
-    // Determine tool schema: request option overrides default
+    // Determine tool schema: must be provided in request options
     let toolParametersSchema;
     if (Object.prototype.hasOwnProperty.call(requestOptions, 'toolSchema')) {
       // Use request-specific schema (even if null or undefined)
       toolParametersSchema = requestOptions.toolSchema;
       this.logger.debug(
-        `${this.constructor.name} (${llmId}): Using custom tool schema from request options.`,
+        `${this.constructor.name} (${llmId}): Using tool schema from request options.`,
         {
           llmId,
           schemaProperties: Object.keys(toolParametersSchema?.properties || {}),
         }
       );
     } else {
-      // Fall back to default game AI schema
-      toolParametersSchema =
-        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA;
-      this.logger.debug(
-        `${this.constructor.name} (${llmId}): No custom tool schema provided, using default game AI schema.`,
-        { llmId }
-      );
+      // Tool schema is required - no fallback available
+      const errorMsg = `${this.constructor.name} (${llmId}): Missing 'toolSchema' in request options. A tool schema must be explicitly provided.`;
+      this.logger.error(errorMsg, { llmId });
+      throw new LLMStrategyError(errorMsg, llmId);
     }
 
     // Determine tool description: request option overrides default

@@ -620,7 +620,23 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
         isNearLimit: true,
       }));
 
-    const response = await harness.adapter.getAIDecision('Prompt near limit');
+    // v5 requires explicit toolSchema in request options
+    const requestOptions = {
+      toolSchema: {
+        type: 'object',
+        properties: {
+          action: { type: 'string' },
+          target: { type: 'string' },
+        },
+        required: ['action', 'target'],
+      },
+    };
+
+    const response = await harness.adapter.getAIDecision(
+      'Prompt near limit',
+      undefined,
+      requestOptions
+    );
     expect(response).toContain('integration-default');
     expect(budgetSpy).toHaveBeenCalled();
     expect(validateSpy).toHaveBeenCalled();
@@ -711,8 +727,22 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
 
     await harness.adapter.init({ llmConfigLoader: harness.loader });
 
+    // v5 requires explicit toolSchema in request options
+    const requestOptions = {
+      toolSchema: {
+        type: 'object',
+        properties: {
+          action: { type: 'string' },
+          target: { type: 'string' },
+        },
+        required: ['action', 'target'],
+      },
+    };
+
     const response = await harness.adapter.getAIDecision(
-      'Client-side prompt logging scenario'
+      'Client-side prompt logging scenario',
+      undefined,
+      requestOptions
     );
 
     expect(response).toContain('integration-default');

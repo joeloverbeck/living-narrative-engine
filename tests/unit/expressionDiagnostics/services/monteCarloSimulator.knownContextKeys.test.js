@@ -173,8 +173,8 @@ describe('MonteCarloSimulator - Known Context Keys Validation', () => {
   });
 
   describe('all axes and traits completeness', () => {
-    it('should accept all 11 mood axes without warnings', async () => {
-      // Build logic that references all 11 mood axes
+    it('should accept all 14 mood axes without warnings', async () => {
+      // Build logic that references all 14 mood axes
       const allAxesLogic = MOOD_AXES.map((axis) => ({
         '>=': [{ var: `moodAxes.${axis}` }, -100],
       }));
@@ -193,8 +193,8 @@ describe('MonteCarloSimulator - Known Context Keys Validation', () => {
       expect(result.unseededVarWarnings).toEqual([]);
     });
 
-    it('should accept all 4 affect traits without warnings', async () => {
-      // Build logic that references all 4 affect traits
+    it('should accept all 7 affect traits without warnings', async () => {
+      // Build logic that references all 7 affect traits
       const allTraitsLogic = AFFECT_TRAITS.map((trait) => ({
         '>=': [{ var: `affectTraits.${trait}` }, 0],
       }));
@@ -213,16 +213,22 @@ describe('MonteCarloSimulator - Known Context Keys Validation', () => {
       expect(result.unseededVarWarnings).toEqual([]);
     });
 
-    it('should verify MOOD_AXES has 11 entries including temporal_orientation', () => {
-      expect(MOOD_AXES).toHaveLength(11);
+    it('should verify MOOD_AXES has 14 entries including new axes', () => {
+      expect(MOOD_AXES).toHaveLength(14);
       expect(MOOD_AXES).toContain('temporal_orientation');
       expect(MOOD_AXES).toContain('inhibitory_control');
       expect(MOOD_AXES).toContain('uncertainty');
+      expect(MOOD_AXES).toContain('contamination_salience');
+      expect(MOOD_AXES).toContain('rumination');
+      expect(MOOD_AXES).toContain('evaluation_pressure');
     });
 
-    it('should verify AFFECT_TRAITS has 4 entries including self_control', () => {
-      expect(AFFECT_TRAITS).toHaveLength(4);
+    it('should verify AFFECT_TRAITS has 7 entries including self_control', () => {
+      expect(AFFECT_TRAITS).toHaveLength(7);
       expect(AFFECT_TRAITS).toContain('self_control');
+      expect(AFFECT_TRAITS).toContain('disgust_sensitivity');
+      expect(AFFECT_TRAITS).toContain('ruminative_tendency');
+      expect(AFFECT_TRAITS).toContain('evaluation_sensitivity');
     });
   });
 

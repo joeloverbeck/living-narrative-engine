@@ -2,9 +2,15 @@
 // --- FILE START ---
 import { BaseOpenRouterStrategy } from './base/baseOpenRouterStrategy.js';
 import { LLMStrategyError } from '../errors/LLMStrategyError.js';
-import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../constants/llmConstants.js'; // Still potentially used for tool_calls fallback logic's expected name
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { getLlmId } from '../utils/llmUtils.js';
+
+/**
+ * Legacy tool name used for tool_calls fallback detection.
+ * This is a rare edge case where json_schema mode didn't populate message.content.
+ * @const {string}
+ */
+const LEGACY_TOOL_NAME_FOR_FALLBACK = 'game_ai_action_speech_output';
 
 /**
  * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
@@ -177,10 +183,9 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
         { llmId }
       );
       const toolCall = message.tool_calls[0];
-      // Using the constant name here, as the json_schema mode doesn't have a 'toolName' in its dependencyInjection.
+      // Using a legacy constant name here, as the json_schema mode doesn't have a 'toolName' in its config.
       // This fallback assumes a specific tool structure if 'json_schema' mode fails to populate 'message.content'.
-      const expectedToolNameForFallback =
-        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name;
+      const expectedToolNameForFallback = LEGACY_TOOL_NAME_FOR_FALLBACK;
 
       if (
         toolCall?.type === 'function' &&

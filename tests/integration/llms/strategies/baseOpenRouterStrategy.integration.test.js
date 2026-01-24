@@ -155,10 +155,20 @@ describe('Integration: BaseOpenRouterStrategy core behavior', () => {
     const httpClient = new RecordingHttpClient();
     const strategy = new BaseOpenRouterStrategy({ httpClient, logger });
 
-    const schema = strategy.buildToolSchema([{}], {
+    // v5 requires explicit toolSchema in request options
+    const requestOptions = {
+      toolSchema: {
+        type: 'object',
+        properties: {
+          action: { type: 'string' },
+        },
+        required: ['action'],
+      },
       toolName: 'custom_tool',
       toolDescription: 'Used in integration tests',
-    });
+    };
+
+    const schema = strategy.buildToolSchema([{}], requestOptions);
 
     expect(schema).toEqual({
       type: 'function',

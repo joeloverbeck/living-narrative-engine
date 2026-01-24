@@ -87,9 +87,23 @@ describe('LLMStrategyFactory configuration validation integration', () => {
     expect(strategy).toBeInstanceOf(OpenRouterJsonSchemaStrategy);
     expect(strategy.requiresCustomToolSchema()).toBe(true);
 
-    const toolSchema = strategy.buildToolSchema([
-      { name: 'game_ai_action_speech' },
-    ]);
+    // v5 requires explicit toolSchema in request options - use buildToolSchema with custom schema
+    const requestOptions = {
+      toolSchema: {
+        type: 'object',
+        properties: {
+          action: { type: 'string' },
+        },
+        required: ['action'],
+      },
+      toolName: 'game_ai_action_speech',
+      toolDescription: 'Test tool description',
+    };
+
+    const toolSchema = strategy.buildToolSchema(
+      [{ name: 'game_ai_action_speech' }],
+      requestOptions
+    );
     expect(toolSchema).toBeTruthy();
     expect(toolSchema.function?.name).toBe('game_ai_action_speech');
   });

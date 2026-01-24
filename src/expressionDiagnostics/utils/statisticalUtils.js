@@ -71,3 +71,104 @@ export function computePercentile(sortedValues, percentile) {
 
   return sortedValues[clampedIndex];
 }
+
+/**
+ * Compute the expected variance proportion for the k-th component under the broken-stick model.
+ *
+ * The broken-stick model provides a null hypothesis for eigenvalue significance in PCA.
+ * It assumes random partitioning of total variance across components.
+ *
+ * Formula: Expected(k) = (1/p) * Σ(j=k to p) [1/j]
+ *
+ * @param {number} k - Component index (1-based, must be >= 1).
+ * @param {number} p - Total number of components (must be >= 1).
+ * @returns {number} Expected variance proportion for component k, or 0 if inputs invalid.
+ */
+export function computeBrokenStickExpected(k, p) {
+  if (
+    typeof k !== 'number' ||
+    typeof p !== 'number' ||
+    !Number.isFinite(k) ||
+    !Number.isFinite(p) ||
+    k < 1 ||
+    p < 1 ||
+    k > p
+  ) {
+    return 0;
+  }
+
+  let sum = 0;
+  for (let j = k; j <= p; j += 1) {
+    sum += 1 / j;
+  }
+
+  return sum / p;
+}
+
+/**
+ * Compute the full broken-stick distribution for p components.
+ *
+ * Returns an array of expected variance proportions for each component.
+ * The distribution is monotonically decreasing and sums to 1.0.
+ *
+ * @param {number} p - Total number of components (must be >= 1).
+ * @returns {number[]} Array of expected variance proportions for components 1..p, or empty array if invalid.
+ */
+export function computeBrokenStickDistribution(p) {
+  if (typeof p !== 'number' || !Number.isFinite(p) || p < 1) {
+    return [];
+  }
+
+  const componentCount = Math.floor(p);
+  const distribution = new Array(componentCount);
+
+  for (let k = 1; k <= componentCount; k += 1) {
+    distribution[k - 1] = computeBrokenStickExpected(k, componentCount);
+  }
+
+  return distribution;
+}
+
+/**
+ * Count the number of significant components using the broken-stick rule.
+ *
+ * A component is significant if its actual variance proportion exceeds
+ * the expected proportion under the broken-stick null hypothesis.
+ *
+ * @param {number[]} eigenvalues - Array of eigenvalues sorted in descending order.
+ * @param {number} totalVariance - Sum of all eigenvalues (total variance).
+ * @returns {number} Number of significant components, or 0 if inputs invalid.
+ */
+export function countSignificantComponentsBrokenStick(
+  eigenvalues,
+  totalVariance
+) {
+  if (
+    !Array.isArray(eigenvalues) ||
+    eigenvalues.length === 0 ||
+    typeof totalVariance !== 'number' ||
+    !Number.isFinite(totalVariance) ||
+    totalVariance <= 0
+  ) {
+    return 0;
+  }
+
+  const p = eigenvalues.length;
+  const brokenStick = computeBrokenStickDistribution(p);
+
+  let significantCount = 0;
+  for (let i = 0; i < p; i += 1) {
+    const actualProportion = eigenvalues[i] / totalVariance;
+    const expectedProportion = brokenStick[i];
+
+    if (actualProportion > expectedProportion) {
+      significantCount += 1;
+    } else {
+      // Broken-stick rule: stop at first non-significant component
+      // because components are ordered by variance
+      break;
+    }
+  }
+
+  return significantCount;
+}

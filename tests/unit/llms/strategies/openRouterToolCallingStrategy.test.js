@@ -31,34 +31,22 @@ describe('OpenRouterToolCallingStrategy', () => {
     );
   });
 
-  it('_buildProviderRequestPayloadAdditions builds payload with valid tool name (no request options)', () => {
+  it('_buildProviderRequestPayloadAdditions throws when toolSchema missing in request options (v5 requirement)', () => {
+    // In v5, toolSchema must be explicitly provided in request options
     const llmConfig = {
       configId: 'llm1',
       jsonOutputStrategy: { toolName: 'my_tool' },
     };
-    const result = strategy._buildProviderRequestPayloadAdditions(
-      {},
-      llmConfig,
-      {} // No request options
-    );
-    expect(result).toEqual({
-      tools: [
-        {
-          type: 'function',
-          function: {
-            name: 'my_tool',
-            description: OPENROUTER_DEFAULT_TOOL_DESCRIPTION,
-            parameters:
-              OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-              OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA,
-          },
-        },
-      ],
-      tool_choice: { type: 'function', function: { name: 'my_tool' } },
-    });
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `OpenRouterToolCallingStrategy (${llmConfig.configId}): Defined tool for use with name 'my_tool'.`,
-      { llmId: llmConfig.configId, toolName: 'my_tool', isCustomSchema: false }
+    expect(() =>
+      strategy._buildProviderRequestPayloadAdditions(
+        {},
+        llmConfig,
+        {} // No request options - missing toolSchema
+      )
+    ).toThrow(LLMStrategyError);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining("Missing 'toolSchema' in request options"),
+      expect.objectContaining({ llmId: llmConfig.configId })
     );
   });
 
@@ -113,7 +101,7 @@ describe('OpenRouterToolCallingStrategy', () => {
     });
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Using custom tool schema from request options'),
+      expect.stringContaining('Using tool schema from request options'),
       expect.objectContaining({
         llmId: llmConfig.configId,
         schemaProperties: ['customField', 'confidence'],
@@ -121,34 +109,26 @@ describe('OpenRouterToolCallingStrategy', () => {
     );
   });
 
-  it('_buildProviderRequestPayloadAdditions uses partial request options with config fallback', () => {
+  it('_buildProviderRequestPayloadAdditions throws when only toolName provided without toolSchema (v5 requirement)', () => {
+    // In v5, toolSchema must be explicitly provided - no default fallback
     const llmConfig = {
       configId: 'llm1',
       jsonOutputStrategy: { toolName: 'config_tool' },
     };
     const requestOptions = {
-      toolName: 'override_tool', // Only override tool name
+      toolName: 'override_tool', // Only override tool name - missing toolSchema
     };
 
-    const result = strategy._buildProviderRequestPayloadAdditions(
-      {},
-      llmConfig,
-      requestOptions
-    );
+    expect(() =>
+      strategy._buildProviderRequestPayloadAdditions(
+        {},
+        llmConfig,
+        requestOptions
+      )
+    ).toThrow(LLMStrategyError);
 
-    expect(result.tools[0].function.name).toBe('override_tool');
-    expect(result.tools[0].function.description).toBe(
-      OPENROUTER_DEFAULT_TOOL_DESCRIPTION
-    );
-    expect(result.tools[0].function.parameters).toEqual(
-      OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA
-    );
-
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'No custom tool schema provided, using default game AI schema'
-      ),
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining("Missing 'toolSchema' in request options"),
       expect.objectContaining({ llmId: llmConfig.configId })
     );
   });
@@ -160,6 +140,11 @@ describe('OpenRouterToolCallingStrategy', () => {
     };
     const requestOptions = {
       toolName: 'request_tool',
+      toolSchema: {
+        // v5 requires explicit toolSchema
+        type: 'object',
+        properties: { field: { type: 'string' } },
+      },
     };
 
     const result = strategy._buildProviderRequestPayloadAdditions(
@@ -202,6 +187,11 @@ describe('OpenRouterToolCallingStrategy', () => {
     };
     const requestOptions = {
       toolName: 'request_tool',
+      toolSchema: {
+        // v5 requires explicit toolSchema
+        type: 'object',
+        properties: { field: { type: 'string' } },
+      },
     };
 
     const result = strategy._buildProviderRequestPayloadAdditions(
@@ -356,6 +346,13 @@ describe('OpenRouterToolCallingStrategy', () => {
         getExecutionEnvironment: jest.fn().mockReturnValue('server'),
         getProjectRootPath: jest.fn().mockReturnValue('/root'),
         getProxyServerUrl: jest.fn(),
+      },
+      // v5 requires explicit toolSchema in request options
+      requestOptions: {
+        toolSchema: {
+          type: 'object',
+          properties: { action: { type: 'string' } },
+        },
       },
     };
     const result = await strategy.execute(params);

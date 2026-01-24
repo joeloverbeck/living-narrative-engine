@@ -2,6 +2,9 @@ import { describe, test, expect } from '@jest/globals';
 import { buildDecisionResult } from '../../../src/utils/decisionResultUtils.js';
 
 describe('buildDecisionResult utility', () => {
+  // Note: moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor
+  // in Phase 1 of the two-phase emotional state update flow (v5 change).
+
   test('defaults all extractedData fields to null when meta is empty', () => {
     const result = buildDecisionResult('myAction', {});
     expect(result).toEqual({
@@ -12,8 +15,6 @@ describe('buildDecisionResult utility', () => {
         thoughts: null,
         notes: null,
         chosenIndex: null,
-        moodUpdate: null,
-        sexualUpdate: null,
       },
     });
   });
@@ -32,15 +33,12 @@ describe('buildDecisionResult utility', () => {
       {
         speech: 'hi',
         chosenIndex: 2,
-        moodUpdate: { valence: 10 },
-        sexualUpdate: { sex_excitation: 40 },
       },
       { availableActions: actions }
     );
 
     expect(result.extractedData.chosenIndex).toBe(2);
-    expect(result.extractedData.moodUpdate).toEqual({ valence: 10 });
-    expect(result.extractedData.sexualUpdate).toEqual({ sex_excitation: 40 });
+    expect(result.extractedData.speech).toBe('hi');
     expect(result.availableActions).toBe(actions);
   });
 });

@@ -82,6 +82,9 @@ const createDefaultMoodData = () => ({
   affiliation: 0,
   inhibitory_control: 0,
   uncertainty: 0,
+  contamination_salience: 0,
+  rumination: 0,
+  evaluation_pressure: 0,
 });
 
 const createMoodData = (overrides = {}) => ({
@@ -461,7 +464,7 @@ describe('EmotionalStatePanel', () => {
   });
 
   describe('bar rendering', () => {
-    it('renders all 11 mood axes', () => {
+    it('renders all 14 mood axes', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -470,7 +473,7 @@ describe('EmotionalStatePanel', () => {
       handler({ payload: { entityId: 'test-entity' } });
 
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(11);
+      expect(axes.length).toBe(14);
     });
 
     it('renders positive value bars extending right from center', () => {
@@ -714,9 +717,9 @@ describe('EmotionalStatePanel', () => {
       // Should not throw
       expect(() => handler({ payload: { entityId: 'test-entity' } })).not.toThrow();
 
-      // Should still render all 11 axes, with missing values treated as 0
+      // Should still render all 14 axes, with missing values treated as 0
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(11);
+      expect(axes.length).toBe(14);
     });
 
     it('renders temporal_orientation axis with correct labels', () => {
@@ -953,7 +956,7 @@ describe('EmotionalStatePanel', () => {
       expect(barFill.style.backgroundColor).toBe('rgb(79, 195, 247)'); // #4FC3F7
     });
 
-    it('renders uncertainty axis in correct position (11th/last)', () => {
+    it('renders evaluation_pressure axis in correct position (14th/last)', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -964,7 +967,7 @@ describe('EmotionalStatePanel', () => {
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
       const lastAxis = axes[axes.length - 1];
 
-      expect(lastAxis.getAttribute('data-axis')).toBe('uncertainty');
+      expect(lastAxis.getAttribute('data-axis')).toBe('evaluation_pressure');
     });
   });
 

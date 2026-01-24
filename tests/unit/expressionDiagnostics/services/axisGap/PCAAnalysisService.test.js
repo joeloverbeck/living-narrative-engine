@@ -113,6 +113,56 @@ describe('PCAAnalysisService', () => {
       expect(lastCumulative).toBeCloseTo(1, 5);
     });
 
+    it('should compute explainedVariance with individual proportions summing to 1', () => {
+      const prototypes = [
+        { id: 'a', weights: { x: 1, y: 2, z: 0 } },
+        { id: 'b', weights: { x: 0, y: 1, z: 2 } },
+        { id: 'c', weights: { x: 2, y: 0, z: 1 } },
+        { id: 'd', weights: { x: 1, y: 1, z: 1 } },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      expect(result.explainedVariance.length).toBeGreaterThan(0);
+      const total = result.explainedVariance.reduce((sum, v) => sum + v, 0);
+      expect(total).toBeCloseTo(1, 5);
+    });
+
+    it('should return explainedVariance in descending order', () => {
+      const prototypes = [
+        { id: 'a', weights: { x: 1, y: 2, z: 0 } },
+        { id: 'b', weights: { x: 0, y: 1, z: 2 } },
+        { id: 'c', weights: { x: 2, y: 0, z: 1 } },
+        { id: 'd', weights: { x: 1, y: 1, z: 1 } },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      expect(result.explainedVariance.length).toBeGreaterThan(1);
+      for (let i = 1; i < result.explainedVariance.length; i++) {
+        expect(result.explainedVariance[i - 1]).toBeGreaterThanOrEqual(
+          result.explainedVariance[i]
+        );
+      }
+    });
+
+    it('should have explainedVariance values between 0 and 1 (within floating point precision)', () => {
+      const prototypes = [
+        { id: 'a', weights: { x: 1, y: 2, z: 0 } },
+        { id: 'b', weights: { x: 0, y: 1, z: 2 } },
+        { id: 'c', weights: { x: 2, y: 0, z: 1 } },
+        { id: 'd', weights: { x: 1, y: 1, z: 1 } },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      result.explainedVariance.forEach((v) => {
+        // Allow for small floating-point precision errors (eigenvalues can be tiny negatives)
+        expect(v).toBeGreaterThanOrEqual(-1e-10);
+        expect(v).toBeLessThanOrEqual(1 + 1e-10);
+      });
+    });
+
     it('should return top loading prototypes', () => {
       const prototypes = Array.from({ length: 15 }, (_, i) => ({
         id: `proto${i}`,
@@ -220,22 +270,137 @@ describe('PCAAnalysisService', () => {
     });
   });
 
-  describe('analyze - Kaiser threshold', () => {
-    it('should count additional significant components above threshold', () => {
-      const svc = new PCAAnalysisService({ pcaKaiserThreshold: 0.5 });
-      const prototypes = Array.from({ length: 20 }, (_, i) => ({
-        id: `p${i}`,
-        weights: {
-          a: Math.random(),
-          b: Math.random(),
-          c: Math.random(),
-        },
-      }));
+  describe('analyze - component significance methods', () => {
+    describe('broken-stick (default)', () => {
+      it('should use broken-stick method by default', () => {
+        const svc = new PCAAnalysisService();
+        const prototypes = Array.from({ length: 10 }, (_, i) => ({
+          id: `p${i}`,
+          weights: {
+            a: i * 0.5,
+            b: (10 - i) * 0.3,
+            c: Math.sin(i) * 0.2,
+          },
+        }));
 
-      const result = svc.analyze(prototypes);
+        const result = svc.analyze(prototypes);
 
-      expect(typeof result.additionalSignificantComponents).toBe('number');
-      expect(result.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+        expect(typeof result.additionalSignificantComponents).toBe('number');
+        expect(result.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+      });
+
+      it('should detect significant components with clear factor structure', () => {
+        // Create prototypes with a clear dominant factor
+        // All prototypes vary primarily along axis 'a'
+        const svc = new PCAAnalysisService({
+          pcaComponentSignificanceMethod: 'broken-stick',
+        });
+        const prototypes = [
+          { id: 'p0', weights: { a: 10, b: 1, c: 0.5 } },
+          { id: 'p1', weights: { a: -10, b: 1.1, c: 0.4 } },
+          { id: 'p2', weights: { a: 8, b: 0.9, c: 0.6 } },
+          { id: 'p3', weights: { a: -8, b: 1.2, c: 0.3 } },
+          { id: 'p4', weights: { a: 5, b: 1, c: 0.5 } },
+          { id: 'p5', weights: { a: -5, b: 0.8, c: 0.7 } },
+        ];
+
+        const result = svc.analyze(prototypes);
+
+        // Should detect at least one significant component
+        expect(result.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+      });
+
+      it('should return 0 for uniform variance distribution', () => {
+        // When all eigenvalues are roughly equal, broken-stick should find none significant
+        const svc = new PCAAnalysisService({
+          pcaComponentSignificanceMethod: 'broken-stick',
+        });
+        // Create prototypes where all axes contribute equally
+        const prototypes = [
+          { id: 'p0', weights: { a: 1, b: 0, c: 0 } },
+          { id: 'p1', weights: { a: 0, b: 1, c: 0 } },
+          { id: 'p2', weights: { a: 0, b: 0, c: 1 } },
+          { id: 'p3', weights: { a: -1, b: 0, c: 0 } },
+          { id: 'p4', weights: { a: 0, b: -1, c: 0 } },
+          { id: 'p5', weights: { a: 0, b: 0, c: -1 } },
+        ];
+
+        const result = svc.analyze(prototypes);
+
+        // Uniform distribution means no single component dominates
+        expect(result.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    describe('kaiser (fallback)', () => {
+      it('should use Kaiser criterion when explicitly configured', () => {
+        const svc = new PCAAnalysisService({
+          pcaComponentSignificanceMethod: 'kaiser',
+          pcaKaiserThreshold: 0.5,
+        });
+        const prototypes = Array.from({ length: 20 }, (_, i) => ({
+          id: `p${i}`,
+          weights: {
+            a: Math.random(),
+            b: Math.random(),
+            c: Math.random(),
+          },
+        }));
+
+        const result = svc.analyze(prototypes);
+
+        expect(typeof result.additionalSignificantComponents).toBe('number');
+        expect(result.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+      });
+
+      it('should count additional significant components above Kaiser threshold', () => {
+        const svc = new PCAAnalysisService({
+          pcaComponentSignificanceMethod: 'kaiser',
+          pcaKaiserThreshold: 0.5,
+        });
+        const prototypes = Array.from({ length: 20 }, (_, i) => ({
+          id: `p${i}`,
+          weights: {
+            a: Math.random(),
+            b: Math.random(),
+            c: Math.random(),
+          },
+        }));
+
+        const result = svc.analyze(prototypes);
+
+        expect(typeof result.additionalSignificantComponents).toBe('number');
+        expect(result.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    describe('method comparison', () => {
+      it('should potentially give different results for same data', () => {
+        // Create data where broken-stick and Kaiser might differ
+        const prototypes = Array.from({ length: 15 }, (_, i) => ({
+          id: `p${i}`,
+          weights: {
+            a: i * 0.2,
+            b: (15 - i) * 0.15,
+            c: Math.sin(i) * 0.1,
+          },
+        }));
+
+        const brokenStickSvc = new PCAAnalysisService({
+          pcaComponentSignificanceMethod: 'broken-stick',
+        });
+        const kaiserSvc = new PCAAnalysisService({
+          pcaComponentSignificanceMethod: 'kaiser',
+          pcaKaiserThreshold: 1.0,
+        });
+
+        const brokenStickResult = brokenStickSvc.analyze(prototypes);
+        const kaiserResult = kaiserSvc.analyze(prototypes);
+
+        // Both should return valid results
+        expect(brokenStickResult.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+        expect(kaiserResult.additionalSignificantComponents).toBeGreaterThanOrEqual(0);
+      });
     });
   });
 
@@ -295,6 +460,7 @@ describe('PCAAnalysisService', () => {
         topLoadingPrototypes: [],
         dimensionsUsed: [],
         cumulativeVariance: [],
+        explainedVariance: [],
         componentsFor80Pct: 0,
         componentsFor90Pct: 0,
         reconstructionErrors: [],

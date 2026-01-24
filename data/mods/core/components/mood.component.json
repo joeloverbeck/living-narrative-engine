@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:mood",
-  "description": "Tracks the 11 mood axes that define a character's current affective/regulatory state. Each axis ranges from -100 to +100.",
+  "description": "Tracks the 14 mood axes that define a character's current affective/regulatory state. Each axis ranges from -100 to +100.",
   "dataSchema": {
     "type": "object",
     "properties": {
@@ -81,6 +81,27 @@
         "maximum": 100,
         "default": 0,
         "description": "Model fit / cognitive clarity. +100 = highly uncertain / cannot integrate; -100 = highly certain / coherent model."
+      },
+      "contamination_salience": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Non-contaminating/neutral (-) to highly contaminating/revolting (+). Visceral repulsion / pathogen-purity salience; distinct from danger (threat) and from social distance (affiliation)."
+      },
+      "rumination": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Mentally flexible/easy disengagement (-) to sticky repetitive replay (+). Perseveration, obsessive review, intrusive thoughts."
+      },
+      "evaluation_pressure": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100,
+        "default": 0,
+        "description": "Not scrutinized/unobserved (-) to intensely scrutinized/being judged (+). Social-evaluative exposure, being watched, performance context. Distinct from threat (danger) and self_evaluation (self-worth)."
       }
     },
     "required": [
@@ -94,7 +115,10 @@
       "self_evaluation",
       "affiliation",
       "inhibitory_control",
-      "uncertainty"
+      "uncertainty",
+      "contamination_salience",
+      "rumination",
+      "evaluation_pressure"
     ],
     "additionalProperties": false
   }

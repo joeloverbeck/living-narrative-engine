@@ -6,7 +6,7 @@
  */
 
 /**
- * The 11 mood axes that define a character's current affective/regulatory state.
+ * The 14 mood axes that define a character's current affective/regulatory state.
  * Each axis ranges from -100 to +100.
  * @type {readonly string[]}
  */
@@ -22,10 +22,13 @@ export const MOOD_AXES = Object.freeze([
   'affiliation',
   'inhibitory_control',
   'uncertainty',
+  'contamination_salience',
+  'rumination',
+  'evaluation_pressure',
 ]);
 
 /**
- * The 4 stable personality traits affecting empathy, moral emotion capacity,
+ * The 7 stable personality traits affecting empathy, moral emotion capacity,
  * and regulatory capacity.
  * @type {readonly string[]}
  */
@@ -34,6 +37,9 @@ export const AFFECT_TRAITS = Object.freeze([
   'cognitive_empathy',
   'harm_aversion',
   'self_control',
+  'disgust_sensitivity',
+  'ruminative_tendency',
+  'evaluation_sensitivity',
 ]);
 
 /**
@@ -63,13 +69,16 @@ export const DEFAULT_AFFECT_TRAIT_VALUE = 50;
 /**
  * Default affect trait values for entities without the affect_traits component.
  * Values of 50 represent "average human" baseline.
- * @type {Readonly<{affective_empathy: number, cognitive_empathy: number, harm_aversion: number, self_control: number}>}
+ * @type {Readonly<{affective_empathy: number, cognitive_empathy: number, harm_aversion: number, self_control: number, disgust_sensitivity: number, ruminative_tendency: number, evaluation_sensitivity: number}>}
  */
 export const DEFAULT_AFFECT_TRAITS = Object.freeze({
   affective_empathy: 50,
   cognitive_empathy: 50,
   harm_aversion: 50,
   self_control: 50,
+  disgust_sensitivity: 50,
+  ruminative_tendency: 50,
+  evaluation_sensitivity: 50,
 });
 
 /**

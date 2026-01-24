@@ -1,7 +1,7 @@
 // src/domUI/emotionalStatePanel.js
 
 /**
- * @file Widget displaying character's current emotional state as 11 mood axes.
+ * @file Widget displaying character's current emotional state as 14 mood axes.
  *
  * Subscribes to TURN_STARTED_ID to refresh the current actor's emotional state.
  * Subscribes to COMPONENT_ADDED_ID to refresh when mood component changes.
@@ -41,6 +41,9 @@ const AXIS_COLORS = {
   affiliation: { negative: '#4e73df', positive: '#e83e8c' }, // cool blue to warm pink
   inhibitory_control: { negative: '#FF7043', positive: '#7E57C2' }, // orange for impulsive, purple for restrained
   uncertainty: { negative: '#4FC3F7', positive: '#7B1FA2' }, // light blue for certain, purple for uncertain
+  contamination_salience: { negative: '#90EE90', positive: '#8B0000' }, // light green for pure/clean, dark red for contaminated
+  rumination: { negative: '#87CEEB', positive: '#483D8B' }, // sky blue for flexible, dark slate blue for stuck
+  evaluation_pressure: { negative: '#E6E6FA', positive: '#FF6347' }, // lavender for unobserved, tomato for scrutinized
 };
 
 /**
@@ -60,6 +63,9 @@ const AXIS_LABELS = {
   affiliation: { negative: 'Detached', positive: 'Connected' },
   inhibitory_control: { negative: 'Impulsive', positive: 'Restrained' },
   uncertainty: { negative: 'Certain', positive: 'Uncertain' },
+  contamination_salience: { negative: 'Pure/Clean', positive: 'Contaminated' },
+  rumination: { negative: 'Flexible', positive: 'Ruminating' },
+  evaluation_pressure: { negative: 'Unobserved', positive: 'Scrutinized' },
 };
 
 /**
@@ -79,13 +85,16 @@ const AXIS_ORDER = [
   'affiliation',
   'inhibitory_control',
   'uncertainty',
+  'contamination_salience',
+  'rumination',
+  'evaluation_pressure',
 ];
 
 /**
- * Widget displaying character's current emotional state as 11 mood axis bars.
+ * Widget displaying character's current emotional state as 14 mood axis bars.
  *
  * Displays:
- * - 11 horizontal bars representing mood axes
+ * - 14 horizontal bars representing mood axes
  * - Each bar shows negative values extending left, positive values extending right
  * - Calculated emotions text below the bars
  *

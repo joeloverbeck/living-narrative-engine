@@ -18,9 +18,9 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
   let mockEmotionCalculatorService;
 
   /**
-   * Creates a valid mood component with all required axes.
+   * Creates a valid mood component with all 14 required axes.
    *
-   * @param {Partial<{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number}>} [overrides] - Optional overrides
+   * @param {Partial<{valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, temporal_orientation: number, self_evaluation: number, affiliation: number, inhibitory_control: number, uncertainty: number, contamination_salience: number, rumination: number, evaluation_pressure: number}>} [overrides] - Optional overrides
    * @returns {object} Mood component data
    */
   function createMoodComponent(overrides = {}) {
@@ -31,8 +31,14 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       threat: -20,
       engagement: 60,
       future_expectancy: 25,
+      temporal_orientation: 0,
       self_evaluation: 35,
       affiliation: 0,
+      inhibitory_control: 0,
+      uncertainty: 0,
+      contamination_salience: 0,
+      rumination: 0,
+      evaluation_pressure: 0,
       ...overrides,
     };
   }
@@ -214,7 +220,7 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
       expect(result.emotionalState).toHaveProperty('sexualStateText');
     });
 
-    test('should include all 8 mood axis values in moodAxes', () => {
+    test('should include all 14 mood axis values in moodAxes', () => {
       const moodData = {
         valence: 70,
         arousal: 40,
@@ -222,8 +228,14 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
         threat: -30,
         engagement: 80,
         future_expectancy: 45,
+        temporal_orientation: 10,
         self_evaluation: 60,
         affiliation: 25,
+        inhibitory_control: 15,
+        uncertainty: 5,
+        contamination_salience: 0,
+        rumination: -5,
+        evaluation_pressure: 20,
       };
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: moodData,
@@ -242,8 +254,14 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
         threat: -30,
         engagement: 80,
         future_expectancy: 45,
+        temporal_orientation: 10,
         self_evaluation: 60,
         affiliation: 25,
+        inhibitory_control: 15,
+        uncertainty: 5,
+        contamination_salience: 0,
+        rumination: -5,
+        evaluation_pressure: 20,
       };
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: moodData,
@@ -395,8 +413,14 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
         threat: 100,
         engagement: -100,
         future_expectancy: 100,
+        temporal_orientation: -100,
         self_evaluation: -100,
         affiliation: -100,
+        inhibitory_control: 100,
+        uncertainty: -100,
+        contamination_salience: 100,
+        rumination: -100,
+        evaluation_pressure: 100,
       };
       const actorState = createValidActorState({
         [MOOD_COMPONENT_ID]: extremeMoodData,

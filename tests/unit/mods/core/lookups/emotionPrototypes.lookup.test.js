@@ -119,9 +119,9 @@ describe('core:emotion_prototypes lookup', () => {
   });
 
   describe('gate validation', () => {
-    // Pattern includes mood axes (including temporal_orientation and uncertainty), sexual axes, and affect traits
+    // Pattern includes all 14 mood axes, 5 sexual axes, and 7 affect traits
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|temporal_orientation|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|inhibitory_control|uncertainty|affective_empathy|cognitive_empathy|affiliation|harm_aversion|self_control)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|temporal_orientation|self_evaluation|affiliation|inhibitory_control|uncertainty|contamination_salience|rumination|evaluation_pressure|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|affective_empathy|cognitive_empathy|harm_aversion|self_control|disgust_sensitivity|ruminative_tendency|evaluation_sensitivity)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
       if (emotionData.gates) {

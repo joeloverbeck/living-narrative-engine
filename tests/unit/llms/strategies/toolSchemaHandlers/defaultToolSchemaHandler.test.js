@@ -42,56 +42,28 @@ describe('DefaultToolSchemaHandler', () => {
   });
 
   describe('buildDefaultToolSchema', () => {
+    // Note: In v5, buildDefaultToolSchema always throws an error.
+    // Callers must use buildCustomToolSchema() with an explicit schema instead.
     const llmId = 'test-llm';
 
-    it('should build default tool schema with standard parameters', () => {
-      const result = handler.buildDefaultToolSchema(llmId);
+    it('should throw error indicating no default schema is available (v5 requirement)', () => {
+      expect(() => handler.buildDefaultToolSchema(llmId)).toThrow(
+        'No default tool schema available. A custom schema must be explicitly provided via buildCustomToolSchema().'
+      );
 
-      expect(result).toEqual({
-        type: 'function',
-        function: {
-          name: 'game_ai_action_speech',
-          description: OPENROUTER_DEFAULT_TOOL_DESCRIPTION,
-          parameters:
-            OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-            OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA,
-        },
-      });
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Building default tool schema with name 'game_ai_action_speech'"
-        ),
-        expect.objectContaining({ llmId, toolName: 'game_ai_action_speech' })
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('No default tool schema available'),
+        expect.objectContaining({ llmId })
       );
     });
 
-    it('should use custom tool name from request options', () => {
+    it('should throw error even when request options are provided', () => {
       const requestOptions = { toolName: 'custom_action' };
-      const result = handler.buildDefaultToolSchema(llmId, requestOptions);
 
-      expect(result.function.name).toBe('custom_action');
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Building default tool schema with name 'custom_action'"
-        ),
-        expect.objectContaining({ llmId, toolName: 'custom_action' })
-      );
-    });
-
-    it('should use custom tool description from request options', () => {
-      const requestOptions = { toolDescription: 'Custom description' };
-      const result = handler.buildDefaultToolSchema(llmId, requestOptions);
-
-      expect(result.function.description).toBe('Custom description');
-    });
-
-    it('should handle empty request options', () => {
-      const result = handler.buildDefaultToolSchema(llmId, {});
-
-      expect(result.function.name).toBe('game_ai_action_speech');
-      expect(result.function.description).toBe(
-        OPENROUTER_DEFAULT_TOOL_DESCRIPTION
+      expect(() =>
+        handler.buildDefaultToolSchema(llmId, requestOptions)
+      ).toThrow(
+        'No default tool schema available. A custom schema must be explicitly provided via buildCustomToolSchema().'
       );
     });
   });

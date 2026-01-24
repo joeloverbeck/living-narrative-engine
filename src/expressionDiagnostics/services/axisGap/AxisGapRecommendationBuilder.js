@@ -4,6 +4,14 @@
  */
 
 /**
+ * Flag reasons that are metadata-only and should not trigger recommendations.
+ * Sign tension is excluded because mixed positive/negative weights are NORMAL
+ * for emotional prototypes (64% were incorrectly flagged before this fix).
+ * @type {Set<string>}
+ */
+const METADATA_ONLY_FLAG_REASONS = new Set(['sign_tension']);
+
+/**
  * @typedef {object} Recommendation
  * @property {'high'|'medium'|'low'} priority - Priority level.
  * @property {'NEW_AXIS'|'INVESTIGATE'|'REFINE_EXISTING'} type - Recommendation type.
@@ -78,12 +86,19 @@ export class AxisGapRecommendationBuilder {
       ? this.#config.pcaResidualVarianceThreshold
       : 0.15;
 
+    // Filter out metadata-only conflicts (e.g., sign_tension) - these should not trigger recommendations
+    const actionableConflicts = Array.isArray(conflicts)
+      ? conflicts.filter(
+          (conflict) => !METADATA_ONLY_FLAG_REASONS.has(conflict.flagReason)
+        )
+      : [];
+
     const pcaTriggered =
       pcaResult.residualVarianceRatio >= pcaThreshold ||
       pcaResult.additionalSignificantComponents > 0;
     const hasHubs = Array.isArray(hubs) && hubs.length > 0;
     const hasGaps = Array.isArray(gaps) && gaps.length > 0;
-    const hasConflicts = Array.isArray(conflicts) && conflicts.length > 0;
+    const hasConflicts = actionableConflicts.length > 0;
 
     // HIGH priority: PCA + coverage gap indicates strong evidence for new axis
     if (pcaTriggered && hasGaps) {
@@ -201,9 +216,9 @@ export class AxisGapRecommendationBuilder {
       }
     }
 
-    // LOW priority: Multi-axis conflicts only
+    // LOW priority: Multi-axis conflicts only (excludes metadata-only like sign_tension)
     if (hasConflicts && !pcaTriggered && !hasHubs && !hasGaps) {
-      for (const conflict of conflicts) {
+      for (const conflict of actionableConflicts) {
         recommendations.push(
           this.buildRecommendation({
             priority: 'low',
@@ -221,9 +236,9 @@ export class AxisGapRecommendationBuilder {
       }
     }
 
-    // If we have conflicts alongside other signals, add them with lower priority
+    // If we have actionable conflicts alongside other signals, add them with lower priority
     if (hasConflicts && (pcaTriggered || hasHubs || hasGaps)) {
-      for (const conflict of conflicts) {
+      for (const conflict of actionableConflicts) {
         recommendations.push(
           this.buildRecommendation({
             priority: 'low',

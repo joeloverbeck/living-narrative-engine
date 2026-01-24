@@ -67,7 +67,7 @@ describe('Monte Carlo - inhibitory_control and self_control Integration', () => 
       expect(Number.isInteger(state.affectTraits.self_control)).toBe(true);
     });
 
-    it('should generate all 11 mood axes in correct ranges', () => {
+    it('should generate all 14 mood axes in correct ranges', () => {
       const state = randomStateGenerator.generate('uniform', 'static');
       const expectedAxes = [
         'valence',
@@ -81,10 +81,13 @@ describe('Monte Carlo - inhibitory_control and self_control Integration', () => 
         'affiliation',
         'inhibitory_control',
         'uncertainty',
+        'contamination_salience',
+        'rumination',
+        'evaluation_pressure',
       ];
 
-      // Verify MOOD_AXES constant has all 11 axes
-      expect(MOOD_AXES).toHaveLength(11);
+      // Verify MOOD_AXES constant has all 14 axes
+      expect(MOOD_AXES).toHaveLength(14);
       expect(MOOD_AXES).toEqual(expectedAxes);
 
       expectedAxes.forEach((axis) => {
@@ -95,17 +98,20 @@ describe('Monte Carlo - inhibitory_control and self_control Integration', () => 
       });
     });
 
-    it('should generate all 4 affect traits in correct ranges', () => {
+    it('should generate all 7 affect traits in correct ranges', () => {
       const state = randomStateGenerator.generate('uniform', 'static');
       const expectedTraits = [
         'affective_empathy',
         'cognitive_empathy',
         'harm_aversion',
         'self_control',
+        'disgust_sensitivity',
+        'ruminative_tendency',
+        'evaluation_sensitivity',
       ];
 
-      // Verify AFFECT_TRAITS constant has all 4 traits
-      expect(AFFECT_TRAITS).toHaveLength(4);
+      // Verify AFFECT_TRAITS constant has all 7 traits
+      expect(AFFECT_TRAITS).toHaveLength(7);
       expect(AFFECT_TRAITS).toEqual(expectedTraits);
 
       expectedTraits.forEach((trait) => {
@@ -320,17 +326,17 @@ describe('Monte Carlo - inhibitory_control and self_control Integration', () => 
       const normalizedMood = normalizeMoodAxes(state.current.mood);
       const normalizedTraits = normalizeAffectTraits(state.affectTraits);
 
-      // 11 mood axes should be generated
-      expect(Object.keys(state.current.mood)).toHaveLength(11);
+      // 14 mood axes should be generated
+      expect(Object.keys(state.current.mood)).toHaveLength(14);
 
-      // All 11 should be normalized
-      expect(Object.keys(normalizedMood)).toHaveLength(11);
+      // All 14 should be normalized
+      expect(Object.keys(normalizedMood)).toHaveLength(14);
 
-      // 4 affect traits should be generated
-      expect(Object.keys(state.affectTraits)).toHaveLength(4);
+      // 7 affect traits should be generated
+      expect(Object.keys(state.affectTraits)).toHaveLength(7);
 
-      // All 4 should be normalized
-      expect(Object.keys(normalizedTraits)).toHaveLength(4);
+      // All 7 should be normalized
+      expect(Object.keys(normalizedTraits)).toHaveLength(7);
     });
   });
 });

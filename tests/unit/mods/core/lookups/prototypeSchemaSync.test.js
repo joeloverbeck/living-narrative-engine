@@ -162,8 +162,8 @@ describe('Prototype Schema Synchronization', () => {
     });
 
     it('should have the expected number of axes', () => {
-      // 11 mood axes + 4 affect traits + 5 sexual axes = 20 total
-      expect(ALL_PROTOTYPE_WEIGHT_AXES).toHaveLength(20);
+      // 14 mood axes + 7 affect traits + 5 sexual axes = 26 total
+      expect(ALL_PROTOTYPE_WEIGHT_AXES).toHaveLength(26);
     });
   });
 

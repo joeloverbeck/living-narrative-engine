@@ -91,6 +91,8 @@ describe('Integration – Human decision flow', () => {
     });
 
     // The final result should be correctly formed
+    // Note: moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor
+    // in Phase 1 of the two-phase emotional state update flow, not in extractedData
     expect(result).toEqual({
       kind: 'success',
       action: {
@@ -103,8 +105,6 @@ describe('Integration – Human decision flow', () => {
         speech: 'Wait',
         thoughts: null,
         notes: null,
-        moodUpdate: null,
-        sexualUpdate: null,
         chosenIndex: 1,
       },
       availableActions: [

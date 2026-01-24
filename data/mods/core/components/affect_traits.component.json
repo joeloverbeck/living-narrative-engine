@@ -32,9 +32,30 @@
         "maximum": 100,
         "default": 50,
         "description": "Baseline impulse control / self-regulation capacity. Biases inhibitory_control and dampens disinhibition under arousal/threat. (0=highly impulsive, 50=average, 100=highly self-controlled)"
+      },
+      "disgust_sensitivity": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "How easily/intensely contamination_salience spikes. 0=iron stomach, 50=average, 100=highly squeamish/contamination-reactive."
+      },
+      "ruminative_tendency": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "How easily rumination axis spikes. 0=mentally flexible/recovers quickly, 50=average, 100=prone to getting stuck in thought loops."
+      },
+      "evaluation_sensitivity": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 50,
+        "description": "How easily evaluation_pressure spikes. 0=unaffected by observation, 50=average, 100=highly sensitive to scrutiny/being watched."
       }
     },
-    "required": ["affective_empathy", "cognitive_empathy", "harm_aversion", "self_control"],
+    "required": ["affective_empathy", "cognitive_empathy", "harm_aversion", "self_control", "disgust_sensitivity", "ruminative_tendency", "evaluation_sensitivity"],
     "additionalProperties": false
   }
 }

@@ -157,46 +157,17 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
 
   /**
    * @description Extract the actionable data from the validated JSON.
+   * Note: moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor
+   * in Phase 1 of the two-phase emotional state update flow.
    * @param {object} parsed - Validated JSON object from the LLM.
    * @param {string} actorId - ID of the actor for logging context.
-   * @returns {{ action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>; moodUpdate?: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }; sexualUpdate?: { sex_excitation: number, sex_inhibition: number } } }}
+   * @returns {{ action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>; cognitiveLedger?: { settled_conclusions: string[]; open_questions: string[] } } }}
    */
   #extractData(parsed, actorId) {
-    const { chosenIndex, speech, thoughts, notes, moodUpdate, sexualUpdate, cognitive_ledger } =
-      parsed;
+    const { chosenIndex, speech, thoughts, notes, cognitive_ledger } = parsed;
     this.#logger.debug(
       `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: ${chosenIndex}`
     );
-
-    // INFO-level logging for mood/sexual state extraction visibility
-    if (moodUpdate) {
-      this.#logger.info(
-        `LLMResponseProcessor: moodUpdate extracted for actor ${actorId}`,
-        {
-          valence: moodUpdate.valence,
-          arousal: moodUpdate.arousal,
-          threat: moodUpdate.threat,
-        }
-      );
-    } else {
-      this.#logger.info(
-        `LLMResponseProcessor: NO moodUpdate in response for actor ${actorId}`
-      );
-    }
-
-    if (sexualUpdate) {
-      this.#logger.info(
-        `LLMResponseProcessor: sexualUpdate extracted for actor ${actorId}`,
-        {
-          sex_excitation: sexualUpdate.sex_excitation,
-          sex_inhibition: sexualUpdate.sex_inhibition,
-        }
-      );
-    } else {
-      this.#logger.info(
-        `LLMResponseProcessor: NO sexualUpdate in response for actor ${actorId}`
-      );
-    }
 
     if (cognitive_ledger) {
       this.#logger.info(
@@ -217,8 +188,6 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       extractedData: {
         thoughts,
         ...(notes !== undefined ? { notes } : {}),
-        ...(moodUpdate !== undefined ? { moodUpdate } : {}),
-        ...(sexualUpdate !== undefined ? { sexualUpdate } : {}),
         ...(cognitive_ledger !== undefined ? { cognitiveLedger: cognitive_ledger } : {}),
       },
     };
@@ -226,10 +195,12 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
 
   /**
    * Process a raw LLM JSON response into structured action data.
+   * Note: This handles Phase 2 of the two-phase emotional state update flow.
+   * moodUpdate/sexualUpdate are handled by MoodResponseProcessor in Phase 1.
    *
    * @param {string} llmJsonResponse
    * @param {string} actorId
-   * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>; moodUpdate?: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }; sexualUpdate?: { sex_excitation: number, sex_inhibition: number } } }>}
+   * @returns {Promise<{ success: boolean; action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>; cognitiveLedger?: { settled_conclusions: string[]; open_questions: string[] } } }>}
    */
   async processResponse(llmJsonResponse, actorId) {
     const parsed = await this.#parseResponse(llmJsonResponse, actorId);

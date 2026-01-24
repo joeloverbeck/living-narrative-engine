@@ -108,6 +108,36 @@
             "type": "number",
             "minimum": -1,
             "maximum": 1
+          },
+          "contamination_salience": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "rumination": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "evaluation_pressure": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "disgust_sensitivity": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "ruminative_tendency": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "evaluation_sensitivity": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
           }
         },
         "additionalProperties": false
@@ -342,11 +372,12 @@
     "sexual_performance_anxiety": {
       "weights": {
         "sexual_arousal": 0.8,
-        "threat": 0.6,
         "self_evaluation": -0.5,
         "agency_control": -0.5,
         "arousal": 0.5,
         "valence": -0.3,
+        "evaluation_pressure": 0.8,
+        "evaluation_sensitivity": 0.5,
         "inhibitory_control": -0.3,
         "self_control": -0.4,
         "temporal_orientation": 0.3,
@@ -354,10 +385,11 @@
       },
       "gates": [
         "sexual_arousal >= 0.35",
-        "threat >= 0.20",
+        "evaluation_pressure >= 0.20",
         "agency_control <= 0.10",
         "self_evaluation <= 0.0",
-        "uncertainty >= 0.10"
+        "uncertainty >= 0.10",
+        "evaluation_sensitivity >= 0.10"
       ]
     },
     "sexual_frustration": {
@@ -380,15 +412,18 @@
       "weights": {
         "sexual_arousal": 0.7,
         "valence": -0.8,
+        "contamination_salience": 0.8,
+        "disgust_sensitivity": 0.5,
         "self_evaluation": -0.3,
-        "threat": 0.2,
         "arousal": 0.3,
         "inhibitory_control": -0.4,
         "self_control": -0.4
       },
       "gates": [
         "sexual_arousal >= 0.30",
-        "valence <= -0.40"
+        "valence <= -0.40",
+        "contamination_salience >= 0.20",
+        "disgust_sensitivity >= 0.10"
       ]
     },
     "sexual_indifference": {
@@ -414,7 +449,8 @@
       "weights": {
         "sex_inhibition": 0.8,
         "valence": -0.8,
-        "threat": 0.5,
+        "contamination_salience": 0.8,
+        "disgust_sensitivity": 0.5,
         "engagement": 0.3,
         "self_evaluation": -0.2,
         "arousal": 0.2,
@@ -427,7 +463,8 @@
         "sex_excitation <= 0.25",
         "valence <= -0.20",
         "engagement >= 0.10",
-        "threat >= 0.10"
+        "contamination_salience >= 0.20",
+        "disgust_sensitivity >= 0.10"
       ]
     }
   }

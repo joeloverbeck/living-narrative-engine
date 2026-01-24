@@ -30,13 +30,13 @@ describe('RandomStateGenerator - Axis Completeness (B3)', () => {
   });
 
   describe('mood axis completeness', () => {
-    it('should emit all 11 canonical mood axes in current state', () => {
+    it('should emit all 14 canonical mood axes in current state', () => {
       const state = generator.generate('uniform', 'static');
 
       // Verify count matches canonical definition
       const generatedAxes = Object.keys(state.current.mood);
       expect(generatedAxes.length).toBe(CANONICAL_MOOD_AXES.length);
-      expect(generatedAxes.length).toBe(11);
+      expect(generatedAxes.length).toBe(14);
 
       // Verify each canonical axis is present
       for (const axis of CANONICAL_MOOD_AXES) {
@@ -47,7 +47,7 @@ describe('RandomStateGenerator - Axis Completeness (B3)', () => {
       }
     });
 
-    it('should emit all 11 canonical mood axes in previous state', () => {
+    it('should emit all 14 canonical mood axes in previous state', () => {
       const state = generator.generate('uniform', 'static');
 
       const generatedAxes = Object.keys(state.previous.mood);
@@ -86,13 +86,13 @@ describe('RandomStateGenerator - Axis Completeness (B3)', () => {
   });
 
   describe('affect trait completeness', () => {
-    it('should emit all 4 canonical affect traits', () => {
+    it('should emit all 7 canonical affect traits', () => {
       const state = generator.generate('uniform', 'static');
 
       // Verify count matches canonical definition
       const generatedTraits = Object.keys(state.affectTraits);
       expect(generatedTraits.length).toBe(CANONICAL_AFFECT_TRAITS.length);
-      expect(generatedTraits.length).toBe(4);
+      expect(generatedTraits.length).toBe(7);
 
       // Verify each canonical trait is present
       for (const trait of CANONICAL_AFFECT_TRAITS) {
@@ -183,22 +183,22 @@ describe('RandomStateGenerator - Axis Completeness (B3)', () => {
     it('should emit all axes in uniform distribution mode', () => {
       const state = generator.generate('uniform', 'static');
 
-      expect(Object.keys(state.current.mood).length).toBe(11);
-      expect(Object.keys(state.affectTraits).length).toBe(4);
+      expect(Object.keys(state.current.mood).length).toBe(14);
+      expect(Object.keys(state.affectTraits).length).toBe(7);
     });
 
     it('should emit all axes in gaussian distribution mode', () => {
       const state = generator.generate('gaussian', 'static');
 
-      expect(Object.keys(state.current.mood).length).toBe(11);
-      expect(Object.keys(state.affectTraits).length).toBe(4);
+      expect(Object.keys(state.current.mood).length).toBe(14);
+      expect(Object.keys(state.affectTraits).length).toBe(7);
     });
 
     it('should emit all axes in dynamic sampling mode', () => {
       const state = generator.generate('uniform', 'dynamic');
 
-      expect(Object.keys(state.current.mood).length).toBe(11);
-      expect(Object.keys(state.affectTraits).length).toBe(4);
+      expect(Object.keys(state.current.mood).length).toBe(14);
+      expect(Object.keys(state.affectTraits).length).toBe(7);
     });
   });
 

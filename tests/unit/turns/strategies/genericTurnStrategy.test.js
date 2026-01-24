@@ -58,6 +58,8 @@ describe('GenericTurnStrategy', () => {
     );
 
     // Assert returned value
+    // Note: In v5, moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor,
+    // not included in extractedData for success path (buildDecisionResult doesn't add them)
     expect(result).toEqual(
       Object.freeze({
         kind: 'success',
@@ -67,8 +69,6 @@ describe('GenericTurnStrategy', () => {
           thoughts: null,
           notes: null,
           chosenIndex: 1,
-          moodUpdate: null,
-          sexualUpdate: null,
         }),
         availableActions: [fakeComposite],
         suggestedIndex: 1,
@@ -80,7 +80,9 @@ describe('GenericTurnStrategy', () => {
     expect(Object.isFrozen(result.extractedData)).toBe(true);
   });
 
-  it('preserves mood and sexual updates from the decision provider', async () => {
+  it('does NOT include mood and sexual updates in success path (v5: handled by MoodResponseProcessor)', async () => {
+    // In v5, moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor
+    // in Phase 1 of the two-phase emotional state update flow, not in extractedData
     const fakeActor = { id: 'actor-mood' };
     const fakeContext = {
       getActor: () => fakeActor,
@@ -103,6 +105,7 @@ describe('GenericTurnStrategy', () => {
     const decisionProvider = {
       decide: jest.fn().mockResolvedValue({
         chosenIndex: 1,
+        // These would have been in v4 but are ignored in v5 success path
         moodUpdate: {
           valence: 30,
           arousal: 20,
@@ -129,19 +132,10 @@ describe('GenericTurnStrategy', () => {
 
     const result = await strategy.decideAction(fakeContext);
 
-    expect(result.extractedData.moodUpdate).toEqual({
-      valence: 30,
-      arousal: 20,
-      agency_control: 10,
-      threat: -10,
-      engagement: 25,
-      future_expectancy: 5,
-      self_evaluation: 15,
-    });
-    expect(result.extractedData.sexualUpdate).toEqual({
-      sex_excitation: 45,
-      sex_inhibition: 30,
-    });
+    // v5: moodUpdate/sexualUpdate should NOT be in extractedData for success path
+    expect(result.extractedData.moodUpdate).toBeUndefined();
+    expect(result.extractedData.sexualUpdate).toBeUndefined();
+    expect(result.kind).toBe('success');
   });
 
   it('returns fallback decision when an error occurs and factory provided', async () => {

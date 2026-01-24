@@ -46,38 +46,56 @@ export class MultiAxisConflictDetector {
   /**
    * Detect all multi-axis conflicts in prototypes.
    *
+   * Returns structured result with separated conflict types:
+   * - conflicts: Union of all conflict types (backward compatible array)
+   * - highAxisLoadings: Prototypes with unusually high active axis count
+   * - signTensions: Prototypes with mixed positive/negative weights (METADATA ONLY - not actionable)
+   *
+   * NOTE: signTensions are informational metadata and should NOT:
+   * - Contribute to confidence scoring
+   * - Trigger recommendations
+   * - Be counted as actionable conflicts
+   * Mixed positive/negative weights are NORMAL for emotional prototypes.
+   *
    * @param {Array<{id?: string, prototypeId?: string, weights?: Record<string, number>}>} prototypes - Prototype objects.
-   * @returns {ConflictResult[]} Array of conflict results.
+   * @returns {{conflicts: ConflictResult[], highAxisLoadings: ConflictResult[], signTensions: ConflictResult[]}} Structured conflict results.
    */
   detect(prototypes) {
     const protoArray = Array.isArray(prototypes) ? prototypes : [];
     if (protoArray.length < 2) {
-      return [];
+      return { conflicts: [], highAxisLoadings: [], signTensions: [] };
     }
 
     const highAxisLoadings = this.detectHighAxisLoadings(protoArray);
     const signTensions = this.detectSignTensions(protoArray);
 
-    // Union with deduplication by prototypeId
+    // Union with deduplication by prototypeId for backward compatibility
+    // Only highAxisLoadings contribute to actionable conflicts
     const conflictMap = new Map();
 
     for (const entry of highAxisLoadings) {
       conflictMap.set(entry.prototypeId, entry);
     }
 
+    // Sign tensions are metadata only - add additionalFlagReason if prototype
+    // also has high axis loading, but don't add as standalone conflict
     for (const entry of signTensions) {
-      if (!conflictMap.has(entry.prototypeId)) {
-        conflictMap.set(entry.prototypeId, entry);
-      } else {
+      if (conflictMap.has(entry.prototypeId)) {
         // Merge: add secondary flag reason if different
         const existing = conflictMap.get(entry.prototypeId);
         if (existing.flagReason !== entry.flagReason) {
           existing.additionalFlagReason = entry.flagReason;
         }
       }
+      // Note: We no longer add sign_tension-only entries to conflicts
+      // They are returned separately as metadata
     }
 
-    return Array.from(conflictMap.values());
+    return {
+      conflicts: Array.from(conflictMap.values()),
+      highAxisLoadings,
+      signTensions,
+    };
   }
 
   /**

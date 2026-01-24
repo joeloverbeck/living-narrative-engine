@@ -52,10 +52,10 @@ if ((highResidual && hasCoverageGaps) || (hasHubs && hasMultiAxisConflicts)) {
 
 Confidence is determined by two factors:
 1. The number of independent detection methods that triggered
-2. Whether any single prototype has 3+ flagging reasons (multi-signal agreement)
+2. Whether any single prototype triggers 3+ **distinct signal families** (not just raw reason count)
 
 ```javascript
-// AxisGapAnalyzer.js, #computeConfidenceLevel method
+// AxisGapReportSynthesizer.js, #computeConfidenceLevel method
 #computeConfidenceLevel(methodsTriggered, prototypeWeightSummaries = []) {
   // Base confidence from method count
   let baseConfidence = 'low';
@@ -65,12 +65,13 @@ Confidence is determined by two factors:
     baseConfidence = 'medium';
   }
 
-  // Boost confidence if any prototype has multi-signal agreement (3+ reasons)
-  const hasMultiSignalPrototype = prototypeWeightSummaries.some(
-    summary => summary?.reasons?.length >= 3
+  // Boost confidence if any prototype triggers 3+ distinct signal families
+  // Signal families: pca, hub, gap, conflict (not raw reason count)
+  const hasMultiFamilyPrototype = prototypeWeightSummaries.some(
+    summary => this.#countDistinctFamilies(summary?.reasons) >= 3
   );
 
-  if (hasMultiSignalPrototype && baseConfidence !== 'high') {
+  if (hasMultiFamilyPrototype && baseConfidence !== 'high') {
     // Promote by one level
     return baseConfidence === 'low' ? 'medium' : 'high';
   }
@@ -79,7 +80,7 @@ Confidence is determined by two factors:
 }
 ```
 
-> **Note:** Confidence can be boosted by a single prototype having 3+ flag reasons, even if only 1-2 detection methods triggered overall.
+> **Note:** Confidence boosting counts distinct **signal families** (e.g., pca, hub, gap, conflict), not raw reason count. This prevents double-counting when a prototype has multiple reasons from the same family.
 
 ### Signal Counting Threshold Inconsistency
 
@@ -105,7 +106,7 @@ const highResidual = residualVariance > highResidualThreshold;  // Uses >
 
 **Purpose:** Detect unexplained variance in prototype positions that suggests missing dimensions.
 
-**Location:** `AxisGapAnalyzer.js`, `#runPCAAnalysis` method
+**Location:** `AxisGapAnalyzer.js`, `#runPCAAnalysis` method; `PCAAnalysisService.js`
 
 #### Algorithm
 
@@ -117,22 +118,69 @@ const highResidual = residualVariance > highResidualThreshold;  // Uses >
    - Eigenvalues represent variance explained by each principal component
    - Eigenvectors represent the direction of each component
 
-4. **Identify Significant Components:** Count eigenvalues exceeding Kaiser threshold (1.0)
+4. **Identify Significant Components:** Count components using the configured significance method (broken-stick or Kaiser)
 
 5. **Calculate Residual Variance:** Sum eigenvalues beyond expected axis count, divide by total variance
+
+#### Component Significance Methods
+
+The system supports two methods for determining significant PCA components:
+
+##### Broken-Stick Rule (Default)
+
+The **broken-stick model** provides a statistically grounded null hypothesis for eigenvalue significance. It models how variance would be randomly partitioned across components if there were no true underlying structure.
+
+**Formula:** For the k-th component out of p total components:
+```
+Expected(k) = (1/p) × Σ(j=k to p)[1/j]
+```
+
+**Interpretation:** A component is significant if its actual variance proportion exceeds its broken-stick expected value. Components are evaluated in order; counting stops at the first non-significant component.
+
+**Why broken-stick is preferred:**
+- Works correctly with standardized/bounded data where eigenvalues rarely exceed 1.0
+- Provides a principled statistical baseline rather than an arbitrary threshold
+- Conservative and well-established in psychometrics and ecology
+- Deterministic (no random sampling needed unlike parallel analysis)
+
+##### Kaiser Criterion (Fallback)
+
+The traditional Kaiser criterion considers a component significant if its eigenvalue ≥ 1.0.
+
+**When to use Kaiser:**
+- When comparing with legacy analyses that used Kaiser
+- When eigenvalues are interpretable in original units (not recommended for standardized data)
+
+**Known limitation:** Kaiser criterion often produces "0 additional components" with standardized data because eigenvalues for correlation matrices are bounded and rarely exceed 1.0. This is why broken-stick is now the default.
 
 #### Key Metrics Produced
 
 - `residualVarianceRatio`: Proportion of variance not explained by expected axes
-- `additionalSignificantComponents`: Number of eigenvalues ≥ 1.0 beyond expected count
+- `additionalSignificantComponents`: Number of significant components beyond expected count (method-dependent)
 - `topLoadingPrototypes`: Prototypes with highest absolute loading on the first unexplained component
 
-#### Thresholds
+#### Configuration Options
 
-| Parameter | Value | Purpose |
-|-----------|-------|---------|
-| `pcaKaiserThreshold` | 1.0 | Minimum eigenvalue to consider a component significant |
+| Parameter | Default | Purpose |
+|-----------|---------|---------|
+| `pcaComponentSignificanceMethod` | 'broken-stick' | Method for determining significant components |
+| `pcaKaiserThreshold` | 1.0 | Eigenvalue threshold (only used with 'kaiser' method) |
 | `pcaResidualVarianceThreshold` | 0.15 | Minimum residual variance to flag as "high" |
+
+#### Configuration Example
+
+```javascript
+// Use broken-stick (recommended for standardized data)
+const config = {
+  pcaComponentSignificanceMethod: 'broken-stick',
+};
+
+// Use Kaiser (for backwards compatibility or specific use cases)
+const config = {
+  pcaComponentSignificanceMethod: 'kaiser',
+  pcaKaiserThreshold: 1.0,
+};
+```
 
 ---
 
@@ -193,7 +241,10 @@ Coverage gaps indicate prototype clusters that don't align well with any existin
    - Maximum edge weight < `hubMaxEdgeWeight` (0.9) - prevents hubs that are just high-overlap pairs
    - Neighborhood diversity ≥ `hubMinNeighborhoodDiversity` (2) - neighbors span at least 2 different primary axes
 
-4. **Compute Hub Score:** `hubScore = degree × neighborhoodDiversity`
+4. **Compute Hub Score:** `hubScore = degree × (1 - variance_of_edge_weights)`
+   - Lower variance in edge weights indicates more consistent overlap patterns
+   - Higher score indicates a more significant hub
+   - Note: `neighborhoodDiversity` is a filter criterion (step 3), not part of the score formula
 
 #### Thresholds
 
@@ -296,6 +347,17 @@ Prototypes with high axis loadings engage with many dimensions simultaneously, p
 
 Sign tensions indicate prototypes being "pulled" in opposite directions across the axis space, suggesting the current axes may not cleanly separate the underlying concepts.
 
+#### Metadata-Only Classification
+
+**Important:** Sign tensions are classified as **metadata-only** signals and do NOT contribute to:
+- Confidence scoring
+- Recommendation generation
+- Verdict determination
+
+This is by design because mixed positive/negative weights are **normal** for emotional prototypes representing complex states. Including them as actionable signals would generate excessive false positives (~64% of prototypes were incorrectly flagged as conflicts during development).
+
+Sign tension data is still available in the analysis results for informational purposes but is excluded from all scoring and recommendation logic.
+
 ---
 
 ## 3. Dimensionality Analysis (PCA)
@@ -346,13 +408,32 @@ Residual Variance Ratio = Σ(eigenvalues[axisCount:]) / Σ(all eigenvalues)
 
 ### Additional Significant Components
 
-Uses Kaiser criterion: eigenvalue ≥ 1.0 indicates a component explains at least as much variance as a single original variable.
+The system counts significant components beyond the expected axis count using a configurable method:
+
+#### Broken-Stick Method (Default)
+
+The default method compares each eigenvalue to its broken-stick expected value:
+
+```javascript
+// PCAAnalysisService.js - broken-stick calculation
+const brokenStickExpected = computeBrokenStickExpected(eigenvalueIndex, totalComponents);
+// Component is significant if actual > expected
+const isSignificant = eigenvalue > brokenStickExpected;
+```
+
+Components are evaluated in order; counting stops at the first non-significant component.
+
+#### Kaiser Method (Fallback)
+
+When configured with `pcaComponentSignificanceMethod: 'kaiser'`, uses the traditional eigenvalue ≥ 1.0 criterion:
 
 ```javascript
 const additionalSignificantComponents = residualValues.filter(
   value => value >= this.#config.pcaKaiserThreshold  // 1.0
 ).length;
 ```
+
+> **Note:** See Section 2.1 for detailed comparison of these methods and why broken-stick is preferred for standardized data.
 
 ---
 
@@ -444,12 +525,12 @@ High reconstruction error means the prototype's position in axis space cannot be
 
 | Recommendation | Trigger Condition | Priority |
 |----------------|-------------------|----------|
-| `ADD_AXIS` | residualVariance ≥ 0.15 AND additionalSignificantComponents > 0 | high |
-| `INVESTIGATE_COVERAGE_GAP` | coverageGaps.length > 0 | medium |
-| `REVIEW_HUB_PROTOTYPE` | hubPrototypes.length > 0 | medium |
-| `RESOLVE_MULTI_AXIS_CONFLICT` | multiAxisConflicts.length > 0 | medium |
-| `REFINE_AXIS_DEFINITIONS` | any of above signals present | low |
-| `NO_ACTION_NEEDED` | no signals detected | info |
+| `NEW_AXIS` | (PCA triggered AND coverage gaps) OR (hubs AND coverage gaps) | high |
+| `INVESTIGATE` | PCA triggered alone, OR hubs alone, OR coverage gaps alone | medium |
+| `REFINE_EXISTING` | Multi-axis conflicts detected (excludes sign_tension which is metadata-only) | low |
+| `NO_ACTION_NEEDED` | No actionable signals detected | info |
+
+> **Note:** The actual recommendation type is `NEW_AXIS` (not `ADD_AXIS`). PCA is considered "triggered" when `residualVarianceRatio >= threshold OR additionalSignificantComponents > 0`.
 
 ### Recommendation Generation Logic
 
@@ -662,7 +743,8 @@ Prototypes can now accumulate **multiple flagging reasons**. This provides riche
 
 | Parameter | Default | Purpose |
 |-----------|---------|---------|
-| `pcaKaiserThreshold` | 1.0 | Kaiser criterion for significant eigenvalues |
+| `pcaComponentSignificanceMethod` | 'broken-stick' | Method for determining significant PCA components ('broken-stick' or 'kaiser') |
+| `pcaKaiserThreshold` | 1.0 | Kaiser criterion for significant eigenvalues (only used with 'kaiser' method) |
 | `pcaResidualVarianceThreshold` | 0.15 | Threshold for "high" residual variance (signal counting, uses `>=`) |
 | `residualVarianceThreshold` | 0.15 | Threshold for residual variance (signal breakdown, uses `>`)* |
 | `reconstructionErrorThreshold` | 0.5 | RMSE threshold for poorly fitting prototypes |
@@ -763,7 +845,13 @@ Output: AxisGapAnalysisResult {
 ├─────────────────────────────────────────────────────────────┤
 │  Renders:                                                   │
 │  - Decision summary (YES/MAYBE/NO)                          │
-│  - Signal breakdown cards (6 signal types)                  │
+│  - Signal breakdown cards (4 rendered in UI):               │
+│      • PCA signals                                          │
+│      • Hub signals                                          │
+│      • Coverage gap signals                                 │
+│      • Multi-axis conflict signals                          │
+│    Note: highAxisLoadingSignals and signTensionSignals      │
+│    are available in data but not rendered as separate cards │
 │  - PCA statistics                                           │
 │  - Flagged prototype cards with multi-reason badges         │
 │  - Recommendations list                                     │
