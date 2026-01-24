@@ -655,6 +655,7 @@ describe('AIPromptContentProvider', () => {
         characterName: testCharName,
         locationName: testLocationName,
         thoughtsArray: [],
+        cognitiveLedger: null,
       });
 
       // Verify that the internal (spied) getter methods were called correctly

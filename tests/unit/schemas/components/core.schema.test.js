@@ -83,6 +83,10 @@ const validPayloads = {
   'core:gender': { value: 'male' },
   'core:participation': { participating: true },
   'core:conspicuous': {},
+  'core:cognitive_ledger': {
+    settled_conclusions: [],
+    open_questions: [],
+  },
 };
 
 /** @type {Record<string, unknown>} */
@@ -130,6 +134,10 @@ const invalidPayloads = {
   'core:gender': {},
   'core:participation': {},
   'core:conspicuous': { extra: true },
+  'core:cognitive_ledger': {
+    settled_conclusions: [],
+    open_questions: [''],
+  },
 };
 
 describe('JSON-Schema – core component data contracts', () => {

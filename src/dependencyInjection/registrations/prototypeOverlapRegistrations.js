@@ -31,6 +31,14 @@ import PrototypeProfileCalculator from '../../expressionDiagnostics/services/pro
 import GateASTNormalizer from '../../expressionDiagnostics/services/prototypeOverlap/GateASTNormalizer.js';
 import ActionableSuggestionEngine from '../../expressionDiagnostics/services/prototypeOverlap/ActionableSuggestionEngine.js';
 
+// Axis Gap Analysis Sub-Services (refactored)
+import { PCAAnalysisService } from '../../expressionDiagnostics/services/axisGap/PCAAnalysisService.js';
+import { HubPrototypeDetector } from '../../expressionDiagnostics/services/axisGap/HubPrototypeDetector.js';
+import { CoverageGapDetector } from '../../expressionDiagnostics/services/axisGap/CoverageGapDetector.js';
+import { MultiAxisConflictDetector } from '../../expressionDiagnostics/services/axisGap/MultiAxisConflictDetector.js';
+import { AxisGapRecommendationBuilder } from '../../expressionDiagnostics/services/axisGap/AxisGapRecommendationBuilder.js';
+import { AxisGapReportSynthesizer } from '../../expressionDiagnostics/services/axisGap/AxisGapReportSynthesizer.js';
+
 /**
  * Register Prototype Overlap Analysis services.
  *
@@ -284,7 +292,75 @@ export function registerPrototypeOverlapServices(registrar) {
       })
   );
 
-  // AxisGapAnalyzer: detects missing axis dimensions
+  // ========================================
+  // Axis Gap Analysis Sub-Services (refactored)
+  // ========================================
+
+  // PCAAnalysisService: Principal Component Analysis for axis gap detection
+  registrar.singletonFactory(
+    diagnosticsTokens.IPCAAnalysisService,
+    (c) =>
+      new PCAAnalysisService({
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // HubPrototypeDetector: Hub detection via overlap graph analysis
+  registrar.singletonFactory(
+    diagnosticsTokens.IHubPrototypeDetector,
+    (c) =>
+      new HubPrototypeDetector({
+        ...PROTOTYPE_OVERLAP_CONFIG,
+      })
+  );
+
+  // CoverageGapDetector: Coverage gap identification via clustering
+  registrar.singletonFactory(
+    diagnosticsTokens.ICoverageGapDetector,
+    (c) =>
+      new CoverageGapDetector({
+        ...PROTOTYPE_OVERLAP_CONFIG,
+      })
+  );
+
+  // MultiAxisConflictDetector: High axis loadings and sign tension detection
+  registrar.singletonFactory(
+    diagnosticsTokens.IMultiAxisConflictDetector,
+    (c) =>
+      new MultiAxisConflictDetector({
+        ...PROTOTYPE_OVERLAP_CONFIG,
+      })
+  );
+
+  // AxisGapRecommendationBuilder: Recommendation generation from analysis results
+  registrar.singletonFactory(
+    diagnosticsTokens.IAxisGapRecommendationBuilder,
+    (c) =>
+      new AxisGapRecommendationBuilder({
+        pcaResidualVarianceThreshold:
+          PROTOTYPE_OVERLAP_CONFIG.pcaResidualVarianceThreshold,
+      })
+  );
+
+  // AxisGapReportSynthesizer: Report synthesis from all analysis results
+  registrar.singletonFactory(
+    diagnosticsTokens.IAxisGapReportSynthesizer,
+    (c) =>
+      new AxisGapReportSynthesizer(
+        {
+          pcaResidualVarianceThreshold:
+            PROTOTYPE_OVERLAP_CONFIG.pcaResidualVarianceThreshold,
+          residualVarianceThreshold:
+            PROTOTYPE_OVERLAP_CONFIG.residualVarianceThreshold,
+          reconstructionErrorThreshold:
+            PROTOTYPE_OVERLAP_CONFIG.reconstructionErrorThreshold,
+        },
+        c.resolve(diagnosticsTokens.IAxisGapRecommendationBuilder)
+      )
+  );
+
+  // AxisGapAnalyzer: orchestrator for axis gap detection (uses sub-services)
   registrar.singletonFactory(
     diagnosticsTokens.IAxisGapAnalyzer,
     (c) =>
@@ -292,6 +368,15 @@ export function registerPrototypeOverlapServices(registrar) {
         prototypeProfileCalculator: c.resolve(
           diagnosticsTokens.IPrototypeProfileCalculator
         ),
+        pcaAnalysisService: c.resolve(diagnosticsTokens.IPCAAnalysisService),
+        hubPrototypeDetector: c.resolve(
+          diagnosticsTokens.IHubPrototypeDetector
+        ),
+        coverageGapDetector: c.resolve(diagnosticsTokens.ICoverageGapDetector),
+        multiAxisConflictDetector: c.resolve(
+          diagnosticsTokens.IMultiAxisConflictDetector
+        ),
+        reportSynthesizer: c.resolve(diagnosticsTokens.IAxisGapReportSynthesizer),
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
       })

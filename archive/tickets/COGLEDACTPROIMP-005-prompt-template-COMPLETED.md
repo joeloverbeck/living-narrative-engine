@@ -1,8 +1,17 @@
 # COGLEDACTPROIMP-005: Add cognitiveLedgerSection Placeholder to Prompt Template
 
+Status: Completed
+
 ## Summary
 
-Add the `{cognitiveLedgerSection}` placeholder to `CHARACTER_PROMPT_TEMPLATE` after `<perception_log>` and before `{thoughtsVoiceGuidance}`.
+Add the `{cognitiveLedgerSection}` placeholder to `CHARACTER_PROMPT_TEMPLATE` after `<perception_log>` and before `{thoughtsVoiceGuidance}`. Cognitive ledger formatting/extraction already exists; this ticket only wires the template and adds coverage at the prompt generation level.
+
+## Assumptions Rechecked (Corrected)
+
+- `formatCognitiveLedgerSection()` already exists in `src/prompting/promptDataFormatter.js`.
+- `AIPromptContentProvider` already supplies `cognitiveLedger` in prompt data and limits thoughts to 1.
+- The cognitive ledger component schema and ID constants already exist.
+- The remaining missing piece for prompt output is the template placeholder insertion and prompt-generation integration coverage.
 
 ---
 
@@ -92,8 +101,8 @@ Update the version comment to reflect this change:
    - Test: Full prompt generates without errors when cognitive ledger absent
 
 2. **Existing Tests**
-   - `tests/integration/prompting/promptBuilder.test.js` passes (may need minor updates)
-   - `npm run test:integration -- --testPathPattern="prompt"` passes
+   - `tests/integration/prompting/promptBuilder.test.js` passes (expected to be unaffected)
+   - `npm run test:integration -- --testPathPatterns="prompt" --coverage=false` passes
 
 ### Invariants That Must Remain True
 
@@ -109,10 +118,10 @@ Update the version comment to reflect this change:
 
 ```bash
 # Run prompt integration tests
-npm run test:integration -- --testPathPattern="prompt"
+npm run test:integration -- --testPathPatterns="prompt" --coverage=false
 
 # Run new integration tests
-npm run test:integration -- --testPathPattern="cognitiveLedgerPromptGeneration"
+npm run test:integration -- --testPathPatterns="cognitiveLedgerPromptGeneration" --coverage=false
 
 # Verify template structure
 node -e "const t = require('./src/prompting/templates/characterPromptTemplate.js'); console.log(t.CHARACTER_PROMPT_TEMPLATE.includes('{cognitiveLedgerSection}'))"
@@ -122,5 +131,13 @@ node -e "const t = require('./src/prompting/templates/characterPromptTemplate.js
 
 ## Dependencies
 
-- **Requires**: COGLEDACTPROIMP-003 (formatter returns string for substitution)
-- **Requires**: COGLEDACTPROIMP-004 (content provider adds cognitiveLedgerSection to prompt data)
+- **Requires**: COGLEDACTPROIMP-003 (formatter returns string for substitution) - already satisfied in current codebase
+- **Requires**: COGLEDACTPROIMP-004 (content provider adds cognitiveLedgerSection to prompt data) - already satisfied in current codebase
+
+---
+
+## Outcome
+
+- Added `{cognitiveLedgerSection}` placement and version bump in the character prompt template as planned.
+- Added a prompt-generation integration test for cognitive ledger presence, absence, and placement as planned.
+- Updated prompt assembly integration expectations to match the existing single-thought display rule (not originally called out in this ticket).

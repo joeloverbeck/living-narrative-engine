@@ -62,6 +62,9 @@ class PrototypeAnalysisController {
   #signalCoverageGapsStatus;
   #signalMultiAxisConflictsStatus;
 
+  // Signal threshold elements (for dynamic OR logic display)
+  #signalPcaThreshold;
+
   // Decision panel elements
   #decisionVerdict;
   #decisionRationale;
@@ -166,6 +169,9 @@ class PrototypeAnalysisController {
     this.#signalMultiAxisConflictsStatus = document.getElementById(
       'signal-multi-axis-conflicts-status'
     );
+
+    // Signal threshold elements (for dynamic OR logic display)
+    this.#signalPcaThreshold = document.getElementById('signal-pca-threshold');
 
     // Decision panel elements
     this.#decisionVerdict = document.getElementById('decision-verdict');
@@ -1083,6 +1089,9 @@ class PrototypeAnalysisController {
     // Render summary statistics
     this.#renderAxisGapSummary(axisGapAnalysis.summary);
 
+    // Update PCA threshold display to show OR logic
+    this.#updatePcaThresholdDisplay(axisGapAnalysis.pcaAnalysis);
+
     // Render decision summary panel (YES/MAYBE/NO verdict)
     this.#renderDecisionSummary(axisGapAnalysis);
 
@@ -1188,6 +1197,37 @@ class PrototypeAnalysisController {
   }
 
   /**
+   * Update the PCA threshold display to clarify OR logic.
+   *
+   * Shows whether PCA triggered due to residual variance, additional components, or both.
+   * Clarifies that either condition alone is sufficient for triggering.
+   *
+   * @param {object|undefined} pcaAnalysis - PCA analysis results
+   * @private
+   */
+  #updatePcaThresholdDisplay(pcaAnalysis) {
+    if (!this.#signalPcaThreshold) return;
+
+    const residualVariance = pcaAnalysis?.residualVarianceRatio ?? 0;
+    const additionalComponents = pcaAnalysis?.additionalSignificantComponents ?? 0;
+    const threshold = 0.15; // 15% threshold
+
+    const highResidual = residualVariance > threshold;
+    const hasComponents = additionalComponents > 0;
+
+    // Determine which conditions triggered (OR logic)
+    if (highResidual && hasComponents) {
+      this.#signalPcaThreshold.textContent = `(residual >${(threshold * 100).toFixed(0)}% OR components >0)`;
+    } else if (highResidual) {
+      this.#signalPcaThreshold.textContent = `(residual >${(threshold * 100).toFixed(0)}% triggered)`;
+    } else if (hasComponents) {
+      this.#signalPcaThreshold.textContent = '(components >0 triggered)';
+    } else {
+      this.#signalPcaThreshold.textContent = `(residual ≤${(threshold * 100).toFixed(0)}% AND no extra components)`;
+    }
+  }
+
+  /**
    * Render the decision summary panel with YES/MAYBE/NO verdict.
    *
    * Decision Logic:
@@ -1203,7 +1243,7 @@ class PrototypeAnalysisController {
 
     const pcaAnalysis = axisGapAnalysis?.pcaAnalysis;
     const signalBreakdown = axisGapAnalysis?.summary?.signalBreakdown;
-    const residualVariance = pcaAnalysis?.residualVariance ?? 0;
+    const residualVariance = pcaAnalysis?.residualVarianceRatio ?? 0;
 
     // Extract signal counts
     const pcaSignals = signalBreakdown?.pcaSignals ?? 0;

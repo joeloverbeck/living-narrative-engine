@@ -253,7 +253,6 @@ describe('AIPromptContentProvider.getMoodUpdatePromptData', () => {
       const result = await provider.getMoodUpdatePromptData(gameStateDto, logger);
 
       expect(result.thoughtsArray).toEqual([
-        { text: 'Thought 1', timestamp: '2025-01-01T00:00:00Z' },
         { text: 'Thought 2', timestamp: '2025-01-02T00:00:00Z' },
       ]);
     });

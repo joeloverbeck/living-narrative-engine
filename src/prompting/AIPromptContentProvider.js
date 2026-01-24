@@ -28,7 +28,10 @@ import {
   PROMPT_FALLBACK_MINIMAL_CHARACTER_DETAILS,
   ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING,
 } from '../constants/textDefaults.js';
-import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
+import {
+  COGNITIVE_LEDGER_COMPONENT_ID,
+  SHORT_TERM_MEMORY_COMPONENT_ID,
+} from '../constants/componentIds.js';
 import { validateDependencies } from '../utils/dependencyUtils.js';
 import { AgeUtils } from '../utils/ageUtils.js';
 import { tokens } from '../dependencyInjection/tokens.js';
@@ -389,7 +392,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   _extractMemoryComponents(componentsMap) {
     const memoryComp = componentsMap[SHORT_TERM_MEMORY_COMPONENT_ID];
     const thoughtsArray = Array.isArray(memoryComp?.thoughts)
-      ? memoryComp.thoughts.filter((t) => t && t.text)
+      ? memoryComp.thoughts.filter((t) => t && t.text).slice(-1)
       : [];
 
     const notesComp = componentsMap['core:notes'];
@@ -407,19 +410,51 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
   /**
    * @private
+   * @description Extracts cognitive ledger data from the components map.
+   * @param {object} componentsMap - Actor or game components.
+   * @returns {{settled_conclusions: string[], open_questions: string[]} | null}
+   *   Cognitive ledger data or null if missing.
+   */
+  _extractCognitiveLedger(componentsMap) {
+    const cognitiveLedger = componentsMap?.[COGNITIVE_LEDGER_COMPONENT_ID];
+    if (!cognitiveLedger) {
+      return null;
+    }
+
+    return {
+      settled_conclusions: Array.isArray(cognitiveLedger.settled_conclusions)
+        ? cognitiveLedger.settled_conclusions
+        : [],
+      open_questions: Array.isArray(cognitiveLedger.open_questions)
+        ? cognitiveLedger.open_questions
+        : [],
+    };
+  }
+
+  /**
+   * @private
    * Combines base values and memory arrays into the final PromptData object.
    * @param {object} baseValues - Preassembled base prompt values.
    * @param {Array<{text:string,timestamp?:string}>} thoughtsArray - Extracted short-term memory thoughts.
    * @param {Array<{text:string,timestamp?:string}>} notesArray - Extracted notes.
    * @param {Array<{text:string,timestamp?:string}>} goalsArray - Extracted goals.
+   * @param {{settled_conclusions: string[], open_questions: string[]} | null} cognitiveLedger
+   *   Cognitive ledger data or null if missing.
    * @returns {PromptData} The assembled PromptData object.
    */
-  _buildPromptData(baseValues, thoughtsArray, notesArray, goalsArray) {
+  _buildPromptData(
+    baseValues,
+    thoughtsArray,
+    notesArray,
+    goalsArray,
+    cognitiveLedger
+  ) {
     const promptData = {
       ...baseValues,
       thoughtsArray,
       notesArray,
       goalsArray,
+      cognitiveLedger,
     };
 
     this.#logger.debug(
@@ -487,12 +522,14 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       };
 
       const memoryData = this._extractMemoryComponents(componentsMap);
+      const cognitiveLedger = this._extractCognitiveLedger(componentsMap);
 
       promptData = this._buildPromptData(
         baseValues,
         memoryData.thoughtsArray,
         memoryData.notesArray,
-        memoryData.goalsArray
+        memoryData.goalsArray,
+        cognitiveLedger
       );
 
       return promptData;
@@ -1020,12 +1057,14 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       };
 
       const memoryData = this._extractMemoryComponents(componentsMap);
+      const cognitiveLedger = this._extractCognitiveLedger(componentsMap);
 
       promptData = this._buildPromptData(
         baseValues,
         memoryData.thoughtsArray,
         memoryData.notesArray,
-        memoryData.goalsArray
+        memoryData.goalsArray,
+        cognitiveLedger
       );
 
       this.#logger.debug(

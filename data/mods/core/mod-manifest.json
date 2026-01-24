@@ -17,6 +17,7 @@
       "affect_traits.component.json",
       "apparent_age.component.json",
       "armed.component.json",
+      "cognitive_ledger.component.json",
       "conspicuous.component.json",
       "current_actor.component.json",
       "description.component.json",

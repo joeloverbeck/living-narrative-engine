@@ -337,10 +337,8 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       const sections = testBed.parsePromptSections(prompt);
       expect(sections.thoughts).toBeDefined();
 
-      // Assert - Thought entries are included
-      expect(sections.thoughts).toContain(
-        'I feel welcomed in this friendly tavern'
-      );
+      // Assert - Last thought entry is included (production slices to last 1 thought)
+      // Note: AIPromptContentProvider._extractMemoryComponents uses .slice(-1) on thoughts
       expect(sections.thoughts).toContain('The innkeeper seems trustworthy');
     });
 

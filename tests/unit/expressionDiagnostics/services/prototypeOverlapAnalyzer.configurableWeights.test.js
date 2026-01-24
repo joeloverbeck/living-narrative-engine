@@ -40,6 +40,7 @@ describe('PrototypeOverlapAnalyzer - configurable composite weights', () => {
    */
   const createMockRegistryService = (prototypes = []) => ({
     getPrototypesByType: jest.fn().mockReturnValue(prototypes),
+    getAllPrototypes: jest.fn().mockReturnValue(prototypes),
   });
 
   /**

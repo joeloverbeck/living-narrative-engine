@@ -22,18 +22,19 @@ describe('PrototypeVectorEvaluator', () => {
       checkAllGatesPass: jest.fn((gates, ctx) => ctx.pass ?? true),
       preParseGates: jest.fn((gates) => gates.map((g) => ({ gate: g }))),
       checkParsedGatesPass: jest.fn((parsedGates, normalizedCtx) => normalizedCtx.pass ?? true),
+      checkParsedGatesPassFlat: jest.fn((parsedGates, flatAxes) => flatAxes.get('_pass') === 1),
     };
     mockIntensityCalculator = {
       computeIntensity: jest.fn((weights, ctx) => ctx.intensity ?? 0),
       computeIntensityFromNormalized: jest.fn((weights, normalizedCtx) => normalizedCtx.intensity ?? 0),
+      computeIntensityFromFlat: jest.fn((weights, flatAxes) => flatAxes.get('_intensity') ?? 0),
     };
+    // NOTE: _pass and _intensity are stored in moodAxes so they get flattened into the Map
     mockContextAxisNormalizer = {
       getNormalizedAxes: jest.fn((ctx) => ({
-        moodAxes: {},
+        moodAxes: { _pass: ctx.pass ? 1 : 0, _intensity: ctx.intensity ?? 0 },
         sexualAxes: {},
         traitAxes: {},
-        pass: ctx.pass,
-        intensity: ctx.intensity,
       })),
     };
   });
@@ -199,7 +200,8 @@ describe('PrototypeVectorEvaluator', () => {
       globalThis.requestIdleCallback = idleSpy;
 
       const prototype = { id: 'proto-a', gates: [], weights: { valence: 1 } };
-      const contextPool = Array.from({ length: 501 }, () => ({
+      // CHUNK_SIZE is 5000, so we need > 5000 contexts to trigger a yield
+      const contextPool = Array.from({ length: 5001 }, () => ({
         pass: true,
         intensity: 0.4,
       }));

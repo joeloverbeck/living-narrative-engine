@@ -30,6 +30,7 @@ function createValidResponse(overrides = {}) {
     chosenIndex: 1,
     speech: 'Hello there!',
     thoughts: 'I should be cautious.',
+    cognitive_ledger: createValidCognitiveLedger(),
     ...overrides,
   };
 }
@@ -45,6 +46,20 @@ function createValidNote(overrides = {}) {
     text: 'They seem friendly',
     subject: 'stranger',
     subjectType: 'entity',
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a valid cognitive ledger payload.
+ *
+ * @param {object} overrides - Fields to override or add.
+ * @returns {object} Valid cognitive ledger object.
+ */
+function createValidCognitiveLedger(overrides = {}) {
+  return {
+    settled_conclusions: ['We are in a safe place.'],
+    open_questions: ['Who is the stranger?'],
     ...overrides,
   };
 }
@@ -86,6 +101,16 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA_V5 contract', () => {
     test('valid response with optional notes array validates', () => {
       const data = createValidResponse({
         notes: [createValidNote()],
+      });
+
+      const isValid = validate(data);
+      expect(isValid).toBe(true);
+      expect(validate.errors).toBeNull();
+    });
+
+    test('valid response with cognitive_ledger validates', () => {
+      const data = createValidResponse({
+        cognitive_ledger: createValidCognitiveLedger(),
       });
 
       const isValid = validate(data);
@@ -277,6 +302,135 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA_V5 contract', () => {
           .subjectType.enum;
 
       expect(schemaEnum.sort()).toEqual([...SUBJECT_TYPE_ENUM_VALUES].sort());
+    });
+  });
+
+  describe('cognitive_ledger validation', () => {
+    test('missing cognitive_ledger fails validation (required field)', () => {
+      const data = {
+        chosenIndex: 1,
+        speech: 'Hello there!',
+        thoughts: 'I should be cautious.',
+        // cognitive_ledger intentionally omitted
+      };
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+      const missingError = validate.errors.find(
+        (err) =>
+          err.keyword === 'required' &&
+          err.params?.missingProperty === 'cognitive_ledger'
+      );
+      expect(missingError).toBeTruthy();
+    });
+
+    test('missing settled_conclusions fails validation', () => {
+      const data = createValidResponse({
+        cognitive_ledger: createValidCognitiveLedger({
+          settled_conclusions: undefined,
+        }),
+      });
+      delete data.cognitive_ledger.settled_conclusions;
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+      const missingError = validate.errors.find(
+        (err) =>
+          err.keyword === 'required' &&
+          err.params?.missingProperty === 'settled_conclusions'
+      );
+      expect(missingError).toBeTruthy();
+    });
+
+    test('missing open_questions fails validation', () => {
+      const data = createValidResponse({
+        cognitive_ledger: createValidCognitiveLedger({ open_questions: undefined }),
+      });
+      delete data.cognitive_ledger.open_questions;
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+      const missingError = validate.errors.find(
+        (err) =>
+          err.keyword === 'required' &&
+          err.params?.missingProperty === 'open_questions'
+      );
+      expect(missingError).toBeTruthy();
+    });
+
+    test('settled_conclusions with more than 3 items fails validation', () => {
+      const data = createValidResponse({
+        cognitive_ledger: createValidCognitiveLedger({
+          settled_conclusions: ['a', 'b', 'c', 'd'],
+        }),
+      });
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+      const maxItemsError = validate.errors.find(
+        (err) =>
+          err.instancePath === '/cognitive_ledger/settled_conclusions' &&
+          err.keyword === 'maxItems'
+      );
+      expect(maxItemsError).toBeTruthy();
+    });
+
+    test('open_questions with more than 3 items fails validation', () => {
+      const data = createValidResponse({
+        cognitive_ledger: createValidCognitiveLedger({
+          open_questions: ['a', 'b', 'c', 'd'],
+        }),
+      });
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+      const maxItemsError = validate.errors.find(
+        (err) =>
+          err.instancePath === '/cognitive_ledger/open_questions' &&
+          err.keyword === 'maxItems'
+      );
+      expect(maxItemsError).toBeTruthy();
+    });
+
+    test('cognitive_ledger rejects empty string items', () => {
+      const data = createValidResponse({
+        cognitive_ledger: createValidCognitiveLedger({
+          settled_conclusions: [''],
+        }),
+      });
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+      const minLengthError = validate.errors.find(
+        (err) =>
+          err.instancePath === '/cognitive_ledger/settled_conclusions/0' &&
+          err.keyword === 'minLength'
+      );
+      expect(minLengthError).toBeTruthy();
+    });
+
+    test('cognitive_ledger rejects additional properties', () => {
+      const data = createValidResponse({
+        cognitive_ledger: createValidCognitiveLedger({
+          extraField: 'nope',
+        }),
+      });
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+      const additionalPropsError = validate.errors.find(
+        (err) =>
+          err.keyword === 'additionalProperties' &&
+          err.params?.additionalProperty === 'extraField'
+      );
+      expect(additionalPropsError).toBeTruthy();
     });
   });
 

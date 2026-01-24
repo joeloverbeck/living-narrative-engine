@@ -4,6 +4,12 @@
 
 Create the new `cognitive_ledger` component definition and add its constant ID. This establishes the data storage foundation for tracking settled conclusions and open questions.
 
+## Assumptions & Scope Corrections
+
+- `src/constants/componentIds.js` currently ends with `AFFECT_TRAITS_COMPONENT_ID`, so the new export will be appended under a new “Cognitive system components” comment.
+- Targeted Jest runs must use `--testPathPatterns` (plural) and should disable coverage (e.g., `--coverage=false`) to avoid global thresholds.
+- Component schema validation in unit tests uses `TestBedClass.validateAgainstSchema()` with the component ID (e.g., `core:cognitive_ledger`).
+
 ---
 
 ## Files to Touch
@@ -14,6 +20,7 @@ Create the new `cognitive_ledger` component definition and add its constant ID. 
 | `src/constants/componentIds.js` | MODIFY (add 1 constant) |
 | `data/mods/core/mod-manifest.json` | MODIFY (add component to manifest) |
 | `tests/unit/mods/core/components/cognitiveLedger.component.test.js` | CREATE |
+| `tests/unit/schemas/components/core.schema.test.js` | MODIFY (add payloads for new component) |
 
 ---
 
@@ -126,11 +133,21 @@ Add `"components/cognitive_ledger.component.json"` to the `components` array.
 npm run validate:strict
 
 # Run new unit tests
-npm run test:unit -- --testPathPattern="cognitiveLedger.component"
+npm run test:unit -- --testPathPatterns="cognitiveLedger.component" --coverage=false
 
 # Run all unit tests to ensure no regressions
 npm run test:unit
 
 # Verify constant exports
-node -e "const c = require('./src/constants/componentIds.js'); console.log(c.COGNITIVE_LEDGER_COMPONENT_ID)"
+node -e "import('./src/constants/componentIds.js').then((c) => console.log(c.COGNITIVE_LEDGER_COMPONENT_ID))"
 ```
+
+## Status
+
+Completed.
+
+## Outcome
+
+- Added the `core:cognitive_ledger` component schema and registered it in the core manifest and component IDs.
+- Implemented targeted schema validation tests plus updated core component schema payload fixtures.
+- Scope remained limited to component definitions/tests; prompt and LLM processing work stayed out of scope as planned.

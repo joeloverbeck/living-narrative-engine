@@ -23,6 +23,7 @@
           <select id="prototype-family" class="form-select">
             <option value="emotion">Emotions</option>
             <option value="sexual">Sexual States</option>
+            <option value="both">Both (Combined)</option>
           </select>
         </div>
         <button id="run-analysis-btn" class="action-button" disabled>
@@ -83,6 +84,18 @@
             <span id="decision-verdict" class="decision-badge verdict-no">NO</span>
           </div>
           <p id="decision-rationale" class="decision-rationale">Analysis not yet run.</p>
+          <details class="decision-logic-details">
+            <summary>How is this determined?</summary>
+            <ul class="decision-criteria">
+              <li><strong>YES:</strong> (High residual AND coverage gaps) OR (Hub prototypes AND multi-axis conflicts)</li>
+              <li><strong>MAYBE:</strong> High residual alone, OR any other single signal</li>
+              <li><strong>NO:</strong> Residual ≤15% AND no detection signals</li>
+            </ul>
+            <p class="logic-emphasis">
+              <em>Important:</em> PCA uses <strong>OR</strong> logic for triggering. High residual variance (>15%)
+              alone is sufficient for MAYBE verdict, regardless of "Additional Components" count.
+            </p>
+          </details>
           <div class="variance-summary">
             <span class="variance-label">Explained by top 4 PCs:</span>
             <span id="variance-top4" class="variance-value">--</span>
@@ -117,6 +130,13 @@
               <span id="signal-multi-axis-conflicts-threshold" class="signal-threshold">(balanced usage)</span>
             </div>
           </div>
+          <div class="signal-logic-explanation">
+            <p class="logic-note">
+              <strong>Detection Logic:</strong> PCA signal triggers when residual variance >15%
+              <strong>OR</strong> additional components >0. Either condition alone is sufficient
+              for triggering INVESTIGATE recommendations.
+            </p>
+          </div>
         </div>
 
         <div class="pca-summary">
@@ -133,6 +153,7 @@
           <div class="metric-row">
             <span class="metric-label">Additional Components Suggested:</span>
             <span id="additional-components" class="metric-value">--</span>
+            <span class="help-text" title="Kaiser criterion (eigenvalue ≥1.0) count. Note: With normalized prototype vectors, this may show 0 even with high residual variance. The system uses OR logic - high residual alone still triggers investigation.">(?)</span>
           </div>
           <div class="metric-row">
             <span class="metric-label">Dimensions Used:</span>

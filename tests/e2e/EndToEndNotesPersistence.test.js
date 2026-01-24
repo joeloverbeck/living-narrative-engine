@@ -207,6 +207,10 @@ describe('End-to-End Notes Persistence Flow', () => {
           subjectType: 'knowledge',
         },
       ],
+      cognitive_ledger: {
+        settled_conclusions: [],
+        open_questions: [],
+      },
     };
 
     const processingResult = await processor.processResponse(

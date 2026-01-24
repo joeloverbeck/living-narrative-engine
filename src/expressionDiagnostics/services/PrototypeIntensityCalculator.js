@@ -193,6 +193,31 @@ class PrototypeIntensityCalculator {
   }
 
   /**
+   * Compute emotion intensity from weights using flattened axis Map.
+   * This is the ultra-optimized hot path for batch evaluation.
+   * Uses O(1) Map lookups instead of multiple hasOwnProperty calls.
+   *
+   * @param {object} weights - Axis weights.
+   * @param {Map<string, number>} flatAxes - Flattened axis map from flattenNormalizedAxes().
+   * @returns {number} Normalized intensity in [0, 1].
+   */
+  computeIntensityFromFlat(weights, flatAxes) {
+    let rawSum = 0;
+    let sumAbsWeights = 0;
+
+    for (const [axis, weight] of Object.entries(weights)) {
+      // Direct Map lookup is O(1) vs multiple hasOwnProperty calls
+      const resolvedAxis = axis === 'SA' ? 'sexual_arousal' : axis;
+      const value = flatAxes.get(resolvedAxis) ?? 0;
+      rawSum += weight * value;
+      sumAbsWeights += Math.abs(weight);
+    }
+
+    if (sumAbsWeights === 0) return 0;
+    return Math.max(0, Math.min(1, rawSum / sumAbsWeights));
+  }
+
+  /**
    * Compute percentile from sorted array.
    * @param {number[]} sortedArr - Sorted array of values
    * @param {number} p - Percentile (0-1)

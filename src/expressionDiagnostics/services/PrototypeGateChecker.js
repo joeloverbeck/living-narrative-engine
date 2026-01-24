@@ -117,6 +117,27 @@ class PrototypeGateChecker {
   }
 
   /**
+   * Check gates using pre-parsed constraints against flattened axis Map.
+   * This is the ultra-optimized hot path for batch evaluation.
+   * Uses O(1) Map lookups instead of multiple hasOwnProperty calls.
+   *
+   * @param {GateConstraint[]} parsedGates - Pre-parsed gate constraints.
+   * @param {Map<string, number>} flatAxes - Flattened axis map from flattenNormalizedAxes().
+   * @returns {boolean} True when all gates are satisfied.
+   */
+  checkParsedGatesPassFlat(parsedGates, flatAxes) {
+    for (const constraint of parsedGates) {
+      // Direct Map lookup is O(1) vs multiple hasOwnProperty calls
+      const resolvedAxis = constraint.axis === 'SA' ? 'sexual_arousal' : constraint.axis;
+      const value = flatAxes.get(resolvedAxis) ?? 0;
+      if (!constraint.isSatisfiedBy(value)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Compute fraction of contexts passing all gates.
    *
    * @param {{gates: string[]}} proto - Prototype with gate strings.

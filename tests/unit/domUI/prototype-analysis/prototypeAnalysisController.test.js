@@ -27,6 +27,7 @@ describe('PrototypeAnalysisController', () => {
           <select id="prototype-family" class="form-select">
             <option value="emotion">Emotions</option>
             <option value="sexual">Sexual States</option>
+            <option value="both">Both (Combined)</option>
           </select>
         </div>
         <button id="run-analysis-btn" class="action-button" disabled>
@@ -664,6 +665,41 @@ describe('PrototypeAnalysisController', () => {
       expect(mockAnalyzer.analyze).not.toHaveBeenCalledWith(
         expect.objectContaining({
           sampleCount: expect.any(Number),
+        })
+      );
+    });
+
+    it('should pass "both" prototypeFamily when combined option is selected', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [],
+        metadata: {
+          prototypeFamily: 'both',
+          totalPrototypes: 108,
+          candidatePairsFound: 5778,
+          candidatePairsEvaluated: 5000,
+          redundantPairsFound: 0,
+          sampleCountPerPair: 50000,
+        },
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+
+      // Select "both" option
+      document.getElementById('prototype-family').value = 'both';
+
+      const runBtn = document.getElementById('run-analysis-btn');
+      runBtn.click();
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(mockAnalyzer.analyze).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prototypeFamily: 'both',
         })
       );
     });
@@ -2851,7 +2887,7 @@ describe('PrototypeAnalysisController', () => {
           sampleCountPerPair: 8000,
         },
         axisGapAnalysis: createAxisGapAnalysis({
-          pcaAnalysis: { residualVariance: 0.20 },
+          pcaAnalysis: { residualVarianceRatio: 0.20 },
           summary: {
             signalBreakdown: {
               pcaSignals: 1,
@@ -2890,7 +2926,7 @@ describe('PrototypeAnalysisController', () => {
           sampleCountPerPair: 8000,
         },
         axisGapAnalysis: createAxisGapAnalysis({
-          pcaAnalysis: { residualVariance: 0.18 },
+          pcaAnalysis: { residualVarianceRatio: 0.18 },
           summary: {
             signalBreakdown: {
               pcaSignals: 1,
@@ -2972,6 +3008,96 @@ describe('PrototypeAnalysisController', () => {
 
       const rationale = document.getElementById('decision-rationale');
       expect(rationale.textContent.length).toBeGreaterThan(0);
+    });
+
+    describe('residual variance consistency invariant', () => {
+      it('should use residualVarianceRatio for verdict calculation (regression test for field name bug)', async () => {
+        // This test ensures the decision summary uses residualVarianceRatio (not residualVariance)
+        // A high residual (> 0.15) with no other signals should produce MAYBE verdict
+        mockAnalyzer.analyze.mockResolvedValue({
+          recommendations: [],
+          metadata: {
+            prototypeFamily: 'emotion',
+            totalPrototypes: 10,
+            candidatePairsFound: 0,
+            candidatePairsEvaluated: 0,
+            redundantPairsFound: 0,
+            sampleCountPerPair: 8000,
+          },
+          axisGapAnalysis: createAxisGapAnalysis({
+            pcaAnalysis: { residualVarianceRatio: 0.247 },
+            summary: {
+              signalBreakdown: {
+                pcaSignals: 1,
+                hubSignals: 0,
+                coverageGapSignals: 0,
+                multiAxisConflictSignals: 0,
+              },
+            },
+          }),
+        });
+
+        const controller = new PrototypeAnalysisController({
+          logger: mockLogger,
+          prototypeOverlapAnalyzer: mockAnalyzer,
+        });
+
+        await controller.initialize();
+        document.getElementById('run-analysis-btn').click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const verdict = document.getElementById('decision-verdict');
+        // 24.7% > 15% threshold should produce MAYBE (not NO)
+        expect(verdict.textContent).toBe('MAYBE');
+        expect(verdict.classList.contains('verdict-maybe')).toBe(true);
+
+        // Also verify the rationale mentions the correct percentage
+        const rationale = document.getElementById('decision-rationale');
+        expect(rationale.textContent).toContain('24.7%');
+      });
+
+      it('should display the same residual variance percentage in summary rationale and PCA section', async () => {
+        const testResidualVarianceRatio = 0.123;
+        mockAnalyzer.analyze.mockResolvedValue({
+          recommendations: [],
+          metadata: {
+            prototypeFamily: 'emotion',
+            totalPrototypes: 10,
+            candidatePairsFound: 0,
+            candidatePairsEvaluated: 0,
+            redundantPairsFound: 0,
+            sampleCountPerPair: 8000,
+          },
+          axisGapAnalysis: createAxisGapAnalysis({
+            pcaAnalysis: { residualVarianceRatio: testResidualVarianceRatio },
+            summary: {
+              signalBreakdown: {
+                pcaSignals: 0,
+                hubSignals: 0,
+                coverageGapSignals: 0,
+                multiAxisConflictSignals: 0,
+              },
+            },
+          }),
+        });
+
+        const controller = new PrototypeAnalysisController({
+          logger: mockLogger,
+          prototypeOverlapAnalyzer: mockAnalyzer,
+        });
+
+        await controller.initialize();
+        document.getElementById('run-analysis-btn').click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // Check the rationale contains the correct percentage
+        const rationale = document.getElementById('decision-rationale');
+        expect(rationale.textContent).toContain('12.3%');
+
+        // Check the PCA section displays the same percentage
+        const pcaResidualVariance = document.getElementById('residual-variance');
+        expect(pcaResidualVariance.textContent).toBe('12.3%');
+      });
     });
   });
 

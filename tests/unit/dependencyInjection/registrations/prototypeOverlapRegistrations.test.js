@@ -65,6 +65,7 @@ describe('registerPrototypeOverlapServices', () => {
     mockPrototypeIntensityCalculator = {
       computeIntensity: jest.fn().mockReturnValue(0.5),
       computeIntensityFromNormalized: jest.fn().mockReturnValue(0.5),
+      computeIntensityFromFlat: jest.fn().mockReturnValue(0.5),
     };
 
     mockRandomStateGenerator = {
@@ -79,12 +80,14 @@ describe('registerPrototypeOverlapServices', () => {
       checkAllGatesPass: jest.fn().mockReturnValue(true),
       preParseGates: jest.fn().mockImplementation((gates) => gates),
       checkParsedGatesPass: jest.fn().mockReturnValue(true),
+      checkParsedGatesPassFlat: jest.fn().mockReturnValue(true),
     };
 
     mockPrototypeRegistryService = {
       getPrototypes: jest.fn().mockReturnValue([]),
       getAllPrototypeKeys: jest.fn().mockReturnValue([]),
       getPrototypesByType: jest.fn().mockReturnValue([]),
+      getAllPrototypes: jest.fn().mockReturnValue([]),
     };
 
     mockContextAxisNormalizer = {
@@ -481,6 +484,7 @@ describe('registerPrototypeOverlapServices - fixed behavior', () => {
     mockPrototypeIntensityCalculator = {
       computeIntensity: jest.fn().mockReturnValue(0.5),
       computeIntensityFromNormalized: jest.fn().mockReturnValue(0.5),
+      computeIntensityFromFlat: jest.fn().mockReturnValue(0.5),
     };
 
     mockRandomStateGenerator = {
@@ -495,12 +499,14 @@ describe('registerPrototypeOverlapServices - fixed behavior', () => {
       checkAllGatesPass: jest.fn().mockReturnValue(true),
       preParseGates: jest.fn().mockImplementation((gates) => gates),
       checkParsedGatesPass: jest.fn().mockReturnValue(true),
+      checkParsedGatesPassFlat: jest.fn().mockReturnValue(true),
     };
 
     mockPrototypeRegistryService = {
       getPrototypes: jest.fn().mockReturnValue([]),
       getAllPrototypeKeys: jest.fn().mockReturnValue([]),
       getPrototypesByType: jest.fn().mockReturnValue([]),
+      getAllPrototypes: jest.fn().mockReturnValue([]),
     };
 
     mockContextAxisNormalizer = {

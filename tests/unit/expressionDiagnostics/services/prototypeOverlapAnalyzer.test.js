@@ -39,6 +39,7 @@ describe('PrototypeOverlapAnalyzer', () => {
    */
   const createMockRegistryService = (prototypes = []) => ({
     getPrototypesByType: jest.fn().mockReturnValue(prototypes),
+    getAllPrototypes: jest.fn().mockReturnValue(prototypes),
   });
 
   /**
@@ -407,6 +408,7 @@ describe('PrototypeOverlapAnalyzer', () => {
           callOrder.push('getPrototypesByType');
           return [protoA, protoB];
         }),
+        getAllPrototypes: jest.fn(() => [protoA, protoB]),
       };
       const candidatePairFilter = {
         filterCandidates: jest.fn(async () => {
@@ -1076,6 +1078,22 @@ describe('PrototypeOverlapAnalyzer', () => {
       expect(prototypeRegistryService.getPrototypesByType).toHaveBeenCalledWith(
         'sexual'
       );
+    });
+
+    it('uses getAllPrototypes when prototypeFamily is "both"', async () => {
+      const prototypeRegistryService = createMockRegistryService([]);
+
+      const { analyzer } = createAnalyzer({
+        prototypeRegistryService,
+      });
+
+      await analyzer.analyze({ prototypeFamily: 'both' });
+
+      expect(prototypeRegistryService.getAllPrototypes).toHaveBeenCalledWith({
+        hasEmotions: true,
+        hasSexualStates: true,
+      });
+      expect(prototypeRegistryService.getPrototypesByType).not.toHaveBeenCalled();
     });
 
     it('uses specified sampleCount override', async () => {

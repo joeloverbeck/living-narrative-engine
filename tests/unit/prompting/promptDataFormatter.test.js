@@ -246,6 +246,10 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
         thoughtsArray: [{ text: 'Test thought', timestamp: '2024-01-01' }],
         notesArray: [],
         goalsArray: [{ text: 'Test goal', timestamp: '2024-01-01' }],
+        cognitiveLedger: {
+          settled_conclusions: ['Settled'],
+          open_questions: ['Open'],
+        },
       };
 
       const result = formatter.formatPromptData(promptData);
@@ -262,6 +266,9 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       expect(result.notesVoiceGuidance).toBe(makeNotesGuidance());
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('<goals>\n- Test goal\n</goals>');
+      expect(result.cognitiveLedgerSection).toContain('<cognitive_ledger>');
+      expect(result.cognitiveLedgerSection).toContain('- Settled');
+      expect(result.cognitiveLedgerSection).toContain('- Open');
     });
 
     test('uses mood-specific formatting when isMoodUpdatePrompt is true', () => {

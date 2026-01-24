@@ -162,7 +162,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
    * @returns {{ action: { chosenIndex: number; speech: string }; extractedData: { thoughts: string; notes?: Array<{text: string, subject: string, context?: string, timestamp?: string}>; moodUpdate?: { valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }; sexualUpdate?: { sex_excitation: number, sex_inhibition: number } } }}
    */
   #extractData(parsed, actorId) {
-    const { chosenIndex, speech, thoughts, notes, moodUpdate, sexualUpdate } =
+    const { chosenIndex, speech, thoughts, notes, moodUpdate, sexualUpdate, cognitive_ledger } =
       parsed;
     this.#logger.debug(
       `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: ${chosenIndex}`
@@ -198,6 +198,20 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       );
     }
 
+    if (cognitive_ledger) {
+      this.#logger.info(
+        `LLMResponseProcessor: cognitive_ledger extracted for actor ${actorId}`,
+        {
+          settled_conclusions_count: cognitive_ledger.settled_conclusions?.length ?? 0,
+          open_questions_count: cognitive_ledger.open_questions?.length ?? 0,
+        }
+      );
+    } else {
+      this.#logger.info(
+        `LLMResponseProcessor: NO cognitive_ledger in response for actor ${actorId}`
+      );
+    }
+
     return {
       action: { chosenIndex, speech },
       extractedData: {
@@ -205,6 +219,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         ...(notes !== undefined ? { notes } : {}),
         ...(moodUpdate !== undefined ? { moodUpdate } : {}),
         ...(sexualUpdate !== undefined ? { sexualUpdate } : {}),
+        ...(cognitive_ledger !== undefined ? { cognitiveLedger: cognitive_ledger } : {}),
       },
     };
   }

@@ -168,6 +168,10 @@ describe('End-to-End Short-Term Memory Flow', () => {
       chosenIndex: 1,
       speech: 'Hello',
       thoughts: 'FirstThought',
+      cognitive_ledger: {
+        settled_conclusions: [],
+        open_questions: [],
+      },
     };
 
     const processingResult = await responseProcessor.processResponse(

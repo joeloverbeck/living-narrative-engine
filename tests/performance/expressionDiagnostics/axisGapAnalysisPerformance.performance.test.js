@@ -107,6 +107,7 @@ describe('Axis Gap Analysis Performance', () => {
   const createMockCoreServices = (prototypes) => ({
     prototypeRegistryService: {
       getPrototypesByType: jest.fn().mockReturnValue(prototypes),
+      getAllPrototypes: jest.fn().mockReturnValue(prototypes),
     },
     candidatePairFilter: {
       filterCandidates: jest.fn().mockResolvedValue({

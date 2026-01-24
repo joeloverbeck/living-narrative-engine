@@ -39,6 +39,7 @@ describe('PrototypeOverlapAnalyzer - V2 Full Integration', () => {
    */
   const createMockRegistryService = (prototypes = []) => ({
     getPrototypesByType: jest.fn().mockReturnValue(prototypes),
+    getAllPrototypes: jest.fn().mockReturnValue(prototypes),
   });
 
   /**
