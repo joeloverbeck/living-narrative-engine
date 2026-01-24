@@ -1,9 +1,26 @@
 import { describe, it, expect } from '@jest/globals';
 import { OpenRouterJsonSchemaStrategy } from '../../../../src/llms/strategies/openRouterJsonSchemaStrategy.js';
 import { EnvironmentContext } from '../../../../src/llms/environmentContext.js';
-import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../../../../src/llms/constants/llmConstants.js';
 import { LLMStrategyError } from '../../../../src/llms/errors/LLMStrategyError.js';
 import { createEnhancedMockLogger } from '../../../common/mockFactories/loggerMocks.js';
+
+// Test schema used for integration tests (v5 action-only schema style)
+const TEST_GAME_AI_SCHEMA = {
+  name: 'game_ai_action_speech_output',
+  schema: {
+    name: 'game_ai_action_speech_output',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', description: 'The chosen action' },
+        speech: { type: 'string', description: 'Character speech' },
+      },
+      required: ['action', 'speech'],
+      additionalProperties: false,
+    },
+  },
+};
 
 class RecordingHttpClient {
   constructor(responseFactory) {
@@ -37,7 +54,7 @@ const BASE_CONFIG = Object.freeze({
   },
   jsonOutputStrategy: {
     method: 'openrouter_json_schema',
-    jsonSchema: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema,
+    jsonSchema: TEST_GAME_AI_SCHEMA.schema,
   },
 });
 
@@ -178,7 +195,7 @@ describe('Integration: OpenRouterJsonSchemaStrategy', () => {
               {
                 type: 'function',
                 function: {
-                  name: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name,
+                  name: TEST_GAME_AI_SCHEMA.name,
                   arguments: fallbackJson,
                 },
               },

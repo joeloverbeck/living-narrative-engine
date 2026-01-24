@@ -47,8 +47,6 @@ import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 import TextDataFetcher from '../../data/textDataFetcher.js';
 import {
-  LLM_TURN_ACTION_RESPONSE_SCHEMA,
-  LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
   LLM_TURN_ACTION_RESPONSE_SCHEMA_V5,
   LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,
   LLM_MOOD_UPDATE_RESPONSE_SCHEMA,
@@ -188,10 +186,6 @@ export async function registerLoaders(container) {
         validatorGenerator: c.resolve(tokens.IValidatorGenerator),
         dataRegistry: c.resolve(tokens.IDataRegistry),
         preloadSchemas: [
-          {
-            schema: LLM_TURN_ACTION_RESPONSE_SCHEMA,
-            id: LLM_TURN_ACTION_RESPONSE_SCHEMA_ID,
-          },
           {
             schema: LLM_TURN_ACTION_RESPONSE_SCHEMA_V5,
             id: LLM_TURN_ACTION_RESPONSE_SCHEMA_V5_ID,

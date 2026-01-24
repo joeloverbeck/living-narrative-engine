@@ -28,7 +28,7 @@ describe('Temporal Orientation Axis Integration', () => {
   describe('MOOD_AXES Constant', () => {
     it('should include temporal_orientation as the 7th axis (after future_expectancy)', () => {
       expect(MOOD_AXES).toContain('temporal_orientation');
-      expect(MOOD_AXES).toHaveLength(11);
+      expect(MOOD_AXES).toHaveLength(14);
       expect(MOOD_AXES[6]).toBe('temporal_orientation');
     });
 
@@ -163,12 +163,12 @@ describe('Temporal Orientation Axis Integration', () => {
       expect(context.moodAxes.temporal_orientation).toBeLessThanOrEqual(1);
     });
 
-    it('should maintain 11-axis count through pipeline', () => {
+    it('should maintain 14-axis count through pipeline', () => {
       const state = randomStateGenerator.generate('uniform', 'static');
       const normalizedMood = normalizeMoodAxes(state.current.mood);
 
-      expect(Object.keys(state.current.mood)).toHaveLength(11);
-      expect(Object.keys(normalizedMood)).toHaveLength(11);
+      expect(Object.keys(state.current.mood)).toHaveLength(14);
+      expect(Object.keys(normalizedMood)).toHaveLength(14);
     });
   });
 

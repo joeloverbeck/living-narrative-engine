@@ -1,6 +1,7 @@
 /**
  * @file Integration tests for request-time schema injection functionality
  * @description Tests the complete flow from ConfigurableLLMAdapter through LLMRequestExecutor to OpenRouterToolCallingStrategy
+ * Note: In v5, tool schemas must be explicitly provided - no default fallback schema exists.
  */
 
 import {
@@ -19,7 +20,6 @@ import {
   createMockLLMErrorMapper,
   createMockTokenEstimator,
 } from '../../common/mockFactories/coreServices.js';
-import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../../../src/llms/constants/llmConstants.js';
 
 describe('Request-Time Schema Injection Integration', () => {
   let configurableLLMAdapter;
@@ -208,7 +208,7 @@ describe('Request-Time Schema Injection Integration', () => {
 
     // Verify logging shows custom schema usage
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Using custom tool schema from request options'),
+      expect.stringContaining('Using tool schema from request options'),
       expect.objectContaining({
         llmId: 'test-openrouter-config',
         schemaProperties: ['analysis', 'confidence', 'metadata'],
@@ -216,46 +216,22 @@ describe('Request-Time Schema Injection Integration', () => {
     );
   });
 
-  it('should fall back to default schema when no request options provided', async () => {
+  it('should throw error when no toolSchema is provided in request options (v5 requirement)', async () => {
+    // In v5, toolSchema must be explicitly provided - no default fallback exists.
     // Initialize adapter
     await configurableLLMAdapter.init({ llmConfigLoader: mockLlmConfigLoader });
     await configurableLLMAdapter.setActiveLlm('test-openrouter-config');
 
-    // Mock HTTP response for default schema
-    mockHttpClient.request.mockResolvedValue({
-      choices: [
-        {
-          message: {
-            tool_calls: [
-              {
-                type: 'function',
-                function: {
-                  name: 'game_ai_action',
-                  arguments: JSON.stringify({
-                    action: 'proceed',
-                    speech: 'Default schema response',
-                  }),
-                },
-              },
-            ],
-          },
-        },
-      ],
-    });
+    const gameSummary = 'Test game summary without schema';
 
-    const gameSummary = 'Test game summary for default schema';
+    // Execute without request options - should throw because toolSchema is required
+    await expect(
+      configurableLLMAdapter.getAIDecision(gameSummary)
+    ).rejects.toThrow(/Missing 'toolSchema'/);
 
-    // Execute without request options
-    const result = await configurableLLMAdapter.getAIDecision(gameSummary);
-
-    // Verify HTTP client was called
-    expect(mockHttpClient.request).toHaveBeenCalledTimes(1);
-
-    // Verify logging shows default schema usage
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'No custom tool schema provided, using default game AI schema'
-      ),
+    // Verify error was logged
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining("Missing 'toolSchema' in request options"),
       expect.objectContaining({ llmId: 'test-openrouter-config' })
     );
   });
@@ -288,6 +264,7 @@ describe('Request-Time Schema Injection Integration', () => {
     });
 
     const requestOptions = {
+      toolSchema: customSchema, // Required in v5
       toolName: 'priority_test_tool', // Should override config toolName
     };
 
@@ -392,49 +369,22 @@ describe('Request-Time Schema Injection Integration', () => {
     );
   });
 
-  it('should maintain backward compatibility when no request options are provided', async () => {
+  it('should require explicit toolSchema - no backward compatibility without schema (v5 breaking change)', async () => {
+    // In v5, all callers must provide explicit toolSchema.
+    // This is a breaking change from v4 where default schema was used.
     // Initialize adapter
     await configurableLLMAdapter.init({ llmConfigLoader: mockLlmConfigLoader });
     await configurableLLMAdapter.setActiveLlm('test-openrouter-config');
 
-    // Mock HTTP response with expected tool name
-    mockHttpClient.request.mockResolvedValue({
-      choices: [
-        {
-          message: {
-            tool_calls: [
-              {
-                type: 'function',
-                function: {
-                  name: 'game_ai_action',
-                  arguments: JSON.stringify({
-                    action: 'proceed',
-                    speech: 'Backward compatibility response',
-                  }),
-                },
-              },
-            ],
-          },
-        },
-      ],
-    });
-
     const gameSummary = 'Test backward compatibility';
 
-    // Execute without any request options (legacy behavior)
-    const result = await configurableLLMAdapter.getAIDecision(gameSummary);
+    // Execute without any request options - should throw in v5
+    await expect(
+      configurableLLMAdapter.getAIDecision(gameSummary)
+    ).rejects.toThrow(/Missing 'toolSchema'/);
 
-    // Should work without errors
-    expect(result).toBeDefined();
-    expect(mockHttpClient.request).toHaveBeenCalledTimes(1);
-
-    // Verify result is properly extracted
-    expect(result).toBe(
-      JSON.stringify({
-        action: 'proceed',
-        speech: 'Backward compatibility response',
-      })
-    );
+    // Verify HTTP client was NOT called since schema validation fails early
+    expect(mockHttpClient.request).not.toHaveBeenCalled();
   });
 
   it('should propagate request options through the entire execution chain', async () => {

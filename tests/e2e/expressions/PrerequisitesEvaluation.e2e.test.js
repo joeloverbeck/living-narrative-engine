@@ -15,7 +15,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 // ============================================================================
 
 /**
- * Create mood data with all 11 axes initialized to defaults.
+ * Create mood data with all 14 axes initialized to defaults.
  * @param {object} overrides - Values to override
  * @returns {object} Complete mood data object
  */
@@ -31,6 +31,9 @@ const createMoodData = (overrides = {}) => ({
   affiliation: 0,
   inhibitory_control: 0,
   uncertainty: 0,
+  contamination_salience: 0,
+  rumination: 0,
+  evaluation_pressure: 0,
   ...overrides,
 });
 
@@ -47,7 +50,7 @@ const createSexualStateData = (overrides = {}) => ({
 });
 
 /**
- * Create affect traits data with all 4 properties.
+ * Create affect traits data with all 7 properties.
  * Default values are 50 representing "average human" baseline.
  * @param {object} overrides - Values to override
  * @returns {object} Complete affect traits data object
@@ -57,6 +60,9 @@ const createAffectTraitsData = (overrides = {}) => ({
   cognitive_empathy: 50,
   harm_aversion: 50,
   self_control: 50,
+  disgust_sensitivity: 50,
+  ruminative_tendency: 50,
+  evaluation_sensitivity: 50,
   ...overrides,
 });
 

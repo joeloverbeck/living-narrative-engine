@@ -1,26 +1,22 @@
 // tests/unit/schemas/llmOutputSchemas.affiliationAxis.test.js
 // -----------------------------------------------------------------------------
 // Tests that verify the affiliation mood axis is properly integrated into
-// the LLM response schemas.
+// the LLM mood update response schema (v1).
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import {
-  LLM_MOOD_UPDATE_RESPONSE_SCHEMA,
-  LLM_TURN_ACTION_RESPONSE_SCHEMA,
-} from '../../../src/turns/schemas/llmOutputSchemas.js';
+import { LLM_MOOD_UPDATE_RESPONSE_SCHEMA } from '../../../src/turns/schemas/llmOutputSchemas.js';
 import { describe, test, expect, beforeAll } from '@jest/globals';
 
 // -----------------------------------------------------------------------------
-// Helper – compile schemas once for all tests
+// Helper – compile schema once for all tests
 // -----------------------------------------------------------------------------
 
 let validateMoodUpdate;
-let validateLegacy;
 
-// Valid fixtures that include all 11 mood axes including affiliation
-const validMoodUpdateWith11Axes = {
+// Valid fixtures that include all 14 mood axes including affiliation
+const validMoodUpdateWith14Axes = {
   valence: 10,
   arousal: -20,
   agency_control: 30,
@@ -32,6 +28,9 @@ const validMoodUpdateWith11Axes = {
   affiliation: 15,
   inhibitory_control: 0,
   uncertainty: 0,
+  contamination_salience: 0,
+  rumination: 0,
+  evaluation_pressure: 0,
 };
 
 const validMoodUpdateWithout_Affiliation = {
@@ -45,6 +44,9 @@ const validMoodUpdateWithout_Affiliation = {
   self_evaluation: 70,
   inhibitory_control: 0,
   uncertainty: 0,
+  contamination_salience: 0,
+  rumination: 0,
+  evaluation_pressure: 0,
 };
 
 const validSexualUpdate = {
@@ -57,21 +59,7 @@ const validSexualUpdate = {
  */
 function createValidMoodResponse(overrides = {}) {
   return {
-    moodUpdate: validMoodUpdateWith11Axes,
-    sexualUpdate: validSexualUpdate,
-    ...overrides,
-  };
-}
-
-/**
- * Creates a valid legacy response.
- */
-function createValidLegacyResponse(overrides = {}) {
-  return {
-    chosenIndex: 1,
-    speech: 'Hello',
-    thoughts: 'Internal monologue',
-    moodUpdate: validMoodUpdateWith11Axes,
+    moodUpdate: validMoodUpdateWith14Axes,
     sexualUpdate: validSexualUpdate,
     ...overrides,
   };
@@ -81,7 +69,6 @@ beforeAll(() => {
   const ajv = new Ajv({ strict: true, allErrors: true });
   addFormats(ajv);
   validateMoodUpdate = ajv.compile(LLM_MOOD_UPDATE_RESPONSE_SCHEMA);
-  validateLegacy = ajv.compile(LLM_TURN_ACTION_RESPONSE_SCHEMA);
 });
 
 // -----------------------------------------------------------------------------
@@ -116,7 +103,7 @@ describe('LLM_MOOD_UPDATE_RESPONSE_SCHEMA affiliation axis', () => {
 
   test('should accept affiliation at minimum bound (-100)', () => {
     const data = createValidMoodResponse({
-      moodUpdate: { ...validMoodUpdateWith11Axes, affiliation: -100 },
+      moodUpdate: { ...validMoodUpdateWith14Axes, affiliation: -100 },
     });
 
     const isValid = validateMoodUpdate(data);
@@ -125,7 +112,7 @@ describe('LLM_MOOD_UPDATE_RESPONSE_SCHEMA affiliation axis', () => {
 
   test('should accept affiliation at maximum bound (100)', () => {
     const data = createValidMoodResponse({
-      moodUpdate: { ...validMoodUpdateWith11Axes, affiliation: 100 },
+      moodUpdate: { ...validMoodUpdateWith14Axes, affiliation: 100 },
     });
 
     const isValid = validateMoodUpdate(data);
@@ -134,7 +121,7 @@ describe('LLM_MOOD_UPDATE_RESPONSE_SCHEMA affiliation axis', () => {
 
   test('should reject affiliation below minimum (-101)', () => {
     const data = createValidMoodResponse({
-      moodUpdate: { ...validMoodUpdateWith11Axes, affiliation: -101 },
+      moodUpdate: { ...validMoodUpdateWith14Axes, affiliation: -101 },
     });
 
     const isValid = validateMoodUpdate(data);
@@ -150,7 +137,7 @@ describe('LLM_MOOD_UPDATE_RESPONSE_SCHEMA affiliation axis', () => {
 
   test('should reject affiliation above maximum (101)', () => {
     const data = createValidMoodResponse({
-      moodUpdate: { ...validMoodUpdateWith11Axes, affiliation: 101 },
+      moodUpdate: { ...validMoodUpdateWith14Axes, affiliation: 101 },
     });
 
     const isValid = validateMoodUpdate(data);
@@ -166,7 +153,7 @@ describe('LLM_MOOD_UPDATE_RESPONSE_SCHEMA affiliation axis', () => {
 
   test('should reject non-integer affiliation values', () => {
     const data = createValidMoodResponse({
-      moodUpdate: { ...validMoodUpdateWith11Axes, affiliation: 10.5 },
+      moodUpdate: { ...validMoodUpdateWith14Axes, affiliation: 10.5 },
     });
 
     const isValid = validateMoodUpdate(data);
@@ -179,46 +166,9 @@ describe('LLM_MOOD_UPDATE_RESPONSE_SCHEMA affiliation axis', () => {
     expect(typeError).toBeTruthy();
   });
 
-  test('schema should document 11 mood axes in description', () => {
+  test('schema should document 14 mood axes in description', () => {
     const description =
       LLM_MOOD_UPDATE_RESPONSE_SCHEMA.properties.moodUpdate.description;
-    expect(description).toContain('11');
-  });
-});
-
-// -----------------------------------------------------------------------------
-// Test Suite - LLM_TURN_ACTION_RESPONSE_SCHEMA (Legacy v4)
-// -----------------------------------------------------------------------------
-
-describe('LLM_TURN_ACTION_RESPONSE_SCHEMA (legacy) affiliation axis', () => {
-  test('should accept valid response with affiliation axis', () => {
-    const data = createValidLegacyResponse();
-
-    const isValid = validateLegacy(data);
-    expect(isValid).toBe(true);
-    expect(validateLegacy.errors).toBeNull();
-  });
-
-  test('should require affiliation axis in moodUpdate', () => {
-    const data = createValidLegacyResponse({
-      moodUpdate: validMoodUpdateWithout_Affiliation,
-    });
-
-    const isValid = validateLegacy(data);
-    expect(isValid).toBe(false);
-    expect(validateLegacy.errors).toBeDefined();
-
-    const missingAffiliationError = validateLegacy.errors.find(
-      (err) =>
-        err.keyword === 'required' &&
-        err.params?.missingProperty === 'affiliation'
-    );
-    expect(missingAffiliationError).toBeTruthy();
-  });
-
-  test('legacy schema should document 11 mood axes in description', () => {
-    const description =
-      LLM_TURN_ACTION_RESPONSE_SCHEMA.properties.moodUpdate.description;
-    expect(description).toContain('11');
+    expect(description).toContain('14');
   });
 });

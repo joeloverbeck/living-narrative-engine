@@ -3,7 +3,10 @@
  * @description Performs dimensionality reduction and variance analysis on prototype weights.
  */
 
-import { computeMedian } from '../../utils/statisticalUtils.js';
+import {
+  computeMedian,
+  countSignificantComponentsBrokenStick,
+} from '../../utils/statisticalUtils.js';
 
 /**
  * @typedef {object} PCAResult
@@ -12,6 +15,7 @@ import { computeMedian } from '../../utils/statisticalUtils.js';
  * @property {Array<{prototypeId: string, loading: number}>} topLoadingPrototypes - Top 10 extreme prototypes.
  * @property {string[]} dimensionsUsed - Axes included in analysis.
  * @property {number[]} cumulativeVariance - Cumulative variance explained per component.
+ * @property {number[]} explainedVariance - Individual variance explained per component (ratio 0-1).
  * @property {number} componentsFor80Pct - Components needed for 80% variance.
  * @property {number} componentsFor90Pct - Components needed for 90% variance.
  * @property {Array<{prototypeId: string, error: number}>} reconstructionErrors - Top 5 worst-fitting prototypes.
@@ -29,11 +33,14 @@ export class PCAAnalysisService {
    * @param {object} [config] - Configuration options.
    * @param {number} [config.pcaKaiserThreshold] - Minimum eigenvalue for significance (default: 1.0).
    * @param {number} [config.activeAxisEpsilon] - Minimum weight magnitude for active axis (default: 0).
+   * @param {'broken-stick'|'kaiser'} [config.pcaComponentSignificanceMethod] - Method for component significance (default: 'broken-stick').
    */
   constructor(config = {}) {
     this.#config = {
       pcaKaiserThreshold: config.pcaKaiserThreshold ?? 1.0,
       activeAxisEpsilon: config.activeAxisEpsilon ?? 0,
+      pcaComponentSignificanceMethod:
+        config.pcaComponentSignificanceMethod ?? 'broken-stick',
     };
   }
 
@@ -88,9 +95,11 @@ export class PCAAnalysisService {
       1,
       Math.max(0, residualVariance / totalVariance)
     );
-    const additionalSignificantComponents = residualValues.filter(
-      (value) => value >= this.#config.pcaKaiserThreshold
-    ).length;
+    const additionalSignificantComponents = this.#computeAdditionalSignificantComponents(
+      eigen.values,
+      totalVariance,
+      axisCount
+    );
     const topLoadingPrototypes = this.#computeExtremePrototypes({
       axisCount,
       eigenvectors: eigen.vectors,
@@ -105,6 +114,11 @@ export class PCAAnalysisService {
       cumulative += eigenvalue;
       cumulativeVariance.push(cumulative / totalVariance);
     }
+
+    // Compute individual variance proportions from eigenvalues
+    const explainedVariance = eigen.values.map(
+      (eigenvalue) => eigenvalue / totalVariance
+    );
 
     // Find component counts for 80% and 90% thresholds
     const componentsFor80Pct =
@@ -126,6 +140,7 @@ export class PCAAnalysisService {
       topLoadingPrototypes,
       dimensionsUsed: axes,
       cumulativeVariance,
+      explainedVariance,
       componentsFor80Pct,
       componentsFor90Pct,
       reconstructionErrors,
@@ -144,6 +159,7 @@ export class PCAAnalysisService {
       topLoadingPrototypes: [],
       dimensionsUsed: [],
       cumulativeVariance: [],
+      explainedVariance: [],
       componentsFor80Pct: 0,
       componentsFor90Pct: 0,
       reconstructionErrors: [],
@@ -408,6 +424,35 @@ export class PCAAnalysisService {
     const axisCount = Math.max(1, Math.floor(median));
 
     return Math.min(axisCount, axes.length);
+  }
+
+  /**
+   * Compute the number of additional significant components beyond expected axis count.
+   *
+   * Uses either the broken-stick rule or Kaiser criterion based on configuration.
+   *
+   * @param {number[]} eigenvalues - All eigenvalues sorted in descending order.
+   * @param {number} totalVariance - Sum of all eigenvalues.
+   * @param {number} axisCount - Expected number of axes (components to exclude from "additional").
+   * @returns {number} Number of additional significant components.
+   */
+  #computeAdditionalSignificantComponents(eigenvalues, totalVariance, axisCount) {
+    const method = this.#config.pcaComponentSignificanceMethod;
+
+    if (method === 'broken-stick') {
+      // Broken-stick counts total significant components, so subtract expected
+      const totalSignificant = countSignificantComponentsBrokenStick(
+        eigenvalues,
+        totalVariance
+      );
+      return Math.max(0, totalSignificant - axisCount);
+    }
+
+    // Fallback: Kaiser criterion on residual eigenvalues
+    const residualValues = eigenvalues.slice(axisCount);
+    return residualValues.filter(
+      (value) => value >= this.#config.pcaKaiserThreshold
+    ).length;
   }
 
   /**

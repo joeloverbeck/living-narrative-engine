@@ -33,6 +33,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(true);
     });
@@ -50,6 +53,9 @@ describe('core:mood component schema', () => {
         affiliation: -100,
         inhibitory_control: -100,
         uncertainty: -100,
+        contamination_salience: -100,
+        rumination: -100,
+        evaluation_pressure: -100,
       });
       expect(result.isValid).toBe(true);
     });
@@ -67,6 +73,9 @@ describe('core:mood component schema', () => {
         affiliation: 100,
         inhibitory_control: 100,
         uncertainty: 100,
+        contamination_salience: 100,
+        rumination: 100,
+        evaluation_pressure: 100,
       });
       expect(result.isValid).toBe(true);
     });
@@ -84,6 +93,9 @@ describe('core:mood component schema', () => {
         affiliation: -45,
         inhibitory_control: 0,
         uncertainty: 40,
+        contamination_salience: -20,
+        rumination: 35,
+        evaluation_pressure: -55,
       });
       expect(result.isValid).toBe(true);
     });
@@ -102,6 +114,9 @@ describe('core:mood component schema', () => {
       'affiliation',
       'inhibitory_control',
       'uncertainty',
+      'contamination_salience',
+      'rumination',
+      'evaluation_pressure',
     ];
 
     requiredFields.forEach((field) => {
@@ -118,6 +133,9 @@ describe('core:mood component schema', () => {
           affiliation: 0,
           inhibitory_control: 0,
           uncertainty: 0,
+          contamination_salience: 0,
+          rumination: 0,
+          evaluation_pressure: 0,
         };
         delete data[field];
         const result = validate(data);
@@ -139,6 +157,9 @@ describe('core:mood component schema', () => {
       'affiliation',
       'inhibitory_control',
       'uncertainty',
+      'contamination_salience',
+      'rumination',
+      'evaluation_pressure',
     ];
 
     axes.forEach((axis) => {
@@ -155,6 +176,9 @@ describe('core:mood component schema', () => {
           affiliation: 0,
           inhibitory_control: 0,
           uncertainty: 0,
+          contamination_salience: 0,
+          rumination: 0,
+          evaluation_pressure: 0,
         };
         data[axis] = -101;
         const result = validate(data);
@@ -174,6 +198,9 @@ describe('core:mood component schema', () => {
           affiliation: 0,
           inhibitory_control: 0,
           uncertainty: 0,
+          contamination_salience: 0,
+          rumination: 0,
+          evaluation_pressure: 0,
         };
         data[axis] = 101;
         const result = validate(data);
@@ -196,6 +223,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -213,6 +243,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -225,10 +258,14 @@ describe('core:mood component schema', () => {
         threat: 0,
         engagement: 0,
         future_expectancy: 0,
+        temporal_orientation: 0,
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -248,6 +285,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
         unknown_property: 42,
       });
       expect(result.isValid).toBe(false);
@@ -273,6 +313,9 @@ describe('core:mood component schema', () => {
         affiliation: 100,
         inhibitory_control: -100,
         uncertainty: 100,
+        contamination_salience: -100,
+        rumination: 100,
+        evaluation_pressure: -100,
       });
       expect(result.isValid).toBe(true);
     });
@@ -292,6 +335,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(true);
     });
@@ -309,6 +355,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 100,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(true);
     });
@@ -326,6 +375,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: -100,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(true);
     });
@@ -343,6 +395,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: -101,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -360,6 +415,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 101,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(false);
     });
@@ -377,6 +435,9 @@ describe('core:mood component schema', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 50.5,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       });
       expect(result.isValid).toBe(false);
     });

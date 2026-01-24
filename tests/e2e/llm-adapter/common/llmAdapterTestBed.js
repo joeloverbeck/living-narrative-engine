@@ -347,14 +347,88 @@ export class LLMAdapterTestBed {
   }
 
   /**
+   * Get the default test tool schema for tool-calling strategy.
+   * Matches the structure of LLM_TURN_ACTION_RESPONSE_SCHEMA_V5.
+   *
+   * @private
+   * @returns {object} Default tool schema
+   */
+  #getDefaultTestToolSchema() {
+    return {
+      type: 'object',
+      properties: {
+        chosenIndex: {
+          type: 'integer',
+          minimum: 1,
+          description: 'Index of the chosen action (1-based)',
+        },
+        speech: {
+          type: 'string',
+          description: 'What the character says aloud',
+        },
+        thoughts: {
+          type: 'string',
+          description: "Character's internal thoughts and reasoning",
+        },
+        notes: {
+          type: 'array',
+          description: 'Optional notes the character records',
+          items: {
+            type: 'object',
+            properties: {
+              text: { type: 'string', description: 'The note content' },
+              subject: {
+                type: 'string',
+                description: 'Primary subject of the note',
+              },
+              context: {
+                type: 'string',
+                description: 'Where/how this was observed',
+              },
+              tags: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
+      },
+      required: ['chosenIndex', 'speech', 'thoughts'],
+    };
+  }
+
+  /**
    * Get AI decision through the adapter
    *
    * @param {string} prompt - The prompt to send
    * @param {AbortSignal} [abortSignal] - Optional abort signal
+   * @param {object} [requestOptions] - Optional request-specific options
    * @returns {Promise<string>} Raw JSON response
    */
-  async getAIDecision(prompt, abortSignal) {
-    return await this.llmAdapter.getAIDecision(prompt, abortSignal);
+  async getAIDecision(prompt, abortSignal, requestOptions = {}) {
+    // Build request options with default toolSchema for tool-calling strategy
+    const finalRequestOptions = { ...requestOptions };
+
+    if (
+      !Object.prototype.hasOwnProperty.call(finalRequestOptions, 'toolSchema')
+    ) {
+      const { config } = await this.getCurrentLLMConfig();
+
+      // Only provide default schema for tool-calling strategy
+      if (config?.jsonOutputStrategy?.method === 'openrouter_tool_calling') {
+        finalRequestOptions.toolSchema = this.#getDefaultTestToolSchema();
+        finalRequestOptions.toolName =
+          finalRequestOptions.toolName ||
+          config.jsonOutputStrategy?.toolName ||
+          'function_call';
+        finalRequestOptions.toolDescription =
+          finalRequestOptions.toolDescription ||
+          'Test tool for game AI action decisions';
+      }
+    }
+
+    return await this.llmAdapter.getAIDecision(
+      prompt,
+      abortSignal,
+      finalRequestOptions
+    );
   }
 
   /**

@@ -4,6 +4,36 @@
  */
 
 /**
+ * Maps flag reasons to their detection method family.
+ * Multiple reasons from the same family represent correlated signals,
+ * not independent detection methods.
+ *
+ * IMPORTANT: sign_tension is marked as 'metadata' family because:
+ * - Mixed positive/negative weights are NORMAL for emotional prototypes
+ * - 64% of prototypes were incorrectly flagged as conflicts
+ * - Sign tension should NOT contribute to confidence scoring or recommendations
+ * - It remains visible as informational metadata for structural understanding
+ *
+ * @type {Record<string, string>}
+ */
+const REASON_TO_FAMILY_MAP = {
+  high_reconstruction_error: 'pca',
+  extreme_projection: 'pca',
+  hub: 'hubs',
+  coverage_gap: 'gaps',
+  multi_axis_conflict: 'conflicts',
+  high_axis_loading: 'conflicts',
+  sign_tension: 'metadata', // METADATA ONLY - does not contribute to confidence/recommendations
+};
+
+/**
+ * Family names that are metadata-only and should not contribute to
+ * confidence scoring or recommendation generation.
+ * @type {Set<string>}
+ */
+const METADATA_ONLY_FAMILIES = new Set(['metadata']);
+
+/**
  * @typedef {import('./AxisGapRecommendationBuilder.js').Recommendation} Recommendation
  * @typedef {import('./AxisGapRecommendationBuilder.js').PCAResult} PCAResult
  * @typedef {import('./AxisGapRecommendationBuilder.js').HubResult} HubResult
@@ -19,7 +49,8 @@
  * @property {Record<string, object>} metricsByReason - Metrics keyed by reason.
  * @property {string|null} reason - Primary flag reason (backward compat).
  * @property {object} metrics - Primary metrics (backward compat).
- * @property {boolean} multiSignalAgreement - Whether 3+ reasons agree.
+ * @property {boolean} multiSignalAgreement - Whether 3+ reasons agree (backward compat).
+ * @property {number} distinctFamilyCount - Number of distinct method families.
  */
 
 /**
@@ -126,6 +157,7 @@ export class AxisGapReportSynthesizer {
         additionalSignificantComponents: pcaResult.additionalSignificantComponents,
         topLoadingPrototypes: pcaResult.topLoadingPrototypes,
         cumulativeVariance: pcaResult.cumulativeVariance ?? [],
+        explainedVariance: pcaResult.explainedVariance ?? [],
         componentsFor80Pct: pcaResult.componentsFor80Pct ?? 0,
         componentsFor90Pct: pcaResult.componentsFor90Pct ?? 0,
         reconstructionErrors: pcaResult.reconstructionErrors ?? [],
@@ -196,6 +228,7 @@ export class AxisGapReportSynthesizer {
 
     /**
      * Helper to accumulate flag reasons.
+     *
      * @param {string} prototypeId - The prototype ID to flag.
      * @param {string} reason - The reason for flagging.
      * @param {object} metrics - The metrics associated with this reason.
@@ -298,7 +331,8 @@ export class AxisGapReportSynthesizer {
         metricsByReason,
         reason: reasons[0] ?? null,
         metrics: metricsByReason[reasons[0]] ?? {},
-        multiSignalAgreement: reasons.length >= 3,
+        multiSignalAgreement: reasons.length >= 3, // Keep for backward compat
+        distinctFamilyCount: this.#countDistinctFamilies(reasons),
       });
     }
 
@@ -354,17 +388,51 @@ export class AxisGapReportSynthesizer {
       baseConfidence = 'medium';
     }
 
-    const hasMultiSignalPrototype =
+    // Use distinct method families instead of raw reason count to avoid
+    // inflated confidence from correlated signals (e.g., multiple PCA reasons)
+    const hasMultiFamilyPrototype =
       Array.isArray(prototypeWeightSummaries) &&
       prototypeWeightSummaries.some(
-        (summary) => Array.isArray(summary?.reasons) && summary.reasons.length >= 3
+        (summary) => this.#countDistinctFamilies(summary?.reasons) >= 3
       );
 
-    if (hasMultiSignalPrototype && baseConfidence !== 'high') {
+    if (hasMultiFamilyPrototype && baseConfidence !== 'high') {
       return baseConfidence === 'low' ? 'medium' : 'high';
     }
 
     return baseConfidence;
+  }
+
+  /**
+   * Count distinct method families represented by reasons.
+   * Reasons from the same family (e.g., PCA) are correlated and should
+   * not be counted as independent signals for confidence boosting.
+   *
+   * Metadata-only families (like sign_tension) are excluded from the count
+   * as they should not contribute to confidence scoring.
+   *
+   * @param {string[]|undefined} reasons - Array of flag reason strings.
+   * @returns {number} Number of distinct actionable method families.
+   */
+  #countDistinctFamilies(reasons) {
+    if (!Array.isArray(reasons) || reasons.length === 0) {
+      return 0;
+    }
+
+    const families = new Set();
+    for (const reason of reasons) {
+      const family = REASON_TO_FAMILY_MAP[reason];
+      if (family) {
+        // Skip metadata-only families - they don't contribute to confidence
+        if (!METADATA_ONLY_FAMILIES.has(family)) {
+          families.add(family);
+        }
+      } else {
+        // Unknown reasons are counted as their own family (safe fallback)
+        families.add(reason);
+      }
+    }
+    return families.size;
   }
 
   /**
@@ -379,6 +447,7 @@ export class AxisGapReportSynthesizer {
       topLoadingPrototypes: [],
       dimensionsUsed: [],
       cumulativeVariance: [],
+      explainedVariance: [],
       componentsFor80Pct: 0,
       componentsFor90Pct: 0,
       reconstructionErrors: [],

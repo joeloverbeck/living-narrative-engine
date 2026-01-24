@@ -1,37 +1,21 @@
 // tests/integration/schemas/llmOutputValidation.integration.test.js
 // Integration tests for LLM output validation pipeline
-// Verifies that LLM responses are properly validated against schema v4
-// and that responses with tags are rejected while responses without tags pass
+// Verifies that LLM responses are properly validated against schema v5 (action-only)
+// Note: moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor
+// in Phase 1 of the two-phase emotional state update flow.
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { LLM_TURN_ACTION_RESPONSE_SCHEMA } from '../../../src/turns/schemas/llmOutputSchemas.js';
+import { LLM_TURN_ACTION_RESPONSE_SCHEMA_V5 } from '../../../src/turns/schemas/llmOutputSchemas.js';
 
-describe('LLM Output Validation Pipeline Integration', () => {
+describe('LLM Output Validation Pipeline Integration (V5 Schema)', () => {
   let validator;
-  const baseMoodUpdate = {
-    valence: 10,
-    arousal: 5,
-    agency_control: 15,
-    threat: -5,
-    engagement: 20,
-    future_expectancy: 10,
-    temporal_orientation: 0,
-    self_evaluation: 5,
-    affiliation: 5,
-    inhibitory_control: 0,
-    uncertainty: 5,
-  };
-  const baseSexualUpdate = {
-    sex_excitation: 10,
-    sex_inhibition: 20,
-  };
 
   beforeAll(() => {
     const ajv = new Ajv({ strict: true, allErrors: true });
     addFormats(ajv);
-    validator = ajv.compile(LLM_TURN_ACTION_RESPONSE_SCHEMA);
+    validator = ajv.compile(LLM_TURN_ACTION_RESPONSE_SCHEMA_V5);
   });
 
   describe('Mock LLM Response Processing', () => {
@@ -41,8 +25,10 @@ describe('LLM Output Validation Pipeline Integration', () => {
         speech: 'I understand your concern about the situation.',
         thoughts:
           'The player seems worried. I should provide reassurance while staying in character.',
-        moodUpdate: baseMoodUpdate,
-        sexualUpdate: baseSexualUpdate,
+        cognitive_ledger: {
+          settled_conclusions: ['Player is anxious about the upcoming battle'],
+          open_questions: ['What specific concerns should I address?'],
+        },
         notes: [
           {
             text: 'Player expressed worry about upcoming battle',
@@ -69,8 +55,10 @@ describe('LLM Output Validation Pipeline Integration', () => {
         speech: 'The marketplace is bustling today.',
         thoughts:
           'Many people are out shopping. This could be useful information.',
-        moodUpdate: baseMoodUpdate,
-        sexualUpdate: baseSexualUpdate,
+        cognitive_ledger: {
+          settled_conclusions: [],
+          open_questions: [],
+        },
         notes: [
           {
             text: 'Merchant seems nervous about recent events',
@@ -101,8 +89,10 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 3,
         speech: 'Yes, that makes sense.',
         thoughts: 'Simple response, no new information to note.',
-        moodUpdate: baseMoodUpdate,
-        sexualUpdate: baseSexualUpdate,
+        cognitive_ledger: {
+          settled_conclusions: [],
+          open_questions: [],
+        },
         notes: [],
       };
 
@@ -116,8 +106,10 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 1,
         speech: 'Hello there!',
         thoughts: 'Greeting the player character.',
-        moodUpdate: baseMoodUpdate,
-        sexualUpdate: baseSexualUpdate,
+        cognitive_ledger: {
+          settled_conclusions: [],
+          open_questions: [],
+        },
       };
 
       const isValid = validator(mockLlmResponse);
@@ -130,8 +122,10 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 2,
         speech: 'The situation is quite complex.',
         thoughts: 'Multiple observations to record.',
-        moodUpdate: baseMoodUpdate,
-        sexualUpdate: baseSexualUpdate,
+        cognitive_ledger: {
+          settled_conclusions: [],
+          open_questions: [],
+        },
         notes: [
           {
             text: 'First observation - normal note',
@@ -167,8 +161,10 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 1,
         speech: 'Test response',
         thoughts: 'Test thoughts',
-        moodUpdate: baseMoodUpdate,
-        sexualUpdate: baseSexualUpdate,
+        cognitive_ledger: {
+          settled_conclusions: [],
+          open_questions: [],
+        },
         notes: [
           {
             text: 'Note with tags',
@@ -202,8 +198,10 @@ describe('LLM Output Validation Pipeline Integration', () => {
         chosenIndex: 1,
         speech: 'Test',
         thoughts: 'Test',
-        moodUpdate: baseMoodUpdate,
-        sexualUpdate: baseSexualUpdate,
+        cognitive_ledger: {
+          settled_conclusions: [],
+          open_questions: [],
+        },
         notes: [
           {
             text: 'Valid note',
@@ -234,21 +232,21 @@ describe('LLM Output Validation Pipeline Integration', () => {
     });
 
     test('should maintain correct schema version', () => {
-      expect(LLM_TURN_ACTION_RESPONSE_SCHEMA.$id).toContain(
-        'llmTurnActionResponse'
+      expect(LLM_TURN_ACTION_RESPONSE_SCHEMA_V5.$id).toContain(
+        'llmTurnActionResponseV5'
       );
-      expect(LLM_TURN_ACTION_RESPONSE_SCHEMA.properties).toBeDefined();
-      expect(LLM_TURN_ACTION_RESPONSE_SCHEMA.required).toEqual([
+      expect(LLM_TURN_ACTION_RESPONSE_SCHEMA_V5.properties).toBeDefined();
+      // V5 does NOT require moodUpdate/sexualUpdate - those are handled by v1 mood schema
+      expect(LLM_TURN_ACTION_RESPONSE_SCHEMA_V5.required).toEqual([
         'chosenIndex',
         'speech',
         'thoughts',
-        'moodUpdate',
-        'sexualUpdate',
+        'cognitive_ledger',
       ]);
     });
 
     test('should verify notes structure excludes tags', () => {
-      const notesSchema = LLM_TURN_ACTION_RESPONSE_SCHEMA.properties.notes;
+      const notesSchema = LLM_TURN_ACTION_RESPONSE_SCHEMA_V5.properties.notes;
       const noteItemSchema = notesSchema.items;
 
       expect(noteItemSchema.properties).toBeDefined();
@@ -261,6 +259,16 @@ describe('LLM Output Validation Pipeline Integration', () => {
         'subject',
         'subjectType',
       ]);
+    });
+
+    test('should include cognitive_ledger in schema', () => {
+      const cognitiveLedger =
+        LLM_TURN_ACTION_RESPONSE_SCHEMA_V5.properties.cognitive_ledger;
+
+      expect(cognitiveLedger).toBeDefined();
+      expect(cognitiveLedger.type).toBe('object');
+      expect(cognitiveLedger.properties.settled_conclusions).toBeDefined();
+      expect(cognitiveLedger.properties.open_questions).toBeDefined();
     });
   });
 });

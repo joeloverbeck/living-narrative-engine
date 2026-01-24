@@ -19,8 +19,8 @@ import {
 
 describe('moodAffectConstants', () => {
   describe('MOOD_AXES', () => {
-    it('contains exactly 11 mood axes', () => {
-      expect(MOOD_AXES).toHaveLength(11);
+    it('contains exactly 14 mood axes', () => {
+      expect(MOOD_AXES).toHaveLength(14);
     });
 
     it('contains all expected mood axes in the correct order', () => {
@@ -36,6 +36,9 @@ describe('moodAffectConstants', () => {
         'affiliation',
         'inhibitory_control',
         'uncertainty',
+        'contamination_salience',
+        'rumination',
+        'evaluation_pressure',
       ]);
     });
 
@@ -56,8 +59,8 @@ describe('moodAffectConstants', () => {
   });
 
   describe('AFFECT_TRAITS', () => {
-    it('contains exactly 4 affect traits', () => {
-      expect(AFFECT_TRAITS).toHaveLength(4);
+    it('contains exactly 7 affect traits', () => {
+      expect(AFFECT_TRAITS).toHaveLength(7);
     });
 
     it('contains all expected affect traits in the correct order', () => {
@@ -66,6 +69,9 @@ describe('moodAffectConstants', () => {
         'cognitive_empathy',
         'harm_aversion',
         'self_control',
+        'disgust_sensitivity',
+        'ruminative_tendency',
+        'evaluation_sensitivity',
       ]);
     });
 
@@ -113,12 +119,15 @@ describe('moodAffectConstants', () => {
   });
 
   describe('DEFAULT_AFFECT_TRAITS', () => {
-    it('contains all 4 affect traits with default values', () => {
+    it('contains all 7 affect traits with default values', () => {
       expect(DEFAULT_AFFECT_TRAITS).toEqual({
         affective_empathy: 50,
         cognitive_empathy: 50,
         harm_aversion: 50,
         self_control: 50,
+        disgust_sensitivity: 50,
+        ruminative_tendency: 50,
+        evaluation_sensitivity: 50,
       });
     });
 
@@ -139,7 +148,7 @@ describe('moodAffectConstants', () => {
     });
 
     it('contains all mood axes', () => {
-      expect(MOOD_AXES_SET.size).toBe(11);
+      expect(MOOD_AXES_SET.size).toBe(14);
       for (const axis of MOOD_AXES) {
         expect(MOOD_AXES_SET.has(axis)).toBe(true);
       }
@@ -162,7 +171,7 @@ describe('moodAffectConstants', () => {
     });
 
     it('contains all affect traits', () => {
-      expect(AFFECT_TRAITS_SET.size).toBe(4);
+      expect(AFFECT_TRAITS_SET.size).toBe(7);
       for (const trait of AFFECT_TRAITS) {
         expect(AFFECT_TRAITS_SET.has(trait)).toBe(true);
       }
@@ -188,6 +197,9 @@ describe('moodAffectConstants', () => {
       expect(isMoodAxis('affiliation')).toBe(true);
       expect(isMoodAxis('inhibitory_control')).toBe(true);
       expect(isMoodAxis('uncertainty')).toBe(true);
+      expect(isMoodAxis('contamination_salience')).toBe(true);
+      expect(isMoodAxis('rumination')).toBe(true);
+      expect(isMoodAxis('evaluation_pressure')).toBe(true);
     });
 
     it('returns false for invalid mood axes', () => {
@@ -211,6 +223,9 @@ describe('moodAffectConstants', () => {
       expect(isAffectTrait('cognitive_empathy')).toBe(true);
       expect(isAffectTrait('harm_aversion')).toBe(true);
       expect(isAffectTrait('self_control')).toBe(true);
+      expect(isAffectTrait('disgust_sensitivity')).toBe(true);
+      expect(isAffectTrait('ruminative_tendency')).toBe(true);
+      expect(isAffectTrait('evaluation_sensitivity')).toBe(true);
     });
 
     it('returns false for invalid affect traits', () => {

@@ -76,6 +76,8 @@ describe('Integration – AI decision flow', () => {
       actions: [composite],
       abortSignal: null,
     });
+    // Note: moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor
+    // in Phase 1 of the two-phase emotional state update flow, not in extractedData
     expect(result).toEqual({
       kind: 'success',
       action: {
@@ -87,8 +89,6 @@ describe('Integration – AI decision flow', () => {
         speech: null,
         thoughts: null,
         notes: null,
-        moodUpdate: null,
-        sexualUpdate: null,
         chosenIndex: 1,
       },
       availableActions: [

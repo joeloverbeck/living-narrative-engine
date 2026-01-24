@@ -127,10 +127,27 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
     }
 
     // For OpenRouter strategies, we typically use a single tool
-    // Use the first tool or default to game AI action
     const llmId = 'unknown'; // This would be provided by the calling context in practice
 
     try {
+      // If custom schema is provided in request options, use buildCustomToolSchema
+      if (Object.prototype.hasOwnProperty.call(requestOptions, 'toolSchema')) {
+        const customSchema = requestOptions.toolSchema;
+        const toolName = requestOptions.toolName || 'custom_tool';
+        const toolDescription =
+          requestOptions.toolDescription || 'Custom tool for specific request';
+
+        if (customSchema && typeof customSchema === 'object') {
+          return this.#toolSchemaHandler.buildCustomToolSchema(
+            customSchema,
+            toolName,
+            toolDescription,
+            llmId
+          );
+        }
+      }
+
+      // Fall back to default tool schema (will throw in v5)
       return this.#toolSchemaHandler.buildDefaultToolSchema(
         llmId,
         requestOptions

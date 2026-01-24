@@ -113,6 +113,9 @@ describe('ExpressionContextBuilder', () => {
           affiliation: 0,
           inhibitory_control: 0,
           uncertainty: 0,
+          contamination_salience: 0,
+          rumination: 0,
+          evaluation_pressure: 0,
         },
       })
     );
@@ -171,6 +174,9 @@ describe('ExpressionContextBuilder', () => {
       affiliation: 35,
       inhibitory_control: 20,
       uncertainty: 15,
+      contamination_salience: 25,
+      rumination: 30,
+      evaluation_pressure: -10,
     };
 
     const result = builder.buildContext(
@@ -237,6 +243,9 @@ describe('ExpressionContextBuilder', () => {
       affiliation: 0,
       inhibitory_control: 0,
       uncertainty: 0,
+      contamination_salience: 0,
+      rumination: 0,
+      evaluation_pressure: 0,
     });
   });
 
@@ -259,6 +268,9 @@ describe('ExpressionContextBuilder', () => {
         affiliation: 8,
         inhibitory_control: 9,
         uncertainty: 10,
+        contamination_salience: 11,
+        rumination: 12,
+        evaluation_pressure: 13,
       },
     };
 
@@ -343,6 +355,9 @@ describe('ExpressionContextBuilder', () => {
       affiliation: 0,
       inhibitory_control: 0,
       uncertainty: 0,
+      contamination_salience: 0,
+      rumination: 0,
+      evaluation_pressure: 0,
     });
   });
 
@@ -465,6 +480,9 @@ describe('ExpressionContextBuilder', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
       },
     };
 
@@ -497,6 +515,9 @@ describe('ExpressionContextBuilder', () => {
         affiliation: 0,
         inhibitory_control: 0,
         uncertainty: 0,
+        contamination_salience: 0,
+        rumination: 0,
+        evaluation_pressure: 0,
         extra_axis: 5,
       },
     };
@@ -512,7 +533,7 @@ describe('ExpressionContextBuilder', () => {
   });
 
   // ============================================
-  // Mood Axes Tests (all 11 canonical axes)
+  // Mood Axes Tests (all 14 canonical axes)
   // ============================================
 
   describe('affiliation axis support', () => {
@@ -553,6 +574,9 @@ describe('ExpressionContextBuilder', () => {
           affiliation: 15,
           inhibitory_control: 9,
           uncertainty: 10,
+          contamination_salience: 0,
+          rumination: 0,
+          evaluation_pressure: 0,
         },
       };
 

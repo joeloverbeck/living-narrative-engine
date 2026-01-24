@@ -1,19 +1,16 @@
 /**
  * @file Default tool schema handler for LLM strategies
- * @description Provides default tool schema generation behavior that can be used
- * by strategies that don't require custom schema logic.
+ * @description Provides tool schema generation behavior for LLM strategies.
+ * Custom schemas must be explicitly provided - no default fallback schema exists.
  */
 
-import {
-  OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA,
-  OPENROUTER_DEFAULT_TOOL_DESCRIPTION,
-} from '../../constants/llmConstants.js';
+import { OPENROUTER_DEFAULT_TOOL_DESCRIPTION } from '../../constants/llmConstants.js';
 
 /**
  * @class DefaultToolSchemaHandler
- * @description Handles default tool schema generation using the standard game AI action schema.
- * This provides backward compatibility with existing implementations while serving as a fallback
- * for strategies that don't implement custom schema logic.
+ * @description Handles tool schema generation for LLM strategies.
+ * Custom schemas must be explicitly provided via buildCustomToolSchema().
+ * No default fallback schema exists - callers must provide their own schema.
  */
 export class DefaultToolSchemaHandler {
   /**
@@ -38,40 +35,19 @@ export class DefaultToolSchemaHandler {
   }
 
   /**
-   * Builds the default game AI tool schema.
-   * This method provides the standard tool schema used throughout the system
-   * for game AI decision-making.
+   * Builds a tool schema - requires explicit schema parameters.
+   * No default fallback schema exists. Use buildCustomToolSchema() instead
+   * with an explicit schema.
    *
    * @param {string} llmId - The LLM identifier for logging purposes
    * @param {object} [requestOptions] - Optional request-specific options
-   * @param {string} [requestOptions.toolName] - Override for the tool name
-   * @param {string} [requestOptions.toolDescription] - Override for the tool description
-   * @returns {object} The default tool schema object
+   * @throws {Error} Always throws - no default schema available
+   * @deprecated Use buildCustomToolSchema() with an explicit schema instead
    */
   buildDefaultToolSchema(llmId, requestOptions = {}) {
-    // Use default game AI schema
-    const toolParametersSchema =
-      OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-      OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA;
-
-    // Default tool name and description unless overridden
-    const toolName = requestOptions.toolName || 'game_ai_action_speech';
-    const toolDescription =
-      requestOptions.toolDescription || OPENROUTER_DEFAULT_TOOL_DESCRIPTION;
-
-    this.#logger.debug(
-      `DefaultToolSchemaHandler (${llmId}): Building default tool schema with name '${toolName}'.`,
-      { llmId, toolName }
-    );
-
-    return {
-      type: 'function',
-      function: {
-        name: toolName,
-        description: toolDescription,
-        parameters: toolParametersSchema,
-      },
-    };
+    const errorMsg = `DefaultToolSchemaHandler (${llmId}): No default tool schema available. A custom schema must be explicitly provided via buildCustomToolSchema().`;
+    this.#logger.error(errorMsg, { llmId, requestOptions });
+    throw new Error(errorMsg);
   }
 
   /**

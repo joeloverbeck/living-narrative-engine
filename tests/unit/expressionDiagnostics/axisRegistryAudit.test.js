@@ -151,12 +151,15 @@ describe('Axis Registry Audit (B1)', () => {
       expect(MOOD_AXES).toContain('uncertainty');
     });
 
-    it('should have exactly 4 affect traits', () => {
-      expect(AFFECT_TRAITS).toHaveLength(4);
+    it('should have exactly 7 affect traits', () => {
+      expect(AFFECT_TRAITS).toHaveLength(7);
       expect(AFFECT_TRAITS).toContain('affective_empathy');
       expect(AFFECT_TRAITS).toContain('cognitive_empathy');
       expect(AFFECT_TRAITS).toContain('harm_aversion');
       expect(AFFECT_TRAITS).toContain('self_control');
+      expect(AFFECT_TRAITS).toContain('disgust_sensitivity');
+      expect(AFFECT_TRAITS).toContain('ruminative_tendency');
+      expect(AFFECT_TRAITS).toContain('evaluation_sensitivity');
     });
 
     it('should have no overlap between mood axes and affect traits', () => {

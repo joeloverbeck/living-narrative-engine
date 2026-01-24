@@ -5,7 +5,6 @@ import { OpenRouterJsonSchemaStrategy } from '../../../../src/llms/strategies/op
 import { LLMStrategyError } from '../../../../src/llms/errors/LLMStrategyError.js';
 import { ConfigurationError } from '../../../../src/errors/configurationError';
 import { InvalidEnvironmentContextError } from '../../../../src/errors/invalidEnvironmentContextError.js';
-import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../../../../src/llms/constants/llmConstants.js';
 import { BaseChatLLMStrategy } from '../../../../src/llms/strategies/base/baseChatLLMStrategy.js';
 import {
   afterEach,
@@ -15,6 +14,25 @@ import {
   it,
   jest,
 } from '@jest/globals';
+
+// v5: Define test-specific schema since default schemas were removed
+const TEST_ACTION_SPEECH_SCHEMA = {
+  type: 'object',
+  properties: {
+    chosenIndex: { type: 'integer' },
+    speech: { type: 'string' },
+    thoughts: { type: 'string' },
+    action: { type: 'string' },
+  },
+  required: ['chosenIndex'],
+};
+
+// v5: Tool name constant for tests (replaces removed TEST_TOOL_NAME)
+const TEST_TOOL_NAME = 'test_action_speech';
+
+// This must match the LEGACY_TOOL_NAME_FOR_FALLBACK constant in production code
+// used for tool_calls fallback extraction when json_schema mode fails
+const LEGACY_TOOL_NAME_FOR_FALLBACK = 'game_ai_action_speech_output';
 
 describe('OpenRouterJsonSchemaStrategy', () => {
   let mockHttpClient;
@@ -42,7 +60,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
     apiKeyFileName: 'openrouter_key.txt',
     jsonOutputStrategy: {
       method: 'openrouter_json_schema',
-      jsonSchema: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema,
+      jsonSchema: TEST_ACTION_SPEECH_SCHEMA, // v5: use test-specific schema
     },
     displayName: 'Test OpenRouter LLM',
     promptElements: [],
@@ -378,7 +396,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                   {
                     type: 'function',
                     function: {
-                      name: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name,
+                      name: LEGACY_TOOL_NAME_FOR_FALLBACK,
                       arguments: expectedOutputJsonString,
                     },
                   },
@@ -413,7 +431,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
           ),
           expect.objectContaining({
             llmId: baseLlmConfig.configId,
-            functionName: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name,
+            functionName: LEGACY_TOOL_NAME_FOR_FALLBACK,
           })
         );
       });
@@ -428,7 +446,7 @@ describe('OpenRouterJsonSchemaStrategy', () => {
                   {
                     type: 'function',
                     function: {
-                      name: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name,
+                      name: LEGACY_TOOL_NAME_FOR_FALLBACK,
                       arguments: expectedOutputJsonString,
                     },
                   },
@@ -488,13 +506,14 @@ describe('OpenRouterJsonSchemaStrategy', () => {
           )
         );
 
+        // Production code uses LEGACY_TOOL_NAME_FOR_FALLBACK constant for the expected tool name
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining(
-            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): tool_calls structure for fallback did not match expected schema or arguments were empty. Expected function name '${OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name}'.`
+            `OpenRouterJsonSchemaStrategy (${baseLlmConfig.configId}): tool_calls structure for fallback did not match expected schema or arguments were empty. Expected function name '${LEGACY_TOOL_NAME_FOR_FALLBACK}'.`
           ),
           expect.objectContaining({
             llmId: baseLlmConfig.configId,
-            expectedToolName: OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.name,
+            expectedToolName: LEGACY_TOOL_NAME_FOR_FALLBACK,
             toolCallDetails: expect.objectContaining({
               functionName: wrongToolName,
             }),

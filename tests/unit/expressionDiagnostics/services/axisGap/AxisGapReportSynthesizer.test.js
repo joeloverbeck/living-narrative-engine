@@ -14,6 +14,7 @@ describe('AxisGapReportSynthesizer', () => {
     additionalSignificantComponents: 0,
     topLoadingPrototypes: [],
     cumulativeVariance: [],
+    explainedVariance: [],
     componentsFor80Pct: 0,
     componentsFor90Pct: 0,
     reconstructionErrors: [],
@@ -27,6 +28,7 @@ describe('AxisGapReportSynthesizer', () => {
       { prototypeId: 'pca2', loading: 0.8 },
     ],
     cumulativeVariance: [0.5, 0.8, 0.95],
+    explainedVariance: [0.5, 0.3, 0.15],
     componentsFor80Pct: 2,
     componentsFor90Pct: 3,
     reconstructionErrors: [
@@ -235,21 +237,43 @@ describe('AxisGapReportSynthesizer', () => {
       expect(result.summary.confidence).toBe('high');
     });
 
-    it('should boost confidence for multi-signal prototype agreement', () => {
+    it('should NOT boost confidence when all reasons are from correlated families', () => {
       const prototypes = [
         createPrototype('p1', { a: 0.5, b: -0.3 }),
       ];
 
-      // Create results that flag p1 from 3+ sources
+      // Create results that flag p1 from PCA family only (2 reasons, 1 family)
       const pca = createTriggeredPCAResult();
       pca.topLoadingPrototypes = [{ prototypeId: 'p1', loading: 0.9 }];
       pca.reconstructionErrors = [{ prototypeId: 'p1', error: 0.6 }];
 
       const hubs = [{ ...createHub(), prototypeId: 'p1' }];
 
-      // Only 2 methods triggered (PCA + hub), base confidence = medium
-      // But p1 has 3+ reasons, should boost to high
+      // p1 has 3 reasons but only 2 distinct families (pca, hubs)
+      // Should NOT boost confidence since it requires 3+ distinct families
       const result = synthesizer.synthesize(pca, hubs, [], [], 5, prototypes);
+
+      // Base confidence = medium (2 methods triggered: PCA + hubs)
+      // No boost since only 2 families present
+      expect(result.summary.confidence).toBe('medium');
+    });
+
+    it('should boost confidence when 3+ distinct method families trigger', () => {
+      const prototypes = [
+        createPrototype('p1', { a: 0.5, b: -0.3 }),
+      ];
+
+      // Create results that flag p1 from 3 distinct families
+      const pca = createTriggeredPCAResult();
+      pca.topLoadingPrototypes = [{ prototypeId: 'p1', loading: 0.9 }];
+      pca.reconstructionErrors = [{ prototypeId: 'p1', error: 0.6 }];
+
+      const hubs = [{ ...createHub(), prototypeId: 'p1' }];
+      const gaps = [{ ...createGap(), centroidPrototypes: ['p1'] }];
+
+      // p1 has 4 reasons from 3 distinct families (pca, hubs, gaps)
+      // Should boost confidence from medium to high
+      const result = synthesizer.synthesize(pca, hubs, gaps, [], 5, prototypes);
 
       expect(result.summary.confidence).toBe('high');
     });
@@ -264,6 +288,7 @@ describe('AxisGapReportSynthesizer', () => {
       expect(result.pcaAnalysis.additionalSignificantComponents).toBe(1);
       expect(result.pcaAnalysis.topLoadingPrototypes.length).toBe(2);
       expect(result.pcaAnalysis.cumulativeVariance).toEqual([0.5, 0.8, 0.95]);
+      expect(result.pcaAnalysis.explainedVariance).toEqual([0.5, 0.3, 0.15]);
       expect(result.pcaAnalysis.componentsFor80Pct).toBe(2);
       expect(result.pcaAnalysis.componentsFor90Pct).toBe(3);
     });
@@ -278,6 +303,7 @@ describe('AxisGapReportSynthesizer', () => {
       const result = synthesizer.synthesize(pca, [], [], [], 10);
 
       expect(result.pcaAnalysis.cumulativeVariance).toEqual([]);
+      expect(result.pcaAnalysis.explainedVariance).toEqual([]);
       expect(result.pcaAnalysis.componentsFor80Pct).toBe(0);
       expect(result.pcaAnalysis.reconstructionErrors).toEqual([]);
     });
@@ -344,6 +370,7 @@ describe('AxisGapReportSynthesizer', () => {
       expect(result.pcaAnalysis.residualVarianceRatio).toBe(0);
       expect(result.pcaAnalysis.topLoadingPrototypes).toEqual([]);
       expect(result.pcaAnalysis.cumulativeVariance).toEqual([]);
+      expect(result.pcaAnalysis.explainedVariance).toEqual([]);
     });
 
     it('should include all signal breakdown fields at zero', () => {
@@ -516,7 +543,7 @@ describe('AxisGapReportSynthesizer', () => {
       expect(result[0].reasons).toContain('hub');
     });
 
-    it('should set multiSignalAgreement when 3+ reasons', () => {
+    it('should set multiSignalAgreement when 3+ reasons (backward compat)', () => {
       const prototypes = [createPrototype('p1', { a: 0.5 })];
       const pca = {
         ...createEmptyPCAResult(),
@@ -533,7 +560,74 @@ describe('AxisGapReportSynthesizer', () => {
         []
       );
 
+      // multiSignalAgreement is true because there are 3+ reasons (raw count)
       expect(result[0].multiSignalAgreement).toBe(true);
+    });
+
+    it('should include distinctFamilyCount in weight summary', () => {
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+      const pca = {
+        ...createEmptyPCAResult(),
+        topLoadingPrototypes: [{ prototypeId: 'p1', loading: 0.9 }],
+        reconstructionErrors: [{ prototypeId: 'p1', error: 0.6 }],
+      };
+      const hubs = [{ ...createHub(), prototypeId: 'p1' }];
+
+      const result = synthesizer.computePrototypeWeightSummaries(
+        prototypes,
+        pca,
+        hubs,
+        [],
+        []
+      );
+
+      // p1 has 3 reasons from 2 families (pca: 2 reasons, hubs: 1 reason)
+      expect(result[0].distinctFamilyCount).toBe(2);
+    });
+
+    it('should count all 4 families when all detection methods flag same prototype', () => {
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+      const pca = {
+        ...createEmptyPCAResult(),
+        topLoadingPrototypes: [{ prototypeId: 'p1', loading: 0.9 }],
+        reconstructionErrors: [{ prototypeId: 'p1', error: 0.6 }],
+      };
+      const hubs = [{ ...createHub(), prototypeId: 'p1' }];
+      const gaps = [{ ...createGap(), centroidPrototypes: ['p1'] }];
+      const conflicts = [{ ...createConflict(), prototypeId: 'p1' }];
+
+      const result = synthesizer.computePrototypeWeightSummaries(
+        prototypes,
+        pca,
+        hubs,
+        gaps,
+        conflicts
+      );
+
+      // p1 has reasons from 4 families: pca, hubs, gaps, conflicts
+      expect(result[0].distinctFamilyCount).toBe(4);
+    });
+
+    it('should count conflicts family as one even with multiple conflict reasons', () => {
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+      // Create conflicts with different flag reasons (all from conflicts family)
+      const conflicts = [
+        { prototypeId: 'p1', activeAxisCount: 5, signBalance: 0.1, flagReason: 'high_axis_loading' },
+        { prototypeId: 'p1', activeAxisCount: 3, signBalance: 0.8, flagReason: 'sign_tension' },
+      ];
+
+      const result = synthesizer.computePrototypeWeightSummaries(
+        prototypes,
+        createEmptyPCAResult(),
+        [],
+        [],
+        conflicts
+      );
+
+      // Only 1 family (conflicts), even though 2 different reasons
+      expect(result[0].distinctFamilyCount).toBe(1);
+      expect(result[0].reasons).toContain('high_axis_loading');
+      expect(result[0].reasons).toContain('sign_tension');
     });
 
     it('should include top 5 axes by absolute weight', () => {

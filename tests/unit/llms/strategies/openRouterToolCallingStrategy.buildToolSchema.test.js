@@ -54,23 +54,19 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
       expect(result).toBeNull();
     });
 
-    it('should build default tool schema when no custom schema provided', () => {
+    it('should return null when no custom schema provided (v5 requires explicit toolSchema)', () => {
+      // In v5, buildDefaultToolSchema throws, so buildToolSchema returns null
       const tools = [{ name: 'test_tool' }];
       const result = strategy.buildToolSchema(tools);
 
-      expect(result).toEqual({
-        type: 'function',
-        function: {
-          name: 'game_ai_action_speech',
-          description: OPENROUTER_DEFAULT_TOOL_DESCRIPTION,
-          parameters:
-            OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-            OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA,
-        },
-      });
+      expect(result).toBeNull();
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Building default tool schema'),
+        expect.objectContaining({ llmId: 'openrouter-tool-calling' })
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Fallback tool schema generation also failed'),
         expect.objectContaining({ llmId: 'openrouter-tool-calling' })
       );
     });
@@ -149,7 +145,8 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
       );
     });
 
-    it('should fall back to default when invalid custom schema provided', () => {
+    it('should return null when invalid custom schema provided (v5 has no default fallback)', () => {
+      // In v5, buildDefaultToolSchema throws, so invalid schema returns null
       const tools = [{ name: 'test_tool' }];
       const requestOptions = {
         toolSchema: 'invalid-schema', // Should be object
@@ -158,11 +155,8 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
 
       const result = strategy.buildToolSchema(tools, requestOptions);
 
-      // Should fall back to default schema
-      expect(result.function.name).toBe('game_ai_action_speech');
-      expect(result.function.description).toBe(
-        OPENROUTER_DEFAULT_TOOL_DESCRIPTION
-      );
+      // Should return null since default fallback throws in v5
+      expect(result).toBeNull();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -173,9 +167,14 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
           providedSchema: 'invalid-schema',
         })
       );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Fallback tool schema generation also failed'),
+        expect.objectContaining({ llmId: 'openrouter-tool-calling' })
+      );
     });
 
-    it('should fall back to default when null custom schema provided', () => {
+    it('should return null when null custom schema provided (v5 has no default fallback)', () => {
+      // In v5, buildDefaultToolSchema throws, so null schema returns null
       const tools = [{ name: 'test_tool' }];
       const requestOptions = {
         toolSchema: null,
@@ -184,8 +183,9 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
 
       const result = strategy.buildToolSchema(tools, requestOptions);
 
-      // Should fall back to default schema
-      expect(result.function.name).toBe('game_ai_action_speech');
+      // Should return null since default fallback throws in v5
+      expect(result).toBeNull();
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
           'Invalid custom tool schema provided, falling back to default'
@@ -195,27 +195,29 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
           providedSchema: null,
         })
       );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Fallback tool schema generation also failed'),
+        expect.objectContaining({ llmId: 'openrouter-tool-calling' })
+      );
     });
 
-    it('should handle custom schema build errors gracefully', () => {
+    it('should return null when custom schema build fails (v5: no default fallback)', () => {
+      // In v5, when custom schema build fails and buildDefaultToolSchema throws,
+      // the result should be null since there's no valid fallback
       const tools = [{ name: 'test_tool' }];
 
       // Mock the handler to throw an error during custom schema building
+      // AND throw when trying fallback (v5 behavior: buildDefaultToolSchema always throws)
       const originalGetToolSchemaHandler = strategy._getToolSchemaHandler;
       strategy._getToolSchemaHandler = jest.fn().mockReturnValue({
         buildCustomToolSchema: jest.fn().mockImplementation(() => {
           throw new Error('Custom schema build failed');
         }),
-        buildDefaultToolSchema: jest.fn(() => ({
-          type: 'function',
-          function: {
-            name: 'game_ai_action_speech',
-            description: OPENROUTER_DEFAULT_TOOL_DESCRIPTION,
-            parameters:
-              OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-              OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA,
-          },
-        })),
+        buildDefaultToolSchema: jest.fn().mockImplementation(() => {
+          throw new Error(
+            'No default tool schema available. A custom schema must be explicitly provided.'
+          );
+        }),
       });
 
       const requestOptions = {
@@ -226,8 +228,8 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
 
       const result = strategy.buildToolSchema(tools, requestOptions);
 
-      // Should fall back to default after error
-      expect(result.function.name).toBe('game_ai_action_speech');
+      // v5: Should return null when both custom and fallback fail
+      expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Error building tool schema'),
         expect.objectContaining({ llmId: 'openrouter-tool-calling' })
@@ -268,7 +270,8 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
       strategy._getToolSchemaHandler = originalGetToolSchemaHandler;
     });
 
-    it('should use default tool schema when requestOptions has toolSchema property but is undefined', () => {
+    it('should return null when requestOptions has toolSchema property but is undefined (v5 has no default fallback)', () => {
+      // In v5, buildDefaultToolSchema throws, so undefined schema returns null
       const tools = [{ name: 'test_tool' }];
       const requestOptions = {
         toolSchema: undefined, // Explicitly set to undefined
@@ -278,15 +281,9 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
 
       const result = strategy.buildToolSchema(tools, requestOptions);
 
-      // When toolSchema is undefined (but the property exists), it should warn and fall back to default
-      expect(result.function.name).toBe('game_ai_action_speech');
-      expect(result.function.description).toBe(
-        OPENROUTER_DEFAULT_TOOL_DESCRIPTION
-      );
-      expect(result.function.parameters).toEqual(
-        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-          OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA
-      );
+      // When toolSchema is undefined, it warns and tries default which throws, returning null
+      expect(result).toBeNull();
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
           'Invalid custom tool schema provided, falling back to default'
@@ -295,6 +292,10 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
           llmId: 'openrouter-tool-calling',
           providedSchema: undefined,
         })
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Fallback tool schema generation also failed'),
+        expect.objectContaining({ llmId: 'openrouter-tool-calling' })
       );
     });
   });
@@ -725,7 +726,8 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
       expect(result.function.parameters).toEqual(requestOptions.toolSchema);
     });
 
-    it('should log detailed information about fallback scenarios', () => {
+    it('should log detailed information about fallback scenarios (v5 returns null)', () => {
+      // In v5, buildDefaultToolSchema throws, so invalid schema results in null
       const tools = [{ name: 'test_tool' }];
       const requestOptions = {
         toolSchema: 'invalid-schema-string', // Invalid schema
@@ -734,8 +736,8 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
 
       const result = strategy.buildToolSchema(tools, requestOptions);
 
-      // Should fall back to default schema when invalid schema provided
-      expect(result.function.name).toBe('game_ai_action_speech');
+      // Should return null since default fallback throws in v5
+      expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
           'Invalid custom tool schema provided, falling back to default'
@@ -744,6 +746,10 @@ describe('OpenRouterToolCallingStrategy - buildToolSchema', () => {
           llmId: 'openrouter-tool-calling',
           providedSchema: 'invalid-schema-string',
         })
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Fallback tool schema generation also failed'),
+        expect.objectContaining({ llmId: 'openrouter-tool-calling' })
       );
     });
   });

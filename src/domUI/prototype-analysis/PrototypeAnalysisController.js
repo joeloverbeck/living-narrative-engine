@@ -48,6 +48,7 @@ class PrototypeAnalysisController {
   #hubList;
   #coverageGapList;
   #conflictList;
+  #signTensionList;
   #axisRecommendationsList;
 
   // Signal breakdown elements
@@ -150,6 +151,7 @@ class PrototypeAnalysisController {
     this.#hubList = document.getElementById('hub-list');
     this.#coverageGapList = document.getElementById('coverage-gap-list');
     this.#conflictList = document.getElementById('conflict-list');
+    this.#signTensionList = document.getElementById('sign-tension-list');
     this.#axisRecommendationsList = document.getElementById(
       'axis-recommendations-list'
     );
@@ -1104,8 +1106,11 @@ class PrototypeAnalysisController {
     // Render coverage gaps
     this.#renderCoverageGaps(axisGapAnalysis.coverageGaps);
 
-    // Render multi-axis conflicts
+    // Render multi-axis conflicts (actionable - high axis loadings only)
     this.#renderMultiAxisConflicts(axisGapAnalysis.multiAxisConflicts);
+
+    // Render sign tensions (informational metadata, not actionable)
+    this.#renderSignTensions(axisGapAnalysis.signTensions);
 
     // Render axis recommendations
     this.#renderAxisRecommendations(axisGapAnalysis.recommendations);
@@ -1497,7 +1502,7 @@ class PrototypeAnalysisController {
     parts.push(`Uses ${axisCount} ax${axisCount !== 1 ? 'es' : 'is'}`);
 
     if (signBalance !== null && signBalance !== undefined) {
-      parts.push(`${Math.round(signBalance)}% sign balance - complex blend pattern`);
+      parts.push(`${Math.round(signBalance * 100)}% sign balance - complex blend pattern`);
     } else {
       parts.push('conflicting sign pattern');
     }
@@ -1814,7 +1819,7 @@ class PrototypeAnalysisController {
 
     conflicts.forEach((conflict) => {
       const li = document.createElement('li');
-      const axisCount = conflict.axisCount ?? conflict.conflictingAxes?.length ?? 0;
+      const axisCount = conflict.activeAxisCount ?? conflict.axisCount ?? conflict.conflictingAxes?.length ?? 0;
       const signBalance = conflict.signBalance ?? conflict.balance ?? null;
 
       // Generate contextual explanation
@@ -1832,6 +1837,61 @@ class PrototypeAnalysisController {
         </div>
       `;
       this.#conflictList.appendChild(li);
+    });
+  }
+
+  /**
+   * Render sign tensions list (informational metadata, not actionable).
+   *
+   * Sign tensions show prototypes with mixed positive/negative weights, which is
+   * NORMAL for emotional prototypes. This section is purely informational and
+   * does not contribute to confidence scoring or recommendations.
+   *
+   * @param {Array} signTensions - Array of sign tension objects
+   * @private
+   */
+  #renderSignTensions(signTensions) {
+    if (!this.#signTensionList) return;
+
+    this.#signTensionList.innerHTML = '';
+
+    if (!Array.isArray(signTensions) || signTensions.length === 0) {
+      const emptyMsg = document.createElement('li');
+      emptyMsg.className = 'empty-list-message metadata-empty';
+      emptyMsg.textContent = 'No sign tensions detected.';
+      this.#signTensionList.appendChild(emptyMsg);
+      return;
+    }
+
+    signTensions.forEach((tension) => {
+      const li = document.createElement('li');
+      li.className = 'sign-tension-item metadata-item';
+
+      const prototypeId = tension.prototypeId ?? tension.id ?? 'Unknown';
+      const activeAxisCount = tension.activeAxisCount ?? 0;
+      const signBalance = tension.signBalance ?? null;
+      const positiveAxes = tension.highMagnitudePositive ?? tension.positiveAxes ?? [];
+      const negativeAxes = tension.highMagnitudeNegative ?? tension.negativeAxes ?? [];
+
+      // Format sign balance display
+      const balanceDisplay = signBalance !== null
+        ? `${Math.round(signBalance * 100)}% balance`
+        : 'mixed signs';
+
+      li.innerHTML = `
+        <div class="sign-tension-header">
+          <span class="sign-tension-prototype-id">${this.#escapeHtml(prototypeId)}</span>
+          <span class="sign-tension-badge metadata-badge">Informational</span>
+        </div>
+        <div class="sign-tension-details">
+          <span class="sign-tension-summary">
+            ${activeAxisCount} active axes, ${balanceDisplay}
+          </span>
+          ${positiveAxes.length > 0 ? `<div class="sign-tension-positive">+: ${positiveAxes.map((a) => this.#escapeHtml(a)).join(', ')}</div>` : ''}
+          ${negativeAxes.length > 0 ? `<div class="sign-tension-negative">−: ${negativeAxes.map((a) => this.#escapeHtml(a)).join(', ')}</div>` : ''}
+        </div>
+      `;
+      this.#signTensionList.appendChild(li);
     });
   }
 

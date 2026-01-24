@@ -24,7 +24,7 @@ const mockSchemaValidator = () => ({
   isSchemaLoaded: jest.fn().mockReturnValue(true),
 });
 
-// Valid mood update fixture
+// Valid mood update fixture (all 14 mood axes)
 const validMoodUpdate = {
   valence: 10,
   arousal: -20,
@@ -32,7 +32,14 @@ const validMoodUpdate = {
   threat: -40,
   engagement: 50,
   future_expectancy: -60,
+  temporal_orientation: 0,
   self_evaluation: 70,
+  affiliation: 0,
+  inhibitory_control: 0,
+  uncertainty: 0,
+  contamination_salience: 0,
+  rumination: 0,
+  evaluation_pressure: 0,
 };
 
 // Valid sexual update fixture
@@ -294,7 +301,7 @@ describe('MoodResponseProcessor', () => {
         expect(result).toHaveProperty('sexualUpdate');
       });
 
-      test('moodUpdate contains all 7 axes', async () => {
+      test('moodUpdate contains all 14 axes', async () => {
         const payload = createValidPayload();
         const llmResponse = JSON.stringify(payload);
         schemaValidatorMock.validate.mockReturnValue({
@@ -310,7 +317,14 @@ describe('MoodResponseProcessor', () => {
         expect(result.moodUpdate).toHaveProperty('threat');
         expect(result.moodUpdate).toHaveProperty('engagement');
         expect(result.moodUpdate).toHaveProperty('future_expectancy');
+        expect(result.moodUpdate).toHaveProperty('temporal_orientation');
         expect(result.moodUpdate).toHaveProperty('self_evaluation');
+        expect(result.moodUpdate).toHaveProperty('affiliation');
+        expect(result.moodUpdate).toHaveProperty('inhibitory_control');
+        expect(result.moodUpdate).toHaveProperty('uncertainty');
+        expect(result.moodUpdate).toHaveProperty('contamination_salience');
+        expect(result.moodUpdate).toHaveProperty('rumination');
+        expect(result.moodUpdate).toHaveProperty('evaluation_pressure');
       });
 
       test('sexualUpdate contains both fields', async () => {

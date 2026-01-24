@@ -23,6 +23,9 @@ const createMoodData = (overrides = {}) => ({
   affiliation: 0,
   inhibitory_control: 0,
   uncertainty: 0,
+  contamination_salience: 0,
+  rumination: 0,
+  evaluation_pressure: 0,
   ...overrides,
 });
 

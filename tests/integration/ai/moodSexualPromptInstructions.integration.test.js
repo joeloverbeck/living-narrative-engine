@@ -68,7 +68,7 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       expect(promptText).toContain('integers [0..100]');
     });
 
-    it('should list all 10 mood axes in ranges', () => {
+    it('should list all 14 mood axes in ranges', () => {
       expect(promptText).toContain('valence');
       expect(promptText).toContain('arousal');
       expect(promptText).toContain('agency_control');
@@ -79,6 +79,9 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       expect(promptText).toContain('affiliation');
       expect(promptText).toContain('inhibitory_control');
       expect(promptText).toContain('uncertainty');
+      expect(promptText).toContain('contamination_salience');
+      expect(promptText).toContain('rumination');
+      expect(promptText).toContain('evaluation_pressure');
     });
 
     it('should list both sex variables in ranges', () => {
@@ -273,7 +276,7 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
   });
 
   describe('Token Efficiency', () => {
-    it('should keep the mood/sexual update section under 1750 tokens (approximately 7000 characters)', () => {
+    it('should keep the mood/sexual update section under 2250 tokens (approximately 9000 characters)', () => {
       // The moodUpdateOnlyInstructionText is dedicated to mood/sexual updates
       // Verify start marker exists
       const startMarker = 'EMOTIONAL + SEXUAL STATE UPDATE';
@@ -282,8 +285,8 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
 
       // Measure the entire dedicated mood update text
       // Rough estimate: 4 characters per token on average
-      // 1750 tokens * 4 = 7000 characters max (adjusted for new axes)
-      expect(promptText.length).toBeLessThan(7000);
+      // 2250 tokens * 4 = 9000 characters max (adjusted for 14 mood axes)
+      expect(promptText.length).toBeLessThan(9000);
     });
   });
 

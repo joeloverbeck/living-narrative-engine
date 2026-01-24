@@ -1,47 +1,68 @@
 // tests/schemas/llmProviderTurnAction.schema.test.js
 // -----------------------------------------------------------------------------
-// JSON‑Schema validation tests for the LLM_PROVIDER_TURN_ACTION_SCHEMA
+// JSON‑Schema validation tests for the LLM Provider Turn Action schema.
+// NOTE: In v5, moodUpdate/sexualUpdate are handled separately by MoodResponseProcessor,
+// not included in the action response schema.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../../../src/llms/constants/llmConstants.js';
 import { describe, beforeAll, test, expect } from '@jest/globals';
 
-const schema = OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema;
+// v5: Define test-specific schema since default schemas were removed.
+// This schema reflects the v5 action response structure (without moodUpdate/sexualUpdate).
+const LLM_PROVIDER_TURN_ACTION_SCHEMA = {
+  type: 'object',
+  properties: {
+    chosenIndex: {
+      type: 'integer',
+      minimum: 1,
+      description: 'The 1-based index of the chosen action from the available options.',
+    },
+    speech: {
+      type: 'string',
+      description: "The character's spoken dialogue.",
+    },
+    thoughts: {
+      type: 'string',
+      description: "The character's internal thoughts.",
+    },
+    notes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          text: { type: 'string', minLength: 1 },
+          subject: { type: 'string', minLength: 1 },
+          subjectType: {
+            type: 'string',
+            enum: ['self', 'other', 'knowledge', 'location'],
+          },
+        },
+        required: ['text', 'subject', 'subjectType'],
+        additionalProperties: false,
+      },
+      description: 'Optional notes about the situation.',
+    },
+  },
+  required: ['chosenIndex', 'speech', 'thoughts'],
+  additionalProperties: false,
+};
 
-describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
+describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA (v5)', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
-  const baseMoodUpdate = {
-    valence: 10,
-    arousal: 5,
-    agency_control: 3,
-    threat: -4,
-    engagement: 2,
-    future_expectancy: 1,
-    temporal_orientation: -1,
-    self_evaluation: 0,
-    affiliation: 0,
-    inhibitory_control: -2,
-    uncertainty: 4,
-  };
-  const baseSexualUpdate = {
-    sex_excitation: 25,
-    sex_inhibition: 30,
-  };
+
   const basePayload = {
     chosenIndex: 1,
     speech: 'hello',
     thoughts: 'thinking',
-    moodUpdate: baseMoodUpdate,
-    sexualUpdate: baseSexualUpdate,
   };
 
   beforeAll(() => {
     const ajv = new Ajv({ strict: true, allErrors: true });
     addFormats(ajv);
-    validate = ajv.compile(schema);
+    validate = ajv.compile(LLM_PROVIDER_TURN_ACTION_SCHEMA);
   });
 
   /* ── VALID CASES ─────────────────────────────────────────────────────── */
@@ -87,14 +108,6 @@ describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
     ['missing chosenIndex', { ...basePayload, chosenIndex: undefined }],
     ['missing speech', { ...basePayload, speech: undefined }],
     ['missing thoughts', { ...basePayload, thoughts: undefined }],
-    [
-      'missing moodUpdate',
-      { ...basePayload, moodUpdate: undefined },
-    ],
-    [
-      'missing sexualUpdate',
-      { ...basePayload, sexualUpdate: undefined },
-    ],
     ['chosenIndex too low (0)', { ...basePayload, chosenIndex: 0 }],
     ['chosenIndex negative', { ...basePayload, chosenIndex: -5 }],
     [
@@ -108,12 +121,8 @@ describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
       { ...basePayload, notes: 'not-array' },
     ],
     [
-      'note item empty string',
-      { ...basePayload, notes: [''] },
-    ],
-    [
-      'note item non-string',
-      { ...basePayload, notes: [123] },
+      'note item missing required fields',
+      { ...basePayload, notes: [{ text: 'note' }] },
     ],
     [
       'additional property at root',
@@ -129,14 +138,37 @@ describe('JSON‑Schema – LLM_PROVIDER_TURN_ACTION_SCHEMA', () => {
     if (payload.thoughts === undefined) {
       delete payload.thoughts;
     }
-    if (payload.moodUpdate === undefined) {
-      delete payload.moodUpdate;
-    }
-    if (payload.sexualUpdate === undefined) {
-      delete payload.sexualUpdate;
-    }
     const ok = validate(payload);
     expect(ok).toBe(false);
     expect(validate.errors?.length).toBeGreaterThan(0);
+  });
+
+  /* ── v5 SPECIFIC: moodUpdate/sexualUpdate NOT in action schema ───────── */
+  test('v5: moodUpdate should be rejected (handled by MoodResponseProcessor)', () => {
+    const payloadWithMood = {
+      ...basePayload,
+      moodUpdate: { valence: 10 },
+    };
+    const ok = validate(payloadWithMood);
+    expect(ok).toBe(false);
+    expect(validate.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ keyword: 'additionalProperties' }),
+      ])
+    );
+  });
+
+  test('v5: sexualUpdate should be rejected (handled by MoodResponseProcessor)', () => {
+    const payloadWithSexual = {
+      ...basePayload,
+      sexualUpdate: { sex_excitation: 25 },
+    };
+    const ok = validate(payloadWithSexual);
+    expect(ok).toBe(false);
+    expect(validate.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ keyword: 'additionalProperties' }),
+      ])
+    );
   });
 });
