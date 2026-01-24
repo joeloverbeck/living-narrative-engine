@@ -54,7 +54,7 @@
     "fake-indexeddb": "^6.2.5",
     "fast-check": "^4.5.3",
     "fs-extra": "^11.3.3",
-    "globals": "^16.5.0",
+    "globals": "^17.1.0",
     "html-validate": "^10.6.0",
     "http-server": "^14.1.1",
     "inquirer": "^13.2.0",
