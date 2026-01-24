@@ -8,8 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "startle_flinch.expression.json",
-      "stunned_processing_pause.expression.json"
+      "startle_flinch.expression.json"
     ]
   }
 }

@@ -17,7 +17,7 @@ import { describe, test, expect, beforeAll } from '@jest/globals';
 
 let validate;
 
-// Common valid fixtures for required fields
+// Common valid fixtures for required fields (all 11 mood axes)
 const validMoodUpdate = {
   valence: 10,
   arousal: -20,
@@ -25,8 +25,11 @@ const validMoodUpdate = {
   threat: -40,
   engagement: 50,
   future_expectancy: -60,
+  temporal_orientation: 25,
   self_evaluation: 70,
   affiliation: 0,
+  inhibitory_control: 0,
+  uncertainty: 0,
 };
 
 const validSexualUpdate = {

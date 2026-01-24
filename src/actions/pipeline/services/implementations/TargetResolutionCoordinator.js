@@ -20,7 +20,7 @@ export default class TargetResolutionCoordinator {
    * @param {import('../interfaces/ITargetDependencyResolver.js').ITargetDependencyResolver} deps.dependencyResolver
    * @param {import('../interfaces/IScopeContextBuilder.js').IScopeContextBuilder} deps.contextBuilder
    * @param {import('../interfaces/ITargetDisplayNameResolver.js').ITargetDisplayNameResolver} deps.nameResolver
-   * @param {import('../../scopes/unifiedScopeResolver.js').UnifiedScopeResolver} deps.unifiedScopeResolver
+   * @param {import('../../../scopes/unifiedScopeResolver.js').UnifiedScopeResolver} deps.unifiedScopeResolver
    * @param {import('../../../../interfaces/coreServices.js').IEntityManager} deps.entityManager
    * @param {import('../../../../interfaces/coreServices.js').ILogger} deps.logger
    * @param {import('../interfaces/ITargetResolutionTracingOrchestrator.js').ITargetResolutionTracingOrchestrator} deps.tracingOrchestrator
@@ -216,7 +216,7 @@ export default class TargetResolutionCoordinator {
    * @description Resolve targets according to dependency order.
    * @param {object} params - Resolution parameters.
    * @param {object} params.context - Pipeline context containing data payloads.
-   * @param {import('../../actionTypes.js').ActionDefinition} params.actionDef - Action definition metadata.
+   * @param {import('../../../actionTypes.js').ActionDefinition} params.actionDef - Action definition metadata.
    * @param {Record<string, object>} params.targetDefs - Target definitions map.
    * @param {import('../../../../entities/entity.js').default} params.actor - Acting entity.
    * @param {object} params.actionContext - Action context object.

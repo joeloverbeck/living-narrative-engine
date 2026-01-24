@@ -11,6 +11,11 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { diagnosticsTokens } from '../../../../src/dependencyInjection/tokens/tokens-diagnostics.js';
 import { registerExpressionServices } from '../../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { registerExpressionDiagnosticsServices } from '../../../../src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
+import SharedContextPoolGenerator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/SharedContextPoolGenerator.js';
+import { PROTOTYPE_OVERLAP_CONFIG } from '../../../../src/expressionDiagnostics/config/prototypeOverlapConfig.js';
+
+const TEST_SHARED_POOL_SIZE = 5000;
+const TEST_POOL_SEED = 1337;
 
 /**
  * Near-identical prototypes designed to trigger MERGE_RECOMMENDED classification.
@@ -54,6 +59,8 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
   let dom;
   let container;
   let analyzer;
+  let baseResult;
+  let baseResultRepeat;
 
   beforeAll(async () => {
     // Setup minimal DOM environment
@@ -86,6 +93,21 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
         // Register diagnostics services
         registerExpressionDiagnosticsServices(c);
 
+        const sharedPoolGenerator = new SharedContextPoolGenerator({
+          randomStateGenerator: c.resolve(diagnosticsTokens.IRandomStateGenerator),
+          contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
+          logger: c.resolve(tokens.ILogger),
+          poolSize: TEST_SHARED_POOL_SIZE,
+          stratified: PROTOTYPE_OVERLAP_CONFIG.enableStratifiedSampling,
+          stratumCount: PROTOTYPE_OVERLAP_CONFIG.stratumCount,
+          stratificationStrategy: PROTOTYPE_OVERLAP_CONFIG.stratificationStrategy,
+          randomSeed: TEST_POOL_SEED,
+        });
+        c.setOverride(
+          diagnosticsTokens.ISharedContextPoolGenerator,
+          sharedPoolGenerator
+        );
+
         // Register merge-worthy prototypes for testing
         const dataRegistry = c.resolve(tokens.IDataRegistry);
         dataRegistry.store('lookups', 'core:emotion_prototypes', {
@@ -103,6 +125,15 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
 
     container = result.container;
     analyzer = container.resolve(diagnosticsTokens.IPrototypeOverlapAnalyzer);
+
+    baseResult = await analyzer.analyze({
+      prototypeFamily: 'emotion',
+      sampleCount: 4000,
+    });
+    baseResultRepeat = await analyzer.analyze({
+      prototypeFamily: 'emotion',
+      sampleCount: 4000,
+    });
   });
 
   afterAll(() => {
@@ -117,13 +148,8 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
 
   describe('numbness ↔ apathy style pair (merge-worthy)', () => {
     it('should classify near-identical prototypes as merge_recommended', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
       // Find merge recommendations
-      const mergeRecs = result.recommendations.filter(
+      const mergeRecs = baseResult.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
 
@@ -142,12 +168,7 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
     });
 
     it('should include complete v2 evidence fields', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const mergeRecs = result.recommendations.filter(
+      const mergeRecs = baseResult.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
 
@@ -181,9 +202,15 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
       expect(evidence.intensitySimilarity).toBeDefined();
       expect(typeof evidence.intensitySimilarity.rmse).toBe('number');
       expect(typeof evidence.intensitySimilarity.pctWithinEps).toBe('number');
-      expect(evidence.intensitySimilarity.pctWithinEps).toBeGreaterThanOrEqual(
-        0.85
-      );
+      if (baseResult.metadata.analysisMode === 'v3') {
+        expect(Number.isNaN(evidence.intensitySimilarity.pctWithinEps)).toBe(
+          true
+        );
+      } else {
+        expect(evidence.intensitySimilarity.pctWithinEps).toBeGreaterThanOrEqual(
+          0.85
+        );
+      }
 
       // Verify highCoactivation structure
       expect(evidence.highCoactivation).toBeDefined();
@@ -198,12 +225,7 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
     });
 
     it('should have empty suggestedGateBands for merge', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const mergeRecs = result.recommendations.filter(
+      const mergeRecs = baseResult.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
 
@@ -217,20 +239,10 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
     });
 
     it('should produce deterministic results', async () => {
-      const result1 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const result2 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const mergeRecs1 = result1.recommendations.filter(
+      const mergeRecs1 = baseResult.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
-      const mergeRecs2 = result2.recommendations.filter(
+      const mergeRecs2 = baseResultRepeat.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
 
@@ -245,12 +257,7 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
     });
 
     it('should have valid severity and confidence values', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const mergeRecs = result.recommendations.filter(
+      const mergeRecs = baseResult.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
 
@@ -272,12 +279,7 @@ describe('PrototypeOverlapAnalyzer - MERGE_RECOMMENDED Integration', () => {
     });
 
     it('should include appropriate actions for merge', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const mergeRecs = result.recommendations.filter(
+      const mergeRecs = baseResult.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
 

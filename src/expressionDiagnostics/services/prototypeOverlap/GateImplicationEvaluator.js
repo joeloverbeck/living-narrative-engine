@@ -35,6 +35,15 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  */
 
 /**
+ * @typedef {object} ASTImplicationResult
+ * @property {boolean} implies - Whether A → B
+ * @property {boolean} isVacuous - Whether implication is vacuously true
+ * @property {boolean} parseComplete - Whether both gates fully parsed
+ * @property {'deterministic' | 'probabilistic' | 'unknown'} confidence - Confidence level
+ * @property {string[]} parseErrors - Any parsing errors encountered
+ */
+
+/**
  * Evaluates implication relationships between gate constraint sets.
  *
  * Given two sets of per-axis intervals (from GateConstraintExtractor),
@@ -48,19 +57,25 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * - Unsatisfiable (empty) intervals vacuously imply anything
  */
 class GateImplicationEvaluator {
+  #gateASTNormalizer;
   #logger;
 
   /**
    * Constructs a new GateImplicationEvaluator instance.
    *
    * @param {object} deps - Dependencies object
+   * @param {import('./GateASTNormalizer.js').default} deps.gateASTNormalizer - AST normalizer for gate parsing
    * @param {import('../../../interfaces/coreServices.js').ILogger} deps.logger - Logger instance
    */
-  constructor({ logger }) {
+  constructor({ gateASTNormalizer, logger }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error'],
     });
+    validateDependency(gateASTNormalizer, 'IGateASTNormalizer', logger, {
+      requiredMethods: ['parse', 'checkImplication', 'toString'],
+    });
 
+    this.#gateASTNormalizer = gateASTNormalizer;
     this.#logger = logger;
   }
 
@@ -164,6 +179,68 @@ class GateImplicationEvaluator {
       relation,
       isVacuous: false,
     };
+  }
+
+  /**
+   * Check if gateA implies gateB using AST-based analysis.
+   *
+   * @param {object|string|object[]} gateA - Gate definition (any supported format)
+   * @param {object|string|object[]} gateB - Gate definition (any supported format)
+   * @returns {ASTImplicationResult} Implication result with parse status
+   */
+  checkImplication(gateA, gateB) {
+    const parsedA = this.#gateASTNormalizer.parse(gateA);
+    const parsedB = this.#gateASTNormalizer.parse(gateB);
+    const parseErrors = [...parsedA.errors, ...parsedB.errors];
+
+    if (!parsedA.parseComplete || !parsedB.parseComplete) {
+      this.#logger.debug(
+        `GateImplicationEvaluator.checkImplication: Parse incomplete - ` +
+          `A=${parsedA.parseComplete}, B=${parsedB.parseComplete}, ` +
+          `errors=${parseErrors.join('; ')}`
+      );
+      return {
+        implies: false,
+        isVacuous: false,
+        parseComplete: false,
+        confidence: 'unknown',
+        parseErrors,
+      };
+    }
+
+    const result = this.#gateASTNormalizer.checkImplication(
+      parsedA.ast,
+      parsedB.ast
+    );
+
+    this.#logger.debug(
+      `GateImplicationEvaluator.checkImplication: implies=${result.implies}, ` +
+        `isVacuous=${result.isVacuous}`
+    );
+
+    return {
+      implies: result.implies,
+      isVacuous: result.isVacuous,
+      parseComplete: true,
+      confidence: 'deterministic',
+      parseErrors: [],
+    };
+  }
+
+  /**
+   * Get human-readable description of a gate.
+   *
+   * @param {object|string|object[]} gate - Gate definition
+   * @returns {string} Human-readable gate string
+   */
+  describeGate(gate) {
+    const parsed = this.#gateASTNormalizer.parse(gate);
+
+    if (!parsed.parseComplete) {
+      return `[Unparseable gate: ${parsed.errors.join(', ')}]`;
+    }
+
+    return this.#gateASTNormalizer.toString(parsed.ast);
   }
 
   /**

@@ -10,9 +10,6 @@
  * @see tickets/SCHVALTESINT-010-parameter-rule-generator.md
  */
 
-import { readdir, readFile } from 'fs/promises';
-import { join } from 'path';
-
 /**
  * Default path to the operations schemas directory
  *
@@ -58,6 +55,13 @@ const TEMPLATE_DEFINITIONS = new Set([
 export async function generateParameterRules(
   operationsDir = DEFAULT_OPERATIONS_DIR
 ) {
+  // Dynamic import to avoid Node.js core module dependency in browser-targeted code
+  const dynamicImport = (specifier) => import(specifier);
+  const [{ readdir, readFile }, { join }] = await Promise.all([
+    dynamicImport('fs/promises'),
+    dynamicImport('path'),
+  ]);
+
   const files = await readdir(operationsDir);
   const schemaFiles = files.filter((f) => f.endsWith('.schema.json'));
 

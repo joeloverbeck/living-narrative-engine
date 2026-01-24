@@ -30,6 +30,8 @@ describe('CandidatePairFilter', () => {
     candidateMinActiveAxisOverlap: 0.6,
     candidateMinSignAgreement: 0.8,
     candidateMinCosineSimilarity: 0.85,
+    softSignThreshold: 0.15,
+    jaccardEmptySetValue: 1.0,
     ...overrides,
   });
 
@@ -59,17 +61,17 @@ describe('CandidatePairFilter', () => {
   };
 
   describe('constructor', () => {
-    it('should create instance with valid dependencies', () => {
+    it('should create instance with valid dependencies', async () => {
       const { filter } = createFilter();
       expect(filter).toBeInstanceOf(CandidatePairFilter);
     });
 
-    it('should throw when logger is missing', () => {
+    it('should throw when logger is missing', async () => {
       const config = createConfig();
       expect(() => new CandidatePairFilter({ config, logger: null })).toThrow();
     });
 
-    it('should throw when logger lacks required methods', () => {
+    it('should throw when logger lacks required methods', async () => {
       const config = createConfig();
       const invalidLogger = { debug: jest.fn() }; // Missing warn, error
       expect(
@@ -77,12 +79,12 @@ describe('CandidatePairFilter', () => {
       ).toThrow();
     });
 
-    it('should throw when config is missing', () => {
+    it('should throw when config is missing', async () => {
       const logger = createMockLogger();
       expect(() => new CandidatePairFilter({ config: null, logger })).toThrow();
     });
 
-    it('should throw when config lacks required thresholds', () => {
+    it('should throw when config lacks required thresholds', async () => {
       const logger = createMockLogger();
       const incompleteConfig = { activeAxisEpsilon: 0.08 }; // Missing others
       expect(
@@ -90,7 +92,7 @@ describe('CandidatePairFilter', () => {
       ).toThrow();
     });
 
-    it('should log error when config threshold is invalid', () => {
+    it('should log error when config threshold is invalid', async () => {
       const logger = createMockLogger();
       const invalidConfig = {
         activeAxisEpsilon: 'not a number',
@@ -106,14 +108,14 @@ describe('CandidatePairFilter', () => {
   });
 
   describe('Active Axis Extraction', () => {
-    it('excludes axes below epsilon from active set', () => {
+    it('excludes axes below epsilon from active set', async () => {
       // Set epsilon = 0.1, prototype has weights: {a: 0.05, b: 0.15}
       // Only 'b' should be active
       const { filter } = createFilter({ activeAxisEpsilon: 0.1 });
       const p1 = createPrototype('p1', { a: 0.05, b: 0.15, c: 0.2 });
       const p2 = createPrototype('p2', { a: 0.05, b: 0.15, c: 0.2 }); // Identical
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await await filter.filterCandidates([p1, p2]);
 
       // Should produce a candidate pair (identical prototypes)
       expect(result.candidates).toHaveLength(1);
@@ -122,25 +124,25 @@ describe('CandidatePairFilter', () => {
       expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
     });
 
-    it('includes axes at or above epsilon boundary', () => {
+    it('includes axes at or above epsilon boundary', async () => {
       // epsilon = 0.1, weight = 0.1 should be included
       const { filter } = createFilter({ activeAxisEpsilon: 0.1 });
       const p1 = createPrototype('p1', { a: 0.1, b: 0.2 }); // 'a' is exactly at boundary
       const p2 = createPrototype('p2', { a: 0.1, b: 0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await await filter.filterCandidates([p1, p2]);
 
       // Both active sets: {a, b}, Jaccard = 1.0
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
     });
 
-    it('handles negative weights correctly (absolute value >= epsilon)', () => {
+    it('handles negative weights correctly (absolute value >= epsilon)', async () => {
       const { filter } = createFilter({ activeAxisEpsilon: 0.1 });
       const p1 = createPrototype('p1', { a: -0.15, b: 0.2 });
       const p2 = createPrototype('p2', { a: -0.15, b: 0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
@@ -148,7 +150,7 @@ describe('CandidatePairFilter', () => {
   });
 
   describe('Sign Agreement', () => {
-    it('computes sign agreement only for shared active axes', () => {
+    it('computes sign agreement only for shared active axes', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0, // Allow all through for testing
@@ -161,13 +163,13 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.2, b: 0.2 });
       const p2 = createPrototype('p2', { b: 0.2, c: 0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.signAgreement).toBe(1);
     });
 
-    it('returns 0 sign agreement when no shared axes', () => {
+    it('returns 0 sign agreement when no shared axes', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0, // Allow through
@@ -179,13 +181,13 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.2 });
       const p2 = createPrototype('p2', { b: 0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0);
     });
 
-    it('computes correct ratio for mixed sign agreement', () => {
+    it('computes correct ratio for mixed sign agreement', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -200,15 +202,151 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.2, b: -0.2, c: 0.2, d: 0.2 });
       const p2 = createPrototype('p2', { a: 0.2, b: -0.2, c: -0.2, d: 0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0.75);
     });
   });
 
+  describe('Sign Agreement - Soft Sign', () => {
+    it('treats near-zero weights as neutral (soft sign)', async () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.08,
+        softSignThreshold: 0.15,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { valence: 0.09 });
+      const p2 = createPrototype('p2', { valence: -0.09 });
+
+      const result = await filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(1);
+    });
+
+    it('hard sign disagrees for weights opposite and above softSignThreshold', async () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.08,
+        softSignThreshold: 0.15,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { valence: 0.5 });
+      const p2 = createPrototype('p2', { valence: -0.5 });
+
+      const result = await filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0);
+    });
+
+    it('soft sign treats zero as neutral', async () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.0,
+        softSignThreshold: 0.15,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { valence: 0 });
+      const p2 = createPrototype('p2', { valence: 0.1 });
+
+      const result = await filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(1);
+    });
+
+    it('mixed soft and hard signs are evaluated correctly', async () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.08,
+        softSignThreshold: 0.15,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', {
+        valence: 0.8,
+        arousal: 0.6,
+        dominance: -0.5,
+        novelty: 0.1,
+      });
+      const p2 = createPrototype('p2', {
+        valence: -0.7,
+        arousal: 0.4,
+        dominance: -0.3,
+        novelty: 0.5,
+      });
+
+      const result = await filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBeCloseTo(
+        0.5,
+        5
+      );
+    });
+
+    it('backward compatible when softSignThreshold is 0', async () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.08,
+        softSignThreshold: 0,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { valence: 0.09 });
+      const p2 = createPrototype('p2', { valence: -0.09 });
+
+      const result = await filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0);
+    });
+  });
+
+  describe('Jaccard - Empty Set Handling', () => {
+    it('returns configured value for Jaccard(empty, empty)', async () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        jaccardEmptySetValue: 1.0,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.01 });
+      const p2 = createPrototype('p2', { a: 0.02 });
+
+      const result = await filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
+    });
+
+    it('respects legacy behavior when jaccardEmptySetValue is 0', async () => {
+      const { filter } = createFilter({
+        activeAxisEpsilon: 0.1,
+        jaccardEmptySetValue: 0.0,
+        candidateMinActiveAxisOverlap: 0.0,
+        candidateMinSignAgreement: 0.0,
+        candidateMinCosineSimilarity: -1.0,
+      });
+
+      const p1 = createPrototype('p1', { a: 0.01 });
+      const p2 = createPrototype('p2', { a: 0.02 });
+
+      const result = await filter.filterCandidates([p1, p2]);
+
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(0);
+    });
+  });
+
   describe('Cosine Similarity', () => {
-    it('returns ~1 for identical weight vectors', () => {
+    it('returns ~1 for identical weight vectors', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -219,7 +357,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3, c: -0.2 });
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3, c: -0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
@@ -228,7 +366,7 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('returns ~0 for orthogonal weight vectors', () => {
+    it('returns ~0 for orthogonal weight vectors', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.0,
         candidateMinActiveAxisOverlap: 0.0,
@@ -241,7 +379,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 1.0, b: 0.0 });
       const p2 = createPrototype('p2', { a: 0.0, b: 1.0 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
@@ -250,7 +388,7 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('returns ~-1 for opposite weight vectors', () => {
+    it('returns ~-1 for opposite weight vectors', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -261,7 +399,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3, c: -0.2 });
       const p2 = createPrototype('p2', { a: -0.5, b: -0.3, c: 0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
@@ -270,7 +408,7 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('handles vectors with different axis sets (missing treated as 0)', () => {
+    it('handles vectors with different axis sets (missing treated as 0)', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.0,
         candidateMinActiveAxisOverlap: 0.0,
@@ -285,7 +423,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.6, b: 0.8 });
       const p2 = createPrototype('p2', { a: 0.6, b: 0.8, c: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       const expected = 1.0 / Math.sqrt(1.25);
@@ -313,7 +451,7 @@ describe('CandidatePairFilter', () => {
       };
     });
 
-    it('filters out pairs below activeAxisOverlap threshold', () => {
+    it('filters out pairs below activeAxisOverlap threshold', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.9, // Very high threshold
@@ -322,7 +460,7 @@ describe('CandidatePairFilter', () => {
       });
 
       // Low overlap pair has Jaccard = 0 (no shared axes)
-      const result = filter.filterCandidates([
+      const result = await filter.filterCandidates([
         lowOverlapPair.p1,
         lowOverlapPair.p2,
       ]);
@@ -330,7 +468,7 @@ describe('CandidatePairFilter', () => {
       expect(result.candidates).toHaveLength(0);
     });
 
-    it('filters out pairs below signAgreement threshold', () => {
+    it('filters out pairs below signAgreement threshold', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -342,12 +480,12 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
       const p2 = createPrototype('p2', { a: -0.5, b: -0.3 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(0);
     });
 
-    it('filters out pairs below cosineSimilarity threshold', () => {
+    it('filters out pairs below cosineSimilarity threshold', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -359,12 +497,12 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 1.0 });
       const p2 = createPrototype('p2', { b: 1.0 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(0);
     });
 
-    it('passes pairs meeting all thresholds', () => {
+    it('passes pairs meeting all thresholds', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.6,
@@ -373,7 +511,7 @@ describe('CandidatePairFilter', () => {
       });
 
       // Identical prototypes pass all thresholds
-      const result = filter.filterCandidates([
+      const result = await filter.filterCandidates([
         highOverlapPair.p1,
         highOverlapPair.p2,
       ]);
@@ -387,7 +525,7 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('correctly gates based on exact threshold values', () => {
+    it('correctly gates based on exact threshold values', async () => {
       // Test boundary condition: metric exactly equals threshold
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
@@ -403,7 +541,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.2, b: 0.2 });
       const p2 = createPrototype('p2', { a: 0.2, b: 0.2, c: 0.2, d: 0.2 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       // Should pass because >= 0.5
       expect(result.candidates).toHaveLength(1);
@@ -412,7 +550,7 @@ describe('CandidatePairFilter', () => {
   });
 
   describe('Symmetry & Deduplication', () => {
-    it('produces symmetric metrics for (A,B) and (B,A)', () => {
+    it('produces symmetric metrics for (A,B) and (B,A)', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -424,8 +562,8 @@ describe('CandidatePairFilter', () => {
       const p2 = createPrototype('p2', { a: 0.4, b: -0.2, c: 0.1, d: 0.3 });
 
       // Run twice with reversed order
-      const result1 = filter.filterCandidates([p1, p2]);
-      const result2 = filter.filterCandidates([p2, p1]);
+      const result1 = await filter.filterCandidates([p1, p2]);
+      const result2 = await filter.filterCandidates([p2, p1]);
 
       // Metrics should be identical
       expect(result1.candidates[0].candidateMetrics.activeAxisOverlap).toBe(
@@ -440,7 +578,7 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('returns only one of (A,B) or (B,A), not both', () => {
+    it('returns only one of (A,B) or (B,A), not both', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -453,7 +591,7 @@ describe('CandidatePairFilter', () => {
       const p3 = createPrototype('p3', { a: 0.5 });
 
       // 3 prototypes => 3 unique pairs: (p1,p2), (p1,p3), (p2,p3)
-      const result = filter.filterCandidates([p1, p2, p3]);
+      const result = await filter.filterCandidates([p1, p2, p3]);
 
       expect(result.candidates).toHaveLength(3);
 
@@ -465,7 +603,7 @@ describe('CandidatePairFilter', () => {
       expect(uniquePairIds.size).toBe(3);
     });
 
-    it('excludes self-pairs (A,A)', () => {
+    it('excludes self-pairs (A,A)', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -476,12 +614,12 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5 });
 
       // Single prototype cannot form a pair
-      const result = filter.filterCandidates([p1]);
+      const result = await filter.filterCandidates([p1]);
 
       expect(result.candidates).toHaveLength(0);
     });
 
-    it('includes prototype references in result', () => {
+    it('includes prototype references in result', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -492,7 +630,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5 });
       const p2 = createPrototype('p2', { a: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates[0].prototypeA).toBe(p1);
       expect(result.candidates[0].prototypeB).toBe(p2);
@@ -500,10 +638,10 @@ describe('CandidatePairFilter', () => {
   });
 
   describe('Edge Cases', () => {
-    it('returns empty array for empty prototype array', () => {
+    it('returns empty array for empty prototype array', async () => {
       const { filter, logger } = createFilter();
 
-      const result = filter.filterCandidates([]);
+      const result = await filter.filterCandidates([]);
 
       expect(result.candidates).toEqual([]);
       expect(logger.debug).toHaveBeenCalledWith(
@@ -511,20 +649,20 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('returns empty array for single prototype', () => {
+    it('returns empty array for single prototype', async () => {
       const { filter, logger } = createFilter();
 
       const p1 = createPrototype('p1', { a: 0.5 });
-      const result = filter.filterCandidates([p1]);
+      const result = await filter.filterCandidates([p1]);
 
       expect(result.candidates).toEqual([]);
       expect(logger.debug).toHaveBeenCalled();
     });
 
-    it('returns empty array for null input', () => {
+    it('returns empty array for null input', async () => {
       const { filter, logger } = createFilter();
 
-      const result = filter.filterCandidates(null);
+      const result = await filter.filterCandidates(null);
 
       expect(result.candidates).toEqual([]);
       expect(logger.warn).toHaveBeenCalledWith(
@@ -532,25 +670,25 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('returns empty array for undefined input', () => {
+    it('returns empty array for undefined input', async () => {
       const { filter, logger } = createFilter();
 
-      const result = filter.filterCandidates(undefined);
+      const result = await filter.filterCandidates(undefined);
 
       expect(result.candidates).toEqual([]);
       expect(logger.warn).toHaveBeenCalled();
     });
 
-    it('returns empty array for non-array input', () => {
+    it('returns empty array for non-array input', async () => {
       const { filter, logger } = createFilter();
 
-      const result = filter.filterCandidates('not an array');
+      const result = await filter.filterCandidates('not an array');
 
       expect(result.candidates).toEqual([]);
       expect(logger.warn).toHaveBeenCalled();
     });
 
-    it('filters out prototypes with no weights property', () => {
+    it('filters out prototypes with no weights property', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -562,7 +700,7 @@ describe('CandidatePairFilter', () => {
       const p2 = { id: 'p2' }; // No weights
       const p3 = createPrototype('p3', { a: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2, p3]);
+      const result = await filter.filterCandidates([p1, p2, p3]);
 
       // Only p1-p3 pair should form
       expect(result.candidates).toHaveLength(1);
@@ -570,7 +708,7 @@ describe('CandidatePairFilter', () => {
       expect(result.candidates[0].prototypeB.id).toBe('p3');
     });
 
-    it('filters out prototypes with invalid weights (non-object)', () => {
+    it('filters out prototypes with invalid weights (non-object)', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -582,12 +720,12 @@ describe('CandidatePairFilter', () => {
       const p2 = { id: 'p2', weights: 'invalid' };
       const p3 = createPrototype('p3', { a: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2, p3]);
+      const result = await filter.filterCandidates([p1, p2, p3]);
 
       expect(result.candidates).toHaveLength(1);
     });
 
-    it('filters out prototypes with empty weights object', () => {
+    it('filters out prototypes with empty weights object', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -599,12 +737,12 @@ describe('CandidatePairFilter', () => {
       const p2 = createPrototype('p2', {}); // Empty weights
       const p3 = createPrototype('p3', { a: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2, p3]);
+      const result = await filter.filterCandidates([p1, p2, p3]);
 
       expect(result.candidates).toHaveLength(1);
     });
 
-    it('handles prototypes with non-numeric weight values', () => {
+    it('handles prototypes with non-numeric weight values', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -615,13 +753,13 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5, b: 'invalid' });
       const p2 = createPrototype('p2', { a: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       // Should still work, ignoring non-numeric weights
       expect(result.candidates).toHaveLength(1);
     });
 
-    it('handles zero-weight vectors (all weights below epsilon)', () => {
+    it('handles zero-weight vectors (all weights below epsilon)', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -632,11 +770,11 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.01, b: 0.02 }); // All below epsilon
       const p2 = createPrototype('p2', { a: 0.01, b: 0.02 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
-      // Both have empty active sets, Jaccard of empty sets = 0
+      // Both have empty active sets, Jaccard of empty sets uses configured value
       expect(result.candidates).toHaveLength(1);
-      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(0);
+      expect(result.candidates[0].candidateMetrics.activeAxisOverlap).toBe(1);
       expect(result.candidates[0].candidateMetrics.signAgreement).toBe(0);
       // Cosine similarity still computed on full vectors
       expect(result.candidates[0].candidateMetrics.weightCosineSimilarity).toBeCloseTo(
@@ -645,7 +783,7 @@ describe('CandidatePairFilter', () => {
       );
     });
 
-    it('handles null prototype entries in array', () => {
+    it('handles null prototype entries in array', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -656,14 +794,14 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5 });
       const p3 = createPrototype('p3', { a: 0.5 });
 
-      const result = filter.filterCandidates([p1, null, p3]);
+      const result = await filter.filterCandidates([p1, null, p3]);
 
       expect(result.candidates).toHaveLength(1);
     });
   });
 
   describe('Integration scenarios', () => {
-    it('handles typical emotion prototype comparison', () => {
+    it('handles typical emotion prototype comparison', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.08,
         candidateMinActiveAxisOverlap: 0.6,
@@ -682,7 +820,7 @@ describe('CandidatePairFilter', () => {
         valence: 0.7,
         arousal: 0.3,
         dominance: 0.2,
-        novelty: 0.1,
+        novelty: 0.2,
       });
 
       // Different emotion (anger) - should not match joy/contentment
@@ -693,7 +831,7 @@ describe('CandidatePairFilter', () => {
         novelty: 0.3,
       });
 
-      const result = filter.filterCandidates([joy, contentment, anger]);
+      const result = await filter.filterCandidates([joy, contentment, anger]);
 
       // Joy and contentment should be candidates (similar positive emotions)
       // Anger should not match either due to opposite valence sign
@@ -711,14 +849,14 @@ describe('CandidatePairFilter', () => {
       expect(angerPairs).toHaveLength(0);
     });
 
-    it('produces summary debug log', () => {
+    it('produces summary debug log', async () => {
       const { filter, logger } = createFilter();
 
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
       const p3 = createPrototype('p3', { c: 0.5, d: 0.3 }); // Different
 
-      filter.filterCandidates([p1, p2, p3]);
+      await filter.filterCandidates([p1, p2, p3]);
 
       // Verify debug log mentions Route A results
       expect(logger.debug).toHaveBeenCalledWith(
@@ -728,7 +866,7 @@ describe('CandidatePairFilter', () => {
   });
 
   describe('Metric range invariants', () => {
-    it('activeAxisOverlap is always in [0, 1]', () => {
+    it('activeAxisOverlap is always in [0, 1]', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -755,14 +893,14 @@ describe('CandidatePairFilter', () => {
       ];
 
       for (const [p1, p2] of testCases) {
-        const result = filter.filterCandidates([p1, p2]);
+        const result = await filter.filterCandidates([p1, p2]);
         const overlap = result.candidates[0].candidateMetrics.activeAxisOverlap;
         expect(overlap).toBeGreaterThanOrEqual(0);
         expect(overlap).toBeLessThanOrEqual(1);
       }
     });
 
-    it('signAgreement is always in [0, 1]', () => {
+    it('signAgreement is always in [0, 1]', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -789,7 +927,7 @@ describe('CandidatePairFilter', () => {
       ];
 
       for (const [p1, p2] of testCases) {
-        const result = filter.filterCandidates([p1, p2]);
+        const result = await filter.filterCandidates([p1, p2]);
         expect(result.candidates).toHaveLength(1);
         const signAgreement = result.candidates[0].candidateMetrics.signAgreement;
         expect(signAgreement).toBeGreaterThanOrEqual(0);
@@ -797,7 +935,7 @@ describe('CandidatePairFilter', () => {
       }
     });
 
-    it('weightCosineSimilarity is always in [-1, 1]', () => {
+    it('weightCosineSimilarity is always in [-1, 1]', async () => {
       const { filter } = createFilter({
         activeAxisEpsilon: 0.1,
         candidateMinActiveAxisOverlap: 0.0,
@@ -829,7 +967,7 @@ describe('CandidatePairFilter', () => {
       ];
 
       for (const [p1, p2] of testCases) {
-        const result = filter.filterCandidates([p1, p2]);
+        const result = await filter.filterCandidates([p1, p2]);
         expect(result.candidates).toHaveLength(1);
         const cosine = result.candidates[0].candidateMetrics.weightCosineSimilarity;
         // Use tolerance for floating point comparison
@@ -902,7 +1040,7 @@ describe('CandidatePairFilter', () => {
       return { filter, logger, gateSimilarityFilter, behavioralPrescanFilter };
     };
 
-    it('should work without optional dependencies (backward compatibility)', () => {
+    it('should work without optional dependencies (backward compatibility)', async () => {
       const logger = createMockLogger();
       const config = createConfig({ enableMultiRouteFiltering: true });
 
@@ -912,13 +1050,13 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       // Should still work with Route A only
       expect(result.candidates).toHaveLength(1);
     });
 
-    it('should skip multi-route when enableMultiRouteFiltering is false', () => {
+    it('should skip multi-route when enableMultiRouteFiltering is false', async () => {
       const { filter, gateSimilarityFilter, behavioralPrescanFilter } =
         createMultiRouteFilter({
           configOverrides: { enableMultiRouteFiltering: false },
@@ -928,14 +1066,14 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
 
-      filter.filterCandidates([p1, p2]);
+      await filter.filterCandidates([p1, p2]);
 
       // Route B and C should not be called
       expect(gateSimilarityFilter.filterPairs).not.toHaveBeenCalled();
       expect(behavioralPrescanFilter.filterPairs).not.toHaveBeenCalled();
     });
 
-    it('should call Route B with pairs rejected by Route A', () => {
+    it('should call Route B with pairs rejected by Route A', async () => {
       const { filter, gateSimilarityFilter } = createMultiRouteFilter();
 
       // Create prototypes that fail Route A (different axes)
@@ -943,7 +1081,7 @@ describe('CandidatePairFilter', () => {
       const p2 = createPrototype('p2', { b: 0.5 });
       const p3 = createPrototype('p3', { c: 0.5 });
 
-      filter.filterCandidates([p1, p2, p3]);
+      await filter.filterCandidates([p1, p2, p3]);
 
       // Route B should receive rejected pairs
       expect(gateSimilarityFilter.filterPairs).toHaveBeenCalled();
@@ -951,33 +1089,33 @@ describe('CandidatePairFilter', () => {
       expect(routeBInput.length).toBeGreaterThan(0);
     });
 
-    it('should call Route C with pairs rejected by both Routes A and B', () => {
+    it('should call Route C with pairs rejected by both Routes A and B', async () => {
       const { filter, behavioralPrescanFilter } = createMultiRouteFilter();
 
       // Create prototypes that fail Route A
       const p1 = createPrototype('p1', { a: 0.5 });
       const p2 = createPrototype('p2', { b: 0.5 });
 
-      filter.filterCandidates([p1, p2]);
+      await filter.filterCandidates([p1, p2]);
 
       // Route C should be called
       expect(behavioralPrescanFilter.filterPairs).toHaveBeenCalled();
     });
 
-    it('should mark Route A candidates with selectedBy: routeA', () => {
+    it('should mark Route A candidates with selectedBy: routeA', async () => {
       const { filter } = createMultiRouteFilter();
 
       // Prototypes that pass Route A
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       expect(result.candidates).toHaveLength(1);
       expect(result.candidates[0].selectedBy).toBe('routeA');
     });
 
-    it('should include Route B candidates with routeB provenance', () => {
+    it('should include Route B candidates with routeB provenance', async () => {
       const routeBCandidate = {
         prototypeA: createPrototype('rb1', { x: 0.5 }),
         prototypeB: createPrototype('rb2', { y: 0.5 }),
@@ -994,7 +1132,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5 });
       const p2 = createPrototype('p2', { b: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2, routeBCandidate.prototypeA, routeBCandidate.prototypeB]);
+      const result = await filter.filterCandidates([p1, p2, routeBCandidate.prototypeA, routeBCandidate.prototypeB]);
 
       const routeBCandidates = result.candidates.filter(
         (c) => c.selectedBy === 'routeB'
@@ -1002,7 +1140,7 @@ describe('CandidatePairFilter', () => {
       expect(routeBCandidates.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should include Route C candidates with routeC provenance', () => {
+    it('should include Route C candidates with routeC provenance', async () => {
       const routeCCandidate = {
         prototypeA: createPrototype('rc1', { x: 0.5 }),
         prototypeB: createPrototype('rc2', { y: 0.5 }),
@@ -1020,7 +1158,7 @@ describe('CandidatePairFilter', () => {
       const p1 = createPrototype('p1', { a: 0.5 });
       const p2 = createPrototype('p2', { b: 0.5 });
 
-      const result = filter.filterCandidates([p1, p2, routeCCandidate.prototypeA, routeCCandidate.prototypeB]);
+      const result = await filter.filterCandidates([p1, p2, routeCCandidate.prototypeA, routeCCandidate.prototypeB]);
 
       const routeCCandidates = result.candidates.filter(
         (c) => c.selectedBy === 'routeC'
@@ -1028,7 +1166,7 @@ describe('CandidatePairFilter', () => {
       expect(routeCCandidates.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should track route-specific stats when multi-route is enabled', () => {
+    it('should track route-specific stats when multi-route is enabled', async () => {
       const { filter } = createMultiRouteFilter();
 
       // Mix of prototypes
@@ -1036,7 +1174,7 @@ describe('CandidatePairFilter', () => {
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
       const p3 = createPrototype('p3', { c: 0.5 }); // Will be rejected by Route A
 
-      const result = filter.filterCandidates([p1, p2, p3]);
+      const result = await filter.filterCandidates([p1, p2, p3]);
 
       // Should have routeStats in the result
       expect(result.stats.routeStats).toBeDefined();
@@ -1044,7 +1182,7 @@ describe('CandidatePairFilter', () => {
       expect(result.stats.routeStats.routeA.passed).toBeGreaterThanOrEqual(0);
     });
 
-    it('should deduplicate candidates across routes', () => {
+    it('should deduplicate candidates across routes', async () => {
       // Create a pair that passes both Route A and Route B
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
@@ -1062,7 +1200,7 @@ describe('CandidatePairFilter', () => {
         gateSimilarityFilter: createMockGateSimilarityFilter([routeBCandidate]),
       });
 
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
 
       // Should only have one candidate for this pair (Route A wins)
       const p1p2Candidates = result.candidates.filter(
@@ -1075,7 +1213,7 @@ describe('CandidatePairFilter', () => {
       expect(p1p2Candidates[0].selectedBy).toBe('routeA');
     });
 
-    it('should handle case where Route B filter is null', () => {
+    it('should handle case where Route B filter is null', async () => {
       const logger = createMockLogger();
       const config = createConfig({ enableMultiRouteFiltering: true });
 
@@ -1090,11 +1228,11 @@ describe('CandidatePairFilter', () => {
       const p2 = createPrototype('p2', { b: 0.5 });
 
       // Should not throw
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
       expect(result).toBeDefined();
     });
 
-    it('should handle case where Route C filter is null', () => {
+    it('should handle case where Route C filter is null', async () => {
       const logger = createMockLogger();
       const config = createConfig({ enableMultiRouteFiltering: true });
 
@@ -1109,11 +1247,11 @@ describe('CandidatePairFilter', () => {
       const p2 = createPrototype('p2', { b: 0.5 });
 
       // Should not throw
-      const result = filter.filterCandidates([p1, p2]);
+      const result = await filter.filterCandidates([p1, p2]);
       expect(result).toBeDefined();
     });
 
-    it('should merge candidates from all routes correctly', () => {
+    it('should merge candidates from all routes correctly', async () => {
       // Route A passes p1-p2
       const p1 = createPrototype('p1', { a: 0.5, b: 0.3 });
       const p2 = createPrototype('p2', { a: 0.5, b: 0.3 });
@@ -1145,7 +1283,7 @@ describe('CandidatePairFilter', () => {
         behavioralPrescanFilter: createMockBehavioralPrescanFilter([routeCCandidate]),
       });
 
-      const result = filter.filterCandidates([p1, p2, p3, p4, p5, p6]);
+      const result = await filter.filterCandidates([p1, p2, p3, p4, p5, p6]);
 
       // Should have candidates from all routes
       const routeACount = result.candidates.filter((c) => c.selectedBy === 'routeA').length;

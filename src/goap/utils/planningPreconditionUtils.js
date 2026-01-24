@@ -26,7 +26,7 @@ const LEGACY_PRECONDITION_ASSERTION_CODE =
  * so authors know to migrate.
  *
  * @param {object} task - Task definition
- * @param {import('../../logging/logger.js').default} logger - Logger for warnings
+ * @param {import('../../logging/loggerStrategy.js').default} logger - Logger for warnings
  * @param options
  * @returns {Array<{description: string, condition: object}>} Normalized preconditions
  */

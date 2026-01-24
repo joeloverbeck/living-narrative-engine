@@ -14,6 +14,7 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { diagnosticsTokens } from '../../../../src/dependencyInjection/tokens/tokens-diagnostics.js';
 import { registerExpressionServices } from '../../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { registerExpressionDiagnosticsServices } from '../../../../src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
+import { PROTOTYPE_OVERLAP_CONFIG } from '../../../../src/expressionDiagnostics/config/prototypeOverlapConfig.js';
 
 /**
  * Prototype pair designed to trigger KEEP_DISTINCT classification.
@@ -210,7 +211,13 @@ describe('PrototypeOverlapAnalyzer - KEEP_DISTINCT Integration', () => {
       expect(result.metadata.prototypeFamily).toBe('emotion');
       expect(typeof result.metadata.candidatePairsEvaluated).toBe('number');
       expect(typeof result.metadata.sampleCountPerPair).toBe('number');
-      expect(result.metadata.sampleCountPerPair).toBe(4000);
+      if (result.metadata.analysisMode === 'v3') {
+        expect(result.metadata.sampleCountPerPair).toBe(
+          PROTOTYPE_OVERLAP_CONFIG.sharedPoolSize
+        );
+      } else {
+        expect(result.metadata.sampleCountPerPair).toBe(4000);
+      }
 
       // Verify classification breakdown has all expected fields
       const breakdown = result.metadata.classificationBreakdown;

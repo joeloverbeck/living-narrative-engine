@@ -48,7 +48,7 @@ describe('PrototypeOverlapAnalyzer', () => {
    * @returns {object} Mock filter
    */
   const createMockCandidatePairFilter = (candidatePairs = []) => ({
-    filterCandidates: jest.fn().mockReturnValue({
+    filterCandidates: jest.fn().mockResolvedValue({
       candidates: candidatePairs,
       stats: {
         totalPossiblePairs: candidatePairs.length > 0 ? 10 : 0,
@@ -409,7 +409,7 @@ describe('PrototypeOverlapAnalyzer', () => {
         }),
       };
       const candidatePairFilter = {
-        filterCandidates: jest.fn(() => {
+        filterCandidates: jest.fn(async () => {
           callOrder.push('filterCandidates');
           return {
             candidates: [candidatePair],
@@ -483,7 +483,8 @@ describe('PrototypeOverlapAnalyzer', () => {
       await analyzer.analyze();
 
       expect(candidatePairFilter.filterCandidates).toHaveBeenCalledWith(
-        prototypes
+        prototypes,
+        expect.any(Function) // onProgress callback
       );
     });
 
@@ -545,7 +546,10 @@ describe('PrototypeOverlapAnalyzer', () => {
 
       expect(overlapClassifier.classify).toHaveBeenCalledWith(
         candidatePair.candidateMetrics,
-        { gateOverlap: behaviorResult.gateOverlap, intensity: behaviorResult.intensity }
+        expect.objectContaining({
+          gateOverlap: behaviorResult.gateOverlap,
+          intensity: behaviorResult.intensity,
+        })
       );
     });
 
@@ -734,9 +738,9 @@ describe('PrototypeOverlapAnalyzer', () => {
 
       const filteringCalls = progressCalls.filter((c) => c.stage === 'filtering');
       expect(filteringCalls.length).toBeGreaterThan(0);
-      // New format uses { current, total } for filtering stage
-      expect(filteringCalls).toContainEqual({ stage: 'filtering', current: 0, total: 1 });
-      expect(filteringCalls).toContainEqual({ stage: 'filtering', current: 1, total: 1 });
+      // New format uses { current, total, stageNumber, totalStages } for filtering stage
+      expect(filteringCalls).toContainEqual({ stage: 'filtering', current: 0, total: 1, stageNumber: 1, totalStages: 4 });
+      expect(filteringCalls).toContainEqual({ stage: 'filtering', current: 1, total: 1, stageNumber: 1, totalStages: 4 });
     });
 
     it('reports evaluation progress per pair with nested structure', async () => {
@@ -1242,6 +1246,954 @@ describe('PrototypeOverlapAnalyzer', () => {
       expect(result1.metadata.redundantPairsFound).toBe(
         result2.metadata.redundantPairsFound
       );
+    });
+  });
+
+  // ========================================
+  // V3 Pipeline Integration (PROANAOVEV3-013)
+  // ========================================
+  describe('V3 Pipeline Integration', () => {
+    /**
+     * Create a mock shared context pool generator.
+     *
+     * @param {Array<object>} [pool] - Context pool to return
+     * @returns {object} Mock generator
+     */
+    const createMockSharedContextPoolGenerator = (pool = null) => ({
+      generate: jest.fn().mockReturnValue(
+        pool ?? [
+          { mood: { joy: 0.5, sadness: -0.2 } },
+          { mood: { joy: 0.8, sadness: -0.5 } },
+          { mood: { joy: 0.2, sadness: 0.3 } },
+        ]
+      ),
+    });
+
+    /**
+     * Create a mock prototype vector evaluator.
+     *
+     * @param {Map<string, Array<object>>} [vectors] - Vectors to return
+     * @returns {object} Mock evaluator
+     */
+    const createMockPrototypeVectorEvaluator = (vectors = null) => ({
+      evaluateAll: jest.fn().mockResolvedValue(
+        vectors ??
+          new Map([
+            ['proto_a', [{ passed: true, intensity: 0.8 }, { passed: true, intensity: 0.9 }, { passed: false, intensity: 0 }]],
+            ['proto_b', [{ passed: true, intensity: 0.7 }, { passed: true, intensity: 0.85 }, { passed: false, intensity: 0 }]],
+          ])
+      ),
+    });
+
+    /**
+     * Create a mock prototype profile calculator.
+     *
+     * @param {object} [profile] - Profile to return for each prototype
+     * @returns {object} Mock calculator
+     */
+    const createMockPrototypeProfileCalculator = (profile = null) => ({
+      calculateSingle: jest.fn().mockReturnValue(
+        profile ?? {
+          activationRate: 0.67,
+          meanIntensity: 0.8,
+          axisContributions: { joy: 0.6, sadness: 0.4 },
+          lowNovelty: false,
+          lowVolume: false,
+        }
+      ),
+    });
+
+    /**
+     * Create a V3-compatible mock overlap classifier (includes classifyV3).
+     *
+     * @param {object} [result] - Result to return
+     * @returns {object} Mock classifier
+     */
+    const createMockV3OverlapClassifier = (result = null) => ({
+      classify: jest.fn().mockReturnValue(
+        result ?? {
+          type: 'not_redundant',
+          thresholds: {},
+          metrics: {},
+        }
+      ),
+      classifyV3: jest.fn().mockReturnValue(
+        result ?? {
+          type: 'not_redundant',
+          thresholds: {},
+          metrics: {},
+        }
+      ),
+    });
+
+    /**
+     * Create an analyzer with V3 dependencies.
+     *
+     * @param {object} [overrides] - Override specific dependencies
+     * @returns {object} Analyzer and mocks
+     */
+    const createV3Analyzer = (overrides = {}) => {
+      const logger = createMockLogger();
+      const config = createConfig(overrides.config);
+      const prototypeRegistryService =
+        overrides.prototypeRegistryService ?? createMockRegistryService();
+      const candidatePairFilter =
+        overrides.candidatePairFilter ?? createMockCandidatePairFilter();
+      const behavioralOverlapEvaluator =
+        overrides.behavioralOverlapEvaluator ??
+        createMockBehavioralOverlapEvaluator();
+      const overlapClassifier =
+        overrides.overlapClassifier ?? createMockV3OverlapClassifier();
+      const overlapRecommendationBuilder =
+        overrides.overlapRecommendationBuilder ??
+        createMockOverlapRecommendationBuilder();
+      const gateBandingSuggestionBuilder =
+        overrides.gateBandingSuggestionBuilder ??
+        createMockGateBandingSuggestionBuilder();
+
+      // V3 services
+      const sharedContextPoolGenerator =
+        overrides.sharedContextPoolGenerator ??
+        createMockSharedContextPoolGenerator();
+      const prototypeVectorEvaluator =
+        overrides.prototypeVectorEvaluator ??
+        createMockPrototypeVectorEvaluator();
+      const prototypeProfileCalculator =
+        overrides.prototypeProfileCalculator ??
+        createMockPrototypeProfileCalculator();
+
+      const analyzer = new PrototypeOverlapAnalyzer({
+        prototypeRegistryService,
+        candidatePairFilter,
+        behavioralOverlapEvaluator,
+        overlapClassifier,
+        overlapRecommendationBuilder,
+        gateBandingSuggestionBuilder,
+        config,
+        logger,
+        // V3 services
+        sharedContextPoolGenerator,
+        prototypeVectorEvaluator,
+        prototypeProfileCalculator,
+      });
+
+      return {
+        analyzer,
+        logger,
+        config,
+        prototypeRegistryService,
+        candidatePairFilter,
+        behavioralOverlapEvaluator,
+        overlapClassifier,
+        overlapRecommendationBuilder,
+        gateBandingSuggestionBuilder,
+        sharedContextPoolGenerator,
+        prototypeVectorEvaluator,
+        prototypeProfileCalculator,
+      };
+    };
+
+    describe('constructor - V3 services', () => {
+      it('should accept optional V3 services (sharedContextPoolGenerator, prototypeVectorEvaluator, prototypeProfileCalculator)', () => {
+        const { analyzer } = createV3Analyzer();
+        expect(analyzer).toBeInstanceOf(PrototypeOverlapAnalyzer);
+      });
+
+      it('should work without V3 services (backward compatibility)', () => {
+        const { analyzer } = createAnalyzer();
+        expect(analyzer).toBeInstanceOf(PrototypeOverlapAnalyzer);
+      });
+
+      it('should validate sharedContextPoolGenerator when provided', () => {
+        const logger = createMockLogger();
+        expect(() =>
+          new PrototypeOverlapAnalyzer({
+            prototypeRegistryService: createMockRegistryService(),
+            candidatePairFilter: createMockCandidatePairFilter(),
+            behavioralOverlapEvaluator: createMockBehavioralOverlapEvaluator(),
+            overlapClassifier: createMockOverlapClassifier(),
+            overlapRecommendationBuilder: createMockOverlapRecommendationBuilder(),
+            gateBandingSuggestionBuilder: createMockGateBandingSuggestionBuilder(),
+            config: createConfig(),
+            logger,
+            sharedContextPoolGenerator: { notGenerate: jest.fn() }, // Missing required method
+            prototypeVectorEvaluator: createMockPrototypeVectorEvaluator(),
+            prototypeProfileCalculator: createMockPrototypeProfileCalculator(),
+          })
+        ).toThrow();
+      });
+
+      it('should validate prototypeVectorEvaluator when provided', () => {
+        const logger = createMockLogger();
+        expect(() =>
+          new PrototypeOverlapAnalyzer({
+            prototypeRegistryService: createMockRegistryService(),
+            candidatePairFilter: createMockCandidatePairFilter(),
+            behavioralOverlapEvaluator: createMockBehavioralOverlapEvaluator(),
+            overlapClassifier: createMockOverlapClassifier(),
+            overlapRecommendationBuilder: createMockOverlapRecommendationBuilder(),
+            gateBandingSuggestionBuilder: createMockGateBandingSuggestionBuilder(),
+            config: createConfig(),
+            logger,
+            sharedContextPoolGenerator: createMockSharedContextPoolGenerator(),
+            prototypeVectorEvaluator: { notEvaluateAll: jest.fn() }, // Missing required method
+            prototypeProfileCalculator: createMockPrototypeProfileCalculator(),
+          })
+        ).toThrow();
+      });
+
+      it('should validate prototypeProfileCalculator when provided', () => {
+        const logger = createMockLogger();
+        expect(() =>
+          new PrototypeOverlapAnalyzer({
+            prototypeRegistryService: createMockRegistryService(),
+            candidatePairFilter: createMockCandidatePairFilter(),
+            behavioralOverlapEvaluator: createMockBehavioralOverlapEvaluator(),
+            overlapClassifier: createMockOverlapClassifier(),
+            overlapRecommendationBuilder: createMockOverlapRecommendationBuilder(),
+            gateBandingSuggestionBuilder: createMockGateBandingSuggestionBuilder(),
+            config: createConfig(),
+            logger,
+            sharedContextPoolGenerator: createMockSharedContextPoolGenerator(),
+            prototypeVectorEvaluator: createMockPrototypeVectorEvaluator(),
+            prototypeProfileCalculator: { notCalculateSingle: jest.fn() }, // Missing required method
+          })
+        ).toThrow();
+      });
+    });
+
+    describe('V3 orchestration', () => {
+      it('should generate shared pool once at start when V3 enabled', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        const sharedContextPoolGenerator = createMockSharedContextPoolGenerator();
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          sharedContextPoolGenerator,
+        });
+
+        await analyzer.analyze();
+
+        expect(sharedContextPoolGenerator.generate).toHaveBeenCalledTimes(1);
+      });
+
+      it('should evaluate all prototypes on shared pool', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+        const contextPool = [{ mood: { joy: 0.5 } }, { mood: { joy: 0.8 } }];
+
+        const sharedContextPoolGenerator = createMockSharedContextPoolGenerator(contextPool);
+        const prototypeVectorEvaluator = createMockPrototypeVectorEvaluator();
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          sharedContextPoolGenerator,
+          prototypeVectorEvaluator,
+        });
+
+        await analyzer.analyze();
+
+        expect(prototypeVectorEvaluator.evaluateAll).toHaveBeenCalledTimes(1);
+        expect(prototypeVectorEvaluator.evaluateAll).toHaveBeenCalledWith(
+          [protoA, protoB],
+          contextPool,
+          expect.any(Function)
+        );
+      });
+
+      it('should compute profiles for all prototypes', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        const prototypeProfileCalculator = createMockPrototypeProfileCalculator();
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          prototypeProfileCalculator,
+        });
+
+        await analyzer.analyze();
+
+        // Should calculate profile for each prototype
+        expect(prototypeProfileCalculator.calculateSingle).toHaveBeenCalledTimes(2);
+      });
+
+      it('should pass V3 vectors to behavioralOverlapEvaluator', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        const vectorA = [{ passed: true, intensity: 0.8 }];
+        const vectorB = [{ passed: true, intensity: 0.7 }];
+        const outputVectors = new Map([
+          ['proto_a', vectorA],
+          ['proto_b', vectorB],
+        ]);
+
+        const prototypeVectorEvaluator = {
+          evaluateAll: jest.fn().mockResolvedValue(outputVectors),
+        };
+        const behavioralOverlapEvaluator = {
+          evaluate: jest.fn().mockResolvedValue({
+            gateOverlap: { onEitherRate: 0.3, onBothRate: 0.28, pOnlyRate: 0.01, qOnlyRate: 0.01 },
+            intensity: { pearsonCorrelation: 0.95, meanAbsDiff: 0.05 },
+            agreementMetrics: { mae: 0.05, rmse: 0.07 },
+            divergenceExamples: [],
+          }),
+        };
+        const overlapClassifier = {
+          classify: jest.fn().mockReturnValue({ type: 'not_redundant', thresholds: {}, metrics: {} }),
+          classifyV3: jest.fn().mockReturnValue({ type: 'not_redundant', thresholds: {}, metrics: {} }),
+        };
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          prototypeVectorEvaluator,
+          behavioralOverlapEvaluator,
+          overlapClassifier,
+        });
+
+        await analyzer.analyze();
+
+        // V3 mode: evaluate called with {vectorA, vectorB} object
+        expect(behavioralOverlapEvaluator.evaluate).toHaveBeenCalledWith(
+          protoA,
+          protoB,
+          { vectorA, vectorB }
+        );
+      });
+
+      it('should call classifyV3 when V3 data available', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        const profileA = { activationRate: 0.67, meanIntensity: 0.8 };
+        const profileB = { activationRate: 0.65, meanIntensity: 0.75 };
+        const agreementMetrics = { mae: 0.05, rmse: 0.07 };
+
+        let profileCallIndex = 0;
+        const prototypeProfileCalculator = {
+          calculateSingle: jest.fn(() => {
+            profileCallIndex++;
+            return profileCallIndex === 1 ? profileA : profileB;
+          }),
+        };
+
+        const behavioralOverlapEvaluator = {
+          evaluate: jest.fn().mockResolvedValue({
+            gateOverlap: { onEitherRate: 0.3, onBothRate: 0.28, pOnlyRate: 0.01, qOnlyRate: 0.01 },
+            intensity: { pearsonCorrelation: 0.95, meanAbsDiff: 0.05 },
+            agreementMetrics,
+            divergenceExamples: [],
+          }),
+        };
+
+        const overlapClassifier = {
+          classify: jest.fn().mockReturnValue({ type: 'not_redundant', thresholds: {}, metrics: {} }),
+          classifyV3: jest.fn().mockReturnValue({ type: 'not_redundant', thresholds: {}, metrics: {} }),
+        };
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          behavioralOverlapEvaluator,
+          overlapClassifier,
+          prototypeProfileCalculator,
+        });
+
+        await analyzer.analyze();
+
+        expect(overlapClassifier.classifyV3).toHaveBeenCalledWith({
+          agreementMetrics,
+          profileA,
+          profileB,
+        });
+        // V2 classify should not be called when V3 mode is active
+        expect(overlapClassifier.classify).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('V3 performance logging', () => {
+      it('should log V3 analysis summary with complexity metrics', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+        const contextPool = [{ mood: { joy: 0.5 } }, { mood: { joy: 0.8 } }, { mood: { joy: 0.3 } }];
+
+        const { analyzer, logger } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          sharedContextPoolGenerator: createMockSharedContextPoolGenerator(contextPool),
+        });
+
+        await analyzer.analyze();
+
+        // V3 specific logging
+        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('V3'));
+        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Pool size'));
+        expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Complexity'));
+      });
+    });
+
+    describe('V3 setup progress reporting', () => {
+      it('reports setup progress in V3 mode', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        // Mock generator that invokes the progress callback
+        const sharedContextPoolGenerator = {
+          generate: jest.fn(async (onProgress) => {
+            onProgress?.(50, 100); // 50% complete
+            onProgress?.(100, 100); // 100% complete
+            return [{ mood: { joy: 0.5 } }, { mood: { joy: 0.8 } }];
+          }),
+        };
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          sharedContextPoolGenerator,
+        });
+
+        const progressCalls = [];
+        const onProgress = jest.fn((stage, progressData) => {
+          progressCalls.push({ stage, ...progressData });
+        });
+
+        await analyzer.analyze({ onProgress });
+
+        // Should have setup stage calls
+        const setupCalls = progressCalls.filter((c) => c.stage === 'setup');
+        expect(setupCalls.length).toBeGreaterThan(0);
+
+        // V3 mode has 5 total stages (setup, filtering, evaluating, classifying, recommending)
+        const setupCall = setupCalls.find((c) => c.phase === 'pool');
+        expect(setupCall).toBeDefined();
+        expect(setupCall.totalStages).toBe(5);
+        expect(setupCall.stageNumber).toBe(1);
+      });
+
+      it('setup progress includes pool, vectors, and profiles phases', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        // Mock generator that invokes the progress callback
+        const sharedContextPoolGenerator = {
+          generate: jest.fn(async (onProgress) => {
+            onProgress?.(100, 100);
+            return [{ mood: { joy: 0.5 } }];
+          }),
+        };
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          sharedContextPoolGenerator,
+        });
+
+        const progressCalls = [];
+        const onProgress = jest.fn((stage, progressData) => {
+          progressCalls.push({ stage, ...progressData });
+        });
+
+        await analyzer.analyze({ onProgress });
+
+        const setupCalls = progressCalls.filter((c) => c.stage === 'setup');
+
+        // Should have all three phases
+        const phases = setupCalls.map((c) => c.phase);
+        expect(phases).toContain('pool');
+        expect(phases).toContain('vectors');
+        expect(phases).toContain('profiles');
+      });
+
+      it('reports pool progress with current and total counts', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        // Mock generator that invokes progress callback multiple times
+        const sharedContextPoolGenerator = {
+          generate: jest.fn(async (onProgress) => {
+            onProgress?.(25, 100);
+            onProgress?.(50, 100);
+            onProgress?.(75, 100);
+            onProgress?.(100, 100);
+            return [{ mood: { joy: 0.5 } }];
+          }),
+        };
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          sharedContextPoolGenerator,
+        });
+
+        const progressCalls = [];
+        const onProgress = jest.fn((stage, progressData) => {
+          progressCalls.push({ stage, ...progressData });
+        });
+
+        await analyzer.analyze({ onProgress });
+
+        const poolCalls = progressCalls.filter((c) => c.stage === 'setup' && c.phase === 'pool');
+
+        // Should have multiple pool progress updates (initial placeholder + 4 from generator)
+        expect(poolCalls.length).toBeGreaterThanOrEqual(4);
+
+        // All pool calls should have poolCurrent and poolTotal
+        for (const call of poolCalls) {
+          expect(call).toHaveProperty('poolCurrent');
+          expect(call).toHaveProperty('poolTotal');
+        }
+
+        // Filter out the initial placeholder call (poolTotal: 1) and verify actual progress calls
+        const actualProgressCalls = poolCalls.filter((c) => c.poolTotal === 100);
+        expect(actualProgressCalls.length).toBe(4); // The 4 calls from the mock generator
+
+        for (const call of actualProgressCalls) {
+          expect(call.poolTotal).toBe(100);
+        }
+
+        // Verify progress is monotonically increasing for actual progress calls
+        let prevCurrent = 0;
+        for (const call of actualProgressCalls) {
+          expect(call.poolCurrent).toBeGreaterThanOrEqual(prevCurrent);
+          prevCurrent = call.poolCurrent;
+        }
+      });
+    });
+
+    describe('backward compatibility', () => {
+      it('should use V2 flow when V3 services not provided', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+        const candidatePair = createCandidatePair(protoA, protoB);
+
+        const behavioralOverlapEvaluator = createMockBehavioralOverlapEvaluator();
+        const overlapClassifier = createMockOverlapClassifier();
+
+        const { analyzer, config } = createAnalyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          behavioralOverlapEvaluator,
+          overlapClassifier,
+        });
+
+        await analyzer.analyze();
+
+        // V2 mode: evaluate called with sampleCount and callback
+        expect(behavioralOverlapEvaluator.evaluate).toHaveBeenCalledWith(
+          protoA,
+          protoB,
+          config.sampleCountPerPair,
+          expect.any(Function)
+        );
+
+        // V2 mode: classify (not classifyV3) should be called
+        expect(overlapClassifier.classify).toHaveBeenCalled();
+      });
+
+      it('should return v2 in metadata.analysisMode when V3 services not provided', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+
+        const { analyzer } = createAnalyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([]),
+        });
+
+        const result = await analyzer.analyze();
+
+        expect(result.metadata.analysisMode).toBe('v2');
+      });
+
+      it('should return v3 in metadata.analysisMode when V3 services provided', async () => {
+        const protoA = createPrototype('proto_a');
+        const protoB = createPrototype('proto_b');
+
+        const { analyzer } = createV3Analyzer({
+          prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+          candidatePairFilter: createMockCandidatePairFilter([]),
+        });
+
+        const result = await analyzer.analyze();
+
+        expect(result.metadata.analysisMode).toBe('v3');
+        expect(result.metadata.v3Metrics).toBeDefined();
+        expect(result.metadata.v3Metrics.sharedPoolSize).toBeGreaterThan(0);
+      });
+    });
+
+    // ========================================
+    // Stage C.5: Axis Gap Analysis (AXIGAPDETSPE-009)
+    // ========================================
+    describe('Stage C.5: Axis Gap Analysis', () => {
+      /**
+       * Create a mock axis gap analyzer.
+       *
+       * @param {object} [result] - Result to return
+       * @returns {object} Mock analyzer
+       */
+      const createMockAxisGapAnalyzer = (result = null) => ({
+        analyze: jest.fn().mockReturnValue(
+          result ?? {
+            summary: { totalGaps: 0, criticalGaps: 0 },
+            pcaAnalysis: null,
+            hubPrototypes: [],
+            coverageGaps: [],
+            multiAxisConflicts: [],
+            recommendations: [],
+          }
+        ),
+      });
+
+      /**
+       * Create a V3 analyzer with axis gap analyzer.
+       *
+       * @param {object} [overrides] - Override specific dependencies
+       * @returns {object} Analyzer and mocks
+       */
+      const createV3AnalyzerWithAxisGap = (overrides = {}) => {
+        const logger = createMockLogger();
+        const config = createConfig({
+          enableAxisGapDetection: true,
+          ...overrides.config,
+        });
+        const prototypeRegistryService =
+          overrides.prototypeRegistryService ?? createMockRegistryService();
+        const candidatePairFilter =
+          overrides.candidatePairFilter ?? createMockCandidatePairFilter();
+        const behavioralOverlapEvaluator =
+          overrides.behavioralOverlapEvaluator ??
+          createMockBehavioralOverlapEvaluator();
+        const overlapClassifier =
+          overrides.overlapClassifier ?? createMockV3OverlapClassifier();
+        const overlapRecommendationBuilder =
+          overrides.overlapRecommendationBuilder ??
+          createMockOverlapRecommendationBuilder();
+        const gateBandingSuggestionBuilder =
+          overrides.gateBandingSuggestionBuilder ??
+          createMockGateBandingSuggestionBuilder();
+
+        // V3 services
+        const sharedContextPoolGenerator =
+          overrides.sharedContextPoolGenerator ??
+          createMockSharedContextPoolGenerator();
+        const prototypeVectorEvaluator =
+          overrides.prototypeVectorEvaluator ??
+          createMockPrototypeVectorEvaluator();
+        const prototypeProfileCalculator =
+          overrides.prototypeProfileCalculator ??
+          createMockPrototypeProfileCalculator();
+
+        // Axis gap analyzer
+        const axisGapAnalyzer =
+          overrides.axisGapAnalyzer ?? createMockAxisGapAnalyzer();
+
+        const analyzer = new PrototypeOverlapAnalyzer({
+          prototypeRegistryService,
+          candidatePairFilter,
+          behavioralOverlapEvaluator,
+          overlapClassifier,
+          overlapRecommendationBuilder,
+          gateBandingSuggestionBuilder,
+          config,
+          logger,
+          sharedContextPoolGenerator,
+          prototypeVectorEvaluator,
+          prototypeProfileCalculator,
+          axisGapAnalyzer,
+        });
+
+        return {
+          analyzer,
+          logger,
+          config,
+          prototypeRegistryService,
+          candidatePairFilter,
+          behavioralOverlapEvaluator,
+          overlapClassifier,
+          overlapRecommendationBuilder,
+          gateBandingSuggestionBuilder,
+          sharedContextPoolGenerator,
+          prototypeVectorEvaluator,
+          prototypeProfileCalculator,
+          axisGapAnalyzer,
+        };
+      };
+
+      describe('constructor', () => {
+        it('should accept optional axisGapAnalyzer dependency', () => {
+          const { analyzer } = createV3AnalyzerWithAxisGap();
+          expect(analyzer).toBeInstanceOf(PrototypeOverlapAnalyzer);
+        });
+
+        it('should work without axisGapAnalyzer (backward compatible)', () => {
+          const { analyzer } = createV3Analyzer();
+          expect(analyzer).toBeInstanceOf(PrototypeOverlapAnalyzer);
+        });
+
+        it('should validate axisGapAnalyzer when provided', () => {
+          const logger = createMockLogger();
+          expect(() =>
+            new PrototypeOverlapAnalyzer({
+              prototypeRegistryService: createMockRegistryService(),
+              candidatePairFilter: createMockCandidatePairFilter(),
+              behavioralOverlapEvaluator: createMockBehavioralOverlapEvaluator(),
+              overlapClassifier: createMockOverlapClassifier(),
+              overlapRecommendationBuilder: createMockOverlapRecommendationBuilder(),
+              gateBandingSuggestionBuilder: createMockGateBandingSuggestionBuilder(),
+              config: createConfig(),
+              logger,
+              sharedContextPoolGenerator: createMockSharedContextPoolGenerator(),
+              prototypeVectorEvaluator: createMockPrototypeVectorEvaluator(),
+              prototypeProfileCalculator: createMockPrototypeProfileCalculator(),
+              axisGapAnalyzer: { notAnalyze: jest.fn() }, // Missing required method
+            })
+          ).toThrow();
+        });
+      });
+
+      describe('analyze() - axisGapAnalysis in result', () => {
+        it('should include axisGapAnalysis in V3 mode results when enabled', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const expectedAxisGapResult = {
+            summary: { totalGaps: 2, criticalGaps: 1 },
+            pcaAnalysis: { variance: [0.5, 0.3, 0.2] },
+            hubPrototypes: ['proto_hub'],
+            coverageGaps: [{ axis: 'anger', coverage: 0.2 }],
+            multiAxisConflicts: [],
+            recommendations: [{ type: 'add_prototype', axis: 'anger' }],
+          };
+
+          const axisGapAnalyzer = createMockAxisGapAnalyzer(expectedAxisGapResult);
+
+          const { analyzer } = createV3AnalyzerWithAxisGap({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+            axisGapAnalyzer,
+          });
+
+          const result = await analyzer.analyze();
+
+          expect(result.axisGapAnalysis).toEqual(expectedAxisGapResult);
+          expect(axisGapAnalyzer.analyze).toHaveBeenCalledTimes(1);
+        });
+
+        it('should return null axisGapAnalysis in V2 mode', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+
+          const { analyzer } = createAnalyzer({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([]),
+          });
+
+          const result = await analyzer.analyze();
+
+          expect(result.axisGapAnalysis).toBeNull();
+        });
+
+        it('should return null axisGapAnalysis in empty result', async () => {
+          const { analyzer } = createV3AnalyzerWithAxisGap({
+            prototypeRegistryService: createMockRegistryService([]), // No prototypes
+          });
+
+          const result = await analyzer.analyze();
+
+          expect(result.axisGapAnalysis).toBeNull();
+        });
+
+        it('should return null axisGapAnalysis when V3 mode but axisGapAnalyzer not provided', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const { analyzer } = createV3Analyzer({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+          });
+
+          const result = await analyzer.analyze();
+
+          expect(result.axisGapAnalysis).toBeNull();
+        });
+      });
+
+      describe('feature flag gating', () => {
+        it('should skip axis gap analysis when enableAxisGapDetection is false', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const axisGapAnalyzer = createMockAxisGapAnalyzer();
+
+          const { analyzer } = createV3AnalyzerWithAxisGap({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+            axisGapAnalyzer,
+            config: { enableAxisGapDetection: false },
+          });
+
+          const result = await analyzer.analyze();
+
+          expect(result.axisGapAnalysis).toBeNull();
+          expect(axisGapAnalyzer.analyze).not.toHaveBeenCalled();
+        });
+
+        it('should run axis gap analysis when enableAxisGapDetection is true', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const axisGapAnalyzer = createMockAxisGapAnalyzer();
+
+          const { analyzer } = createV3AnalyzerWithAxisGap({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+            axisGapAnalyzer,
+            config: { enableAxisGapDetection: true },
+          });
+
+          await analyzer.analyze();
+
+          expect(axisGapAnalyzer.analyze).toHaveBeenCalledTimes(1);
+        });
+
+        it('should run axis gap analysis when enableAxisGapDetection is not explicitly set (default)', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const axisGapAnalyzer = createMockAxisGapAnalyzer();
+          const logger = createMockLogger();
+          const config = createConfig(); // No enableAxisGapDetection set
+
+          const analyzer = new PrototypeOverlapAnalyzer({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+            behavioralOverlapEvaluator: createMockBehavioralOverlapEvaluator(),
+            overlapClassifier: createMockV3OverlapClassifier(),
+            overlapRecommendationBuilder: createMockOverlapRecommendationBuilder(),
+            gateBandingSuggestionBuilder: createMockGateBandingSuggestionBuilder(),
+            config,
+            logger,
+            sharedContextPoolGenerator: createMockSharedContextPoolGenerator(),
+            prototypeVectorEvaluator: createMockPrototypeVectorEvaluator(),
+            prototypeProfileCalculator: createMockPrototypeProfileCalculator(),
+            axisGapAnalyzer,
+          });
+
+          await analyzer.analyze();
+
+          expect(axisGapAnalyzer.analyze).toHaveBeenCalledTimes(1);
+        });
+      });
+
+      describe('progress reporting', () => {
+        it('should report progress for axis_gap_analysis stage', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const axisGapAnalyzer = createMockAxisGapAnalyzer();
+          const progressCalls = [];
+
+          const { analyzer } = createV3AnalyzerWithAxisGap({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+            axisGapAnalyzer,
+          });
+
+          await analyzer.analyze({
+            onProgress: (stage, data) => {
+              if (stage === 'axis_gap_analysis') {
+                progressCalls.push({ stage, ...data });
+              }
+            },
+          });
+
+          expect(progressCalls.length).toBeGreaterThanOrEqual(1);
+          expect(progressCalls[0]).toHaveProperty('stageNumber');
+          expect(progressCalls[0]).toHaveProperty('totalStages');
+        });
+      });
+
+      describe('error handling', () => {
+        it('should continue without axis gap analysis when analyzer throws', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const axisGapAnalyzer = {
+            analyze: jest.fn().mockImplementation(() => {
+              throw new Error('Axis gap analysis failed');
+            }),
+          };
+
+          const { analyzer, logger } = createV3AnalyzerWithAxisGap({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+            axisGapAnalyzer,
+          });
+
+          const result = await analyzer.analyze();
+
+          // Should complete without throwing
+          expect(result).toBeDefined();
+          expect(result.axisGapAnalysis).toBeNull();
+          expect(logger.error).toHaveBeenCalled();
+        });
+      });
+
+      describe('data passing to analyzer', () => {
+        it('should pass prototypes, outputVectors, profiles, and pairResults to axis gap analyzer', async () => {
+          const protoA = createPrototype('proto_a');
+          const protoB = createPrototype('proto_b');
+          const candidatePair = createCandidatePair(protoA, protoB);
+
+          const axisGapAnalyzer = createMockAxisGapAnalyzer();
+
+          const { analyzer } = createV3AnalyzerWithAxisGap({
+            prototypeRegistryService: createMockRegistryService([protoA, protoB]),
+            candidatePairFilter: createMockCandidatePairFilter([candidatePair]),
+            axisGapAnalyzer,
+          });
+
+          await analyzer.analyze();
+
+          expect(axisGapAnalyzer.analyze).toHaveBeenCalledWith(
+            [protoA, protoB], // prototypes
+            expect.any(Map), // outputVectors
+            expect.any(Map), // profiles
+            expect.any(Array), // pairResults
+            expect.any(Function) // progress callback
+          );
+
+          // Verify pairResults structure
+          const pairResults = axisGapAnalyzer.analyze.mock.calls[0][3];
+          expect(pairResults).toHaveLength(1);
+          expect(pairResults[0]).toHaveProperty('prototypeA');
+          expect(pairResults[0]).toHaveProperty('prototypeB');
+          expect(pairResults[0]).toHaveProperty('classification');
+        });
+      });
     });
   });
 });

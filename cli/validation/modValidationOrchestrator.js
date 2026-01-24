@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file Orchestrates all mod validation including dependencies and cross-references
  * @see src/modding/modDependencyValidator.js - Existing dependency validation
@@ -26,6 +27,9 @@ const DEFAULT_AFFECT_TRAITS = AFFECT_TRAITS;
  * Comprehensive mod validation error that aggregates multiple validation failures
  */
 class ModValidationError extends ModDependencyError {
+  /**
+   * @param {ModEcosystemValidationResult} validationResults
+   */
   constructor(validationResults) {
     const messages = [];
 
@@ -88,16 +92,16 @@ class ModValidationOrchestrator {
 
   /**
    * @param {object} dependencies
-   * @param {import('../../src/utils/loggerUtils.js').ILogger} dependencies.logger
+   * @param {import('../../src/interfaces/coreServices.js').ILogger} dependencies.logger
    * @param {typeof import('../../src/modding/modDependencyValidator.js').default} dependencies.modDependencyValidator
    * @param {import('./modCrossReferenceValidator.js').default} dependencies.modCrossReferenceValidator
    * @param {import('../../src/modding/modLoadOrderResolver.js').default} dependencies.modLoadOrderResolver
    * @param {import('../../src/modding/modManifestLoader.js').default} dependencies.modManifestLoader
-   * @param {import('../../src/interfaces/coreServices.js').IPathResolver} dependencies.pathResolver
+   * @param {import('../../src/interfaces/IPathResolver.js').IPathResolver} dependencies.pathResolver
    * @param {import('../../src/interfaces/coreServices.js').IConfiguration} dependencies.configuration
-   * @param {ManifestFileExistenceValidator} [dependencies.fileExistenceValidator] - Optional file existence validator
-   * @param {ExpressionPrerequisiteValidator} [dependencies.expressionPrerequisiteValidator] - Optional expression prerequisite validator
-   * @param {JsonLogicEvaluationService} [dependencies.jsonLogicEvaluationService] - Optional JSON Logic evaluator for operator registry
+   * @param {ManifestFileExistenceValidator | null} [dependencies.fileExistenceValidator] - Optional file existence validator
+   * @param {ExpressionPrerequisiteValidator | null} [dependencies.expressionPrerequisiteValidator] - Optional expression prerequisite validator
+   * @param {JsonLogicEvaluationService | null} [dependencies.jsonLogicEvaluationService] - Optional JSON Logic evaluator for operator registry
    */
   constructor({
     logger,
@@ -165,10 +169,11 @@ class ModValidationOrchestrator {
   /**
    * Performs comprehensive validation of the entire mod ecosystem
    *
-   * @param {object} options - Validation options
-   * @param {boolean} options.skipCrossReferences - Skip cross-reference validation
-   * @param {boolean} options.failFast - Stop on first validation failure
-   * @param {string[]} options.modsToValidate - Specific mods to validate (default: all)
+   * @param {object} [options] - Validation options
+   * @param {boolean} [options.skipCrossReferences] - Skip cross-reference validation
+   * @param {boolean} [options.failFast] - Stop on first validation failure
+   * @param {string[] | null} [options.modsToValidate] - Specific mods to validate (default: all)
+   * @param {boolean} [options.strictMode] - Enable strict validation rules
    * @returns {Promise<ModEcosystemValidationResult>} Complete validation results
    */
   async validateEcosystem(options = {}) {
@@ -737,7 +742,7 @@ class ModValidationOrchestrator {
    *
    * @private
    * @param {string[]|null} modsToValidate - Specific mods or null for all
-   * @returns {Promise<Map<string, object>>} Map of validated manifests
+   * @returns {Promise<Map<string, any>>} Map of validated manifests
    */
   async #loadAndValidateManifests(modsToValidate) {
     this.#logger.info('Phase 1: Loading and validating mod manifests');
@@ -765,7 +770,7 @@ class ModValidationOrchestrator {
    * @private
    * @param {string} modId - Mod identifier
    * @param {object} manifest - Mod manifest
-   * @param {Map<string, object>} manifestsMap - All manifests for context
+   * @param {Map<string, any>} manifestsMap - All manifests for context
    * @returns {Promise<object>} Dependency validation results
    */
   async #validateModDependencies(modId, manifest, manifestsMap) {
@@ -826,7 +831,7 @@ class ModValidationOrchestrator {
    * Validates dependencies for loading subset of mods
    *
    * @private
-   * @param {Map<string, object>} loadingMods - Mods being loaded
+   * @param {Map<string, any>} loadingMods - Mods being loaded
    * @returns {Promise<object>} Dependency validation results
    */
   async #validateLoadingDependencies(loadingMods) {
@@ -1030,8 +1035,8 @@ class ModValidationOrchestrator {
 
 /**
  * @typedef {object} ModEcosystemValidationResult
- * @property {object} dependencies - Dependency validation results
- * @property {Map<string, object> | null} crossReferences - Cross-reference validation results
+ * @property {object | null} dependencies - Dependency validation results
+ * @property {Map<string, any> | null} crossReferences - Cross-reference validation results
  * @property {object | null} loadOrder - Load order resolution results
  * @property {object} performance - Performance metrics
  * @property {boolean} isValid - Overall validation status
@@ -1042,7 +1047,7 @@ class ModValidationOrchestrator {
 /**
  * @typedef {object} ModValidationResult
  * @property {string} modId - Mod identifier
- * @property {object} dependencies - Dependency validation results
+ * @property {object | null} dependencies - Dependency validation results
  * @property {object | null} crossReferences - Cross-reference validation results
  * @property {boolean} isValid - Validation status
  * @property {string[]} errors - Critical errors

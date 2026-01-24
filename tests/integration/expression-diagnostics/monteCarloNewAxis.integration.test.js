@@ -67,7 +67,7 @@ describe('Monte Carlo - inhibitory_control and self_control Integration', () => 
       expect(Number.isInteger(state.affectTraits.self_control)).toBe(true);
     });
 
-    it('should generate all 10 mood axes in correct ranges', () => {
+    it('should generate all 11 mood axes in correct ranges', () => {
       const state = randomStateGenerator.generate('uniform', 'static');
       const expectedAxes = [
         'valence',
@@ -76,14 +76,15 @@ describe('Monte Carlo - inhibitory_control and self_control Integration', () => 
         'threat',
         'engagement',
         'future_expectancy',
+        'temporal_orientation',
         'self_evaluation',
         'affiliation',
         'inhibitory_control',
         'uncertainty',
       ];
 
-      // Verify MOOD_AXES constant has all 10 axes
-      expect(MOOD_AXES).toHaveLength(10);
+      // Verify MOOD_AXES constant has all 11 axes
+      expect(MOOD_AXES).toHaveLength(11);
       expect(MOOD_AXES).toEqual(expectedAxes);
 
       expectedAxes.forEach((axis) => {
@@ -319,11 +320,11 @@ describe('Monte Carlo - inhibitory_control and self_control Integration', () => 
       const normalizedMood = normalizeMoodAxes(state.current.mood);
       const normalizedTraits = normalizeAffectTraits(state.affectTraits);
 
-      // 10 mood axes should be generated
-      expect(Object.keys(state.current.mood)).toHaveLength(10);
+      // 11 mood axes should be generated
+      expect(Object.keys(state.current.mood)).toHaveLength(11);
 
-      // All 10 should be normalized
-      expect(Object.keys(normalizedMood)).toHaveLength(10);
+      // All 11 should be normalized
+      expect(Object.keys(normalizedMood)).toHaveLength(11);
 
       // 4 affect traits should be generated
       expect(Object.keys(state.affectTraits)).toHaveLength(4);

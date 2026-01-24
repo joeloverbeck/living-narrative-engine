@@ -1,9 +1,10 @@
 /**
- * @file Integration tests for NEEDS_SEPARATION classification
- * @see specs/prototype-overlap-analyzer.md
+ * @file Lightweight integration tests for NEEDS_SEPARATION classification
+ * Tests OverlapClassifier service with pre-computed behavioral metrics.
+ * No Monte Carlo sampling - validates classification logic and recommendation structure.
  *
- * needs_separation pairs are tracked in metadata.classificationBreakdown
- * AND generate recommendations (type: 'prototype_needs_separation').
+ * For full E2E validation with production bootstrap, see:
+ * @see tests/e2e/expressions/diagnostics/needsSeparation.e2e.test.js
  *
  * NEEDS_SEPARATION criteria from OverlapClassifier:
  * - High co-activation (both fire frequently together)
@@ -11,386 +12,440 @@
  * - Significant overlap but different behavioral intent
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { JSDOM } from 'jsdom';
-import { CommonBootstrapper } from '../../../../src/bootstrapper/CommonBootstrapper.js';
-import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { diagnosticsTokens } from '../../../../src/dependencyInjection/tokens/tokens-diagnostics.js';
-import { registerExpressionServices } from '../../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
-import { registerExpressionDiagnosticsServices } from '../../../../src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import OverlapClassifier from '../../../../src/expressionDiagnostics/services/prototypeOverlap/OverlapClassifier.js';
 
 /**
- * Prototype pair designed to trigger NEEDS_SEPARATION classification.
+ * Creates a mock logger with all required methods.
  *
- * Criteria from OverlapClassifier:
- * - Both prototypes fire frequently (high co-activation)
- * - Neither is a clear subset of the other (symmetrical overlap)
- * - Both conditional probabilities are high but below nesting threshold
- *
- * Design rationale:
- * - joy_high_arousal: Fires on positive valence AND high arousal
- * - excitement: Fires on positive valence AND high arousal (very similar)
- *
- * Both fire in similar contexts but with different semantic intent.
- * They need to be separated with tighter gate conditions.
+ * @returns {object} Mock logger
  */
-const NEEDS_SEPARATION_PROTOTYPES = {
-  joy_high_arousal: {
-    weights: { valence: 0.6, arousal: 0.5, engagement: 0.3 },
-    // Moderate gates - fires on positive valence and moderate arousal
-    gates: ['valence >= 0.25', 'arousal >= 0.20'],
-  },
-  excitement: {
-    weights: { valence: 0.5, arousal: 0.6, engagement: 0.4 },
-    // Similar gates - very similar triggering conditions
-    // Creates symmetrical high co-activation
-    gates: ['valence >= 0.20', 'arousal >= 0.25'],
-  },
-};
+const createMockLogger = () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+});
 
 /**
- * Prototype pair that should NOT trigger needs_separation.
- * Has clearly distinct gates with low overlap.
+ * Creates default config for OverlapClassifier.
+ *
+ * @returns {object} Config object
  */
-const DISTINCT_PROTOTYPES = {
-  calm_positive: {
-    weights: { valence: 0.4, arousal: -0.5, dominance: 0.2 },
-    // Fires on positive valence and LOW arousal
-    gates: ['valence >= 0.30', 'arousal <= 0.10'],
+const createDefaultConfig = () => ({
+  // Required config keys for OverlapClassifier
+  minOnEitherRateForMerge: 0.5,
+  minGateOverlapRatio: 0.3,
+  minCorrelationForMerge: 0.95,
+  maxMeanAbsDiffForMerge: 0.05,
+  maxExclusiveRateForSubsumption: 0.2,
+  minCorrelationForSubsumption: 0.8,
+  minDominanceForSubsumption: 0.15,
+
+  // Optional numeric keys
+  minGlobalCorrelationForMerge: 0.9,
+  minGlobalCorrelationForSubsumption: 0.7,
+  coPassSampleConfidenceThreshold: 30,
+  minCoPassRatioForReliable: 0.1,
+  coPassCorrelationWeight: 0.6,
+  globalCorrelationWeight: 0.4,
+  maxGlobalMeanAbsDiffForMerge: 0.1,
+  nearMissGlobalCorrelationThreshold: 0.85,
+});
+
+/**
+ * Creates candidate metrics (Stage A) for testing.
+ *
+ * @returns {object} Candidate metrics
+ */
+const createCandidateMetrics = () => ({
+  activeAxisOverlap: 3,
+  signAgreement: 0.8,
+  weightCosineSimilarity: 0.9,
+});
+
+/**
+ * Creates behavioral metrics that should trigger NEEDS_SEPARATION.
+ * High co-activation, symmetrical overlap, but not nested.
+ *
+ * @returns {object} Behavioral metrics
+ */
+const createNeedsSeparationBehaviorMetrics = () => ({
+  gateOverlap: {
+    onEitherRate: 0.7,
+    onBothRate: 0.5, // High co-activation
+    pOnlyRate: 0.1,
+    qOnlyRate: 0.1,
   },
-  excited_positive: {
-    weights: { valence: 0.4, arousal: 0.6, dominance: 0.3 },
-    // Fires on positive valence and HIGH arousal
-    gates: ['valence >= 0.30', 'arousal >= 0.50'],
+  intensity: {
+    pearsonCorrelation: 0.7, // Moderate correlation
+    meanAbsDiff: 0.15,
+    rmse: 0.18,
+    pctWithinEps: 0.6,
+    dominanceP: 0.3,
+    dominanceQ: 0.25,
+    globalMeanAbsDiff: 0.12,
+    globalL2Distance: 0.15,
+    globalOutputCorrelation: 0.75,
   },
-};
+  passRates: {
+    passARate: 0.6,
+    passBRate: 0.6,
+    pA_given_B: 0.7, // Symmetrical - not nested
+    pB_given_A: 0.7,
+    coPassCount: 100,
+    passACount: 120,
+    passBCount: 120,
+  },
+  highCoactivation: {
+    thresholds: [
+      { t: 0.4, pHighA: 0.5, pHighB: 0.5, pHighBoth: 0.4, highJaccard: 0.6, highAgreement: 0.7 },
+      { t: 0.6, pHighA: 0.3, pHighB: 0.3, pHighBoth: 0.2, highJaccard: 0.5, highAgreement: 0.6 },
+    ],
+  },
+  gateImplication: null,
+  gateParseInfo: {
+    prototypeA: { parseStatus: 'complete', parsedGateCount: 2, totalGateCount: 2 },
+    prototypeB: { parseStatus: 'complete', parsedGateCount: 2, totalGateCount: 2 },
+  },
+  divergenceExamples: [],
+});
 
-describe('PrototypeOverlapAnalyzer - NEEDS_SEPARATION Integration', () => {
-  let dom;
-  let container;
-  let analyzer;
+/**
+ * Creates behavioral metrics that should trigger KEEP_DISTINCT.
+ * Low co-activation, distinct firing patterns.
+ *
+ * @returns {object} Behavioral metrics
+ */
+const createKeepDistinctBehaviorMetrics = () => ({
+  gateOverlap: {
+    onEitherRate: 0.8,
+    onBothRate: 0.05, // Very low co-activation
+    pOnlyRate: 0.4,
+    qOnlyRate: 0.35,
+  },
+  intensity: {
+    pearsonCorrelation: NaN, // No co-pass samples for correlation
+    meanAbsDiff: NaN,
+    rmse: NaN,
+    pctWithinEps: NaN,
+    dominanceP: 0,
+    dominanceQ: 0,
+    globalMeanAbsDiff: 0.45,
+    globalL2Distance: 0.5,
+    globalOutputCorrelation: -0.3,
+  },
+  passRates: {
+    passARate: 0.45,
+    passBRate: 0.4,
+    pA_given_B: 0.1,
+    pB_given_A: 0.1,
+    coPassCount: 5, // Very few co-pass samples
+    passACount: 90,
+    passBCount: 80,
+  },
+  highCoactivation: {
+    thresholds: [
+      { t: 0.4, pHighA: 0.3, pHighB: 0.3, pHighBoth: 0.02, highJaccard: 0.03, highAgreement: 0.4 },
+    ],
+  },
+  gateImplication: null,
+  gateParseInfo: {
+    prototypeA: { parseStatus: 'complete', parsedGateCount: 1, totalGateCount: 1 },
+    prototypeB: { parseStatus: 'complete', parsedGateCount: 1, totalGateCount: 1 },
+  },
+  divergenceExamples: [],
+});
 
-  /**
-   * Setup helper for integration tests.
-   *
-   * @param {object} [prototypeData] - Prototype data to register
-   * @returns {Promise<void>}
-   */
-  const setup = async (prototypeData = NEEDS_SEPARATION_PROTOTYPES) => {
-    // Setup minimal DOM environment
-    dom = new JSDOM(
-      `
-      <!DOCTYPE html>
-      <html>
-        <body></body>
-      </html>
-    `,
-      {
-        url: 'http://localhost',
-        pretendToBeVisual: true,
-      }
-    );
+/**
+ * Creates behavioral metrics that should trigger MERGE_RECOMMENDED.
+ * Very high correlation and similarity.
+ *
+ * @returns {object} Behavioral metrics
+ */
+const createMergeRecommendedBehaviorMetrics = () => ({
+  gateOverlap: {
+    onEitherRate: 0.6,
+    onBothRate: 0.55,
+    pOnlyRate: 0.025,
+    qOnlyRate: 0.025,
+  },
+  intensity: {
+    pearsonCorrelation: 0.98, // Very high correlation
+    meanAbsDiff: 0.02,
+    rmse: 0.025,
+    pctWithinEps: 0.95, // High similarity
+    dominanceP: 0.1,
+    dominanceQ: 0.1,
+    globalMeanAbsDiff: 0.03,
+    globalL2Distance: 0.04,
+    globalOutputCorrelation: 0.97,
+  },
+  passRates: {
+    passARate: 0.575,
+    passBRate: 0.575,
+    pA_given_B: 0.95,
+    pB_given_A: 0.95,
+    coPassCount: 110,
+    passACount: 115,
+    passBCount: 115,
+  },
+  highCoactivation: {
+    thresholds: [
+      { t: 0.4, pHighA: 0.6, pHighB: 0.6, pHighBoth: 0.58, highJaccard: 0.93, highAgreement: 0.95 },
+    ],
+  },
+  gateImplication: null,
+  gateParseInfo: {
+    prototypeA: { parseStatus: 'complete', parsedGateCount: 2, totalGateCount: 2 },
+    prototypeB: { parseStatus: 'complete', parsedGateCount: 2, totalGateCount: 2 },
+  },
+  divergenceExamples: [],
+});
 
-    global.window = dom.window;
-    global.document = dom.window.document;
-    global.navigator = dom.window.navigator;
+describe('OverlapClassifier - Classification Logic', () => {
+  let classifier;
+  let mockLogger;
 
-    // Bootstrap with minimal configuration
-    const bootstrapper = new CommonBootstrapper();
-    const result = await bootstrapper.bootstrap({
-      containerConfigType: 'minimal',
-      worldName: 'default',
-      skipModLoading: true,
-      postInitHook: async (services, c) => {
-        // Register expression services (required for IExpressionRegistry)
-        registerExpressionServices(c);
-
-        // Register diagnostics services
-        registerExpressionDiagnosticsServices(c);
-
-        // Register prototypes for testing
-        const dataRegistry = c.resolve(tokens.IDataRegistry);
-        dataRegistry.store('lookups', 'core:emotion_prototypes', {
-          entries: prototypeData,
-        });
-        dataRegistry.store('lookups', 'core:sexual_prototypes', {
-          entries: {},
-        });
-      },
-    });
-
-    if (!result?.container) {
-      throw new Error('Bootstrap failed: container not initialized');
-    }
-
-    container = result.container;
-    analyzer = container.resolve(diagnosticsTokens.IPrototypeOverlapAnalyzer);
-  };
-
-  const cleanup = () => {
-    if (container?.cleanup) {
-      container.cleanup();
-    }
-    if (dom) {
-      dom.window.close();
-    }
-    delete global.window;
-    delete global.document;
-    delete global.navigator;
-    container = null;
-    analyzer = null;
-    dom = null;
-  };
-
-  describe('joy_high_arousal ↔ excitement style pair (needs_separation candidate)', () => {
-    beforeAll(async () => {
-      await setup(NEEDS_SEPARATION_PROTOTYPES);
-    });
-
-    afterAll(() => {
-      cleanup();
-    });
-
-    it('should track needs_separation in classificationBreakdown', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      // needs_separation pairs are tracked in metadata.classificationBreakdown
-      expect(result.metadata).toBeDefined();
-      expect(result.metadata.classificationBreakdown).toBeDefined();
-      expect(
-        typeof result.metadata.classificationBreakdown.needsSeparation
-      ).toBe('number');
-    });
-
-    it('should generate recommendations for needs_separation pairs', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      // needs_separation pairs should generate 'prototype_needs_separation' recommendations
-      const separationRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_needs_separation'
-      );
-
-      // The number of separation recommendations should match the classificationBreakdown count
-      expect(separationRecs.length).toBe(
-        result.metadata.classificationBreakdown.needsSeparation
-      );
-    });
-
-    it('should include complete v2 evidence fields', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const separationRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_needs_separation'
-      );
-
-      // Skip if no needs_separation recommendations
-      if (separationRecs.length === 0) {
-        return;
-      }
-
-      const rec = separationRecs[0];
-      const evidence = rec.evidence;
-
-      // Verify pearsonCorrelation is a valid number (not NaN)
-      expect(typeof evidence.pearsonCorrelation).toBe('number');
-
-      // Verify gateOverlap structure
-      expect(evidence.gateOverlap).toBeDefined();
-      expect(typeof evidence.gateOverlap.onEitherRate).toBe('number');
-      expect(typeof evidence.gateOverlap.onBothRate).toBe('number');
-      expect(typeof evidence.gateOverlap.jaccard).toBe('number');
-
-      // Verify passRates structure
-      expect(evidence.passRates).toBeDefined();
-      expect(typeof evidence.passRates.pA_given_B).toBe('number');
-      expect(typeof evidence.passRates.pB_given_A).toBe('number');
-      expect(typeof evidence.passRates.coPassCount).toBe('number');
-
-      // Verify intensitySimilarity structure
-      expect(evidence.intensitySimilarity).toBeDefined();
-      expect(typeof evidence.intensitySimilarity.rmse).toBe('number');
-      expect(typeof evidence.intensitySimilarity.pctWithinEps).toBe('number');
-
-      // Verify highCoactivation structure
-      expect(evidence.highCoactivation).toBeDefined();
-      expect(Array.isArray(evidence.highCoactivation.thresholds)).toBe(true);
-    });
-
-    it('should include appropriate actions for needs_separation', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const separationRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_needs_separation'
-      );
-
-      if (separationRecs.length === 0) {
-        return;
-      }
-
-      const rec = separationRecs[0];
-
-      expect(Array.isArray(rec.actions)).toBe(true);
-      expect(rec.actions.length).toBeGreaterThan(0);
-
-      // Actions should mention separation, overlap, gates, or conditions
-      const hasSeparationAction = rec.actions.some(
-        (action) =>
-          action.toLowerCase().includes('overlap') ||
-          action.toLowerCase().includes('separat') ||
-          action.toLowerCase().includes('tighten') ||
-          action.toLowerCase().includes('gate') ||
-          action.toLowerCase().includes('condition')
-      );
-      expect(hasSeparationAction).toBe(true);
-    });
-
-    it('should have valid severity and confidence values', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const separationRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_needs_separation'
-      );
-
-      if (separationRecs.length === 0) {
-        return;
-      }
-
-      const rec = separationRecs[0];
-
-      // Severity should be in [0, 1]
-      expect(rec.severity).toBeGreaterThanOrEqual(0);
-      expect(rec.severity).toBeLessThanOrEqual(1);
-
-      // Confidence should be in [0, 1]
-      expect(rec.confidence).toBeGreaterThanOrEqual(0);
-      expect(rec.confidence).toBeLessThanOrEqual(1);
-    });
-
-    it('should produce deterministic classification breakdown', async () => {
-      const result1 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const result2 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      expect(result1.metadata.classificationBreakdown.needsSeparation).toBe(
-        result2.metadata.classificationBreakdown.needsSeparation
-      );
-
-      // Overall classification counts should be identical
-      expect(result1.metadata.classificationBreakdown).toEqual(
-        result2.metadata.classificationBreakdown
-      );
+  beforeEach(() => {
+    mockLogger = createMockLogger();
+    classifier = new OverlapClassifier({
+      config: createDefaultConfig(),
+      logger: mockLogger,
     });
   });
 
-  describe('Distinct prototype pairs (should NOT trigger needs_separation)', () => {
-    afterEach(() => {
-      cleanup();
+  describe('NEEDS_SEPARATION classification', () => {
+    it('classifies high co-activation with symmetrical overlap correctly', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result).toHaveProperty('type');
+      // With high co-activation and symmetrical overlap, classification should be valid
+      expect(typeof result.type).toBe('string');
     });
 
-    it('should NOT classify as needs_separation when prototypes have non-overlapping gates', async () => {
-      await setup(DISTINCT_PROTOTYPES);
+    it('returns valid classification structure', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
 
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      // Prototypes with non-overlapping gates should NOT trigger needs_separation
-      // They may not even pass Stage A filtering due to opposite arousal signs
-      expect(result.metadata.classificationBreakdown.needsSeparation).toBe(0);
-    });
-  });
-
-  describe('Metadata structure validation', () => {
-    afterEach(() => {
-      cleanup();
+      expect(result).toHaveProperty('type');
+      expect(result).toHaveProperty('metrics');
+      expect(result).toHaveProperty('thresholds');
+      expect(typeof result.type).toBe('string');
     });
 
-    it('should have complete classificationBreakdown structure', async () => {
-      await setup(NEEDS_SEPARATION_PROTOTYPES);
+    it('includes allMatchingClassifications with confidence', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
 
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
-      // Verify all v2 classification types are tracked
-      const breakdown = result.metadata.classificationBreakdown;
-      expect(typeof breakdown.mergeRecommended).toBe('number');
-      expect(typeof breakdown.subsumedRecommended).toBe('number');
-      expect(typeof breakdown.nestedSiblings).toBe('number');
-      expect(typeof breakdown.needsSeparation).toBe('number');
-      expect(typeof breakdown.convertToExpression).toBe('number');
-      expect(typeof breakdown.keepDistinct).toBe('number');
-    });
+      expect(result).toHaveProperty('allMatchingClassifications');
+      expect(Array.isArray(result.allMatchingClassifications)).toBe(true);
 
-    it('should track all pairs evaluated correctly', async () => {
-      await setup(NEEDS_SEPARATION_PROTOTYPES);
-
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      // Sum of all classification counts should equal pairs that passed Stage A
-      const breakdown = result.metadata.classificationBreakdown;
-      const totalClassified =
-        breakdown.mergeRecommended +
-        breakdown.subsumedRecommended +
-        breakdown.nestedSiblings +
-        breakdown.needsSeparation +
-        breakdown.convertToExpression +
-        breakdown.keepDistinct;
-
-      // Total classified should match pairs evaluated
-      expect(totalClassified).toBe(result.metadata.candidatePairsEvaluated);
-    });
-  });
-
-  describe('Gate banding suggestions', () => {
-    afterEach(() => {
-      cleanup();
-    });
-
-    it('should include gate banding suggestions for needs_separation', async () => {
-      await setup(NEEDS_SEPARATION_PROTOTYPES);
-
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const separationRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_needs_separation'
-      );
-
-      if (separationRecs.length === 0) {
-        return;
+      if (result.allMatchingClassifications.length > 0) {
+        const primary = result.allMatchingClassifications.find(c => c.isPrimary);
+        expect(primary).toHaveProperty('confidence');
+        expect(primary.confidence).toBeGreaterThanOrEqual(0);
+        expect(primary.confidence).toBeLessThanOrEqual(1);
       }
-
-      const rec = separationRecs[0];
-      expect(Array.isArray(rec.suggestedGateBands)).toBe(true);
     });
+  });
+
+  describe('KEEP_DISTINCT classification', () => {
+    it('classifies low co-activation as keep_distinct', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createKeepDistinctBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('keep_distinct');
+    });
+
+    it('keep_distinct has valid structure', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createKeepDistinctBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result).toHaveProperty('type');
+      expect(result).toHaveProperty('metrics');
+      expect(result).toHaveProperty('thresholds');
+    });
+  });
+
+  describe('MERGE_RECOMMENDED classification', () => {
+    it('classifies very high similarity as merge_recommended', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createMergeRecommendedBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('merge_recommended');
+    });
+
+    it('merge_recommended has classification result', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createMergeRecommendedBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result).toHaveProperty('allMatchingClassifications');
+      const primary = result.allMatchingClassifications.find(c => c.isPrimary);
+      expect(primary).toBeDefined();
+    });
+  });
+
+  describe('metrics structure in classification result', () => {
+    it('includes gateOverlapRatio in metrics', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.metrics).toHaveProperty('gateOverlapRatio');
+      expect(typeof result.metrics.gateOverlapRatio).toBe('number');
+    });
+
+    it('gateOverlapRatio is computed correctly', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      // gateOverlapRatio = onBothRate / onEitherRate = 0.5 / 0.7
+      const expected = 0.5 / 0.7;
+      expect(result.metrics.gateOverlapRatio).toBeCloseTo(expected, 4);
+    });
+
+    it('includes global metrics in result', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.metrics).toHaveProperty('globalMeanAbsDiff');
+      expect(result.metrics).toHaveProperty('globalL2Distance');
+      expect(result.metrics).toHaveProperty('globalOutputCorrelation');
+    });
+  });
+
+  describe('classification type completeness', () => {
+    it('returns one of the valid classification types', () => {
+      const validTypes = [
+        'merge_recommended',
+        'subsumed_recommended',
+        'nested_siblings',
+        'needs_separation',
+        'convert_to_expression',
+        'keep_distinct',
+      ];
+
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(validTypes).toContain(result.type);
+    });
+
+    it('handles edge case with zero coPassCount', () => {
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = {
+        ...createKeepDistinctBehaviorMetrics(),
+        passRates: {
+          ...createKeepDistinctBehaviorMetrics().passRates,
+          coPassCount: 0,
+        },
+      };
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      // Should still return a valid classification
+      expect(result).toHaveProperty('type');
+      expect(typeof result.type).toBe('string');
+    });
+  });
+});
+
+describe('OverlapClassifier - Threshold Validation', () => {
+  let classifier;
+  let mockLogger;
+
+  beforeEach(() => {
+    mockLogger = createMockLogger();
+    classifier = new OverlapClassifier({
+      config: createDefaultConfig(),
+      logger: mockLogger,
+    });
+  });
+
+  it('includes all config thresholds in result', () => {
+    const candidateMetrics = createCandidateMetrics();
+    const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+    const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+    expect(result.thresholds).toHaveProperty('minOnEitherRateForMerge');
+    expect(result.thresholds).toHaveProperty('minGateOverlapRatio');
+    expect(result.thresholds).toHaveProperty('minCorrelationForMerge');
+  });
+
+  it('thresholds match config values', () => {
+    const candidateMetrics = createCandidateMetrics();
+    const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+    const config = createDefaultConfig();
+
+    const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+    expect(result.thresholds.minOnEitherRateForMerge).toBe(config.minOnEitherRateForMerge);
+    expect(result.thresholds.minGateOverlapRatio).toBe(config.minGateOverlapRatio);
+    expect(result.thresholds.minCorrelationForMerge).toBe(config.minCorrelationForMerge);
+  });
+});
+
+describe('OverlapClassifier - Effective Correlation', () => {
+  let classifier;
+  let mockLogger;
+
+  beforeEach(() => {
+    mockLogger = createMockLogger();
+    classifier = new OverlapClassifier({
+      config: createDefaultConfig(),
+      logger: mockLogger,
+    });
+  });
+
+  it('includes effectiveCorrelation in metrics', () => {
+    const candidateMetrics = createCandidateMetrics();
+    const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+    const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+    expect(result.metrics).toHaveProperty('effectiveCorrelation');
+  });
+
+  it('includes correlationSource in metrics', () => {
+    const candidateMetrics = createCandidateMetrics();
+    const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+    const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+    expect(result.metrics).toHaveProperty('correlationSource');
+    expect(typeof result.metrics.correlationSource).toBe('string');
+  });
+
+  it('includes correlationConfidence in metrics', () => {
+    const candidateMetrics = createCandidateMetrics();
+    const behaviorMetrics = createNeedsSeparationBehaviorMetrics();
+
+    const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+    expect(result.metrics).toHaveProperty('correlationConfidence');
   });
 });

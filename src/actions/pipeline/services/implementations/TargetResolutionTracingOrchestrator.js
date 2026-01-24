@@ -6,7 +6,7 @@
 /** @typedef {import('../../../actionTypes.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../tracing/actionAwareStructuredTrace.js').default} ActionAwareStructuredTrace */
-/** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../../../interfaces/coreServices.js').ILogger} ILogger */
 
 import { validateDependency } from '../../../../utils/dependencyUtils.js';
 

@@ -33,8 +33,11 @@ describe('PromptOutputContract', () => {
     threat: -4,
     engagement: 2,
     future_expectancy: 1,
+    temporal_orientation: -1,
     self_evaluation: 0,
     affiliation: 0,
+    inhibitory_control: -2,
+    uncertainty: 4,
   };
   const baseSexualUpdate = {
     sex_excitation: 25,

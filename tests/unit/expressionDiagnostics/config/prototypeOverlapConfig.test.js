@@ -81,6 +81,71 @@ describe('prototypeOverlapConfig', () => {
       expect(PROTOTYPE_OVERLAP_CONFIG.minDominanceForSubsumption).toBe(0.95);
     });
 
+    // Global correlation thresholds
+    it('should have minGlobalCorrelationForMerge', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.minGlobalCorrelationForMerge).toBe(0.9);
+    });
+
+    it('should have minGlobalCorrelationForSubsumption', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.minGlobalCorrelationForSubsumption).toBe(
+        0.85
+      );
+    });
+
+    it('should have coPassSampleConfidenceThreshold', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.coPassSampleConfidenceThreshold).toBe(500);
+    });
+
+    it('should have minCoPassRatioForReliable', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.minCoPassRatioForReliable).toBe(0.1);
+    });
+
+    it('should have coPassCorrelationWeight', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.coPassCorrelationWeight).toBe(0.6);
+    });
+
+    it('should have globalCorrelationWeight', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.globalCorrelationWeight).toBe(0.4);
+    });
+
+    it('should have maxGlobalMeanAbsDiffForMerge', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.maxGlobalMeanAbsDiffForMerge).toBe(0.15);
+    });
+
+    it('should have nearMissGlobalCorrelationThreshold', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.nearMissGlobalCorrelationThreshold).toBe(
+        0.8
+      );
+    });
+
+    describe('composite score weights', () => {
+      it('should have compositeScoreGateOverlapWeight', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.compositeScoreGateOverlapWeight).toBe(
+          0.3
+        );
+      });
+
+      it('should have compositeScoreCorrelationWeight', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.compositeScoreCorrelationWeight).toBe(
+          0.2
+        );
+      });
+
+      it('should have compositeScoreGlobalDiffWeight', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.compositeScoreGlobalDiffWeight).toBe(
+          0.5
+        );
+      });
+
+      it('should have composite score weights that sum to 1.0', () => {
+        const sum =
+          PROTOTYPE_OVERLAP_CONFIG.compositeScoreGateOverlapWeight +
+          PROTOTYPE_OVERLAP_CONFIG.compositeScoreCorrelationWeight +
+          PROTOTYPE_OVERLAP_CONFIG.compositeScoreGlobalDiffWeight;
+        expect(sum).toBeCloseTo(1.0, 10);
+      });
+    });
+
     // Safety limits
     it('should have maxCandidatePairs unchanged', () => {
       expect(PROTOTYPE_OVERLAP_CONFIG.maxCandidatePairs).toBe(5000);
@@ -384,6 +449,546 @@ describe('prototypeOverlapConfig', () => {
 
     it('should not have undefined v2 properties', () => {
       for (const propName of V2_PROPERTY_NAMES) {
+        expect(PROTOTYPE_OVERLAP_CONFIG[propName]).not.toBeUndefined();
+      }
+    });
+  });
+
+  describe('v2.1 properties - multi-route filtering', () => {
+    describe('enableMultiRouteFiltering', () => {
+      it('should exist and have correct value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.enableMultiRouteFiltering).toBe(true);
+      });
+
+      it('should be a boolean', () => {
+        expect(typeof PROTOTYPE_OVERLAP_CONFIG.enableMultiRouteFiltering).toBe(
+          'boolean'
+        );
+      });
+    });
+
+    describe('gateBasedMinIntervalOverlap', () => {
+      it('should exist and have correct value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.gateBasedMinIntervalOverlap).toBe(0.6);
+      });
+    });
+
+    describe('prescanSampleCount', () => {
+      it('should exist and have correct value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.prescanSampleCount).toBe(500);
+      });
+    });
+
+    describe('prescanMinGateOverlap', () => {
+      it('should exist and have correct value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.prescanMinGateOverlap).toBe(0.5);
+      });
+    });
+
+    describe('maxPrescanPairs', () => {
+      it('should exist and have correct value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxPrescanPairs).toBe(1000);
+      });
+    });
+  });
+
+  describe('v3 properties - Shared Context Pool (ticket 001)', () => {
+    describe('sharedPoolSize', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.sharedPoolSize).toBe(50000);
+      });
+
+      it('should be a positive integer', () => {
+        expect(typeof PROTOTYPE_OVERLAP_CONFIG.sharedPoolSize).toBe('number');
+        expect(PROTOTYPE_OVERLAP_CONFIG.sharedPoolSize).toBeGreaterThan(0);
+        expect(
+          Number.isInteger(PROTOTYPE_OVERLAP_CONFIG.sharedPoolSize)
+        ).toBe(true);
+      });
+    });
+
+    describe('enableStratifiedSampling', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.enableStratifiedSampling).toBe(false);
+      });
+
+      it('should be a boolean', () => {
+        expect(typeof PROTOTYPE_OVERLAP_CONFIG.enableStratifiedSampling).toBe(
+          'boolean'
+        );
+      });
+    });
+
+    describe('stratumCount', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.stratumCount).toBe(5);
+      });
+
+      it('should be a positive integer', () => {
+        expect(typeof PROTOTYPE_OVERLAP_CONFIG.stratumCount).toBe('number');
+        expect(PROTOTYPE_OVERLAP_CONFIG.stratumCount).toBeGreaterThan(0);
+        expect(Number.isInteger(PROTOTYPE_OVERLAP_CONFIG.stratumCount)).toBe(
+          true
+        );
+      });
+    });
+
+    describe('stratificationStrategy', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.stratificationStrategy).toBe('uniform');
+      });
+
+      it('should be a valid strategy string', () => {
+        const validStrategies = ['uniform', 'mood-regime', 'extremes-enhanced'];
+        expect(validStrategies).toContain(
+          PROTOTYPE_OVERLAP_CONFIG.stratificationStrategy
+        );
+      });
+    });
+
+    describe('poolRandomSeed', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.poolRandomSeed).toBe(null);
+      });
+
+      it('should be null or a number', () => {
+        const seed = PROTOTYPE_OVERLAP_CONFIG.poolRandomSeed;
+        expect(seed === null || typeof seed === 'number').toBe(true);
+      });
+    });
+  });
+
+  describe('v3 properties - Agreement Metrics (ticket 004)', () => {
+    describe('confidenceLevel', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.confidenceLevel).toBe(0.95);
+      });
+
+      it('should be a valid confidence level', () => {
+        const validLevels = [0.9, 0.95, 0.99];
+        expect(validLevels).toContain(PROTOTYPE_OVERLAP_CONFIG.confidenceLevel);
+      });
+    });
+
+    describe('minSamplesForReliableCorrelation', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minSamplesForReliableCorrelation).toBe(
+          500
+        );
+      });
+
+      it('should be a positive integer', () => {
+        expect(
+          typeof PROTOTYPE_OVERLAP_CONFIG.minSamplesForReliableCorrelation
+        ).toBe('number');
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minSamplesForReliableCorrelation
+        ).toBeGreaterThan(0);
+        expect(
+          Number.isInteger(
+            PROTOTYPE_OVERLAP_CONFIG.minSamplesForReliableCorrelation
+          )
+        ).toBe(true);
+      });
+    });
+  });
+
+  describe('v3 properties - Classification Thresholds (ticket 010)', () => {
+    describe('maxMaeCoPassForMerge', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxMaeCoPassForMerge).toBe(0.03);
+      });
+
+      it('should be in range (0, 1)', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxMaeCoPassForMerge).toBeGreaterThan(0);
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxMaeCoPassForMerge).toBeLessThan(1);
+      });
+    });
+
+    describe('maxRmseCoPassForMerge', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxRmseCoPassForMerge).toBe(0.05);
+      });
+
+      it('should be greater than maxMaeCoPassForMerge', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxRmseCoPassForMerge).toBeGreaterThan(
+          PROTOTYPE_OVERLAP_CONFIG.maxMaeCoPassForMerge
+        );
+      });
+    });
+
+    describe('maxMaeGlobalForMerge', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxMaeGlobalForMerge).toBe(0.08);
+      });
+
+      it('should be greater than maxMaeCoPassForMerge', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxMaeGlobalForMerge).toBeGreaterThan(
+          PROTOTYPE_OVERLAP_CONFIG.maxMaeCoPassForMerge
+        );
+      });
+    });
+
+    describe('minActivationJaccardForMerge', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minActivationJaccardForMerge).toBe(0.85);
+      });
+
+      it('should be in range (0, 1]', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minActivationJaccardForMerge
+        ).toBeGreaterThan(0);
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minActivationJaccardForMerge
+        ).toBeLessThanOrEqual(1);
+      });
+    });
+
+    describe('minConditionalProbForNesting', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minConditionalProbForNesting).toBe(0.95);
+      });
+
+      it('should be a high threshold (>0.9)', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minConditionalProbForNesting
+        ).toBeGreaterThan(0.9);
+      });
+    });
+
+    describe('minConditionalProbCILowerForNesting', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minConditionalProbCILowerForNesting).toBe(
+          0.9
+        );
+      });
+
+      it('should be less than or equal to minConditionalProbForNesting', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minConditionalProbCILowerForNesting
+        ).toBeLessThanOrEqual(
+          PROTOTYPE_OVERLAP_CONFIG.minConditionalProbForNesting
+        );
+      });
+    });
+
+    describe('symmetryTolerance', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.symmetryTolerance).toBe(0.05);
+      });
+
+      it('should be a small positive number', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.symmetryTolerance).toBeGreaterThan(0);
+        expect(PROTOTYPE_OVERLAP_CONFIG.symmetryTolerance).toBeLessThan(0.2);
+      });
+    });
+
+    describe('asymmetryRequired', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.asymmetryRequired).toBe(0.1);
+      });
+
+      it('should be greater than symmetryTolerance', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.asymmetryRequired).toBeGreaterThan(
+          PROTOTYPE_OVERLAP_CONFIG.symmetryTolerance
+        );
+      });
+    });
+
+    describe('maxMaeDeltaForExpression', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxMaeDeltaForExpression).toBe(0.05);
+      });
+
+      it('should be in range (0, 1)', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.maxMaeDeltaForExpression
+        ).toBeGreaterThan(0);
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxMaeDeltaForExpression).toBeLessThan(
+          1
+        );
+      });
+    });
+
+    describe('maxExclusiveForSubsumption', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxExclusiveForSubsumption).toBe(0.05);
+      });
+
+      it('should be in range (0, 1)', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.maxExclusiveForSubsumption
+        ).toBeGreaterThan(0);
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.maxExclusiveForSubsumption
+        ).toBeLessThan(1);
+      });
+    });
+  });
+
+  describe('v3 properties - Prototype Profile (ticket 005)', () => {
+    describe('lowVolumeThreshold', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.lowVolumeThreshold).toBe(0.05);
+      });
+
+      it('should be in range (0, 1)', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.lowVolumeThreshold).toBeGreaterThan(0);
+        expect(PROTOTYPE_OVERLAP_CONFIG.lowVolumeThreshold).toBeLessThan(1);
+      });
+    });
+
+    describe('lowNoveltyThreshold', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.lowNoveltyThreshold).toBe(0.15);
+      });
+
+      it('should be a positive number', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.lowNoveltyThreshold).toBeGreaterThan(0);
+      });
+    });
+
+    describe('singleAxisFocusThreshold', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.singleAxisFocusThreshold).toBe(0.6);
+      });
+
+      it('should be in range (0.5, 1) indicating majority concentration', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.singleAxisFocusThreshold
+        ).toBeGreaterThan(0.5);
+        expect(PROTOTYPE_OVERLAP_CONFIG.singleAxisFocusThreshold).toBeLessThan(
+          1
+        );
+      });
+    });
+
+    describe('clusteringMethod', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.clusteringMethod).toBe('k-means');
+      });
+
+      it('should be a valid clustering method', () => {
+        const validMethods = ['k-means', 'hierarchical'];
+        expect(validMethods).toContain(
+          PROTOTYPE_OVERLAP_CONFIG.clusteringMethod
+        );
+      });
+    });
+
+    describe('clusterCount', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.clusterCount).toBe(10);
+      });
+
+      it('should be a positive integer', () => {
+        expect(typeof PROTOTYPE_OVERLAP_CONFIG.clusterCount).toBe('number');
+        expect(PROTOTYPE_OVERLAP_CONFIG.clusterCount).toBeGreaterThan(0);
+        expect(Number.isInteger(PROTOTYPE_OVERLAP_CONFIG.clusterCount)).toBe(
+          true
+        );
+      });
+    });
+  });
+
+  describe('v3 properties - Actionable Suggestions (ticket 007)', () => {
+    describe('minSamplesForStump', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minSamplesForStump).toBe(100);
+      });
+
+      it('should be a positive integer', () => {
+        expect(typeof PROTOTYPE_OVERLAP_CONFIG.minSamplesForStump).toBe(
+          'number'
+        );
+        expect(PROTOTYPE_OVERLAP_CONFIG.minSamplesForStump).toBeGreaterThan(0);
+        expect(
+          Number.isInteger(PROTOTYPE_OVERLAP_CONFIG.minSamplesForStump)
+        ).toBe(true);
+      });
+    });
+
+    describe('minInfoGainForSuggestion', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minInfoGainForSuggestion).toBe(0.05);
+      });
+
+      it('should be a small positive number', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minInfoGainForSuggestion
+        ).toBeGreaterThan(0);
+        expect(PROTOTYPE_OVERLAP_CONFIG.minInfoGainForSuggestion).toBeLessThan(
+          1
+        );
+      });
+    });
+
+    describe('divergenceThreshold', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.divergenceThreshold).toBe(0.1);
+      });
+
+      it('should be a positive number', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.divergenceThreshold).toBeGreaterThan(0);
+      });
+    });
+
+    describe('maxSuggestionsPerPair', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxSuggestionsPerPair).toBe(3);
+      });
+
+      it('should be a positive integer', () => {
+        expect(typeof PROTOTYPE_OVERLAP_CONFIG.maxSuggestionsPerPair).toBe(
+          'number'
+        );
+        expect(PROTOTYPE_OVERLAP_CONFIG.maxSuggestionsPerPair).toBeGreaterThan(
+          0
+        );
+        expect(
+          Number.isInteger(PROTOTYPE_OVERLAP_CONFIG.maxSuggestionsPerPair)
+        ).toBe(true);
+      });
+    });
+
+    describe('minOverlapReductionForSuggestion', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minOverlapReductionForSuggestion).toBe(
+          0.1
+        );
+      });
+
+      it('should be in range (0, 1)', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minOverlapReductionForSuggestion
+        ).toBeGreaterThan(0);
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minOverlapReductionForSuggestion
+        ).toBeLessThan(1);
+      });
+    });
+
+    describe('minActivationRateAfterSuggestion', () => {
+      it('should exist and have correct default value', () => {
+        expect(PROTOTYPE_OVERLAP_CONFIG.minActivationRateAfterSuggestion).toBe(
+          0.01
+        );
+      });
+
+      it('should be a small positive number', () => {
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minActivationRateAfterSuggestion
+        ).toBeGreaterThan(0);
+        expect(
+          PROTOTYPE_OVERLAP_CONFIG.minActivationRateAfterSuggestion
+        ).toBeLessThan(PROTOTYPE_OVERLAP_CONFIG.lowVolumeThreshold);
+      });
+    });
+  });
+
+  describe('axis gap detection properties (AXIGAPDETSPE-001)', () => {
+    it('should have enableAxisGapDetection enabled by default', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.enableAxisGapDetection).toBe(true);
+    });
+
+    it('should have PCA thresholds set to expected defaults', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.pcaResidualVarianceThreshold).toBe(0.15);
+      expect(PROTOTYPE_OVERLAP_CONFIG.pcaKaiserThreshold).toBe(1.0);
+    });
+
+    it('should have hub detection thresholds set to expected defaults', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.hubMinDegree).toBe(4);
+      expect(PROTOTYPE_OVERLAP_CONFIG.hubMaxEdgeWeight).toBe(0.9);
+      expect(PROTOTYPE_OVERLAP_CONFIG.hubMinNeighborhoodDiversity).toBe(2);
+    });
+
+    it('should have coverage gap thresholds set to expected defaults', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.coverageGapAxisDistanceThreshold).toBe(
+        0.6
+      );
+      expect(PROTOTYPE_OVERLAP_CONFIG.coverageGapMinClusterSize).toBe(3);
+    });
+
+    it('should have multi-axis conflict thresholds set to expected defaults', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.multiAxisUsageThreshold).toBe(1.5);
+      expect(PROTOTYPE_OVERLAP_CONFIG.multiAxisSignBalanceThreshold).toBe(0.4);
+    });
+
+    it('should include all axis gap detection properties', () => {
+      const AXIS_GAP_PROPERTY_NAMES = [
+        'enableAxisGapDetection',
+        'pcaResidualVarianceThreshold',
+        'pcaKaiserThreshold',
+        'hubMinDegree',
+        'hubMaxEdgeWeight',
+        'hubMinNeighborhoodDiversity',
+        'coverageGapAxisDistanceThreshold',
+        'coverageGapMinClusterSize',
+        'multiAxisUsageThreshold',
+        'multiAxisSignBalanceThreshold',
+      ];
+
+      for (const propName of AXIS_GAP_PROPERTY_NAMES) {
+        expect(PROTOTYPE_OVERLAP_CONFIG).toHaveProperty(propName);
+        expect(PROTOTYPE_OVERLAP_CONFIG[propName]).not.toBeUndefined();
+      }
+      expect(AXIS_GAP_PROPERTY_NAMES.length).toBe(10);
+    });
+  });
+
+  describe('v3 properties completeness', () => {
+    const V3_PROPERTY_NAMES = [
+      // Shared Context Pool
+      'sharedPoolSize',
+      'enableStratifiedSampling',
+      'stratumCount',
+      'stratificationStrategy',
+      'poolRandomSeed',
+      // Agreement Metrics
+      'confidenceLevel',
+      'minSamplesForReliableCorrelation',
+      // Classification Thresholds
+      'maxMaeCoPassForMerge',
+      'maxRmseCoPassForMerge',
+      'maxMaeGlobalForMerge',
+      'minActivationJaccardForMerge',
+      'minConditionalProbForNesting',
+      'minConditionalProbCILowerForNesting',
+      'symmetryTolerance',
+      'asymmetryRequired',
+      'maxMaeDeltaForExpression',
+      'maxExclusiveForSubsumption',
+      // Prototype Profile
+      'lowVolumeThreshold',
+      'lowNoveltyThreshold',
+      'singleAxisFocusThreshold',
+      'clusteringMethod',
+      'clusterCount',
+      // Actionable Suggestions
+      'minSamplesForStump',
+      'minInfoGainForSuggestion',
+      'divergenceThreshold',
+      'maxSuggestionsPerPair',
+      'minOverlapReductionForSuggestion',
+      'minActivationRateAfterSuggestion',
+    ];
+
+    it('should have all 28 v3 properties', () => {
+      for (const propName of V3_PROPERTY_NAMES) {
+        expect(PROTOTYPE_OVERLAP_CONFIG).toHaveProperty(propName);
+      }
+      expect(V3_PROPERTY_NAMES.length).toBe(28);
+    });
+
+    it('should have poolRandomSeed set to null by default', () => {
+      expect(PROTOTYPE_OVERLAP_CONFIG.poolRandomSeed).toBe(null);
+    });
+
+    it('should not have undefined v3 properties (excluding poolRandomSeed which is null)', () => {
+      const propsExcludingPoolSeed = V3_PROPERTY_NAMES.filter(
+        (name) => name !== 'poolRandomSeed'
+      );
+      for (const propName of propsExcludingPoolSeed) {
         expect(PROTOTYPE_OVERLAP_CONFIG[propName]).not.toBeUndefined();
       }
     });

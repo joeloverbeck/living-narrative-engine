@@ -173,8 +173,8 @@ describe('MonteCarloSimulator - Known Context Keys Validation', () => {
   });
 
   describe('all axes and traits completeness', () => {
-    it('should accept all 9 mood axes without warnings', async () => {
-      // Build logic that references all 9 mood axes
+    it('should accept all 11 mood axes without warnings', async () => {
+      // Build logic that references all 11 mood axes
       const allAxesLogic = MOOD_AXES.map((axis) => ({
         '>=': [{ var: `moodAxes.${axis}` }, -100],
       }));
@@ -213,8 +213,9 @@ describe('MonteCarloSimulator - Known Context Keys Validation', () => {
       expect(result.unseededVarWarnings).toEqual([]);
     });
 
-    it('should verify MOOD_AXES has 10 entries including inhibitory_control and uncertainty', () => {
-      expect(MOOD_AXES).toHaveLength(10);
+    it('should verify MOOD_AXES has 11 entries including temporal_orientation', () => {
+      expect(MOOD_AXES).toHaveLength(11);
+      expect(MOOD_AXES).toContain('temporal_orientation');
       expect(MOOD_AXES).toContain('inhibitory_control');
       expect(MOOD_AXES).toContain('uncertainty');
     });

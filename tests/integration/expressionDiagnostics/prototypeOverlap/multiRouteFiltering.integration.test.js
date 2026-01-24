@@ -140,8 +140,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
   });
 
   describe('Multi-Route Pipeline', () => {
-    it('filters candidates using all three routes', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('filters candidates using all three routes', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       // Verify result structure
       expect(result).toHaveProperty('candidates');
@@ -155,8 +155,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(result.stats.routeStats).toHaveProperty('routeC');
     });
 
-    it('includes per-route statistics breakdown', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('includes per-route statistics breakdown', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       const { routeStats } = result.stats;
 
@@ -176,8 +176,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(typeof routeStats.routeC.skipped).toBe('number');
     });
 
-    it('captures more candidates than Route A alone', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('captures more candidates than Route A alone', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       const { routeStats } = result.stats;
 
@@ -201,8 +201,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(totalMeetsExpectation).toBe(true);
     });
 
-    it('tracks provenance with selectedBy field', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('tracks provenance with selectedBy field', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       // Each candidate should have selectedBy field
       for (const candidate of result.candidates) {
@@ -211,8 +211,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       }
     });
 
-    it('includes routeMetrics for each candidate', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('includes routeMetrics for each candidate', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       for (const candidate of result.candidates) {
         expect(candidate).toHaveProperty('routeMetrics');
@@ -220,8 +220,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       }
     });
 
-    it('maintains candidateMetrics for all candidates', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('maintains candidateMetrics for all candidates', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       for (const candidate of result.candidates) {
         expect(candidate).toHaveProperty('candidateMetrics');
@@ -233,8 +233,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
   });
 
   describe('Route A: Weight-Vector Similarity', () => {
-    it('selects near-identical prototype pairs (joyA ↔ joyB)', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('selects near-identical prototype pairs (joyA ↔ joyB)', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       // Find joyA/joyB pair
       const joyPair = result.candidates.find(
@@ -249,8 +249,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(joyPair.selectedBy).toBe('routeA');
     });
 
-    it('rejects opposite prototypes in Route A (anger ↔ calm)', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('rejects opposite prototypes in Route A (anger ↔ calm)', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       // Anger/calm pair should NOT be found via Route A (opposite weights)
       const angerCalmPair = result.candidates.find(
@@ -269,8 +269,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
   });
 
   describe('Route B: Gate-Based Similarity', () => {
-    it('selects pairs with nested gates despite different weights (fearA ↔ fearB)', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('selects pairs with nested gates despite different weights (fearA ↔ fearB)', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       // Find fearA/fearB pair
       const fearPair = result.candidates.find(
@@ -290,8 +290,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(routeBHasMetrics).toBe(true);
     });
 
-    it('tracks byImplication and byOverlap stats', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('tracks byImplication and byOverlap stats', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       const routeBStats = result.stats.routeStats.routeB;
 
@@ -309,8 +309,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
   });
 
   describe('Route C: Behavioral Prescan', () => {
-    it('tracks prescan statistics', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('tracks prescan statistics', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       const routeCStats = result.stats.routeStats.routeC;
 
@@ -320,8 +320,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(routeCStats.skipped).toBeGreaterThanOrEqual(0);
     });
 
-    it('only processes pairs rejected by Routes A and B', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('only processes pairs rejected by Routes A and B', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       const { routeStats } = result.stats;
 
@@ -339,8 +339,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
   });
 
   describe('Total Pairs Accounting', () => {
-    it('total possible pairs equals n*(n-1)/2', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('total possible pairs equals n*(n-1)/2', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       const n = prototypes.length;
       const expectedPairs = (n * (n - 1)) / 2;
@@ -348,8 +348,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(result.stats.totalPossiblePairs).toBe(expectedPairs);
     });
 
-    it('all pairs are accounted for in route processing', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('all pairs are accounted for in route processing', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       const { routeStats, totalPossiblePairs } = result.stats;
 
@@ -367,8 +367,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
   });
 
   describe('Deduplication', () => {
-    it('does not include duplicate pairs across routes', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('does not include duplicate pairs across routes', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       // Check for duplicate pairs
       const seen = new Set();
@@ -389,8 +389,8 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
       expect(duplicateFound).toBe(false);
     });
 
-    it('Route A candidates have priority (appear first)', () => {
-      const result = candidatePairFilter.filterCandidates(prototypes);
+    it('Route A candidates have priority (appear first)', async () => {
+      const result = await candidatePairFilter.filterCandidates(prototypes);
 
       // Find first non-Route-A candidate
       let firstNonRouteAIndex = -1;
@@ -416,28 +416,28 @@ describe('Multi-Route Filtering Integration (v2.1)', () => {
   });
 
   describe('Edge Cases', () => {
-    it('handles empty prototype list', () => {
-      const result = candidatePairFilter.filterCandidates([]);
+    it('handles empty prototype list', async () => {
+      const result = await candidatePairFilter.filterCandidates([]);
 
       expect(result.candidates).toEqual([]);
       expect(result.stats.totalPossiblePairs).toBe(0);
     });
 
-    it('handles single prototype', () => {
-      const result = candidatePairFilter.filterCandidates([prototypes[0]]);
+    it('handles single prototype', async () => {
+      const result = await candidatePairFilter.filterCandidates([prototypes[0]]);
 
       expect(result.candidates).toEqual([]);
       expect(result.stats.prototypesWithValidWeights).toBe(1);
     });
 
-    it('handles prototypes without valid weights', () => {
+    it('handles prototypes without valid weights', async () => {
       const invalidPrototypes = [
         { id: 'noWeights' },
         { id: 'emptyWeights', weights: {} },
         { id: 'stringWeights', weights: { valence: 'high' } },
       ];
 
-      const result = candidatePairFilter.filterCandidates(invalidPrototypes);
+      const result = await candidatePairFilter.filterCandidates(invalidPrototypes);
 
       expect(result.candidates).toEqual([]);
       expect(result.stats.prototypesWithValidWeights).toBe(0);
@@ -517,7 +517,7 @@ describe('Multi-Route Feature Flag', () => {
       ([id, proto]) => ({ id, ...proto })
     );
 
-    const filterResult = filterWithDisabled.filterCandidates(prototypes);
+    const filterResult = await filterWithDisabled.filterCandidates(prototypes);
 
     // Should NOT have routeStats when multi-route is disabled
     expect(filterResult.stats.routeStats).toBeUndefined();

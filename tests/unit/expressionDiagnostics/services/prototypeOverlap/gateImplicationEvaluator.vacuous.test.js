@@ -9,6 +9,7 @@ import GateImplicationEvaluator from '../../../../../src/expressionDiagnostics/s
 
 describe('GateImplicationEvaluator - vacuous truth handling', () => {
   let mockLogger;
+  let mockGateASTNormalizer;
   let evaluator;
 
   beforeEach(() => {
@@ -18,7 +19,16 @@ describe('GateImplicationEvaluator - vacuous truth handling', () => {
       error: jest.fn(),
     };
 
-    evaluator = new GateImplicationEvaluator({ logger: mockLogger });
+    mockGateASTNormalizer = {
+      parse: jest.fn(() => ({ ast: {}, errors: [], parseComplete: true })),
+      checkImplication: jest.fn(() => ({ implies: false, isVacuous: false })),
+      toString: jest.fn(() => '[gate]'),
+    };
+
+    evaluator = new GateImplicationEvaluator({
+      logger: mockLogger,
+      gateASTNormalizer: mockGateASTNormalizer,
+    });
   });
 
   // ==========================================================================

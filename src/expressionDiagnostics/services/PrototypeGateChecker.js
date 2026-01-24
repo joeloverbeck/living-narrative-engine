@@ -72,6 +72,51 @@ class PrototypeGateChecker {
   }
 
   /**
+   * Pre-parse gate strings into GateConstraint objects for reuse.
+   * Use this to avoid parsing the same gates repeatedly across many contexts.
+   *
+   * @param {string[]} gates - Gate strings to parse.
+   * @returns {GateConstraint[]} Array of successfully parsed constraints.
+   */
+  preParseGates(gates) {
+    if (!gates || gates.length === 0) {
+      return [];
+    }
+    const parsed = [];
+    for (const gateStr of gates) {
+      try {
+        parsed.push(GateConstraint.parse(gateStr));
+      } catch {
+        // Skip invalid gates (consistent with checkAllGatesPass behavior)
+      }
+    }
+    return parsed;
+  }
+
+  /**
+   * Check gates using pre-parsed constraints against pre-normalized axes.
+   * This is the optimized hot path for batch evaluation.
+   *
+   * @param {GateConstraint[]} parsedGates - Pre-parsed gate constraints.
+   * @param {{moodAxes: object, sexualAxes: object, traitAxes: object}} normalizedAxes - Pre-normalized context axes.
+   * @returns {boolean} True when all gates are satisfied.
+   */
+  checkParsedGatesPass(parsedGates, normalizedAxes) {
+    for (const constraint of parsedGates) {
+      const value = resolveAxisValue(
+        constraint.axis,
+        normalizedAxes.moodAxes,
+        normalizedAxes.sexualAxes,
+        normalizedAxes.traitAxes
+      );
+      if (!constraint.isSatisfiedBy(value)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Compute fraction of contexts passing all gates.
    *
    * @param {{gates: string[]}} proto - Prototype with gate strings.

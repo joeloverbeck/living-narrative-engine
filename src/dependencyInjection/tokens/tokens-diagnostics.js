@@ -108,6 +108,16 @@ export const diagnosticsTokens = freeze({
   // Multi-Route Candidate Filtering (PROREDANAV2.1 series)
   IGateSimilarityFilter: 'IGateSimilarityFilter',
   IBehavioralPrescanFilter: 'IBehavioralPrescanFilter',
+
+  // V3 Services (PROANAOVEV3 series)
+  ISharedContextPoolGenerator: 'ISharedContextPoolGenerator',
+  IPrototypeVectorEvaluator: 'IPrototypeVectorEvaluator',
+  IWilsonInterval: 'IWilsonInterval',
+  IAgreementMetricsCalculator: 'IAgreementMetricsCalculator',
+  IPrototypeProfileCalculator: 'IPrototypeProfileCalculator',
+  IGateASTNormalizer: 'IGateASTNormalizer',
+  IActionableSuggestionEngine: 'IActionableSuggestionEngine',
+  IAxisGapAnalyzer: 'IAxisGapAnalyzer',
 });
 
 export default diagnosticsTokens;

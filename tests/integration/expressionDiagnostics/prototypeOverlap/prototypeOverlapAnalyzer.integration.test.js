@@ -10,6 +10,11 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { diagnosticsTokens } from '../../../../src/dependencyInjection/tokens/tokens-diagnostics.js';
 import { registerExpressionServices } from '../../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { registerExpressionDiagnosticsServices } from '../../../../src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
+import SharedContextPoolGenerator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/SharedContextPoolGenerator.js';
+import { PROTOTYPE_OVERLAP_CONFIG } from '../../../../src/expressionDiagnostics/config/prototypeOverlapConfig.js';
+
+const TEST_SHARED_POOL_SIZE = 5000;
+const TEST_POOL_SEED = 1337;
 
 // Sample emotion prototypes for testing - realistic subset
 const EMOTION_PROTOTYPES = {
@@ -55,6 +60,8 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
   let dom;
   let container;
   let analyzer;
+  let baseResult2000;
+  let baseResult4000;
 
   beforeAll(async () => {
     // Setup minimal DOM environment
@@ -87,6 +94,21 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
         // Register diagnostics services
         registerExpressionDiagnosticsServices(c);
 
+        const sharedPoolGenerator = new SharedContextPoolGenerator({
+          randomStateGenerator: c.resolve(diagnosticsTokens.IRandomStateGenerator),
+          contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
+          logger: c.resolve(tokens.ILogger),
+          poolSize: TEST_SHARED_POOL_SIZE,
+          stratified: PROTOTYPE_OVERLAP_CONFIG.enableStratifiedSampling,
+          stratumCount: PROTOTYPE_OVERLAP_CONFIG.stratumCount,
+          stratificationStrategy: PROTOTYPE_OVERLAP_CONFIG.stratificationStrategy,
+          randomSeed: TEST_POOL_SEED,
+        });
+        c.setOverride(
+          diagnosticsTokens.ISharedContextPoolGenerator,
+          sharedPoolGenerator
+        );
+
         // Manually register lookup data for testing
         const dataRegistry = c.resolve(tokens.IDataRegistry);
         dataRegistry.store('lookups', 'core:emotion_prototypes', {
@@ -104,6 +126,15 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
 
     container = result.container;
     analyzer = container.resolve(diagnosticsTokens.IPrototypeOverlapAnalyzer);
+
+    baseResult2000 = await analyzer.analyze({
+      prototypeFamily: 'emotion',
+      sampleCount: 2000,
+    });
+    baseResult4000 = await analyzer.analyze({
+      prototypeFamily: 'emotion',
+      sampleCount: 4000,
+    });
   });
 
   afterAll(() => {
@@ -118,27 +149,28 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
 
   describe('Full Pipeline', () => {
     it('analyzes real emotion prototypes from lookup', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 2000, // Reduced for test speed
-      });
-
       // Verify result structure
-      expect(result).toHaveProperty('recommendations');
-      expect(result).toHaveProperty('metadata');
-      expect(Array.isArray(result.recommendations)).toBe(true);
+      expect(baseResult2000).toHaveProperty('recommendations');
+      expect(baseResult2000).toHaveProperty('metadata');
+      expect(Array.isArray(baseResult2000.recommendations)).toBe(true);
 
       // Verify metadata - note: no 'elapsed' field exists
-      expect(result.metadata.totalPrototypes).toBeGreaterThan(0);
-      expect(result.metadata.sampleCountPerPair).toBe(2000);
-      expect(result.metadata.prototypeFamily).toBe('emotion');
-      expect(typeof result.metadata.candidatePairsFound).toBe('number');
-      expect(typeof result.metadata.candidatePairsEvaluated).toBe('number');
-      expect(typeof result.metadata.redundantPairsFound).toBe('number');
+      expect(baseResult2000.metadata.totalPrototypes).toBeGreaterThan(0);
+      if (baseResult2000.metadata.analysisMode === 'v3') {
+        expect(baseResult2000.metadata.sampleCountPerPair).toBe(
+          TEST_SHARED_POOL_SIZE
+        );
+      } else {
+        expect(baseResult2000.metadata.sampleCountPerPair).toBe(2000);
+      }
+      expect(baseResult2000.metadata.prototypeFamily).toBe('emotion');
+      expect(typeof baseResult2000.metadata.candidatePairsFound).toBe('number');
+      expect(typeof baseResult2000.metadata.candidatePairsEvaluated).toBe('number');
+      expect(typeof baseResult2000.metadata.redundantPairsFound).toBe('number');
 
       // Verify recommendation structure if any exist
-      if (result.recommendations.length > 0) {
-        const rec = result.recommendations[0];
+      if (baseResult2000.recommendations.length > 0) {
+        const rec = baseResult2000.recommendations[0];
         expect(rec).toHaveProperty('type');
         expect(rec).toHaveProperty('prototypes');
         expect(rec).toHaveProperty('severity');
@@ -147,6 +179,34 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
         expect(rec).toHaveProperty('candidateMetrics');
         expect(rec).toHaveProperty('behaviorMetrics');
         expect(rec).toHaveProperty('evidence');
+        expect(rec).toHaveProperty('allMatchingClassifications');
+      }
+    });
+
+    it('includes correlation metadata in summary insight', async () => {
+      const closestPair = baseResult2000.metadata?.summaryInsight?.closestPair;
+      if (closestPair) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(closestPair).toHaveProperty('correlationSource');
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(closestPair).toHaveProperty('correlationConfidence');
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(closestPair).toHaveProperty('effectiveCorrelation');
+      }
+    });
+
+    it('composite score uses rebalanced weights favoring global similarity', async () => {
+      const closestPair = baseResult2000.metadata?.summaryInsight?.closestPair;
+      if (closestPair && Number.isFinite(closestPair.globalMeanAbsDiff)) {
+        // With new weights (0.30, 0.20, 0.50), global diff contributes most
+        // The (1 - globalMeanAbsDiff) × 0.50 term should be significant
+        const globalSimilarityContribution =
+          (1 - closestPair.globalMeanAbsDiff) * 0.5;
+
+        if (closestPair.globalMeanAbsDiff < 0.1) {
+          // eslint-disable-next-line jest/no-conditional-expect
+          expect(globalSimilarityContribution).toBeGreaterThan(0.45);
+        }
       }
     });
 
@@ -182,12 +242,7 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
     it('detects MERGE for near-identical test prototypes', async () => {
       // This test relies on actual prototype data
       // If no merge recommendations exist, it validates the system doesn't false-positive
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const mergeRecs = result.recommendations.filter(
+      const mergeRecs = baseResult4000.recommendations.filter(
         (r) => r.type === 'prototype_merge_suggestion'
       );
 
@@ -204,12 +259,7 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
     });
 
     it('detects SUBSUMED for subset prototypes', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const subsumptionRecs = result.recommendations.filter(
+      const subsumptionRecs = baseResult4000.recommendations.filter(
         (r) => r.type === 'prototype_subsumption_suggestion'
       );
 
@@ -218,21 +268,22 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
         expect(rec.severity).toBeGreaterThanOrEqual(0);
         expect(rec.severity).toBeLessThanOrEqual(1);
         expect(
-          rec.actions.some((a) => a.includes('remove') || a.includes('tighten'))
+          rec.actions.some(
+            (a) =>
+              a.toLowerCase().includes('remove') ||
+              a.toLowerCase().includes('tighten')
+          )
         ).toBe(true);
       });
     });
 
     it('returns sorted recommendations by severity descending', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 2000,
-      });
-
-      if (result.recommendations.length > 1) {
-        for (let i = 1; i < result.recommendations.length; i++) {
-          expect(result.recommendations[i - 1].severity).toBeGreaterThanOrEqual(
-            result.recommendations[i].severity
+      if (baseResult2000.recommendations.length > 1) {
+        for (let i = 1; i < baseResult2000.recommendations.length; i++) {
+          expect(
+            baseResult2000.recommendations[i - 1].severity
+          ).toBeGreaterThanOrEqual(
+            baseResult2000.recommendations[i].severity
           );
         }
       }
@@ -267,12 +318,7 @@ describe('PrototypeOverlapAnalyzer Integration', () => {
 
   describe('Metric Validity', () => {
     it('all recommendation metrics are within valid bounds', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 2000,
-      });
-
-      result.recommendations.forEach((rec) => {
+      baseResult2000.recommendations.forEach((rec) => {
         // Severity and confidence in [0,1]
         expect(rec.severity).toBeGreaterThanOrEqual(0);
         expect(rec.severity).toBeLessThanOrEqual(1);

@@ -30,7 +30,7 @@ import NumericConstraintEvaluator from '../../goap/planner/numericConstraintEval
 /**
  * Registers GOAP system services with the dependency injection container.
  *
- * @param {import('../containerBase.js').default} container - DI container
+ * @param {import('../appContainer.js').default} container - DI container
  */
 export function registerGoapServices(container) {
   container.register(

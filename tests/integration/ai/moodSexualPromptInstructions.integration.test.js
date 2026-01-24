@@ -68,7 +68,7 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       expect(promptText).toContain('integers [0..100]');
     });
 
-    it('should list all 7 mood axes in ranges', () => {
+    it('should list all 10 mood axes in ranges', () => {
       expect(promptText).toContain('valence');
       expect(promptText).toContain('arousal');
       expect(promptText).toContain('agency_control');
@@ -76,6 +76,9 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       expect(promptText).toContain('engagement');
       expect(promptText).toContain('future_expectancy');
       expect(promptText).toContain('self_evaluation');
+      expect(promptText).toContain('affiliation');
+      expect(promptText).toContain('inhibitory_control');
+      expect(promptText).toContain('uncertainty');
     });
 
     it('should list both sex variables in ranges', () => {
@@ -129,6 +132,24 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       expect(promptText).toContain('Self-evaluation:');
       expect(promptText).toContain('pride/dignity');
       expect(promptText).toContain('shame/defect/exposed');
+    });
+
+    it('should define affiliation with +/- meaning', () => {
+      expect(promptText).toContain('Affiliation:');
+      expect(promptText).toContain('warm/connected/affiliative');
+      expect(promptText).toContain('cold/detached/hostile');
+    });
+
+    it('should define inhibitory_control with +/- meaning', () => {
+      expect(promptText).toContain('Inhibitory Control:');
+      expect(promptText).toContain('tightly restrained/white-knuckling');
+      expect(promptText).toContain('disinhibited/impulsive');
+    });
+
+    it('should define uncertainty with +/- meaning', () => {
+      expect(promptText).toContain('Uncertainty:');
+      expect(promptText).toContain('highly uncertain/cannot integrate');
+      expect(promptText).toContain('highly certain/coherent model/clear understanding');
     });
   });
 
@@ -252,7 +273,7 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
   });
 
   describe('Token Efficiency', () => {
-    it('should keep the mood/sexual update section under 1200 tokens (approximately 4800 characters)', () => {
+    it('should keep the mood/sexual update section under 1750 tokens (approximately 7000 characters)', () => {
       // The moodUpdateOnlyInstructionText is dedicated to mood/sexual updates
       // Verify start marker exists
       const startMarker = 'EMOTIONAL + SEXUAL STATE UPDATE';
@@ -261,8 +282,8 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
 
       // Measure the entire dedicated mood update text
       // Rough estimate: 4 characters per token on average
-      // 1200 tokens * 4 = 4800 characters max (adjusted for new comprehensive prompt)
-      expect(promptText.length).toBeLessThan(4800);
+      // 1750 tokens * 4 = 7000 characters max (adjusted for new axes)
+      expect(promptText.length).toBeLessThan(7000);
     });
   });
 

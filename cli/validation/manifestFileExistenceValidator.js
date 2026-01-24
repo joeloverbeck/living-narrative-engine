@@ -86,6 +86,11 @@ const CONTENT_CATEGORIES = {
  */
 
 /**
+ * @typedef {object} ModManifest
+ * @property {Record<string, any>} [content]
+ */
+
+/**
  * Validates file existence for all content referenced in mod manifests
  */
 class ManifestFileExistenceValidator {
@@ -97,7 +102,7 @@ class ManifestFileExistenceValidator {
    * @param {import('../../src/interfaces/coreServices.js').ILogger} dependencies.logger
    * @param {string} [dependencies.modsBasePath] - Base path to mods directory
    */
-  constructor({ logger, modsBasePath = null }) {
+  constructor({ logger, modsBasePath = undefined }) {
     if (!logger || typeof logger.info !== 'function') {
       throw new Error(
         'Logger is required with info, warn, error, debug methods'
@@ -113,7 +118,7 @@ class ManifestFileExistenceValidator {
    * Validates all file references in a mod's manifest
    *
    * @param {string} modId - Mod identifier
-   * @param {object} manifest - Parsed mod manifest
+   * @param {ModManifest} manifest - Parsed mod manifest
    * @returns {Promise<ModFileValidationResult>}
    */
   async validateMod(modId, manifest) {
@@ -121,7 +126,7 @@ class ManifestFileExistenceValidator {
     const namingIssues = [];
     const modPath = path.join(this.#modsBasePath, modId);
 
-    const content = manifest.content || {};
+    const content = /** @type {Record<string, any>} */ (manifest?.content ?? {});
     const categories = [
       'actions',
       'rules',
@@ -182,7 +187,7 @@ class ManifestFileExistenceValidator {
   /**
    * Validates all mods in the ecosystem
    *
-   * @param {Map<string, object>} manifests - Map of modId to manifest
+   * @param {Map<string, ModManifest>} manifests - Map of modId to manifest
    * @returns {Promise<Map<string, ModFileValidationResult>>}
    */
   async validateAllMods(manifests) {
@@ -215,7 +220,6 @@ class ManifestFileExistenceValidator {
    * @param {string} category - Content category
    * @param {string} file - Original filename
    * @returns {Promise<string|null>} Alternative filename if found, null otherwise
-   * @private
    */
   async #checkNamingMismatch(modPath, category, file) {
     // Only check for underscore to hyphen conversion
@@ -285,7 +289,7 @@ class ManifestFileExistenceValidator {
    * (inverse of validateMod - checks disk → manifest)
    *
    * @param {string} modId - Mod identifier
-   * @param {object} manifest - Parsed mod manifest (null if missing)
+   * @param {ModManifest} manifest - Parsed mod manifest (null if missing)
    * @returns {Promise<UnregisteredFilesResult>}
    */
   async validateUnregisteredFiles(modId, manifest) {
@@ -304,7 +308,7 @@ class ManifestFileExistenceValidator {
       };
     }
 
-    const content = manifest.content || {};
+    const content = /** @type {Record<string, any>} */ (manifest?.content ?? {});
 
     // Check each content category
     for (const [categoryKey, categoryConfig] of Object.entries(
@@ -361,7 +365,7 @@ class ManifestFileExistenceValidator {
   /**
    * Validates all mods for unregistered files
    *
-   * @param {Map<string, object>} manifests - Map of modId to manifest
+   * @param {Map<string, ModManifest>} manifests - Map of modId to manifest
    * @returns {Promise<Map<string, UnregisteredFilesResult>>}
    */
   async validateAllModsUnregistered(manifests) {
@@ -388,10 +392,9 @@ class ManifestFileExistenceValidator {
   /**
    * Gets the set of files registered in manifest for a given category
    *
-   * @param {object} content - Manifest content section
+   * @param {Record<string, any>} content - Manifest content section
    * @param {string} categoryKey - Category key
    * @returns {Set<string>} Set of registered filenames
-   * @private
    */
   #getRegisteredFilesForCategory(content, categoryKey) {
     const files = content[categoryKey];
@@ -411,7 +414,6 @@ class ManifestFileExistenceValidator {
    * @param {string} dirPath - Directory path to scan
    * @param {RegExp} pattern - File pattern to match
    * @returns {Promise<string[]>} Array of matching filenames
-   * @private
    */
   async #scanDirectory(dirPath, pattern) {
     try {
@@ -436,7 +438,8 @@ class ManifestFileExistenceValidator {
       return files;
     } catch (error) {
       // Directory doesn't exist - this is fine, no unregistered files
-      if (error.code === 'ENOENT') {
+      const err = /** @type {NodeJS.ErrnoException} */ (error);
+      if (err && err.code === 'ENOENT') {
         return [];
       }
       throw error;
@@ -448,7 +451,6 @@ class ManifestFileExistenceValidator {
    *
    * @param {string} filename - Filename to check
    * @returns {boolean} True if file should be ignored
-   * @private
    */
   #isIgnoredFile(filename) {
     // Check against explicit ignore list
@@ -473,12 +475,13 @@ class ManifestFileExistenceValidator {
    * Validates unregistered files in the entities subdirectories
    *
    * @param {string} modPath - Mod base path
-   * @param {object} content - Manifest content section
+   * @param {Record<string, any>} content - Manifest content section
    * @param {Array<{category: string, file: string}>} unregisteredFiles - Array to append results
-   * @private
    */
   async #validateEntitiesUnregistered(modPath, content, unregisteredFiles) {
-    const entities = content.entities || {};
+    const entities = /** @type {{ definitions?: string[], instances?: string[] }} */ (
+      content.entities ?? {}
+    );
 
     // Check definitions
     const definitionsDir = path.join(modPath, 'entities', 'definitions');

@@ -142,6 +142,7 @@ describe('OverlapClassifier v2 infrastructure', () => {
 
       expect(result.type).toBe('merge_recommended');
       expect(CLASSIFICATION_PRIORITY).toContain(result.type);
+      expect(Array.isArray(result.allMatchingClassifications)).toBe(true);
     });
 
     it('should return v2 type directly (subsumed_recommended)', () => {

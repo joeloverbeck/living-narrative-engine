@@ -75,10 +75,10 @@ const SAFE_HEURISTIC_MAX_COST = Number.MAX_SAFE_INTEGER;
  * @see docs/goap/debugging-multi-action.md for troubleshooting
  */
 class GoapPlanner {
-  /** @type {import('../../logging/logger.js').default} */
+  /** @type {import('../../logging/loggerStrategy.js').default} */
   #logger;
 
-  /** @type {import('../../logic/services/jsonLogicEvaluationService.js').default} */
+  /** @type {import('../../logic/jsonLogicEvaluationService.js').default} */
   #jsonLogicService;
 
   /** @type {import('../../data/gameDataRepository.js').GameDataRepository} */
@@ -130,8 +130,8 @@ class GoapPlanner {
    * Create new GOAP planner instance
    *
    * @param {object} deps - Dependencies
-   * @param {import('../../logging/logger.js').default} deps.logger - Logger instance
-   * @param {import('../../logic/services/jsonLogicEvaluationService.js').default} deps.jsonLogicEvaluationService - JSON Logic evaluation service
+   * @param {import('../../logging/loggerStrategy.js').default} deps.logger - Logger instance
+   * @param {import('../../logic/jsonLogicEvaluationService.js').default} deps.jsonLogicEvaluationService - JSON Logic evaluation service
    * @param {import('../../data/gameDataRepository.js').GameDataRepository} deps.gameDataRepository - Game data repository for loading tasks
    * @param {import('../../interfaces/IEntityManager.js').IEntityManager} deps.entityManager - Entity manager for retrieving actor entities
    * @param {import('../../scopeDsl/scopeRegistry.js').default} deps.scopeRegistry - Scope registry for retrieving scope ASTs

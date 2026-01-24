@@ -1,8 +1,8 @@
 /**
- * @file Loader for lookup table definitions.
+ * @file Loader for lookup table definitions with inline schema validation.
  */
 
-import { SimpleItemLoader } from './simpleItemLoader.js';
+import { BaseInlineSchemaLoader } from './baseInlineSchemaLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import GateConstraint from '../expressionDiagnostics/models/GateConstraint.js';
 
@@ -19,10 +19,13 @@ import GateConstraint from '../expressionDiagnostics/models/GateConstraint.js';
  * Loader responsible for lookup table definition files. Lookups provide
  * static reference/mapping data that can be queried at runtime.
  *
+ * This loader validates lookup entries against their inline dataSchema
+ * when present, enabling runtime schema enforcement.
+ *
  * @class LookupLoader
- * @augments SimpleItemLoader
+ * @augments BaseInlineSchemaLoader
  */
-class LookupLoader extends SimpleItemLoader {
+class LookupLoader extends BaseInlineSchemaLoader {
   /**
    * Creates an instance of LookupLoader.
    *
@@ -111,8 +114,38 @@ class LookupLoader extends SimpleItemLoader {
   }
 
   /**
+   * Validates lookup entries against the inline dataSchema.
+   *
+   * @param {string} lookupId - The lookup ID for error messages.
+   * @param {string} schemaId - The registered schema ID.
+   * @param {object} entries - The entries object from the lookup.
+   * @throws {Error} If any entry fails schema validation.
+   * @private
+   */
+  #validateEntriesAgainstSchema(lookupId, schemaId, entries) {
+    if (!entries || typeof entries !== 'object') {
+      return;
+    }
+
+    for (const [entryKey, entryValue] of Object.entries(entries)) {
+      const validation = this._schemaValidator.validate(schemaId, entryValue);
+      if (!validation.isValid) {
+        const errorMessages = validation.errors
+          ? validation.errors.join(', ')
+          : 'Unknown validation error';
+        this._logger.error(
+          `Lookup '${lookupId}' entry '${entryKey}' failed schema validation: ${errorMessages}`
+        );
+        throw new Error(
+          `Invalid lookup entry: ${lookupId}/${entryKey} - ${errorMessages}`
+        );
+      }
+    }
+  }
+
+  /**
    * Processes a fetched lookup item, storing it in the registry and
-   * validating gates for prototype lookups.
+   * validating entries against inline schemas and gates for prototype lookups.
    *
    * @param {string} modId - The mod ID.
    * @param {string} filename - The filename of the lookup.
@@ -122,6 +155,31 @@ class LookupLoader extends SimpleItemLoader {
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} Processing result.
    */
   async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
+    // Extract base ID for schema registration
+    const baseId = data?.id
+      ? data.id.includes(':')
+        ? data.id.split(':')[1]
+        : data.id
+      : filename.replace(/\.lookup\.json$/, '');
+
+    // Register inline dataSchema if present and validate entries
+    if (data?.dataSchema && typeof data.dataSchema === 'object') {
+      const schemaId = `${modId}:${baseId}:entry`;
+
+      await this._registerItemSchema(data, 'dataSchema', schemaId, {
+        successDebugMessage: `LookupLoader [${modId}]: Registered dataSchema for '${baseId}'`,
+      });
+
+      // Validate each entry against the registered schema
+      if (data.entries && typeof data.entries === 'object') {
+        this.#validateEntriesAgainstSchema(
+          data.id || `${modId}:${baseId}`,
+          schemaId,
+          data.entries
+        );
+      }
+    }
+
     const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
       idProp: 'id',

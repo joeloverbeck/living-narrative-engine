@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file Prompt templates for traits rewriter generation
  * @see ../services/TraitsRewriterGenerator.js
@@ -270,7 +271,11 @@ Your primary directive is authentic character portrayal and storytelling within 
  * @param {string} traitValue - The trait value to rewrite
  * @returns {string} Focused prompt for single trait rewriting
  */
-export function createFocusedTraitPrompt(characterData, traitKey, traitValue) {
+export function createFocusedTraitPrompt(
+  /** @type {{ [key: string]: any, speechPatterns?: Array<{pattern: string, example: string}> }} */ characterData,
+  traitKey,
+  traitValue
+) {
   const characterName =
     characterData['core:name']?.text ||
     characterData['core:name']?.name ||

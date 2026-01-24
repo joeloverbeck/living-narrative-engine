@@ -9,7 +9,7 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 /** @typedef {import('../types/perceptionLogTypes.js').RawPerceptionLogEntry} RawPerceptionLogEntry */
-/** @typedef {import('./services/modActionMetadataProvider.js').ModActionMetadata} ModActionMetadata */
+/** @typedef {import('./modActionMetadataProvider.js').ModActionMetadata} ModActionMetadata */
 
 import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
@@ -52,7 +52,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
   #characterDataXmlBuilder;
   /** @type {*} */
   #actionCategorizationService;
-  /** @type {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} */
+  /** @type {import('./modActionMetadataProvider.js').ModActionMetadataProvider} */
   #modActionMetadataProvider;
   /** @type {import('./ChanceTextTranslator.js').ChanceTextTranslator} */
   #chanceTextTranslator;
@@ -65,7 +65,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @param {IGameStateValidationServiceForPrompting} dependencies.gameStateValidationService - Service to validate game state for prompting.
    * @param {*} dependencies.actionCategorizationService - Service for action categorization.
    * @param {import('./characterDataXmlBuilder.js').CharacterDataXmlBuilder} dependencies.characterDataXmlBuilder - Builder for XML character data.
-   * @param {import('./services/modActionMetadataProvider.js').ModActionMetadataProvider} dependencies.modActionMetadataProvider - Provider for mod action metadata.
+   * @param {import('./modActionMetadataProvider.js').ModActionMetadataProvider} dependencies.modActionMetadataProvider - Provider for mod action metadata.
    * @returns {void}
    */
   constructor({

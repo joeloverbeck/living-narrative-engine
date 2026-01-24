@@ -8,8 +8,9 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { AgeUtils } from '../utils/ageUtils.js';
+import { MOOD_AXES } from '../constants/moodAffectConstants.js';
 
-/** @typedef {import('../types/ILogger.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('./xmlElementBuilder.js').default} XmlElementBuilder */
 
 /**
@@ -856,24 +857,15 @@ class CharacterDataXmlBuilder {
 
   /**
    * Formats mood axes into a compact string for the prompt.
+   * Uses MOOD_AXES constant for all 10 axes.
    *
    * @param {object} moodAxes - Mood axis values
    * @returns {string} Formatted mood axis string
    */
   #formatMoodAxes(moodAxes) {
-    const axisOrder = [
-      'valence',
-      'arousal',
-      'agency_control',
-      'threat',
-      'engagement',
-      'future_expectancy',
-      'self_evaluation',
-      'affiliation',
-    ];
-    const parts = axisOrder
-      .filter((key) => typeof moodAxes?.[key] === 'number')
-      .map((key) => `${key}: ${moodAxes[key]}`);
+    const parts = MOOD_AXES.filter(
+      (key) => typeof moodAxes?.[key] === 'number'
+    ).map((key) => `${key}: ${moodAxes[key]}`);
     return parts.join(', ');
   }
 

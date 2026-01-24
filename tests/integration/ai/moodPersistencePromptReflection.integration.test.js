@@ -38,6 +38,7 @@ const ACTOR_ID = 'actor-mood-prompt-test';
 /**
  * Initial mood values - using integers [-100..100] as per schema.
  * These represent a neutral/calm baseline.
+ * Includes all 11 mood axes.
  */
 const INITIAL_MOOD = {
   valence: 0,
@@ -46,7 +47,11 @@ const INITIAL_MOOD = {
   threat: -50, // Safe (negative = safe)
   engagement: 0,
   future_expectancy: 0,
+  temporal_orientation: 0,
   self_evaluation: 0,
+  affiliation: 0,
+  inhibitory_control: 0,
+  uncertainty: 0,
 };
 
 /**
@@ -61,6 +66,7 @@ const INITIAL_SEXUAL_STATE = {
 /**
  * LLM-returned mood update - high valence and engagement should produce
  * emotions like "joy" and "interest" in the formatted output.
+ * Includes all 11 mood axes.
  */
 const MOOD_UPDATE_HIGH_JOY = {
   valence: 80,
@@ -69,7 +75,11 @@ const MOOD_UPDATE_HIGH_JOY = {
   threat: -60, // Very safe
   engagement: 75,
   future_expectancy: 50,
+  temporal_orientation: 20, // Slightly future-focused
   self_evaluation: 60,
+  affiliation: 50,
+  inhibitory_control: 0,
+  uncertainty: -30, // Fairly certain
 };
 
 /**
@@ -335,7 +345,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
       const afterFirstUpdate = actor.getComponentData(MOOD_COMPONENT_ID);
       expect(afterFirstUpdate.valence).toBe(80);
 
-      // Second update - negative shift
+      // Second update - negative shift (all 11 axes)
       const negativeMoodUpdate = {
         valence: -50,
         arousal: -30,
@@ -343,7 +353,11 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
         threat: 40, // Threatened
         engagement: -20,
         future_expectancy: -40,
+        temporal_orientation: -30, // Past-focused (ruminating)
         self_evaluation: -30,
+        affiliation: -20,
+        inhibitory_control: -10,
+        uncertainty: 50, // High uncertainty
       };
 
       persistenceListener.handleEvent({
@@ -455,7 +469,7 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
     it('should correctly persist integer mood values from LLM schema', async () => {
       const actor = await createActorWithMoodAndSexualState();
 
-      // Simulate LLM returning integer values per schema definition
+      // Simulate LLM returning integer values per schema definition (all 11 axes)
       const integerMoodUpdate = {
         valence: -75,
         arousal: 45,
@@ -463,7 +477,11 @@ describe('Mood/Sexual State Persistence and Prompt Reflection', () => {
         threat: 80,
         engagement: 30,
         future_expectancy: -55,
+        temporal_orientation: 10,
         self_evaluation: 15,
+        affiliation: -40,
+        inhibitory_control: 25,
+        uncertainty: 60,
       };
 
       persistenceListener.handleEvent({

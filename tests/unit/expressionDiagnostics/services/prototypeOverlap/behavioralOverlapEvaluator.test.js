@@ -647,8 +647,8 @@ describe('BehavioralOverlapEvaluator', () => {
       const contextBuilder = {
         buildContext: jest.fn(() => ({
           moodAxes: {
-            arousal: 0.75,
-            valence: -0.3,
+            arousal: 75,
+            valence: -30,
           },
         })),
       };
@@ -685,7 +685,47 @@ describe('BehavioralOverlapEvaluator', () => {
       expect(typeof example.contextSummary).toBe('string');
 
       // contextSummary should contain formatted values for relevant axes from prototype weights
-      expect(example.contextSummary).toMatch(/arousal: 0\.75/);
+      expect(example.contextSummary).toMatch(/arousal: 0\.88/);
+    });
+
+    it('normalizes mood axis values for contextSummary display', async () => {
+      const gateChecker = { checkAllGatesPass: jest.fn(() => true) };
+
+      let callCount = 0;
+      const intensityCalc = {
+        computeIntensity: jest.fn(() => {
+          callCount++;
+          return callCount % 2 === 1 ? 0.3 : 0.7;
+        }),
+      };
+
+      const contextBuilder = {
+        buildContext: jest.fn(() => ({
+          moodAxes: {
+            engagement: 100,
+          },
+        })),
+      };
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: intensityCalc,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder,
+        prototypeGateChecker: gateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const protoA = { gates: [], weights: { engagement: 1.0 } };
+      const protoB = { gates: [], weights: { engagement: 0.8 } };
+
+      const result = await evaluator.evaluate(protoA, protoB, 10);
+
+      expect(result.divergenceExamples.length).toBeGreaterThan(0);
+      const example = result.divergenceExamples[0];
+      expect(example.contextSummary).toContain('engagement: 1.00');
     });
 
     it('produces stable examples with same random seed (deterministic inputs)', async () => {
@@ -1543,6 +1583,402 @@ describe('BehavioralOverlapEvaluator', () => {
 
       // Should still include valence from weights
       expect(example.contextSummary).toMatch(/valence/);
+    });
+  });
+
+  // ==========================================================================
+  // V3 Vector-Based Evaluation Tests (PROANAOVEV3-011)
+  // ==========================================================================
+  describe('V3 vector-based evaluation', () => {
+    let mockAgreementMetricsCalculator;
+
+    beforeEach(() => {
+      mockAgreementMetricsCalculator = {
+        calculate: jest.fn(() => ({
+          maeCoPass: 0.1,
+          rmseCoPass: 0.15,
+          maeGlobal: 0.2,
+          rmseGlobal: 0.25,
+          activationJaccard: 0.6,
+          pA_given_B: 0.8,
+          pB_given_A: 0.7,
+          pearsonCoPass: 0.9,
+          pearsonGlobal: 0.85,
+          coPassCount: 50,
+          correlationReliable: true,
+        })),
+      };
+    });
+
+    it('detects V3 mode when options object contains vectors', async () => {
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const vectorA = {
+        gateResults: [true, true, false, true, false],
+        intensities: [0.5, 0.6, 0, 0.7, 0],
+      };
+      const vectorB = {
+        gateResults: [true, false, true, true, false],
+        intensities: [0.4, 0, 0.5, 0.8, 0],
+      };
+
+      const result = await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        { vectorA, vectorB }
+      );
+
+      expect(mockAgreementMetricsCalculator.calculate).toHaveBeenCalledWith(
+        vectorA,
+        vectorB
+      );
+      expect(result.agreementMetrics).toBeDefined();
+      expect(result.agreementMetrics.pearsonCoPass).toBe(0.9);
+    });
+
+    it('falls back to Monte Carlo when sampleCount is a number', async () => {
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const result = await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        10 // V2 mode: sample count as number
+      );
+
+      // Monte Carlo was used, not vector-based
+      expect(mockAgreementMetricsCalculator.calculate).not.toHaveBeenCalled();
+      expect(mockRandomStateGenerator.generate).toHaveBeenCalled();
+      // V2 result does not have agreementMetrics field
+      expect(result.agreementMetrics).toBeUndefined();
+    });
+
+    it('throws error when vectors provided but agreementMetricsCalculator not injected', async () => {
+      // Create evaluator WITHOUT agreementMetricsCalculator
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const vectorA = {
+        gateResults: [true, false],
+        intensities: [0.5, 0],
+      };
+      const vectorB = {
+        gateResults: [true, true],
+        intensities: [0.6, 0.7],
+      };
+
+      await expect(
+        evaluator.evaluate(
+          { gates: [], weights: {} },
+          { gates: [], weights: {} },
+          { vectorA, vectorB }
+        )
+      ).rejects.toThrow('agreementMetricsCalculator required for V3');
+    });
+
+    it('validates agreementMetricsCalculator has calculate method', () => {
+      expect(() => {
+        new BehavioralOverlapEvaluator({
+          prototypeIntensityCalculator: mockIntensityCalculator,
+          randomStateGenerator: mockRandomStateGenerator,
+          contextBuilder: mockContextBuilder,
+          prototypeGateChecker: mockGateChecker,
+          gateConstraintExtractor: mockGateConstraintExtractor,
+          gateImplicationEvaluator: mockGateImplicationEvaluator,
+          agreementMetricsCalculator: {}, // Missing calculate method
+          config: mockConfig,
+          logger: mockLogger,
+        });
+      }).toThrow();
+    });
+
+    it('returns backward-compatible format with V3 agreementMetrics', async () => {
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const vectorA = {
+        gateResults: [true, true, true, false, false],
+        intensities: [0.5, 0.6, 0.7, 0, 0],
+      };
+      const vectorB = {
+        gateResults: [true, false, true, true, false],
+        intensities: [0.4, 0, 0.5, 0.8, 0],
+      };
+
+      const result = await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        { vectorA, vectorB }
+      );
+
+      // Verify backward-compatible structure exists
+      expect(result.gateOverlap).toBeDefined();
+      expect(typeof result.gateOverlap.onEitherRate).toBe('number');
+      expect(typeof result.gateOverlap.onBothRate).toBe('number');
+      expect(typeof result.gateOverlap.pOnlyRate).toBe('number');
+      expect(typeof result.gateOverlap.qOnlyRate).toBe('number');
+
+      expect(result.intensity).toBeDefined();
+      expect(typeof result.intensity.pearsonCorrelation).toBe('number');
+      expect(typeof result.intensity.meanAbsDiff).toBe('number');
+      expect(typeof result.intensity.globalMeanAbsDiff).toBe('number');
+      expect(typeof result.intensity.globalOutputCorrelation).toBe('number');
+
+      expect(result.passRates).toBeDefined();
+      expect(typeof result.passRates.coPassCount).toBe('number');
+
+      // V3-specific field
+      expect(result.agreementMetrics).toBeDefined();
+
+      // Fields not available in V3 mode
+      expect(result.divergenceExamples).toEqual([]);
+      expect(result.highCoactivation).toBeNull();
+      expect(result.gateImplication).toBeNull();
+      expect(result.gateParseInfo).toBeNull();
+    });
+
+    it('computes gate overlap stats from vectors', async () => {
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      // 5 samples: A passes 3 times, B passes 3 times, co-pass is from calculator (50)
+      const vectorA = {
+        gateResults: [true, true, true, false, false],
+        intensities: [0.5, 0.6, 0.7, 0, 0],
+      };
+      const vectorB = {
+        gateResults: [true, false, true, true, false],
+        intensities: [0.4, 0, 0.5, 0.8, 0],
+      };
+
+      const result = await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        { vectorA, vectorB }
+      );
+
+      // passACount = 3, passBCount = 3, coPassCount = 50 (from mock)
+      // However, the actual computation in the code iterates over vectors
+      // passACount should be 3, passBCount should be 3
+      expect(result.passRates.passACount).toBe(3);
+      expect(result.passRates.passBCount).toBe(3);
+      expect(result.passRates.coPassCount).toBe(50); // From mock
+    });
+
+    it('maps agreement metrics to intensity fields correctly', async () => {
+      mockAgreementMetricsCalculator.calculate.mockReturnValue({
+        maeCoPass: 0.12,
+        rmseCoPass: 0.18,
+        maeGlobal: 0.25,
+        rmseGlobal: 0.30,
+        activationJaccard: 0.65,
+        pA_given_B: 0.85,
+        pB_given_A: 0.75,
+        pearsonCoPass: 0.92,
+        pearsonGlobal: 0.88,
+        coPassCount: 100,
+        correlationReliable: true,
+      });
+
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const vectorA = {
+        gateResults: [true, true],
+        intensities: [0.5, 0.6],
+      };
+      const vectorB = {
+        gateResults: [true, true],
+        intensities: [0.4, 0.7],
+      };
+
+      const result = await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        { vectorA, vectorB }
+      );
+
+      // Verify intensity mapping from AgreementMetrics
+      expect(result.intensity.pearsonCorrelation).toBe(0.92);
+      expect(result.intensity.meanAbsDiff).toBe(0.12);
+      expect(result.intensity.rmse).toBe(0.18);
+      expect(result.intensity.globalMeanAbsDiff).toBe(0.25);
+      expect(result.intensity.globalL2Distance).toBe(0.30);
+      expect(result.intensity.globalOutputCorrelation).toBe(0.88);
+    });
+
+    it('handles empty vectors gracefully', async () => {
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const vectorA = {
+        gateResults: [],
+        intensities: [],
+      };
+      const vectorB = {
+        gateResults: [],
+        intensities: [],
+      };
+
+      const result = await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        { vectorA, vectorB }
+      );
+
+      expect(result.gateOverlap.onEitherRate).toBe(0);
+      expect(result.gateOverlap.onBothRate).toBe(0);
+      expect(result.passRates.passACount).toBe(0);
+      expect(result.passRates.passBCount).toBe(0);
+    });
+
+    it('applies minPassSamplesForConditional guardrail in V3 mode', async () => {
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: {
+          ...mockConfig,
+          minPassSamplesForConditional: 500, // High threshold
+        },
+        logger: mockLogger,
+      });
+
+      // Only 3 passes for A and B - below threshold
+      const vectorA = {
+        gateResults: [true, true, true, false, false],
+        intensities: [0.5, 0.6, 0.7, 0, 0],
+      };
+      const vectorB = {
+        gateResults: [true, true, true, false, false],
+        intensities: [0.4, 0.5, 0.6, 0, 0],
+      };
+
+      const result = await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        { vectorA, vectorB }
+      );
+
+      // Conditional probabilities should be NaN due to insufficient samples
+      expect(Number.isNaN(result.passRates.pA_given_B)).toBe(true);
+      expect(Number.isNaN(result.passRates.pB_given_A)).toBe(true);
+    });
+
+    it('logs debug message with V3 prefix', async () => {
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        agreementMetricsCalculator: mockAgreementMetricsCalculator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      const vectorA = {
+        gateResults: [true],
+        intensities: [0.5],
+      };
+      const vectorB = {
+        gateResults: [true],
+        intensities: [0.6],
+      };
+
+      await evaluator.evaluate(
+        { gates: [], weights: {} },
+        { gates: [], weights: {} },
+        { vectorA, vectorB }
+      );
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('(V3)')
+      );
+    });
+
+    it('accepts agreementMetricsCalculator as optional dependency', () => {
+      // Should not throw when agreementMetricsCalculator is not provided
+      const evaluator = new BehavioralOverlapEvaluator({
+        prototypeIntensityCalculator: mockIntensityCalculator,
+        randomStateGenerator: mockRandomStateGenerator,
+        contextBuilder: mockContextBuilder,
+        prototypeGateChecker: mockGateChecker,
+        gateConstraintExtractor: mockGateConstraintExtractor,
+        gateImplicationEvaluator: mockGateImplicationEvaluator,
+        config: mockConfig,
+        logger: mockLogger,
+      });
+
+      expect(evaluator).toBeInstanceOf(BehavioralOverlapEvaluator);
     });
   });
 });

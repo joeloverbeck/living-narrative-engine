@@ -14,12 +14,22 @@ import BehavioralOverlapEvaluator from '../../expressionDiagnostics/services/pro
 import OverlapClassifier from '../../expressionDiagnostics/services/prototypeOverlap/OverlapClassifier.js';
 import OverlapRecommendationBuilder from '../../expressionDiagnostics/services/prototypeOverlap/OverlapRecommendationBuilder.js';
 import PrototypeOverlapAnalyzer from '../../expressionDiagnostics/services/PrototypeOverlapAnalyzer.js';
+import AxisGapAnalyzer from '../../expressionDiagnostics/services/AxisGapAnalyzer.js';
 import PrototypeAnalysisController from '../../domUI/prototype-analysis/PrototypeAnalysisController.js';
 import GateConstraintExtractor from '../../expressionDiagnostics/services/prototypeOverlap/GateConstraintExtractor.js';
 import GateImplicationEvaluator from '../../expressionDiagnostics/services/prototypeOverlap/GateImplicationEvaluator.js';
 import GateBandingSuggestionBuilder from '../../expressionDiagnostics/services/prototypeOverlap/GateBandingSuggestionBuilder.js';
 import GateSimilarityFilter from '../../expressionDiagnostics/services/prototypeOverlap/GateSimilarityFilter.js';
 import BehavioralPrescanFilter from '../../expressionDiagnostics/services/prototypeOverlap/BehavioralPrescanFilter.js';
+
+// V3 Service imports (PROANAOVEV3 series)
+import SharedContextPoolGenerator from '../../expressionDiagnostics/services/prototypeOverlap/SharedContextPoolGenerator.js';
+import PrototypeVectorEvaluator from '../../expressionDiagnostics/services/prototypeOverlap/PrototypeVectorEvaluator.js';
+import { wilsonInterval } from '../../expressionDiagnostics/services/prototypeOverlap/WilsonInterval.js';
+import AgreementMetricsCalculator from '../../expressionDiagnostics/services/prototypeOverlap/AgreementMetricsCalculator.js';
+import PrototypeProfileCalculator from '../../expressionDiagnostics/services/prototypeOverlap/PrototypeProfileCalculator.js';
+import GateASTNormalizer from '../../expressionDiagnostics/services/prototypeOverlap/GateASTNormalizer.js';
+import ActionableSuggestionEngine from '../../expressionDiagnostics/services/prototypeOverlap/ActionableSuggestionEngine.js';
 
 /**
  * Register Prototype Overlap Analysis services.
@@ -48,6 +58,7 @@ export function registerPrototypeOverlapServices(registrar) {
     diagnosticsTokens.IGateImplicationEvaluator,
     (c) =>
       new GateImplicationEvaluator({
+        gateASTNormalizer: c.resolve(diagnosticsTokens.IGateASTNormalizer),
         logger: c.resolve(tokens.ILogger),
       })
   );
@@ -120,6 +131,10 @@ export function registerPrototypeOverlapServices(registrar) {
         gateImplicationEvaluator: c.resolve(
           diagnosticsTokens.IGateImplicationEvaluator
         ),
+        // V3 dependency (PROANAOVEV3-011): optional for backward compatibility
+        agreementMetricsCalculator: c.resolve(
+          diagnosticsTokens.IAgreementMetricsCalculator
+        ),
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
       })
@@ -136,16 +151,22 @@ export function registerPrototypeOverlapServices(registrar) {
   );
 
   // Stage D: Recommendation building
+  // Note: actionableSuggestionEngine is registered in V3 section below but resolved lazily
   registrar.singletonFactory(
     diagnosticsTokens.IOverlapRecommendationBuilder,
     (c) =>
       new OverlapRecommendationBuilder({
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
+        actionableSuggestionEngine: c.resolve(
+          diagnosticsTokens.IActionableSuggestionEngine
+        ),
       })
   );
 
   // Orchestrator: PrototypeOverlapAnalyzer
+  // NOTE: V3 services are registered below and must exist before this factory is called.
+  // The registration order ensures V3 services are available.
   registrar.singletonFactory(
     diagnosticsTokens.IPrototypeOverlapAnalyzer,
     (c) =>
@@ -166,6 +187,18 @@ export function registerPrototypeOverlapServices(registrar) {
         ),
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
+        // V3 services (PROANAOVEV3-013): Enable V3 analysis pipeline
+        sharedContextPoolGenerator: c.resolve(
+          diagnosticsTokens.ISharedContextPoolGenerator
+        ),
+        prototypeVectorEvaluator: c.resolve(
+          diagnosticsTokens.IPrototypeVectorEvaluator
+        ),
+        prototypeProfileCalculator: c.resolve(
+          diagnosticsTokens.IPrototypeProfileCalculator
+        ),
+        // V3 Stage C.5 (AXIGAPDETSPE-009): Axis gap detection
+        axisGapAnalyzer: c.resolve(diagnosticsTokens.IAxisGapAnalyzer),
       })
   );
 
@@ -177,6 +210,121 @@ export function registerPrototypeOverlapServices(registrar) {
         logger: c.resolve(tokens.ILogger),
         prototypeOverlapAnalyzer: c.resolve(
           diagnosticsTokens.IPrototypeOverlapAnalyzer
+        ),
+      })
+  );
+
+  // ========================================
+  // V3 Services (PROANAOVEV3 series)
+  // ========================================
+
+  // SharedContextPoolGenerator: generates shared context pool for consistent prototype evaluation
+  registrar.singletonFactory(
+    diagnosticsTokens.ISharedContextPoolGenerator,
+    (c) =>
+      new SharedContextPoolGenerator({
+        randomStateGenerator: c.resolve(diagnosticsTokens.IRandomStateGenerator),
+        contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
+        logger: c.resolve(tokens.ILogger),
+        poolSize: PROTOTYPE_OVERLAP_CONFIG.sharedPoolSize,
+        stratified: PROTOTYPE_OVERLAP_CONFIG.enableStratifiedSampling,
+        stratumCount: PROTOTYPE_OVERLAP_CONFIG.stratumCount,
+        stratificationStrategy: PROTOTYPE_OVERLAP_CONFIG.stratificationStrategy,
+        randomSeed: PROTOTYPE_OVERLAP_CONFIG.poolRandomSeed,
+      })
+  );
+
+  // PrototypeVectorEvaluator: evaluates prototypes on shared context pool
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeVectorEvaluator,
+    (c) =>
+      new PrototypeVectorEvaluator({
+        prototypeGateChecker: c.resolve(diagnosticsTokens.IPrototypeGateChecker),
+        prototypeIntensityCalculator: c.resolve(
+          diagnosticsTokens.IPrototypeIntensityCalculator
+        ),
+        contextAxisNormalizer: c.resolve(diagnosticsTokens.IContextAxisNormalizer),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // WilsonInterval: pure function for confidence interval calculation
+  registrar.singletonFactory(
+    diagnosticsTokens.IWilsonInterval,
+    () => wilsonInterval
+  );
+
+  // AgreementMetricsCalculator: computes MAE/RMSE/CI metrics
+  registrar.singletonFactory(
+    diagnosticsTokens.IAgreementMetricsCalculator,
+    (c) =>
+      new AgreementMetricsCalculator({
+        wilsonInterval: c.resolve(diagnosticsTokens.IWilsonInterval),
+        confidenceLevel: PROTOTYPE_OVERLAP_CONFIG.confidenceLevel,
+        minSamplesForReliableCorrelation:
+          PROTOTYPE_OVERLAP_CONFIG.minSamplesForReliableCorrelation,
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // PrototypeProfileCalculator: computes per-prototype profile signals
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeProfileCalculator,
+    (c) =>
+      new PrototypeProfileCalculator({
+        config: {
+          lowVolumeThreshold: PROTOTYPE_OVERLAP_CONFIG.lowVolumeThreshold,
+          lowNoveltyThreshold: PROTOTYPE_OVERLAP_CONFIG.lowNoveltyThreshold,
+          singleAxisFocusThreshold:
+            PROTOTYPE_OVERLAP_CONFIG.singleAxisFocusThreshold,
+          clusterCount: PROTOTYPE_OVERLAP_CONFIG.clusterCount,
+          clusteringMethod: PROTOTYPE_OVERLAP_CONFIG.clusteringMethod,
+        },
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // AxisGapAnalyzer: detects missing axis dimensions
+  registrar.singletonFactory(
+    diagnosticsTokens.IAxisGapAnalyzer,
+    (c) =>
+      new AxisGapAnalyzer({
+        prototypeProfileCalculator: c.resolve(
+          diagnosticsTokens.IPrototypeProfileCalculator
+        ),
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // GateASTNormalizer: canonical AST representation for gates
+  registrar.singletonFactory(
+    diagnosticsTokens.IGateASTNormalizer,
+    (c) =>
+      new GateASTNormalizer({
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // ActionableSuggestionEngine: data-driven threshold suggestions
+  registrar.singletonFactory(
+    diagnosticsTokens.IActionableSuggestionEngine,
+    (c) =>
+      new ActionableSuggestionEngine({
+        config: {
+          minSamplesForStump: PROTOTYPE_OVERLAP_CONFIG.minSamplesForStump,
+          minInfoGainForSuggestion:
+            PROTOTYPE_OVERLAP_CONFIG.minInfoGainForSuggestion,
+          divergenceThreshold: PROTOTYPE_OVERLAP_CONFIG.divergenceThreshold,
+          maxSuggestionsPerPair: PROTOTYPE_OVERLAP_CONFIG.maxSuggestionsPerPair,
+          minOverlapReductionForSuggestion:
+            PROTOTYPE_OVERLAP_CONFIG.minOverlapReductionForSuggestion,
+          minActivationRateAfterSuggestion:
+            PROTOTYPE_OVERLAP_CONFIG.minActivationRateAfterSuggestion,
+        },
+        logger: c.resolve(tokens.ILogger),
+        contextAxisNormalizer: c.resolve(
+          diagnosticsTokens.IContextAxisNormalizer
         ),
       })
   );

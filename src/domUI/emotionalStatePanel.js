@@ -1,7 +1,7 @@
 // src/domUI/emotionalStatePanel.js
 
 /**
- * @file Widget displaying character's current emotional state as 9 mood axes.
+ * @file Widget displaying character's current emotional state as 11 mood axes.
  *
  * Subscribes to TURN_STARTED_ID to refresh the current actor's emotional state.
  * Subscribes to COMPONENT_ADDED_ID to refresh when mood component changes.
@@ -36,9 +36,11 @@ const AXIS_COLORS = {
   threat: { negative: '#28a745', positive: '#dc3545' }, // green to red
   engagement: { negative: '#adb5bd', positive: '#0dcaf0' }, // light gray to cyan
   future_expectancy: { negative: '#6f42c1', positive: '#20c997' }, // purple to teal
+  temporal_orientation: { negative: '#8B4513', positive: '#00CED1' }, // sepia for past, teal for future
   self_evaluation: { negative: '#fd7e14', positive: '#6610f2' }, // orange to indigo
   affiliation: { negative: '#4e73df', positive: '#e83e8c' }, // cool blue to warm pink
   inhibitory_control: { negative: '#FF7043', positive: '#7E57C2' }, // orange for impulsive, purple for restrained
+  uncertainty: { negative: '#4FC3F7', positive: '#7B1FA2' }, // light blue for certain, purple for uncertain
 };
 
 /**
@@ -53,9 +55,11 @@ const AXIS_LABELS = {
   threat: { negative: 'Safe', positive: 'Endangered' },
   engagement: { negative: 'Indifferent', positive: 'Absorbed' },
   future_expectancy: { negative: 'Hopeless', positive: 'Hopeful' },
+  temporal_orientation: { negative: 'Past-focused', positive: 'Future-focused' },
   self_evaluation: { negative: 'Shame', positive: 'Pride' },
   affiliation: { negative: 'Detached', positive: 'Connected' },
   inhibitory_control: { negative: 'Impulsive', positive: 'Restrained' },
+  uncertainty: { negative: 'Certain', positive: 'Uncertain' },
 };
 
 /**
@@ -70,16 +74,18 @@ const AXIS_ORDER = [
   'threat',
   'engagement',
   'future_expectancy',
+  'temporal_orientation',
   'self_evaluation',
   'affiliation',
   'inhibitory_control',
+  'uncertainty',
 ];
 
 /**
- * Widget displaying character's current emotional state as 9 mood axis bars.
+ * Widget displaying character's current emotional state as 11 mood axis bars.
  *
  * Displays:
- * - 9 horizontal bars representing mood axes
+ * - 11 horizontal bars representing mood axes
  * - Each bar shows negative values extending left, positive values extending right
  * - Calculated emotions text below the bars
  *

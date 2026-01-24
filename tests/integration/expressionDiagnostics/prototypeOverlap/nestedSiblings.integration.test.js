@@ -11,6 +11,15 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { diagnosticsTokens } from '../../../../src/dependencyInjection/tokens/tokens-diagnostics.js';
 import { registerExpressionServices } from '../../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { registerExpressionDiagnosticsServices } from '../../../../src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
+import SharedContextPoolGenerator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/SharedContextPoolGenerator.js';
+import { PROTOTYPE_OVERLAP_CONFIG } from '../../../../src/expressionDiagnostics/config/prototypeOverlapConfig.js';
+
+const TEST_SHARED_POOL_SIZE = 5000;
+const TEST_POOL_SEED = 1337;
+const getExpectedRecommendationType = (result) =>
+  result.metadata.analysisMode === 'v3'
+    ? 'prototype_subsumption_suggestion'
+    : 'prototype_nested_siblings';
 
 /**
  * Prototype pair designed to trigger NESTED_SIBLINGS classification.
@@ -62,6 +71,8 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
   let dom;
   let container;
   let analyzer;
+  let baseResult;
+  let baseResultRepeat;
 
   beforeAll(async () => {
     // Setup minimal DOM environment
@@ -94,6 +105,21 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
         // Register diagnostics services
         registerExpressionDiagnosticsServices(c);
 
+        const sharedPoolGenerator = new SharedContextPoolGenerator({
+          randomStateGenerator: c.resolve(diagnosticsTokens.IRandomStateGenerator),
+          contextBuilder: c.resolve(diagnosticsTokens.IMonteCarloContextBuilder),
+          logger: c.resolve(tokens.ILogger),
+          poolSize: TEST_SHARED_POOL_SIZE,
+          stratified: PROTOTYPE_OVERLAP_CONFIG.enableStratifiedSampling,
+          stratumCount: PROTOTYPE_OVERLAP_CONFIG.stratumCount,
+          stratificationStrategy: PROTOTYPE_OVERLAP_CONFIG.stratificationStrategy,
+          randomSeed: TEST_POOL_SEED,
+        });
+        c.setOverride(
+          diagnosticsTokens.ISharedContextPoolGenerator,
+          sharedPoolGenerator
+        );
+
         // Register nested sibling prototypes for testing
         const dataRegistry = c.resolve(tokens.IDataRegistry);
         dataRegistry.store('lookups', 'core:emotion_prototypes', {
@@ -111,6 +137,15 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
 
     container = result.container;
     analyzer = container.resolve(diagnosticsTokens.IPrototypeOverlapAnalyzer);
+
+    baseResult = await analyzer.analyze({
+      prototypeFamily: 'emotion',
+      sampleCount: 4000,
+    });
+    baseResultRepeat = await analyzer.analyze({
+      prototypeFamily: 'emotion',
+      sampleCount: 4000,
+    });
   });
 
   afterAll(() => {
@@ -125,14 +160,10 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
 
   describe('interest ↔ curiosity style pair (nested siblings)', () => {
     it('should classify prototypes with nesting behavior as prototype_nested_siblings', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
       // Find nested sibling recommendations
-      const nestedRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const expectedType = getExpectedRecommendationType(baseResult);
+      const nestedRecs = baseResult.recommendations.filter(
+        (r) => r.type === expectedType
       );
 
       // With properly designed nested prototypes, we expect at least one nested sibling recommendation
@@ -150,13 +181,9 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
     });
 
     it('should include complete v2 evidence fields', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const nestedRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const expectedType = getExpectedRecommendationType(baseResult);
+      const nestedRecs = baseResult.recommendations.filter(
+        (r) => r.type === expectedType
       );
 
       // Skip if no nested sibling recommendations (prototypes may not meet all criteria)
@@ -185,7 +212,12 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
       // For nested siblings, one conditional should be high (>= 0.97)
       const pA_given_B = evidence.passRates.pA_given_B;
       const pB_given_A = evidence.passRates.pB_given_A;
-      const hasHighConditional = pA_given_B >= 0.97 || pB_given_A >= 0.97;
+      const minConditional =
+        baseResult.metadata.analysisMode === 'v3'
+          ? PROTOTYPE_OVERLAP_CONFIG.minConditionalProbForNesting
+          : 0.97;
+      const hasHighConditional =
+        pA_given_B >= minConditional || pB_given_A >= minConditional;
       expect(hasHighConditional).toBe(true);
 
       // Verify intensitySimilarity structure
@@ -199,16 +231,12 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
     });
 
     it('should include expression_suppression suggestion for nested siblings', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const nestedRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const expectedType = getExpectedRecommendationType(baseResult);
+      const nestedRecs = baseResult.recommendations.filter(
+        (r) => r.type === expectedType
       );
 
-      if (nestedRecs.length === 0) {
+      if (nestedRecs.length === 0 || expectedType !== 'prototype_nested_siblings') {
         return;
       }
 
@@ -228,21 +256,12 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
     });
 
     it('should produce deterministic results', async () => {
-      const result1 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const result2 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const nestedRecs1 = result1.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const expectedType = getExpectedRecommendationType(baseResult);
+      const nestedRecs1 = baseResult.recommendations.filter(
+        (r) => r.type === expectedType
       );
-      const nestedRecs2 = result2.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const nestedRecs2 = baseResultRepeat.recommendations.filter(
+        (r) => r.type === expectedType
       );
 
       expect(nestedRecs1.length).toBe(nestedRecs2.length);
@@ -256,13 +275,9 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
     });
 
     it('should have valid severity and confidence values', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const nestedRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const expectedType = getExpectedRecommendationType(baseResult);
+      const nestedRecs = baseResult.recommendations.filter(
+        (r) => r.type === expectedType
       );
 
       if (nestedRecs.length === 0) {
@@ -281,13 +296,9 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
     });
 
     it('should include appropriate actions for nested siblings', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const nestedRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const expectedType = getExpectedRecommendationType(baseResult);
+      const nestedRecs = baseResult.recommendations.filter(
+        (r) => r.type === expectedType
       );
 
       if (nestedRecs.length === 0) {
@@ -299,16 +310,25 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
       expect(Array.isArray(rec.actions)).toBe(true);
       expect(rec.actions.length).toBeGreaterThan(0);
 
-      // Actions should mention hierarchy, nesting, specialization, or inheritance
-      const hasNestingAction = rec.actions.some(
-        (action) =>
-          action.toLowerCase().includes('special') ||
-          action.toLowerCase().includes('inherit') ||
-          action.toLowerCase().includes('nest') ||
-          action.toLowerCase().includes('hier') ||
-          action.toLowerCase().includes('reference')
-      );
-      expect(hasNestingAction).toBe(true);
+      if (expectedType === 'prototype_nested_siblings') {
+        const hasNestingAction = rec.actions.some(
+          (action) =>
+            action.toLowerCase().includes('special') ||
+            action.toLowerCase().includes('inherit') ||
+            action.toLowerCase().includes('nest') ||
+            action.toLowerCase().includes('hier') ||
+            action.toLowerCase().includes('reference')
+        );
+        expect(hasNestingAction).toBe(true);
+      } else {
+        const hasSubsumedAction = rec.actions.some(
+          (action) =>
+            action.toLowerCase().includes('subset') ||
+            action.toLowerCase().includes('remove') ||
+            action.toLowerCase().includes('differentiate')
+        );
+        expect(hasSubsumedAction).toBe(true);
+      }
     });
   });
 
@@ -343,13 +363,9 @@ describe('PrototypeOverlapAnalyzer - NESTED_SIBLINGS Integration', () => {
 
   describe('Gate implication evidence', () => {
     it('should include gate implication evidence when available', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const nestedRecs = result.recommendations.filter(
-        (r) => r.type === 'prototype_nested_siblings'
+      const expectedType = getExpectedRecommendationType(baseResult);
+      const nestedRecs = baseResult.recommendations.filter(
+        (r) => r.type === expectedType
       );
 
       if (nestedRecs.length === 0) {

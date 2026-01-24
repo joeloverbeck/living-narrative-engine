@@ -21,14 +21,36 @@ describe('GateImplicationEvaluator', () => {
   });
 
   /**
+   * Create a mock GateASTNormalizer for testing.
+   *
+   * @returns {object} Mock normalizer
+   */
+  const createMockGateASTNormalizer = () => ({
+    parse: jest.fn().mockReturnValue({
+      ast: { type: 'comparison', axis: 'test', operator: '>=', threshold: 0.5 },
+      parseComplete: true,
+      errors: [],
+    }),
+    checkImplication: jest.fn().mockReturnValue({
+      implies: false,
+      isVacuous: false,
+    }),
+    toString: jest.fn().mockReturnValue('test >= 0.5'),
+  });
+
+  /**
    * Create evaluator instance for testing.
    *
-   * @returns {{evaluator: GateImplicationEvaluator, logger: object}} Evaluator and mock logger
+   * @returns {{evaluator: GateImplicationEvaluator, logger: object, mockGateASTNormalizer: object}} Evaluator and mocks
    */
   const createEvaluator = () => {
     const logger = createMockLogger();
-    const evaluator = new GateImplicationEvaluator({ logger });
-    return { evaluator, logger };
+    const mockGateASTNormalizer = createMockGateASTNormalizer();
+    const evaluator = new GateImplicationEvaluator({
+      gateASTNormalizer: mockGateASTNormalizer,
+      logger,
+    });
+    return { evaluator, logger, mockGateASTNormalizer };
   };
 
   /**
@@ -46,19 +68,54 @@ describe('GateImplicationEvaluator', () => {
   });
 
   describe('constructor', () => {
-    it('should create instance with valid logger', () => {
+    it('should create instance with valid dependencies', () => {
       const { evaluator } = createEvaluator();
       expect(evaluator).toBeInstanceOf(GateImplicationEvaluator);
     });
 
     it('should throw when logger is missing', () => {
-      expect(() => new GateImplicationEvaluator({ logger: null })).toThrow();
+      const mockGateASTNormalizer = createMockGateASTNormalizer();
+      expect(
+        () =>
+          new GateImplicationEvaluator({
+            gateASTNormalizer: mockGateASTNormalizer,
+            logger: null,
+          })
+      ).toThrow();
     });
 
     it('should throw when logger lacks required methods', () => {
+      const mockGateASTNormalizer = createMockGateASTNormalizer();
       const invalidLogger = { debug: jest.fn() }; // Missing warn, error
       expect(
-        () => new GateImplicationEvaluator({ logger: invalidLogger })
+        () =>
+          new GateImplicationEvaluator({
+            gateASTNormalizer: mockGateASTNormalizer,
+            logger: invalidLogger,
+          })
+      ).toThrow();
+    });
+
+    it('should throw when gateASTNormalizer is missing', () => {
+      const logger = createMockLogger();
+      expect(
+        () =>
+          new GateImplicationEvaluator({
+            gateASTNormalizer: null,
+            logger,
+          })
+      ).toThrow();
+    });
+
+    it('should throw when gateASTNormalizer lacks required methods', () => {
+      const logger = createMockLogger();
+      const invalidNormalizer = { parse: jest.fn() }; // Missing checkImplication, toString
+      expect(
+        () =>
+          new GateImplicationEvaluator({
+            gateASTNormalizer: invalidNormalizer,
+            logger,
+          })
       ).toThrow();
     });
   });
@@ -673,6 +730,196 @@ describe('GateImplicationEvaluator', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('unsatisfiable')
       );
+    });
+  });
+
+  describe('checkImplication (AST-based)', () => {
+    describe('successful parsing', () => {
+      it('should return deterministic confidence when both gates parse', () => {
+        const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+        const gateA = { and: [{ '>=': [{ var: 'valence' }, 0.5] }] };
+        const gateB = { and: [{ '>=': [{ var: 'valence' }, 0.3] }] };
+
+        const result = evaluator.checkImplication(gateA, gateB);
+
+        expect(result.parseComplete).toBe(true);
+        expect(result.confidence).toBe('deterministic');
+        expect(mockGateASTNormalizer.parse).toHaveBeenCalledTimes(2);
+        expect(mockGateASTNormalizer.checkImplication).toHaveBeenCalled();
+      });
+
+      it('should detect A implies B correctly', () => {
+        const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+        mockGateASTNormalizer.checkImplication.mockReturnValue({
+          implies: true,
+          isVacuous: false,
+        });
+
+        const gateA = 'valence >= 0.5';
+        const gateB = 'valence >= 0.3';
+
+        const result = evaluator.checkImplication(gateA, gateB);
+
+        expect(result.implies).toBe(true);
+        expect(result.isVacuous).toBe(false);
+        expect(result.parseComplete).toBe(true);
+      });
+
+      it('should detect vacuous implications', () => {
+        const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+        mockGateASTNormalizer.checkImplication.mockReturnValue({
+          implies: true,
+          isVacuous: true,
+        });
+
+        const gateA = null;
+        const gateB = 'valence >= 0.5';
+
+        const result = evaluator.checkImplication(gateA, gateB);
+
+        expect(result.implies).toBe(true);
+        expect(result.isVacuous).toBe(true);
+      });
+
+      it('should return empty parseErrors on success', () => {
+        const { evaluator } = createEvaluator();
+
+        const gateA = 'valence >= 0.5';
+        const gateB = 'arousal >= 0.3';
+
+        const result = evaluator.checkImplication(gateA, gateB);
+
+        expect(result.parseErrors).toEqual([]);
+      });
+    });
+
+    describe('parse failures', () => {
+      it('should return unknown confidence when gateA fails to parse', () => {
+        const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+        mockGateASTNormalizer.parse
+          .mockReturnValueOnce({
+            ast: null,
+            parseComplete: false,
+            errors: ['Invalid gate A syntax'],
+          })
+          .mockReturnValueOnce({
+            ast: { type: 'comparison' },
+            parseComplete: true,
+            errors: [],
+          });
+
+        const result = evaluator.checkImplication('invalid', 'valence >= 0.5');
+
+        expect(result.parseComplete).toBe(false);
+        expect(result.confidence).toBe('unknown');
+        expect(result.implies).toBe(false);
+      });
+
+      it('should return unknown confidence when gateB fails to parse', () => {
+        const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+        mockGateASTNormalizer.parse
+          .mockReturnValueOnce({
+            ast: { type: 'comparison' },
+            parseComplete: true,
+            errors: [],
+          })
+          .mockReturnValueOnce({
+            ast: null,
+            parseComplete: false,
+            errors: ['Invalid gate B syntax'],
+          });
+
+        const result = evaluator.checkImplication('valence >= 0.5', 'invalid');
+
+        expect(result.parseComplete).toBe(false);
+        expect(result.confidence).toBe('unknown');
+        expect(result.implies).toBe(false);
+      });
+
+      it('should collect parse errors from both gates', () => {
+        const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+        mockGateASTNormalizer.parse
+          .mockReturnValueOnce({
+            ast: null,
+            parseComplete: false,
+            errors: ['Error in gate A'],
+          })
+          .mockReturnValueOnce({
+            ast: null,
+            parseComplete: false,
+            errors: ['Error in gate B'],
+          });
+
+        const result = evaluator.checkImplication('invalid1', 'invalid2');
+
+        expect(result.parseErrors).toContain('Error in gate A');
+        expect(result.parseErrors).toContain('Error in gate B');
+        expect(result.parseErrors).toHaveLength(2);
+      });
+
+      it('should return implies=false when parsing fails', () => {
+        const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+        mockGateASTNormalizer.parse.mockReturnValue({
+          ast: null,
+          parseComplete: false,
+          errors: ['Parse error'],
+        });
+
+        const result = evaluator.checkImplication('bad', 'worse');
+
+        expect(result.implies).toBe(false);
+        expect(result.isVacuous).toBe(false);
+      });
+    });
+  });
+
+  describe('describeGate', () => {
+    it('should return human-readable string for valid gate', () => {
+      const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+      mockGateASTNormalizer.toString.mockReturnValue('valence >= 0.5');
+
+      const result = evaluator.describeGate('valence >= 0.5');
+
+      expect(result).toBe('valence >= 0.5');
+      expect(mockGateASTNormalizer.parse).toHaveBeenCalled();
+      expect(mockGateASTNormalizer.toString).toHaveBeenCalled();
+    });
+
+    it('should return error message for unparseable gate', () => {
+      const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+      mockGateASTNormalizer.parse.mockReturnValue({
+        ast: null,
+        parseComplete: false,
+        errors: ['Invalid syntax'],
+      });
+
+      const result = evaluator.describeGate('invalid gate');
+
+      expect(result).toBe('[Unparseable gate: Invalid syntax]');
+      expect(mockGateASTNormalizer.toString).not.toHaveBeenCalled();
+    });
+
+    it('should include all error messages in unparseable output', () => {
+      const { evaluator, mockGateASTNormalizer } = createEvaluator();
+
+      mockGateASTNormalizer.parse.mockReturnValue({
+        ast: null,
+        parseComplete: false,
+        errors: ['Error 1', 'Error 2', 'Error 3'],
+      });
+
+      const result = evaluator.describeGate('complex invalid gate');
+
+      expect(result).toBe('[Unparseable gate: Error 1, Error 2, Error 3]');
     });
   });
 });

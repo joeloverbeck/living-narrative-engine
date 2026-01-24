@@ -25,14 +25,6 @@
             <option value="sexual">Sexual States</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="sample-count">Sample Count:</label>
-          <select id="sample-count" class="form-select">
-            <option value="2000">2,000 (Fast)</option>
-            <option value="8000" selected>8,000 (Standard)</option>
-            <option value="20000">20,000 (Thorough)</option>
-          </select>
-        </div>
         <button id="run-analysis-btn" class="action-button" disabled>
           Run Analysis
         </button>
@@ -58,6 +50,148 @@
         </div>
         <div id="empty-state" class="empty-state" hidden>
           <p>No overlapping prototypes detected. All prototypes are sufficiently distinct.</p>
+        </div>
+      </section>
+
+      <!-- Axis Gap Analysis Panel (hidden by default) -->
+      <section id="axis-gap-panel" class="panel axis-gap-panel" hidden>
+        <h2>Axis Space Analysis</h2>
+
+        <div class="axis-gap-summary">
+          <div class="summary-item">
+            <span class="summary-label">Prototypes Analyzed:</span>
+            <span id="axis-gap-total-prototypes" class="summary-value">--</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Recommendations:</span>
+            <span id="axis-gap-recommendations" class="summary-value">--</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Confidence:</span>
+            <span id="axis-gap-confidence" class="summary-value confidence-badge">--</span>
+            <span class="help-text" title="Low: 0-1 detection methods triggered | Medium: 2 methods | High: 3-4 methods">(?)</span>
+          </div>
+        </div>
+        <p class="confidence-explanation">
+          Confidence reflects how many independent detection methods agree:
+          <strong>Low</strong> (0-1 methods), <strong>Medium</strong> (2 methods), <strong>High</strong> (3-4 methods).
+        </p>
+
+        <div id="decision-panel" class="decision-panel">
+          <div class="decision-header">
+            <span class="decision-label">New Axis Recommended?</span>
+            <span id="decision-verdict" class="decision-badge verdict-no">NO</span>
+          </div>
+          <p id="decision-rationale" class="decision-rationale">Analysis not yet run.</p>
+          <div class="variance-summary">
+            <span class="variance-label">Explained by top 4 PCs:</span>
+            <span id="variance-top4" class="variance-value">--</span>
+          </div>
+        </div>
+
+        <div class="signal-breakdown">
+          <h4>Signal Sources</h4>
+          <div class="signal-grid">
+            <div class="signal-item" id="signal-pca-item">
+              <span id="signal-pca-status" class="signal-status pass">✓ PASS</span>
+              <span class="signal-label">PCA Analysis:</span>
+              <span id="signal-pca" class="signal-value">0</span>
+              <span id="signal-pca-threshold" class="signal-threshold">(residual ≤15%)</span>
+            </div>
+            <div class="signal-item" id="signal-hubs-item">
+              <span id="signal-hubs-status" class="signal-status pass">✓ PASS</span>
+              <span class="signal-label">Hub Prototypes:</span>
+              <span id="signal-hubs" class="signal-value">0</span>
+              <span id="signal-hubs-threshold" class="signal-threshold">(no connectors)</span>
+            </div>
+            <div class="signal-item" id="signal-coverage-gaps-item">
+              <span id="signal-coverage-gaps-status" class="signal-status pass">✓ PASS</span>
+              <span class="signal-label">Coverage Gaps:</span>
+              <span id="signal-coverage-gaps" class="signal-value">0</span>
+              <span id="signal-coverage-gaps-threshold" class="signal-threshold">(distance ≤0.6)</span>
+            </div>
+            <div class="signal-item" id="signal-multi-axis-conflicts-item">
+              <span id="signal-multi-axis-conflicts-status" class="signal-status pass">✓ PASS</span>
+              <span class="signal-label">Multi-Axis Conflicts:</span>
+              <span id="signal-multi-axis-conflicts" class="signal-value">0</span>
+              <span id="signal-multi-axis-conflicts-threshold" class="signal-threshold">(balanced usage)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pca-summary">
+          <h3>Dimensionality Analysis (PCA)</h3>
+          <p class="section-description">
+            Principal Component Analysis reveals whether the current axis set captures prototype variance.
+            High residual variance suggests missing dimensions.
+          </p>
+          <div class="metric-row">
+            <span class="metric-label">Residual Variance:</span>
+            <span id="residual-variance" class="metric-value">--</span>
+            <span class="help-text" title="Variance not explained by current axes. >15% (alert): likely missing important dimensions. 10-15% (warning): consider adding axes. <10% (good): current axes adequate.">(?)</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Additional Components Suggested:</span>
+            <span id="additional-components" class="metric-value">--</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Dimensions Used:</span>
+            <span id="pca-dimensions-used" class="metric-value">--</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Components for 80% Variance:</span>
+            <span id="components-for-80" class="metric-value">--</span>
+            <span class="help-text" title="Number of principal components needed to explain 80% of total variance. Lower is better - fewer dimensions capture most information.">(?)</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Components for 90% Variance:</span>
+            <span id="components-for-90" class="metric-value">--</span>
+            <span class="help-text" title="Number of principal components needed to explain 90% of total variance. Compare with current axis count to gauge dimensionality adequacy.">(?)</span>
+          </div>
+          <div id="pca-dimensions-list" class="dimensions-list"></div>
+          <div id="pca-top-loading" class="top-loading-list"></div>
+          <div id="poorly-fitting-prototypes" class="poorly-fitting-section">
+            <h4>Poorly Fitting Prototypes</h4>
+            <p class="pca-subtitle">Prototypes with highest reconstruction error (don't fit well in current axis space)</p>
+            <ul id="poorly-fitting-list" class="poorly-fitting-list"></ul>
+          </div>
+        </div>
+
+        <div class="hub-prototypes">
+          <h3>Hub Prototypes</h3>
+          <p class="section-description">
+            Prototypes connecting multiple clusters may indicate missing dimensions.
+          </p>
+          <ul id="hub-list" class="prototype-list"></ul>
+        </div>
+
+        <div class="coverage-gaps">
+          <h3>Coverage Gaps</h3>
+          <p class="section-description">
+            Prototype clusters distant from all existing axes.
+          </p>
+          <ul id="coverage-gap-list" class="gap-list"></ul>
+        </div>
+
+        <div class="multi-axis-conflicts">
+          <h3>Multi-Axis Conflicts</h3>
+          <p class="section-description">
+            Prototypes using many axes with conflicting signs.
+          </p>
+          <ul id="conflict-list" class="conflict-list"></ul>
+        </div>
+
+        <div class="axis-recommendations">
+          <h3>Axis Recommendations</h3>
+          <ul id="axis-recommendations-list" class="axis-recommendations-list"></ul>
+        </div>
+
+        <div class="prototype-weight-cards">
+          <h3>Flagged Prototypes Analysis</h3>
+          <p class="section-description">
+            Prototypes flagged by detection methods with their dominant axis weights.
+          </p>
+          <div id="prototype-cards-container" class="prototype-cards-container"></div>
         </div>
       </section>
     </main>

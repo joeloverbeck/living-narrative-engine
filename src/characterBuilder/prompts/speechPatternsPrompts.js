@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file Prompt templates for speech patterns generation
  * @see ../models/speechPattern.js

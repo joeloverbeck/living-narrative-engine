@@ -48,7 +48,7 @@ describe('PrototypeOverlapAnalyzer - V2 Full Integration', () => {
    * @returns {object} Mock filter
    */
   const createMockCandidatePairFilter = (candidatePairs = []) => ({
-    filterCandidates: jest.fn().mockReturnValue({
+    filterCandidates: jest.fn().mockResolvedValue({
       candidates: candidatePairs,
       stats: {
         totalPossiblePairs: candidatePairs.length > 0 ? 10 : 0,

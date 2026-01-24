@@ -52,14 +52,44 @@ describe('moodUpdateOnlyInstructionText affiliation axis', () => {
     expect(instructionText).toMatch(/"affiliation":\s*\.\.\./);
   });
 
-  test('should mention 9 mood axes (not 8) in mood ranges documentation', () => {
+  test('should mention 11 mood axes in mood ranges documentation', () => {
     const instructionText = corePromptText.moodUpdateOnlyInstructionText;
 
-    // Should reference 9 axes including inhibitory_control
-    // The RANGES section lists all mood axes - affiliation and inhibitory_control should be included
+    // Should reference 11 axes including temporal_orientation, inhibitory_control and uncertainty
+    // The RANGES section lists all mood axes
     expect(instructionText).toMatch(
-      /valence.*arousal.*agency_control.*threat.*engagement.*future_expectancy.*self_evaluation.*affiliation.*inhibitory_control/i
+      /valence.*arousal.*agency_control.*threat.*engagement.*future_expectancy.*temporal_orientation.*self_evaluation.*affiliation.*inhibitory_control.*uncertainty/i
     );
+  });
+
+  test('should mention uncertainty axis in AXIS DEFINITIONS section', () => {
+    const instructionText = corePromptText.moodUpdateOnlyInstructionText;
+
+    // The instruction text should define the uncertainty axis
+    expect(instructionText).toMatch(/uncertainty/i);
+  });
+
+  test('should define uncertainty with certain/uncertain semantics', () => {
+    const instructionText = corePromptText.moodUpdateOnlyInstructionText;
+
+    // The definition should include key semantic terms
+    expect(instructionText).toMatch(/uncertain|cannot integrate/i);
+    expect(instructionText).toMatch(/certain|coherent model/i);
+  });
+
+  test('should include uncertainty in the OUTPUT FORMAT JSON example', () => {
+    const instructionText = corePromptText.moodUpdateOnlyInstructionText;
+
+    // The JSON output format should include uncertainty
+    expect(instructionText).toMatch(/"uncertainty":\s*\.\.\./);
+  });
+
+  test('should include uncertainty heuristics in DEFAULT UPDATE HEURISTICS', () => {
+    const instructionText = corePromptText.moodUpdateOnlyInstructionText;
+
+    // At least one of the uncertainty heuristics should be present
+    expect(instructionText).toMatch(/Contradictory information.*Uncertainty up/i);
+    expect(instructionText).toMatch(/Clear.*consistent information.*Uncertainty down/i);
   });
 
   test('should define inhibitory_control axis with restraint/impulsive semantics', () => {
@@ -127,9 +157,9 @@ describe('mood component schema alignment', () => {
     expect(required).toContain('affiliation');
   });
 
-  test('mood component should define 10 axes total', () => {
+  test('mood component should define 11 axes total', () => {
     const required = moodComponentSchema.dataSchema.required;
-    expect(required.length).toBe(10);
+    expect(required.length).toBe(11);
     expect(required).toEqual(
       expect.arrayContaining([
         'valence',
@@ -138,6 +168,7 @@ describe('mood component schema alignment', () => {
         'threat',
         'engagement',
         'future_expectancy',
+        'temporal_orientation',
         'self_evaluation',
         'affiliation',
         'inhibitory_control',

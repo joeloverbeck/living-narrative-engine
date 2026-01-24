@@ -1224,4 +1224,407 @@ describe('OverlapRecommendationBuilder', () => {
       expect(valenceDriver).toBeDefined();
     });
   });
+
+  describe('V3 Data-Driven Suggestions', () => {
+    /**
+     * Create a mock actionable suggestion engine.
+     *
+     * @param {Array} suggestions - Suggestions to return
+     * @returns {object} Mock engine
+     */
+    const createMockActionableSuggestionEngine = (suggestions = []) => ({
+      generateSuggestions: jest.fn().mockReturnValue(suggestions),
+    });
+
+    /**
+     * Create V3 data structure for testing.
+     *
+     * @returns {object} V3 data
+     */
+    const createV3Data = () => ({
+      vectorA: {
+        gateResults: new Float32Array([1, 1, 0]),
+        intensities: new Float32Array([0.5, 0.6, 0]),
+      },
+      vectorB: {
+        gateResults: new Float32Array([1, 0, 1]),
+        intensities: new Float32Array([0.5, 0, 0.7]),
+      },
+      contextPool: [{ arousal: 0.5 }, { arousal: 0.6 }, { arousal: 0.7 }],
+    });
+
+    /**
+     * Create valid suggestion.
+     *
+     * @param {object} overrides - Override defaults
+     * @returns {object} Suggestion
+     */
+    const createValidSuggestion = (overrides = {}) => ({
+      axis: 'arousal',
+      type: 'gate_lower_bound',
+      suggestedValue: 0.6,
+      confidence: 0.85,
+      estimatedImpact: 0.3,
+      isValid: true,
+      validationMessage: 'Suggestion passes all validation criteria',
+      ...overrides,
+    });
+
+    /**
+     * Create invalid suggestion.
+     *
+     * @param {object} overrides - Override defaults
+     * @returns {object} Suggestion
+     */
+    const createInvalidSuggestion = (overrides = {}) => ({
+      axis: 'valence',
+      type: 'gate_upper_bound',
+      suggestedValue: 0.9,
+      confidence: 0.4,
+      estimatedImpact: 0.1,
+      isValid: false,
+      validationMessage: 'Insufficient information gain',
+      ...overrides,
+    });
+
+    /**
+     * Create builder with actionable suggestion engine.
+     *
+     * @param {object} engine - Mock engine
+     * @param {object} configOverrides - Config overrides
+     * @returns {object} Builder and logger
+     */
+    const createBuilderWithEngine = (engine, configOverrides = {}) => {
+      const logger = createMockLogger();
+      const config = createConfig(configOverrides);
+      const builder = new OverlapRecommendationBuilder({
+        config,
+        logger,
+        actionableSuggestionEngine: engine,
+      });
+      return { builder, logger };
+    };
+
+    it('should generate suggestions when actionableSuggestionEngine is provided', () => {
+      const validSuggestion = createValidSuggestion();
+      const engine = createMockActionableSuggestionEngine([validSuggestion]);
+      const { builder } = createBuilderWithEngine(engine);
+      const v3Data = createV3Data();
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        v3Data
+      );
+
+      expect(result.suggestions).toHaveLength(1);
+      expect(result.suggestions[0]).toEqual(validSuggestion);
+      expect(engine.generateSuggestions).toHaveBeenCalledWith(
+        v3Data.vectorA,
+        v3Data.vectorB,
+        v3Data.contextPool,
+        'merge'
+      );
+    });
+
+    it('should filter invalid suggestions and include only valid ones', () => {
+      const validSuggestion = createValidSuggestion();
+      const invalidSuggestion = createInvalidSuggestion();
+      const engine = createMockActionableSuggestionEngine([
+        validSuggestion,
+        invalidSuggestion,
+      ]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(result.suggestions).toHaveLength(1);
+      expect(result.suggestions[0].isValid).toBe(true);
+      expect(result.suggestions.find((s) => !s.isValid)).toBeUndefined();
+    });
+
+    it('should log warning for filtered invalid suggestions', () => {
+      const invalidSuggestion = createInvalidSuggestion({
+        validationMessage: 'Confidence too low',
+      });
+      const engine = createMockActionableSuggestionEngine([invalidSuggestion]);
+      const { builder, logger } = createBuilderWithEngine(engine);
+
+      builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Filtered 1 invalid suggestions')
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Confidence too low')
+      );
+    });
+
+    it('should log info for valid suggestions generated', () => {
+      const validSuggestion = createValidSuggestion();
+      const engine = createMockActionableSuggestionEngine([validSuggestion]);
+      const { builder, logger } = createBuilderWithEngine(engine);
+
+      builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Generated 1 valid data-driven suggestions')
+      );
+    });
+
+    it('should return empty suggestions when engine not provided', () => {
+      const { builder } = createBuilder();
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(result.suggestions).toEqual([]);
+    });
+
+    it('should return empty suggestions when v3Data is null', () => {
+      const engine = createMockActionableSuggestionEngine([
+        createValidSuggestion(),
+      ]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        null
+      );
+
+      expect(result.suggestions).toEqual([]);
+      expect(engine.generateSuggestions).not.toHaveBeenCalled();
+    });
+
+    it('should return empty suggestions when vectorA missing from v3Data', () => {
+      const engine = createMockActionableSuggestionEngine([
+        createValidSuggestion(),
+      ]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        { vectorB: {}, contextPool: [] }
+      );
+
+      expect(result.suggestions).toEqual([]);
+      expect(engine.generateSuggestions).not.toHaveBeenCalled();
+    });
+
+    it('should return empty suggestions when vectorB missing from v3Data', () => {
+      const engine = createMockActionableSuggestionEngine([
+        createValidSuggestion(),
+      ]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        { vectorA: {}, contextPool: [] }
+      );
+
+      expect(result.suggestions).toEqual([]);
+      expect(engine.generateSuggestions).not.toHaveBeenCalled();
+    });
+
+    it('should return empty suggestions when contextPool missing from v3Data', () => {
+      const engine = createMockActionableSuggestionEngine([
+        createValidSuggestion(),
+      ]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        { vectorA: {}, vectorB: {} }
+      );
+
+      expect(result.suggestions).toEqual([]);
+      expect(engine.generateSuggestions).not.toHaveBeenCalled();
+    });
+
+    it('should include confidence and impact estimates in suggestions', () => {
+      const validSuggestion = createValidSuggestion({
+        confidence: 0.92,
+        estimatedImpact: 0.45,
+      });
+      const engine = createMockActionableSuggestionEngine([validSuggestion]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(result.suggestions[0].confidence).toBe(0.92);
+      expect(result.suggestions[0].estimatedImpact).toBe(0.45);
+    });
+
+    it('should preserve backward compatibility with 8-param call', () => {
+      const { builder } = createBuilder();
+
+      // Original 8-param call should still work
+      const result = builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion'
+      );
+
+      expect(result.type).toBe('prototype_merge_suggestion');
+      expect(result.suggestions).toEqual([]);
+    });
+
+    it('should pass classification type to engine', () => {
+      const engine = createMockActionableSuggestionEngine([]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('subsumed'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(engine.generateSuggestions).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        'subsumed'
+      );
+    });
+
+    it('should handle undefined classification type gracefully', () => {
+      const engine = createMockActionableSuggestionEngine([]);
+      const { builder } = createBuilderWithEngine(engine);
+
+      builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        {},
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(engine.generateSuggestions).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        'unknown'
+      );
+    });
+
+    it('should include suggestions in debug log', () => {
+      const validSuggestion = createValidSuggestion();
+      const engine = createMockActionableSuggestionEngine([validSuggestion]);
+      const { builder, logger } = createBuilderWithEngine(engine);
+
+      builder.build(
+        createPrototype('a'),
+        createPrototype('b'),
+        createClassification('merge'),
+        createCandidateMetrics(),
+        createBehaviorMetrics(),
+        [],
+        [],
+        'emotion',
+        createV3Data()
+      );
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('v3Suggestions=1')
+      );
+    });
+  });
 });

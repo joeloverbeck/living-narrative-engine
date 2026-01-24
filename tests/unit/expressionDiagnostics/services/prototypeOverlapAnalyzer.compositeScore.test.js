@@ -50,7 +50,7 @@ describe('PrototypeOverlapAnalyzer - composite score', () => {
    * @returns {object} Mock filter
    */
   const createMockCandidatePairFilter = (candidatePairs = []) => ({
-    filterCandidates: jest.fn().mockReturnValue({
+    filterCandidates: jest.fn().mockResolvedValue({
       candidates: candidatePairs,
       stats: {
         totalPossiblePairs: candidatePairs.length > 0 ? 10 : 0,
@@ -366,8 +366,8 @@ describe('PrototypeOverlapAnalyzer - composite score', () => {
       expect(closestPair.prototypeB).toBe('proto:c');
 
       // Verify the composite score reflects the expected ranking
-      // Pair 2 composite ≈ 0.941×0.5 + 0.85×0.3 + 0.88×0.2 = 0.47 + 0.255 + 0.176 = 0.901
-      // Pair 1 composite ≈ 0.053×0.5 + 0.995×0.3 + 0.35×0.2 = 0.026 + 0.299 + 0.07 = 0.395
+      // Pair 2 composite ≈ 0.941×0.3 + 0.85×0.2 + 0.88×0.5 = 0.282 + 0.17 + 0.44 = 0.892
+      // Pair 1 composite ≈ 0.053×0.3 + 0.995×0.2 + 0.35×0.5 = 0.016 + 0.199 + 0.175 = 0.39
       expect(closestPair.compositeScore).toBeGreaterThan(0.6);
     });
   });

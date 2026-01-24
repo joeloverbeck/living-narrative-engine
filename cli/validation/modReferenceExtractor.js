@@ -28,7 +28,7 @@ class ModReferenceExtractor {
    * Creates a new ModReferenceExtractor instance
    *
    * @param {object} dependencies - Dependencies for the extractor
-   * @param {import('../../src/utils/loggerUtils.js').ILogger} dependencies.logger - Logger instance for debug/info/warn/error logging
+   * @param {import('../../src/interfaces/coreServices.js').ILogger} dependencies.logger - Logger instance for debug/info/warn/error logging
    * @param {import('../../src/validation/ajvSchemaValidator.js')} dependencies.ajvValidator - AJV validator instance for schema validation
    */
   constructor({ logger, ajvValidator }) {
@@ -73,8 +73,9 @@ class ModReferenceExtractor {
       );
       return references;
     } catch (error) {
-      this._logger.error(`Failed to extract references from ${modPath}`, error);
-      throw error;
+      const err = /** @type {Error} */ (error);
+      this._logger.error(`Failed to extract references from ${modPath}`, err);
+      throw err;
     }
   }
 
@@ -83,7 +84,7 @@ class ModReferenceExtractor {
    * Extension of existing extractReferences to include file locations
    *
    * @param {string} modPath - Path to mod directory
-   * @returns {Promise<Map<string, Array<{componentId: string, contexts: Array<object>}>>>}
+   * @returns {Promise<Map<string, Array<{componentId: string, contexts: Array<import('./types.js').ReferenceContext>}>>>}
    * References with file context information
    */
   async extractReferencesWithFileContext(modPath) {
@@ -128,11 +129,12 @@ class ModReferenceExtractor {
       );
       return contextualReferences;
     } catch (error) {
+      const err = /** @type {Error} */ (error);
       this._logger.error(
         `Failed to extract contextual references from ${modPath}`,
-        error
+        err
       );
-      throw error;
+      throw err;
     }
   }
 
@@ -185,12 +187,13 @@ class ModReferenceExtractor {
       }
     } catch (error) {
       // Enhanced error context
+      const err = /** @type {Error} */ (error);
       this._logger.warn(
-        `Failed to process ${basename} (${ext}): ${error.message}`,
+        `Failed to process ${basename} (${ext}): ${err.message}`,
         {
           filePath,
           fileType: ext,
-          error: error.name,
+          error: err.name,
         }
       );
 
@@ -242,7 +245,7 @@ class ModReferenceExtractor {
             references.set(modId, new Set());
           }
           for (const componentId of componentIds) {
-            references.get(modId).add(componentId);
+            references.get(modId)?.add(componentId);
           }
         }
         break;
@@ -276,8 +279,9 @@ class ModReferenceExtractor {
         `Extracted ${references.size} mod references from ${fileName}`
       );
     } catch (error) {
+      const err = /** @type {Error} */ (error);
       this._logger.warn(
-        `Failed to parse scope file ${fileName}: ${error.message}`
+        `Failed to parse scope file ${fileName}: ${err.message}`
       );
       // Fallback to regex-based extraction for partial results
       this._extractScopeReferencesWithRegex(content, references);
@@ -289,7 +293,7 @@ class ModReferenceExtractor {
    *
    * @private
    * @param {string} scopeName - Name of the scope (e.g., "intimacy:close_actors")
-   * @param {object} ast - Parsed AST from parseScopeDefinitions
+   * @param {any} ast - Parsed AST from parseScopeDefinitions
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractReferencesFromScopeAST(scopeName, ast, references) {
@@ -317,7 +321,7 @@ class ModReferenceExtractor {
    * - ArrayIterationStep: { type: 'ArrayIterationStep', parent: object }
    *
    * @private
-   * @param {object} node - AST node from parseDslExpression
+   * @param {any} node - AST node from parseDslExpression
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromScopeExpression(node, references) {
@@ -375,7 +379,7 @@ class ModReferenceExtractor {
    * Extracts references from Step nodes (field access)
    *
    * @private
-   * @param {object} node - Step node from AST
+   * @param {any} node - Step node from AST
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromStepNode(node, references) {
@@ -399,7 +403,7 @@ class ModReferenceExtractor {
    * Extracts references from Filter nodes
    *
    * @private
-   * @param {object} node - Filter node from AST
+   * @param {any} node - Filter node from AST
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromFilterNode(node, references) {
@@ -418,7 +422,7 @@ class ModReferenceExtractor {
    * Extracts references from Union nodes (| or + operators)
    *
    * @private
-   * @param {object} node - Union node from AST
+   * @param {any} node - Union node from AST
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromUnionNode(node, references) {
@@ -456,7 +460,7 @@ class ModReferenceExtractor {
       references.set(modId, new Set());
     }
 
-    references.get(modId).add(componentId);
+    references.get(modId)?.add(componentId);
     this._logger.debug(`Found scope reference: ${modId}:${componentId}`);
   }
 
@@ -545,7 +549,7 @@ class ModReferenceExtractor {
           references.set(modId, new Set());
         }
 
-        references.get(modId).add(componentId);
+        references.get(modId)?.add(componentId);
 
         // Log context for debugging
         if (context) {
@@ -582,7 +586,7 @@ class ModReferenceExtractor {
    * Extracts references from action files with specialized logic
    *
    * @private
-   * @param {object} actionData - Parsed action JSON
+   * @param {any} actionData - Parsed action JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromActionFile(actionData, references) {
@@ -680,7 +684,9 @@ class ModReferenceExtractor {
 
     // Prerequisites array - check for condition_ref references
     if (actionData.prerequisites && Array.isArray(actionData.prerequisites)) {
-      actionData.prerequisites.forEach((prerequisite) => {
+      /** @type {any[]} */
+      const prerequisites = actionData.prerequisites;
+      for (const prerequisite of prerequisites) {
         if (prerequisite && typeof prerequisite === 'object') {
           // Handle direct condition_ref in logic
           if (prerequisite.logic?.condition_ref) {
@@ -696,7 +702,7 @@ class ModReferenceExtractor {
             this._extractFromJsonLogic(prerequisite.logic, references);
           }
         }
-      });
+      }
     }
   }
 
@@ -704,7 +710,7 @@ class ModReferenceExtractor {
    * Extracts references from rule files
    *
    * @private
-   * @param {object} ruleData - Parsed rule JSON
+   * @param {any} ruleData - Parsed rule JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromRuleFile(ruleData, references) {
@@ -766,7 +772,7 @@ class ModReferenceExtractor {
           references.set(modId, new Set());
         }
         for (const componentId of componentIds) {
-          references.get(modId).add(componentId);
+          references.get(modId)?.add(componentId);
         }
       }
     }
@@ -776,7 +782,7 @@ class ModReferenceExtractor {
    * Extracts references from condition files
    *
    * @private
-   * @param {object} conditionData - Parsed condition JSON
+   * @param {any} conditionData - Parsed condition JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromConditionFile(conditionData, references) {
@@ -796,7 +802,7 @@ class ModReferenceExtractor {
         references.set(modId, new Set());
       }
       for (const componentId of componentIds) {
-        references.get(modId).add(componentId);
+        references.get(modId)?.add(componentId);
       }
     }
   }
@@ -805,7 +811,7 @@ class ModReferenceExtractor {
    * Extracts references from component definition files
    *
    * @private
-   * @param {object} componentData - Parsed component JSON
+   * @param {any} componentData - Parsed component JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromComponentFile(componentData, references) {
@@ -821,7 +827,7 @@ class ModReferenceExtractor {
           references.set(modId, new Set());
         }
         for (const componentId of componentIds) {
-          references.get(modId).add(componentId);
+          references.get(modId)?.add(componentId);
         }
       }
     }
@@ -838,7 +844,7 @@ class ModReferenceExtractor {
           references.set(modId, new Set());
         }
         for (const componentId of componentIds) {
-          references.get(modId).add(componentId);
+          references.get(modId)?.add(componentId);
         }
       }
     }
@@ -855,7 +861,7 @@ class ModReferenceExtractor {
           references.set(modId, new Set());
         }
         for (const componentId of componentIds) {
-          references.get(modId).add(componentId);
+          references.get(modId)?.add(componentId);
         }
       }
     }
@@ -865,7 +871,7 @@ class ModReferenceExtractor {
    * Extracts references from event definition files
    *
    * @private
-   * @param {object} eventData - Parsed event JSON
+   * @param {any} eventData - Parsed event JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromEventFile(eventData, references) {
@@ -881,7 +887,7 @@ class ModReferenceExtractor {
           references.set(modId, new Set());
         }
         for (const componentId of componentIds) {
-          references.get(modId).add(componentId);
+          references.get(modId)?.add(componentId);
         }
       }
     }
@@ -899,7 +905,7 @@ class ModReferenceExtractor {
         references.set(modId, new Set());
       }
       for (const componentId of componentIds) {
-        references.get(modId).add(componentId);
+        references.get(modId)?.add(componentId);
       }
     }
   }
@@ -908,7 +914,7 @@ class ModReferenceExtractor {
    * Extracts references from blueprint files (anatomy system)
    *
    * @private
-   * @param {object} blueprintData - Parsed blueprint JSON
+   * @param {any} blueprintData - Parsed blueprint JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromBlueprintFile(blueprintData, references) {
@@ -923,7 +929,7 @@ class ModReferenceExtractor {
         references.set(modId, new Set());
       }
       for (const componentId of componentIds) {
-        references.get(modId).add(componentId);
+        references.get(modId)?.add(componentId);
       }
     }
   }
@@ -932,7 +938,7 @@ class ModReferenceExtractor {
    * Extracts references from recipe files (anatomy system)
    *
    * @private
-   * @param {object} recipeData - Parsed recipe JSON
+   * @param {any} recipeData - Parsed recipe JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromRecipeFile(recipeData, references) {
@@ -944,7 +950,7 @@ class ModReferenceExtractor {
         references.set(modId, new Set());
       }
       for (const componentId of componentIds) {
-        references.get(modId).add(componentId);
+        references.get(modId)?.add(componentId);
       }
     }
   }
@@ -953,7 +959,7 @@ class ModReferenceExtractor {
    * Recursively processes JSON Logic expressions to extract mod references
    *
    * @private
-   * @param {object} jsonLogic - JSON Logic expression object
+   * @param {any} jsonLogic - JSON Logic expression object
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromJsonLogic(jsonLogic, references) {
@@ -1014,7 +1020,7 @@ class ModReferenceExtractor {
    * Processes operation handler structures for component references
    *
    * @private
-   * @param {Array | object} operations - Operation handler data
+   * @param {any[] | object} operations - Operation handler data
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromOperationHandlers(operations, references) {
@@ -1031,7 +1037,7 @@ class ModReferenceExtractor {
    * Processes a single operation for component references
    *
    * @private
-   * @param {object} operation - Single operation object
+   * @param {any} operation - Single operation object
    * @param {ModReferenceMap} references - Reference map to populate
    */
   _extractFromSingleOperation(operation, references) {
@@ -1086,7 +1092,7 @@ class ModReferenceExtractor {
           references.set(modId, new Set());
         }
         for (const componentId of componentIds) {
-          references.get(modId).add(componentId);
+          references.get(modId)?.add(componentId);
         }
       }
     }
@@ -1102,7 +1108,7 @@ class ModReferenceExtractor {
         references.set(modId, new Set());
       }
       for (const componentId of componentIds) {
-        references.get(modId).add(componentId);
+        references.get(modId)?.add(componentId);
       }
     }
   }
@@ -1114,9 +1120,10 @@ class ModReferenceExtractor {
    * @param {string} modPath - Path to mod directory
    * @param {string} modId - Target mod ID to find
    * @param {string} componentId - Target component ID to find
-   * @returns {Promise<Array<object>>} Array of context objects with file, line, column, snippet, type
+   * @returns {Promise<Array<import('./types.js').ReferenceContext>>} Array of context objects with file, line, column, snippet, type
    */
   async _findReferenceContexts(modPath, modId, componentId) {
+    /** @type {Array<import('./types.js').ReferenceContext>} */
     const contexts = [];
     const targetReference = `${modId}:${componentId}`;
 
@@ -1133,8 +1140,9 @@ class ModReferenceExtractor {
       );
       return contexts;
     } catch (error) {
+      const err = /** @type {Error} */ (error);
       this._logger.warn(
-        `Failed to find contexts for ${targetReference}: ${error.message}`
+        `Failed to find contexts for ${targetReference}: ${err.message}`
       );
       return [];
     }
@@ -1146,7 +1154,7 @@ class ModReferenceExtractor {
    * @private
    * @param {string} dirPath - Directory to scan
    * @param {string} targetReference - The mod:component reference to find
-   * @param {Array<object>} contexts - Array to populate with contexts
+   * @param {Array<import('./types.js').ReferenceContext>} contexts - Array to populate with contexts
    * @param {string} basePath - Base path for relative file paths
    */
   async _scanDirectoryForContext(dirPath, targetReference, contexts, basePath) {
@@ -1219,8 +1227,9 @@ class ModReferenceExtractor {
         }
       }
     } catch (error) {
+      const err = /** @type {Error} */ (error);
       this._logger.warn(
-        `Failed to process ${basename} for context: ${error.message}`
+        `Failed to process ${basename} for context: ${err.message}`
       );
     }
   }

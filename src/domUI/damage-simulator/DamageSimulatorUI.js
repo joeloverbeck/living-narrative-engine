@@ -11,7 +11,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../shared/RecipeSelectorService.js').default} RecipeSelectorService */
 /** @typedef {import('../shared/EntityLoadingService.js').default} EntityLoadingService */
-/** @typedef {import('../../anatomy/anatomyDataExtractor.js').default} AnatomyDataExtractor */
+/** @typedef {import('../shared/AnatomyDataExtractor.js').default} AnatomyDataExtractor */
 /** @typedef {import('../../anatomy/services/injuryAggregationService.js').default} InjuryAggregationService */
 
 /**
