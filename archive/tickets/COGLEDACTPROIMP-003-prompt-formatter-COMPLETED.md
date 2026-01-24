@@ -6,6 +6,13 @@ Add the `formatCognitiveLedgerSection()` method to `PromptDataFormatter` that fo
 
 ---
 
+## Assumptions & Scope Corrections
+
+- Targeted Jest runs must use `--testPathPatterns` (plural) and should disable coverage for subset runs (e.g., `--coverage=false`).
+- Direct node verification should use ESM import syntax for `src/prompting/promptDataFormatter.js`.
+
+---
+
 ## Files to Touch
 
 | File | Action |
@@ -98,7 +105,7 @@ NO RE-DERIVATION RULE (HARD):
 
 2. **Existing Tests**
    - `tests/unit/prompting/promptDataFormatter.test.js` passes unchanged
-   - `npm run test:unit -- --testPathPattern="promptDataFormatter"` passes
+   - `npm run test:unit -- --testPathPatterns="promptDataFormatter"` passes
 
 ### Invariants That Must Remain True
 
@@ -113,11 +120,20 @@ NO RE-DERIVATION RULE (HARD):
 
 ```bash
 # Run formatter tests
-npm run test:unit -- --testPathPattern="promptDataFormatter"
+npm run test:unit -- --testPathPatterns="promptDataFormatter"
 
 # Run specific new tests
-npm run test:unit -- --testPathPattern="promptDataFormatter.cognitiveLedger"
+npm run test:unit -- --testPathPatterns="promptDataFormatter.cognitiveLedger"
 
 # Verify method exists
-node -e "const F = require('./src/prompting/promptDataFormatter.js').default; const f = new F({info:()=>{}}); console.log(typeof f.formatCognitiveLedgerSection)"
+node --input-type=module -e "import PromptDataFormatter from './src/prompting/promptDataFormatter.js'; const f = new PromptDataFormatter({ logger: { debug: () => {}, warn: () => {}, error: () => {} } }); console.log(typeof f.formatCognitiveLedgerSection)"
 ```
+
+## Status
+
+Completed.
+
+## Outcome
+
+- Added `formatCognitiveLedgerSection()` to `PromptDataFormatter` and covered it with a new unit test file.
+- Updated ticket assumptions/verification commands to match the repo's Jest flag usage and ESM import style.

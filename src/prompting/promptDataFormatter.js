@@ -381,6 +381,46 @@ export class PromptDataFormatter {
   }
 
   /**
+   * Formats the cognitive ledger section for the prompt.
+   * Returns empty string if ledger is null/undefined (actor has no component).
+   *
+   * @param {Object|null|undefined} cognitiveLedger - The cognitive ledger data
+   * @param {string[]} [cognitiveLedger.settled_conclusions] - Settled conclusions
+   * @param {string[]} [cognitiveLedger.open_questions] - Open questions
+   * @returns {string} Formatted XML section or empty string
+   */
+  formatCognitiveLedgerSection(cognitiveLedger) {
+    if (!cognitiveLedger) {
+      return '';
+    }
+
+    const settled = cognitiveLedger.settled_conclusions || [];
+    const open = cognitiveLedger.open_questions || [];
+
+    const settledList =
+      settled.length > 0
+        ? settled.map((item) => `- ${item}`).join('\n')
+        : '- [None yet]';
+
+    const openList =
+      open.length > 0
+        ? open.map((item) => `- ${item}`).join('\n')
+        : '- [None yet]';
+
+    return `<cognitive_ledger>
+SETTLED CONCLUSIONS (treat as already integrated; do not re-argue unless NEW evidence appears):
+${settledList}
+
+OPEN QUESTIONS (allowed to think about now):
+${openList}
+
+NO RE-DERIVATION RULE (HARD):
+- THOUGHTS may reference a settled conclusion only as a short tag.
+- If you feel compelled to re-derive a settled point, convert that impulse into an in-character loop-break and move on.
+</cognitive_ledger>`;
+  }
+
+  /**
    * Format thoughts section with conditional XML wrapper
    *
    * @param {Array<{text: string, timestamp: string}>} thoughtsArray - Array of thoughts
@@ -595,6 +635,9 @@ STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to.
     );
     formattedData.goalsSection = this.formatGoalsSection(
       promptData.goalsArray || []
+    );
+    formattedData.cognitiveLedgerSection = this.formatCognitiveLedgerSection(
+      promptData.cognitiveLedger
     );
 
     this.#logger.debug(

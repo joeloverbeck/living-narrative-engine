@@ -78,3 +78,6 @@ export const RESPIRATORY_ORGAN_COMPONENT_ID = 'breathing-states:respiratory_orga
 export const MOOD_COMPONENT_ID = 'core:mood';
 export const SEXUAL_STATE_COMPONENT_ID = 'core:sexual_state';
 export const AFFECT_TRAITS_COMPONENT_ID = 'core:affect_traits';
+
+// Cognitive system components
+export const COGNITIVE_LEDGER_COMPONENT_ID = 'core:cognitive_ledger';

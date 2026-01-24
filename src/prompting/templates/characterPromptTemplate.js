@@ -1,7 +1,7 @@
 /**
  * @file Character prompt template for AI character responses
  * @description Defines the standard structure for character AI prompts
- * @version 2.0 - Constraint-first architecture (LLMROLPROARCANA-001)
+ * @version 2.1 - Added cognitive ledger section (COGLEDACTPROIMP-005)
  */
 
 /**
@@ -53,6 +53,8 @@ export const CHARACTER_PROMPT_TEMPLATE = `<system_constraints>
 <perception_log>
 {perceptionLogContent}
 </perception_log>
+
+{cognitiveLedgerSection}
 
 {thoughtsVoiceGuidance}
 

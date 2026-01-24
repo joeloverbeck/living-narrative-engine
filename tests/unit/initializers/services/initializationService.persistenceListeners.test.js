@@ -31,6 +31,7 @@ let actionIndex;
 let gameDataRepository;
 let thoughtListener;
 let notesListener;
+let cognitiveLedgerListener;
 let moodSexualListener;
 let expressionPersistenceListener;
 let contentDependencyValidator;
@@ -63,6 +64,7 @@ beforeEach(() => {
   };
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  cognitiveLedgerListener = { handleEvent: jest.fn() };
   moodSexualListener = { handleEvent: jest.fn() };
   expressionPersistenceListener = { handleEvent: jest.fn() };
   contentDependencyValidator = {
@@ -85,6 +87,7 @@ describe('InitializationService persistence listener setup', () => {
         gameDataRepository,
         thoughtListener,
         notesListener,
+        cognitiveLedgerListener,
         moodSexualListener,
         expressionPersistenceListener,
         spatialIndexManager: { buildIndex: jest.fn() },
@@ -115,6 +118,7 @@ describe('InitializationService persistence listener setup', () => {
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
       { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
+      { eventId: ACTION_DECIDED_ID, handler: expect.any(Function) },
       // MOOD_STATE_UPDATED_ID listeners (for two-phase emotional state)
       { eventId: MOOD_STATE_UPDATED_ID, handler: expect.any(Function) },
       { eventId: MOOD_STATE_UPDATED_ID, handler: expect.any(Function) },
@@ -123,22 +127,25 @@ describe('InitializationService persistence listener setup', () => {
       { eventId: TURN_STARTED_ID, handler: expect.any(Function) },
     ]);
 
-    // Execute ACTION_DECIDED_ID handlers (first 4)
+    // Execute ACTION_DECIDED_ID handlers (first 5)
     listenersArg[0].handler();
     listenersArg[1].handler();
     listenersArg[2].handler();
     listenersArg[3].handler();
+    listenersArg[4].handler();
 
     const callOrder = {
       thought: thoughtListener.handleEvent.mock.invocationCallOrder[0],
       notes: notesListener.handleEvent.mock.invocationCallOrder[0],
+      ledger: cognitiveLedgerListener.handleEvent.mock.invocationCallOrder[0],
       mood: moodSexualListener.handleEvent.mock.invocationCallOrder[0],
       expression:
         expressionPersistenceListener.handleEvent.mock.invocationCallOrder[0],
     };
 
     expect(callOrder.thought).toBeLessThan(callOrder.notes);
-    expect(callOrder.notes).toBeLessThan(callOrder.mood);
+    expect(callOrder.notes).toBeLessThan(callOrder.ledger);
+    expect(callOrder.ledger).toBeLessThan(callOrder.mood);
     expect(callOrder.mood).toBeLessThan(callOrder.expression);
   });
 });

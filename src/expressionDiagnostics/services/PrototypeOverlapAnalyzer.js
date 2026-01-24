@@ -7,14 +7,14 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * @typedef {object} AnalysisOptions
- * @property {'emotion'|'sexual'} [prototypeFamily='emotion'] - Family of prototypes to analyze
+ * @property {'emotion'|'sexual'|'both'} [prototypeFamily='emotion'] - Family of prototypes to analyze
  * @property {number} [sampleCount] - Override sample count per pair
  * @property {function(string, number, number): void} [onProgress] - Progress callback (stage, completed, total)
  */
 
 /**
  * @typedef {object} AnalysisMetadata
- * @property {'emotion'|'sexual'} prototypeFamily - Family analyzed
+ * @property {'emotion'|'sexual'|'both'} prototypeFamily - Family analyzed
  * @property {number} totalPrototypes - Number of prototypes in family
  * @property {number} candidatePairsFound - Candidate pairs from Stage A
  * @property {number} candidatePairsEvaluated - Pairs actually evaluated (may be limited)
@@ -107,7 +107,7 @@ class PrototypeOverlapAnalyzer {
       prototypeRegistryService,
       'IPrototypeRegistryService',
       logger,
-      { requiredMethods: ['getPrototypesByType'] }
+      { requiredMethods: ['getPrototypesByType', 'getAllPrototypes'] }
     );
 
     validateDependency(candidatePairFilter, 'ICandidatePairFilter', logger, {
@@ -209,8 +209,15 @@ class PrototypeOverlapAnalyzer {
     const CLASSIFICATION_YIELD_INTERVAL = 10;
 
     // Stage 1: Get prototypes from registry
-    const prototypes =
-      this.#prototypeRegistryService.getPrototypesByType(prototypeFamily);
+    let prototypes;
+    if (prototypeFamily === 'both') {
+      prototypes = this.#prototypeRegistryService.getAllPrototypes({
+        hasEmotions: true,
+        hasSexualStates: true,
+      });
+    } else {
+      prototypes = this.#prototypeRegistryService.getPrototypesByType(prototypeFamily);
+    }
 
     this.#logger.debug(
       `PrototypeOverlapAnalyzer: Found ${prototypes.length} prototypes for family '${prototypeFamily}'`
@@ -706,7 +713,7 @@ class PrototypeOverlapAnalyzer {
   /**
    * Build empty result for edge cases (not enough prototypes).
    *
-   * @param {'emotion'|'sexual'} prototypeFamily - Family analyzed
+   * @param {'emotion'|'sexual'|'both'} prototypeFamily - Family analyzed
    * @param {number} totalPrototypes - Number of prototypes
    * @returns {AnalysisResult} Empty result
    */

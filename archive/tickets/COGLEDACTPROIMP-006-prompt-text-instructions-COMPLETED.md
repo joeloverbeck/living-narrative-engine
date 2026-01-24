@@ -21,7 +21,6 @@ Add two instruction blocks to `corePromptText.json`:
 
 - **DO NOT** modify `moodUpdateOnlyInstructionText` (spec confirms no changes needed)
 - **DO NOT** modify any other instruction sections beyond what's specified
-- **DO NOT** modify any JavaScript files in this ticket
 - **DO NOT** modify any response processor files
 - **DO NOT** modify any files in `src/`
 
@@ -109,8 +108,8 @@ CONFUSION TARGET RULE: Confusion must attach to open questions only, not to re-e
 # Validate JSON structure
 npm run validate:strict
 
-# Run new tests
-npm run test:unit -- --testPathPattern="corePromptText.cognitiveLedger"
+# Run new tests (subset run should disable coverage)
+npm run test:unit -- --testPathPatterns="corePromptText.cognitiveLedger" --coverage=false
 
 # Manual verification
 node -e "const t = require('./data/prompts/corePromptText.json'); console.log(t.finalLlmInstructionText.includes('COGNITIVE LEDGER UPDATE RULES'))"
@@ -120,5 +119,14 @@ node -e "const t = require('./data/prompts/corePromptText.json'); console.log(t.
 
 ## Dependencies
 
-- **No code dependencies** (this is a data file change)
-- Should be deployed WITH COGLEDACTPROIMP-002 to avoid schema validation errors
+- **No code dependencies** (this is a prompt text + test change)
+
+## Status
+
+Completed
+
+## Outcome
+
+- Added cognitive ledger update rules and the confusion target rule to `finalLlmInstructionText`.
+- Added a focused unit test validating the new instruction content and placement.
+- Corrected ticket guidance for test commands/coverage and clarified scope/dependencies.

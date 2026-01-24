@@ -426,6 +426,18 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
   sharedPoolSize: 50000,
 
   /**
+   * Quick analysis preset: smaller pool for faster iteration during development.
+   * Use when speed is more important than statistical precision.
+   */
+  quickAnalysisPoolSize: 15000,
+
+  /**
+   * Deep analysis preset: larger pool for maximum statistical confidence.
+   * Use for final production analysis where precision is critical.
+   */
+  deepAnalysisPoolSize: 100000,
+
+  /**
    * Whether to stratify sampling by mood regime (valence bands).
    */
   enableStratifiedSampling: false,
@@ -614,6 +626,81 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
    * Maximum sign balance ratio for multi-axis conflict detection.
    */
   multiAxisSignBalanceThreshold: 0.4,
+
+  // === Phase 2: Multi-axis conflict splitting (AXGAPDET-002) ===
+  /**
+   * IQR multiplier for high axis loading detection.
+   * Prototypes with activeAxisCount > median + IQR * threshold are flagged.
+   */
+  highAxisLoadingThreshold: 1.5,
+
+  /**
+   * Minimum absolute weight for an axis to be considered "high magnitude" in sign tension detection.
+   */
+  signTensionMinMagnitude: 0.2,
+
+  /**
+   * Minimum number of high-magnitude axes required for sign tension detection.
+   */
+  signTensionMinHighAxes: 2,
+
+  // === Phase 3: Magnitude-aware gap scoring (AXGAPDET-003) ===
+  /**
+   * Enable magnitude-weighted gap scoring.
+   * When true, coverage gap scores incorporate cluster centroid magnitude.
+   */
+  enableMagnitudeAwareGapScoring: true,
+
+  // === Phase 4: Adaptive thresholds (AXGAPDET-004) ===
+  /**
+   * Enable adaptive distance thresholds based on null distribution.
+   * When true, computes data-driven threshold instead of static 0.6.
+   */
+  enableAdaptiveThresholds: false,
+
+  /**
+   * Percentile of null distribution to use as adaptive threshold (0-100).
+   */
+  adaptiveThresholdPercentile: 95,
+
+  /**
+   * Random seed for adaptive threshold null distribution generation.
+   */
+  adaptiveThresholdSeed: 42,
+
+  /**
+   * Number of iterations for null distribution generation.
+   */
+  adaptiveThresholdIterations: 100,
+
+  // === Phase 5: DBSCAN clustering (AXGAPDET-005) ===
+  /**
+   * Clustering method for coverage gap detection: 'profile-based' or 'dbscan'.
+   */
+  coverageGapClusteringMethod: 'profile-based',
+
+  /**
+   * DBSCAN epsilon (max distance for neighborhood membership).
+   * Used when coverageGapClusteringMethod is 'dbscan'.
+   */
+  dbscanEpsilon: 0.4,
+
+  /**
+   * DBSCAN minPoints (min neighbors for core point).
+   * Used when coverageGapClusteringMethod is 'dbscan'.
+   */
+  dbscanMinPoints: 3,
+
+  /**
+   * Threshold for high reconstruction error detection.
+   * Prototypes with error >= threshold are flagged.
+   */
+  reconstructionErrorThreshold: 0.5,
+
+  /**
+   * Threshold for residual variance ratio (missing dimensions indicator).
+   */
+  residualVarianceThreshold: 0.15,
 });
 
 export default PROTOTYPE_OVERLAP_CONFIG;

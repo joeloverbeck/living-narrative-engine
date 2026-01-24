@@ -221,8 +221,29 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA_V5 = {
         additionalProperties: false,
       },
     },
+    cognitive_ledger: {
+      type: 'object',
+      additionalProperties: false,
+      description:
+        'Cognitive ledger tracking settled conclusions and open questions',
+      properties: {
+        settled_conclusions: {
+          type: 'array',
+          description: 'Conclusions already reached (do not re-derive)',
+          items: { type: 'string', minLength: 1 },
+          maxItems: 3,
+        },
+        open_questions: {
+          type: 'array',
+          description: 'Questions still being actively considered',
+          items: { type: 'string', minLength: 1 },
+          maxItems: 3,
+        },
+      },
+      required: ['settled_conclusions', 'open_questions'],
+    },
   },
-  required: ['chosenIndex', 'speech', 'thoughts'],
+  required: ['chosenIndex', 'speech', 'thoughts', 'cognitive_ledger'],
 };
 
 // =============================================================================

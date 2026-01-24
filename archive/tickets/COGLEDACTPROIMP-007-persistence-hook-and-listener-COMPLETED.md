@@ -5,7 +5,21 @@
 Create the persistence infrastructure to save cognitive ledger data from LLM responses back to the actor entity:
 1. `cognitiveLedgerPersistenceHook.js` - The persistence logic with OVERWRITE semantics
 2. `cognitiveLedgerPersistenceListener.js` - Event listener for ACTION_DECIDED events
-3. Register the listener in the DI/orchestration system
+3. Register the listener in the orchestration initialization flow
+
+---
+
+## Status
+
+Completed.
+
+---
+
+## Reassessed Assumptions (Corrections)
+
+- Listener registration is currently handled by `InitializationService` via `setupPersistenceListeners()` in `src/initializers/services/initHelpers.js`, not by direct `dispatcher.subscribe()` in DI registration. The new listener must be wired into the `InitializationService` persistence list and registered through `setupPersistenceListeners()`.
+- ACTION_DECIDED payloads expose LLM data under `event.payload.extractedData` (see `AwaitingActorDecisionState`), so the listener should read `extractedData.cognitive_ledger` (and optionally accept a camelCase alias if present) rather than `event.payload.cognitiveLedger`.
+- Existing persistence hooks (thoughts/notes) take `actorEntity` as input and do not resolve entities internally. The cognitive ledger hook should follow the same pattern.
 
 ---
 
@@ -16,6 +30,7 @@ Create the persistence infrastructure to save cognitive ledger data from LLM res
 | `src/ai/cognitiveLedgerPersistenceHook.js` | CREATE |
 | `src/ai/cognitiveLedgerPersistenceListener.js` | CREATE |
 | `src/dependencyInjection/registrations/orchestrationRegistrations.js` | MODIFY |
+| `src/initializers/services/initializationService.js` | MODIFY |
 | `tests/unit/ai/cognitiveLedgerPersistenceHook.test.js` | CREATE |
 | `tests/unit/ai/cognitiveLedgerPersistenceListener.test.js` | CREATE |
 | `tests/integration/ai/cognitiveLedgerPersistence.integration.test.js` | CREATE |
@@ -38,7 +53,7 @@ Create the persistence infrastructure to save cognitive ledger data from LLM res
 
 **File**: `src/ai/cognitiveLedgerPersistenceHook.js`
 
-Follow the pattern from `notesPersistenceHook.js` but with OVERWRITE semantics:
+Follow the pattern from `notesPersistenceHook.js`/`thoughtPersistenceHook.js` but with OVERWRITE semantics and an `actorEntity` parameter:
 
 ```javascript
 /**
@@ -60,24 +75,15 @@ import { COGNITIVE_LEDGER_COMPONENT_ID } from '../constants/componentIds.js';
  * @param {Object} params.entityManager - EntityManager instance
  * @param {Object} params.logger - Logger instance
  */
-export function persistCognitiveLedger({
-  actorId,
+export function persistCognitiveLedger(
   cognitiveLedger,
-  componentAccess,
-  entityManager,
+  actorEntity,
   logger,
-}) {
+  componentAccess
+) {
   if (!cognitiveLedger) {
     logger.debug(
-      `CognitiveLedgerPersistence: No cognitive_ledger in response for actor ${actorId}, skipping`
-    );
-    return;
-  }
-
-  const actorEntity = entityManager.getEntityInstance(actorId);
-  if (!actorEntity) {
-    logger.warn(
-      `CognitiveLedgerPersistence: Actor entity ${actorId} not found, cannot persist ledger`
+      `CognitiveLedgerPersistence: No cognitive_ledger in response for actor ${actorEntity?.id ?? 'UNKNOWN'}, skipping`
     );
     return;
   }
@@ -93,7 +99,7 @@ export function persistCognitiveLedger({
   });
 
   logger.debug(
-    `CognitiveLedgerPersistence: Persisted ledger for actor ${actorId} ` +
+    `CognitiveLedgerPersistence: Persisted ledger for actor ${actorEntity.id} ` +
       `(${settled.length} settled, ${open.length} open)`
   );
 }
@@ -114,7 +120,7 @@ import { ACTION_DECIDED_ID } from '../constants/eventIds.js';
 import { persistCognitiveLedger } from './cognitiveLedgerPersistenceHook.js';
 
 export class CognitiveLedgerPersistenceListener {
-  #componentAccess;
+  #componentAccessService;
   #entityManager;
   #logger;
 
@@ -124,8 +130,8 @@ export class CognitiveLedgerPersistenceListener {
    * @param {Object} params.entityManager - EntityManager
    * @param {Object} params.logger - Logger
    */
-  constructor({ componentAccess, entityManager, logger }) {
-    this.#componentAccess = componentAccess;
+  constructor({ componentAccessService, entityManager, logger }) {
+    this.#componentAccessService = componentAccessService;
     this.#entityManager = entityManager;
     this.#logger = logger;
   }
@@ -136,10 +142,12 @@ export class CognitiveLedgerPersistenceListener {
    * @param {Object} event - The event object
    * @param {Object} event.payload
    * @param {string} event.payload.actorId
-   * @param {Object} [event.payload.cognitiveLedger]
+   * @param {Object} [event.payload.extractedData]
    */
   handleEvent(event) {
-    const { actorId, cognitiveLedger } = event.payload || {};
+    const { actorId, extractedData } = event.payload || {};
+    const cognitiveLedger =
+      extractedData?.cognitive_ledger ?? extractedData?.cognitiveLedger;
 
     if (!actorId) {
       this.#logger.warn(
@@ -148,20 +156,27 @@ export class CognitiveLedgerPersistenceListener {
       return;
     }
 
-    persistCognitiveLedger({
-      actorId,
+    const actorEntity = this.#entityManager.getEntityInstance(actorId);
+    if (!actorEntity) {
+      this.#logger.warn(
+        `CognitiveLedgerPersistenceListener: entity not found for actor ${actorId}`
+      );
+      return;
+    }
+
+    persistCognitiveLedger(
       cognitiveLedger,
-      componentAccess: this.#componentAccess,
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
+      actorEntity,
+      this.#logger,
+      this.#componentAccessService
+    );
   }
 }
 ```
 
 ### 3. Register Listener
 
-**File**: `src/dependencyInjection/registrations/orchestrationRegistrations.js`
+**Files**: `src/dependencyInjection/registrations/orchestrationRegistrations.js`, `src/initializers/services/initializationService.js`
 
 Add import at top:
 
@@ -169,18 +184,14 @@ Add import at top:
 import { CognitiveLedgerPersistenceListener } from '../../ai/cognitiveLedgerPersistenceListener.js';
 ```
 
-Add registration in `registerOrchestration` function (follow the pattern used for other listeners):
+Create the listener in `registerOrchestration` alongside other persistence listeners, pass it into `InitializationService` under `persistence`, and register its handler via `setupPersistenceListeners()` in `InitializationService` (following the existing thought/notes/mood listener pattern).
 
 ```javascript
-// Create and subscribe CognitiveLedgerPersistenceListener
 const cognitiveLedgerListener = new CognitiveLedgerPersistenceListener({
-  componentAccess: c.resolve(tokens.ComponentAccessService),
-  entityManager: c.resolve(tokens.IEntityManager),
-  logger: c.resolve(tokens.ILogger),
+  componentAccessService: c.resolve(tokens.ComponentAccessService),
+  entityManager,
+  logger: initLogger,
 });
-dispatcher.subscribe(ACTION_DECIDED_ID, (event) =>
-  cognitiveLedgerListener.handleEvent(event)
-);
 ```
 
 ---
@@ -192,7 +203,6 @@ dispatcher.subscribe(ACTION_DECIDED_ID, (event) =>
 1. **New Test File**: `tests/unit/ai/cognitiveLedgerPersistenceHook.test.js`
    - Test: Does nothing when `cognitiveLedger` is null
    - Test: Does nothing when `cognitiveLedger` is undefined
-   - Test: Logs warning when actor entity not found
    - Test: Calls `applyComponent` with correct component ID
    - Test: Enforces max 3 settled_conclusions (truncates if more)
    - Test: Enforces max 3 open_questions (truncates if more)
@@ -201,9 +211,10 @@ dispatcher.subscribe(ACTION_DECIDED_ID, (event) =>
    - Test: Overwrites existing component data (not additive)
 
 2. **New Test File**: `tests/unit/ai/cognitiveLedgerPersistenceListener.test.js`
-   - Test: Calls `persistCognitiveLedger` with correct parameters
+   - Test: Calls `persistCognitiveLedger` with correct parameters from `extractedData.cognitive_ledger`
    - Test: Logs warning when `actorId` missing from payload
-   - Test: Handles missing `cognitiveLedger` gracefully
+   - Test: Logs warning when actor entity not found
+   - Test: Handles missing `extractedData`/`cognitive_ledger` gracefully
    - Test: Handles null payload gracefully
 
 3. **New Integration Test**: `tests/integration/ai/cognitiveLedgerPersistence.integration.test.js`
@@ -229,14 +240,14 @@ dispatcher.subscribe(ACTION_DECIDED_ID, (event) =>
 
 ```bash
 # Run new unit tests
-npm run test:unit -- --testPathPattern="cognitiveLedgerPersistence"
+npm run test:unit -- --testPathPatterns="cognitiveLedgerPersistence" --coverage=false
 
 # Run new integration tests
-npm run test:integration -- --testPathPattern="cognitiveLedgerPersistence"
+npm run test:integration -- --testPathPatterns="cognitiveLedgerPersistence" --coverage=false
 
 # Run all persistence tests
-npm run test:unit -- --testPathPattern="Persistence"
-npm run test:integration -- --testPathPattern="Persistence"
+npm run test:unit -- --testPathPatterns="Persistence" --coverage=false
+npm run test:integration -- --testPathPatterns="Persistence" --coverage=false
 ```
 
 ---
@@ -245,3 +256,11 @@ npm run test:integration -- --testPathPattern="Persistence"
 
 - **Requires**: COGLEDACTPROIMP-001 (component ID constant)
 - **Requires**: ACTION_DECIDED_ID constant (already exists)
+
+---
+
+## Outcome
+
+- Implemented persistence hook/listener using `actorEntity` + `ComponentAccessService` with overwrite semantics and max-3 enforcement.
+- Wired listener creation through `registerOrchestration` and subscription via `InitializationService.setupPersistenceListeners()`, matching existing persistence flow.
+- Listener reads `extractedData.cognitive_ledger` (with a camelCase fallback) rather than a top-level payload field.

@@ -202,11 +202,66 @@ const resolveAxisValueStrict = (
   );
 };
 
+/**
+ * Flatten normalized axes into a single Map for O(1) lookups.
+ * Priority order: traits > sexual > mood (traits take precedence).
+ * This eliminates multiple hasOwnProperty calls per axis lookup.
+ *
+ * @param {{moodAxes: Record<string, number>, sexualAxes: Record<string, number>, traitAxes: Record<string, number>}} normalized
+ * @returns {Map<string, number>} Flattened axis map with SA alias
+ */
+const flattenNormalizedAxes = (normalized) => {
+  const flat = new Map();
+
+  // Add mood axes first (lowest priority)
+  if (normalized.moodAxes && typeof normalized.moodAxes === 'object') {
+    for (const [k, v] of Object.entries(normalized.moodAxes)) {
+      flat.set(k, v);
+    }
+  }
+
+  // Add sexual axes (override mood if present)
+  if (normalized.sexualAxes && typeof normalized.sexualAxes === 'object') {
+    for (const [k, v] of Object.entries(normalized.sexualAxes)) {
+      flat.set(k, v);
+    }
+  }
+
+  // Add trait axes (highest priority, override sexual/mood)
+  if (normalized.traitAxes && typeof normalized.traitAxes === 'object') {
+    for (const [k, v] of Object.entries(normalized.traitAxes)) {
+      flat.set(k, v);
+    }
+  }
+
+  // Handle SA alias for sexual_arousal
+  if (flat.has('sexual_arousal')) {
+    flat.set('SA', flat.get('sexual_arousal'));
+  }
+
+  return flat;
+};
+
+/**
+ * Resolve axis value from a flattened Map (O(1) lookup).
+ * This is the optimized hot path for batch evaluation.
+ *
+ * @param {string} axis - Axis name to resolve
+ * @param {Map<string, number>} flatMap - Flattened axis map
+ * @returns {number} Axis value or 0 if not found
+ */
+const resolveAxisValueFlat = (axis, flatMap) => {
+  const resolvedAxis = axis === 'SA' ? 'sexual_arousal' : axis;
+  return flatMap.get(resolvedAxis) ?? 0;
+};
+
 export {
   calculateSexualArousal,
+  flattenNormalizedAxes,
   normalizeAffectTraits,
   normalizeMoodAxes,
   normalizeSexualAxes,
   resolveAxisValue,
+  resolveAxisValueFlat,
   resolveAxisValueStrict,
 };

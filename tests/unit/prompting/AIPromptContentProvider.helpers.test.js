@@ -87,7 +87,9 @@ describe('AIPromptContentProvider helper methods', () => {
 
   test('_extractMemoryComponents returns arrays from componentsMap', () => {
     const componentsMap = {
-      'core:short_term_memory': { thoughts: [{ text: 't1' }] },
+      'core:short_term_memory': {
+        thoughts: [{ text: 't1' }, { text: 't2' }],
+      },
       'core:notes': {
         notes: [
           { text: 'n1', subject: 'subject1', timestamp: 't1' },
@@ -103,11 +105,23 @@ describe('AIPromptContentProvider helper methods', () => {
     };
 
     const res = provider._extractMemoryComponents(componentsMap);
-    expect(res.thoughtsArray).toEqual([{ text: 't1' }]);
+    expect(res.thoughtsArray).toEqual([{ text: 't2' }]);
     expect(res.notesArray).toEqual([
       { text: 'n1', subject: 'subject1', timestamp: 't1' },
     ]);
     expect(res.goalsArray).toEqual([{ text: 'g1', timestamp: 't3' }]);
+  });
+
+  test('_extractMemoryComponents returns empty thoughts array when missing', () => {
+    const res = provider._extractMemoryComponents({});
+    expect(res.thoughtsArray).toEqual([]);
+  });
+
+  test('_extractMemoryComponents keeps single thought when only one exists', () => {
+    const res = provider._extractMemoryComponents({
+      'core:short_term_memory': { thoughts: [{ text: 'solo' }] },
+    });
+    expect(res.thoughtsArray).toEqual([{ text: 'solo' }]);
   });
 
   test('_extractTimestampedEntries returns [] when property missing or not array', () => {
@@ -142,13 +156,18 @@ describe('AIPromptContentProvider helper methods', () => {
       base,
       ['t'],
       [{ text: 'n', timestamp: 't' }],
-      [{ text: 'g', timestamp: 't' }]
+      [{ text: 'g', timestamp: 't' }],
+      { settled_conclusions: ['settled'], open_questions: ['open'] }
     );
     expect(pd).toEqual({
       a: 1,
       thoughtsArray: ['t'],
       notesArray: [{ text: 'n', timestamp: 't' }],
       goalsArray: [{ text: 'g', timestamp: 't' }],
+      cognitiveLedger: {
+        settled_conclusions: ['settled'],
+        open_questions: ['open'],
+      },
     });
   });
 

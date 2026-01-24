@@ -6,13 +6,19 @@ Add the `cognitive_ledger` field to `LLM_TURN_ACTION_RESPONSE_SCHEMA_V5`. Initia
 
 ---
 
+## Assumptions & Scope Corrections
+
+- Existing v5 schema coverage lives in `tests/unit/schemas/llmTurnActionResponseSchemaV5.test.js`, so cognitive_ledger coverage will be added there instead of creating a new file under `tests/unit/turns/schemas/`.
+- Targeted Jest runs must use `--testPathPatterns` (plural) and should disable coverage (e.g., `--coverage=false`) to avoid global threshold failures.
+
+---
+
 ## Files to Touch
 
 | File | Action |
 |------|--------|
 | `src/turns/schemas/llmOutputSchemas.js` | MODIFY |
-| `tests/unit/turns/schemas/llmOutputSchemas.cognitiveLedger.test.js` | CREATE |
-| `tests/unit/turns/schemas/llmOutputSchemas.test.js` | MODIFY (add cognitive_ledger cases) |
+| `tests/unit/schemas/llmTurnActionResponseSchemaV5.test.js` | MODIFY (add cognitive_ledger cases) |
 
 ---
 
@@ -68,7 +74,7 @@ cognitive_ledger: {
 
 ### Tests That Must Pass
 
-1. **New Test File**: `tests/unit/turns/schemas/llmOutputSchemas.cognitiveLedger.test.js`
+1. **Existing Test File**: `tests/unit/schemas/llmTurnActionResponseSchemaV5.test.js`
    - Test: V5 schema accepts response WITHOUT cognitive_ledger (optional)
    - Test: V5 schema accepts response WITH valid cognitive_ledger
    - Test: V5 schema rejects cognitive_ledger missing `settled_conclusions`
@@ -79,8 +85,8 @@ cognitive_ledger: {
    - Test: V5 schema rejects cognitive_ledger with additional properties
 
 2. **Existing Tests**
-   - `tests/unit/turns/schemas/llmOutputSchemas.test.js` passes (may need updates for new optional field)
-   - `npm run test:unit -- --testPathPattern="llmOutputSchemas"` passes
+   - `tests/unit/schemas/llmOutputSchemas.test.js` passes (no change expected)
+   - `npm run test:unit -- --testPathPatterns="llmOutputSchemas|llmTurnActionResponseSchemaV5" --coverage=false` passes
 
 ### Invariants That Must Remain True
 
@@ -96,11 +102,21 @@ cognitive_ledger: {
 
 ```bash
 # Run schema tests
-npm run test:unit -- --testPathPattern="llmOutputSchemas"
+npm run test:unit -- --testPathPatterns="llmOutputSchemas|llmTurnActionResponseSchemaV5" --coverage=false
 
 # Run integration schema validation
-npm run test:integration -- --testPathPattern="llmOutputValidation"
+npm run test:integration -- --testPathPatterns="llmOutputValidation" --coverage=false
 
 # Verify schema structure
 node -e "const s = require('./src/turns/schemas/llmOutputSchemas.js'); console.log(Object.keys(s.LLM_TURN_ACTION_RESPONSE_SCHEMA_V5.properties))"
 ```
+
+## Status
+
+Completed.
+
+## Outcome
+
+- Added optional `cognitive_ledger` to the v5 action response schema with max-item and min-length constraints.
+- Implemented v5 schema unit tests for optional/invalid ledger payloads instead of creating a new test file.
+- Verification commands updated to match the repo's `--testPathPatterns` convention with coverage disabled for targeted runs.

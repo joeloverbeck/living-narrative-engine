@@ -63,6 +63,7 @@ class InitializationService extends IInitializationService {
   #gameDataRepository;
   #thoughtListener;
   #notesListener;
+  #cognitiveLedgerListener;
   #moodSexualListener;
   #expressionPersistenceListener;
   #spatialIndexManager;
@@ -84,6 +85,7 @@ class InitializationService extends IInitializationService {
    *   gameDataRepository: import('../../interfaces/IGameDataRepository.js').IGameDataRepository,
    *   thoughtListener: IThoughtListener,
    *   notesListener: INotesListener,
+   *   cognitiveLedgerListener?: import('../../ai/cognitiveLedgerPersistenceListener.js').CognitiveLedgerPersistenceListener,
    *   moodSexualListener: import('../../ai/moodSexualPersistenceListener.js').MoodSexualPersistenceListener,
    *   expressionPersistenceListener: import('../../expressions/expressionPersistenceListener.js').default,
    *   spatialIndexManager: ISpatialIndexManager,
@@ -117,6 +119,7 @@ class InitializationService extends IInitializationService {
       gameDataRepository,
       thoughtListener,
       notesListener,
+      cognitiveLedgerListener = { handleEvent: () => {} },
       moodSexualListener,
       expressionPersistenceListener,
       spatialIndexManager,
@@ -221,6 +224,12 @@ class InitializationService extends IInitializationService {
       SystemInitializationError
     );
     assertFunction(
+      cognitiveLedgerListener,
+      'handleEvent',
+      "InitializationService: Missing or invalid required dependency 'cognitiveLedgerListener'.",
+      SystemInitializationError
+    );
+    assertFunction(
       moodSexualListener,
       'handleEvent',
       "InitializationService: Missing or invalid required dependency 'moodSexualListener'.",
@@ -271,6 +280,7 @@ class InitializationService extends IInitializationService {
     this.#gameDataRepository = gameDataRepository;
     this.#thoughtListener = thoughtListener;
     this.#notesListener = notesListener;
+    this.#cognitiveLedgerListener = cognitiveLedgerListener;
     this.#moodSexualListener = moodSexualListener;
     this.#expressionPersistenceListener = expressionPersistenceListener;
     this.#spatialIndexManager = spatialIndexManager;
@@ -336,6 +346,12 @@ class InitializationService extends IInitializationService {
           {
             eventId: ACTION_DECIDED_ID,
             handler: this.#notesListener.handleEvent.bind(this.#notesListener),
+          },
+          {
+            eventId: ACTION_DECIDED_ID,
+            handler: this.#cognitiveLedgerListener.handleEvent.bind(
+              this.#cognitiveLedgerListener
+            ),
           },
           {
             eventId: ACTION_DECIDED_ID,

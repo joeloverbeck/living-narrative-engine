@@ -152,14 +152,12 @@ describe('Prompt Assembly with template-based system', () => {
     expect(prompt).toContain('OnlyThought');
   });
 
-  test('Entity with multiple thoughts formats them correctly', async () => {
+  test('Entity with multiple thoughts includes only the most recent thought', async () => {
     const prompt = await buildPrompt(['First thought', 'Second thought']);
 
-    // Should include both thoughts formatted correctly with enhanced formatting
-    expect(prompt).toContain(
-      buildThoughtsSection('- First thought\n- Second thought')
-    );
-    expect(prompt).toContain('First thought');
+    // Should include only the most recent thought (prompt display is limited)
+    expect(prompt).toContain(buildThoughtsSection('- Second thought'));
+    expect(prompt).not.toContain('First thought');
     expect(prompt).toContain('Second thought');
   });
 

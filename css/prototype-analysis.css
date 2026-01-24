@@ -882,3 +882,77 @@
   padding: 1rem;
   text-align: center;
 }
+
+/* Decision Logic Details */
+.decision-logic-details {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-color-subtle);
+  font-size: 0.85rem;
+}
+
+.decision-logic-details summary {
+  cursor: pointer;
+  color: var(--accent-color-primary);
+  font-weight: 500;
+  padding: 0.25rem 0;
+}
+
+.decision-logic-details summary:hover {
+  text-decoration: underline;
+}
+
+.decision-criteria {
+  list-style: none;
+  padding: 0.5rem 0 0 0;
+  margin: 0;
+}
+
+.decision-criteria li {
+  padding: 0.35rem 0;
+  color: var(--secondary-text-color);
+  line-height: 1.4;
+}
+
+.decision-criteria li strong {
+  color: var(--primary-text-color);
+  font-weight: 600;
+}
+
+.logic-emphasis {
+  margin: 0.75rem 0 0 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--highlight-background);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+  line-height: 1.4;
+}
+
+.logic-emphasis em {
+  color: var(--status-extremely-rare-fill);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.logic-emphasis strong {
+  color: var(--primary-text-color);
+}
+
+/* Signal Logic Explanation */
+.signal-logic-explanation {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-color-subtle);
+}
+
+.logic-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  line-height: 1.4;
+}
+
+.logic-note strong {
+  color: var(--primary-text-color);
+}

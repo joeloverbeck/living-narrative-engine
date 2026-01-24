@@ -118,6 +118,14 @@ export const diagnosticsTokens = freeze({
   IGateASTNormalizer: 'IGateASTNormalizer',
   IActionableSuggestionEngine: 'IActionableSuggestionEngine',
   IAxisGapAnalyzer: 'IAxisGapAnalyzer',
+
+  // Axis Gap Analysis Sub-Services (refactored from AxisGapAnalyzer)
+  IPCAAnalysisService: 'IPCAAnalysisService',
+  IHubPrototypeDetector: 'IHubPrototypeDetector',
+  ICoverageGapDetector: 'ICoverageGapDetector',
+  IMultiAxisConflictDetector: 'IMultiAxisConflictDetector',
+  IAxisGapRecommendationBuilder: 'IAxisGapRecommendationBuilder',
+  IAxisGapReportSynthesizer: 'IAxisGapReportSynthesizer',
 });
 
 export default diagnosticsTokens;

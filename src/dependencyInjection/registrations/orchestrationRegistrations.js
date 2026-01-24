@@ -15,6 +15,7 @@ import ShutdownService from '../../shutdown/services/shutdownService.js'; // Adj
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 import { MoodSexualPersistenceListener } from '../../ai/moodSexualPersistenceListener.js';
+import { CognitiveLedgerPersistenceListener } from '../../ai/cognitiveLedgerPersistenceListener.js';
 import ContentDependencyValidator from '../../initializers/services/contentDependencyValidator.js';
 import ComponentAccessService from '../../entities/componentAccessService.js';
 
@@ -99,6 +100,11 @@ export function registerOrchestration(container) {
       dispatcher: safeEventDispatcher,
       componentAccessService,
     });
+    const cognitiveLedgerListener = new CognitiveLedgerPersistenceListener({
+      logger: initLogger,
+      entityManager,
+      componentAccessService,
+    });
     const moodSexualListener = new MoodSexualPersistenceListener({
       logger: initLogger,
       entityManager,
@@ -121,6 +127,7 @@ export function registerOrchestration(container) {
         gameDataRepository,
         thoughtListener,
         notesListener,
+        cognitiveLedgerListener,
         moodSexualListener,
         expressionPersistenceListener,
         spatialIndexManager,

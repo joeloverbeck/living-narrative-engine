@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:cognitive_ledger",
+  "description": "Stores settled conclusions and open questions to prevent re-litigation of resolved matters.",
+  "dataSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "settled_conclusions": {
+        "type": "array",
+        "maxItems": 3,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A conclusion the character has reached and should not re-derive."
+        },
+        "default": []
+      },
+      "open_questions": {
+        "type": "array",
+        "maxItems": 3,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A question the character is still actively considering."
+        },
+        "default": []
+      }
+    },
+    "required": ["settled_conclusions", "open_questions"],
+    "additionalProperties": false
+  }
+}

@@ -4,8 +4,13 @@
  */
 
 import { validateDependency } from '../../../utils/dependencyUtils.js';
+import { flattenNormalizedAxes } from '../../utils/axisNormalizationUtils.js';
 
-const CHUNK_SIZE = 500;
+/** @typedef {import('../../models/GateConstraint.js').default} GateConstraint */
+
+// OPTIMIZATION: Increased from 500 to reduce event loop yields
+// 50000 contexts / 5000 = 10 yields per prototype vs 100 yields at 500
+const CHUNK_SIZE = 5000;
 
 /**
  * Evaluates prototypes against shared context pools and builds output vectors.
@@ -34,13 +39,13 @@ class PrototypeVectorEvaluator {
       prototypeGateChecker,
       'IPrototypeGateChecker',
       logger,
-      { requiredMethods: ['checkAllGatesPass', 'preParseGates', 'checkParsedGatesPass'] }
+      { requiredMethods: ['checkAllGatesPass', 'preParseGates', 'checkParsedGatesPass', 'checkParsedGatesPassFlat'] }
     );
     validateDependency(
       prototypeIntensityCalculator,
       'IPrototypeIntensityCalculator',
       logger,
-      { requiredMethods: ['computeIntensity', 'computeIntensityFromNormalized'] }
+      { requiredMethods: ['computeIntensity', 'computeIntensityFromNormalized', 'computeIntensityFromFlat'] }
     );
     validateDependency(
       contextAxisNormalizer,
@@ -101,11 +106,13 @@ class PrototypeVectorEvaluator {
       return results;
     }
 
-    // OPTIMIZATION: Pre-normalize entire context pool ONCE (instead of per-prototype)
-    // This eliminates ~4.5 million redundant normalization calls
-    const normalizedPool = contextPool.map((ctx) =>
-      this.#contextAxisNormalizer.getNormalizedAxes(ctx)
-    );
+    // OPTIMIZATION: Pre-normalize and flatten entire context pool ONCE
+    // This eliminates ~4.5 million redundant normalization calls AND
+    // replaces O(n) hasOwnProperty lookups with O(1) Map.get() calls
+    const flatPool = contextPool.map((ctx) => {
+      const normalized = this.#contextAxisNormalizer.getNormalizedAxes(ctx);
+      return flattenNormalizedAxes(normalized);
+    });
 
     // OPTIMIZATION: Pre-parse gates for all prototypes ONCE
     // This eliminates ~13.6 million redundant regex parses
@@ -128,7 +135,7 @@ class PrototypeVectorEvaluator {
       }
 
       const parsedGates = prototypeGatesMap.get(prototypeId);
-      const vector = await this.#evaluatePrototypeOptimized(prototype, normalizedPool, parsedGates);
+      const vector = await this.#evaluatePrototypeOptimized(prototype, flatPool, parsedGates);
       poolCache.set(prototypeId, vector);
       results.set(prototypeId, vector);
       // Report progress after each prototype evaluation
@@ -150,14 +157,15 @@ class PrototypeVectorEvaluator {
       return this.#buildEmptyVector(this.#getPrototypeId(prototype));
     }
 
-    // Pre-normalize for single prototype evaluation
-    const normalizedPool = contextPool.map((ctx) =>
-      this.#contextAxisNormalizer.getNormalizedAxes(ctx)
-    );
+    // Pre-normalize and flatten for single prototype evaluation
+    const flatPool = contextPool.map((ctx) => {
+      const normalized = this.#contextAxisNormalizer.getNormalizedAxes(ctx);
+      return flattenNormalizedAxes(normalized);
+    });
     const gates = Array.isArray(prototype.gates) ? prototype.gates : [];
     const parsedGates = this.#prototypeGateChecker.preParseGates(gates);
 
-    return this.#evaluatePrototypeOptimized(prototype, normalizedPool, parsedGates);
+    return this.#evaluatePrototypeOptimized(prototype, flatPool, parsedGates);
   }
 
   #getPoolCache(contextPool) {
@@ -198,41 +206,42 @@ class PrototypeVectorEvaluator {
   }
 
   /**
-   * Optimized prototype evaluation using pre-normalized contexts and pre-parsed gates.
-   * This is the hot path optimized for batch evaluation.
+   * Optimized prototype evaluation using flattened axis Maps and pre-parsed gates.
+   * This is the ultra-optimized hot path for batch evaluation.
+   * Uses O(1) Map.get() lookups instead of multiple hasOwnProperty calls.
    *
    * @param {object} prototype - Prototype to evaluate.
-   * @param {Array<{moodAxes: object, sexualAxes: object, traitAxes: object}>} normalizedPool - Pre-normalized context pool.
+   * @param {Array<Map<string, number>>} flatPool - Pre-flattened axis maps from flattenNormalizedAxes().
    * @param {Array<GateConstraint>} parsedGates - Pre-parsed gate constraints.
    * @returns {Promise<PrototypeOutputVector>} Output vector for the prototype.
    */
-  async #evaluatePrototypeOptimized(prototype, normalizedPool, parsedGates) {
+  async #evaluatePrototypeOptimized(prototype, flatPool, parsedGates) {
     const prototypeId = this.#getPrototypeId(prototype);
     const weights = prototype.weights ?? {};
 
-    const gateResults = new Float32Array(normalizedPool.length);
-    const intensities = new Float32Array(normalizedPool.length);
+    const gateResults = new Float32Array(flatPool.length);
+    const intensities = new Float32Array(flatPool.length);
 
     let passCount = 0;
     let sumIntensity = 0;
     let sumSqIntensity = 0;
 
-    for (let processed = 0; processed < normalizedPool.length; ) {
-      const chunkEnd = Math.min(processed + CHUNK_SIZE, normalizedPool.length);
+    for (let processed = 0; processed < flatPool.length; ) {
+      const chunkEnd = Math.min(processed + CHUNK_SIZE, flatPool.length);
       for (let i = processed; i < chunkEnd; i += 1) {
-        const normalizedCtx = normalizedPool[i];
-        // Use optimized gate check with pre-parsed constraints
-        const pass = this.#prototypeGateChecker.checkParsedGatesPass(
+        const flatAxes = flatPool[i];
+        // Use ultra-optimized gate check with O(1) Map lookups
+        const pass = this.#prototypeGateChecker.checkParsedGatesPassFlat(
           parsedGates,
-          normalizedCtx
+          flatAxes
         );
         gateResults[i] = pass ? 1 : 0;
         if (pass) {
-          // Use optimized intensity calculation with pre-normalized axes
+          // Use ultra-optimized intensity calculation with O(1) Map lookups
           const intensity =
-            this.#prototypeIntensityCalculator.computeIntensityFromNormalized(
+            this.#prototypeIntensityCalculator.computeIntensityFromFlat(
               weights,
-              normalizedCtx
+              flatAxes
             );
           intensities[i] = intensity;
           passCount += 1;
@@ -244,13 +253,13 @@ class PrototypeVectorEvaluator {
       }
 
       processed = chunkEnd;
-      if (processed < normalizedPool.length) {
+      if (processed < flatPool.length) {
         await this.#yieldToEventLoop();
       }
     }
 
     const activationRate =
-      normalizedPool.length > 0 ? passCount / normalizedPool.length : 0;
+      flatPool.length > 0 ? passCount / flatPool.length : 0;
     let meanIntensity = 0;
     let stdIntensity = 0;
 

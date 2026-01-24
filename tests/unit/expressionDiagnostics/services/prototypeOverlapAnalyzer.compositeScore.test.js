@@ -41,6 +41,7 @@ describe('PrototypeOverlapAnalyzer - composite score', () => {
    */
   const createMockRegistryService = (prototypes = []) => ({
     getPrototypesByType: jest.fn().mockReturnValue(prototypes),
+    getAllPrototypes: jest.fn().mockReturnValue(prototypes),
   });
 
   /**
