@@ -32,22 +32,22 @@ const INVALIDATION_REASONS = {
  * @class
  */
 class PlanInvalidationDetector {
-  /** @type {import('../../logging/logger.js').default} */
+  /** @type {import('../../logging/loggerStrategy.js').default} */
   #logger;
 
-  /** @type {import('../../logic/services/jsonLogicEvaluationService.js').default} */
+  /** @type {import('../../logic/jsonLogicEvaluationService.js').default} */
   #jsonLogicService;
 
-  /** @type {import('../../data/interfaces/IDataRegistry.js').IDataRegistry} */
+  /** @type {import('../../interfaces/IDataRegistry.js').IDataRegistry} */
   #dataRegistry;
 
   /**
    * Create new plan invalidation detector instance
    *
    * @param {object} deps - Dependencies
-   * @param {import('../../logging/logger.js').default} deps.logger - Logger instance
-   * @param {import('../../logic/services/jsonLogicEvaluationService.js').default} deps.jsonLogicEvaluationService - JSON Logic evaluation service
-   * @param {import('../../data/interfaces/IDataRegistry.js').IDataRegistry} deps.dataRegistry - Data registry for loading task definitions
+   * @param {import('../../logging/loggerStrategy.js').default} deps.logger - Logger instance
+   * @param {import('../../logic/jsonLogicEvaluationService.js').default} deps.jsonLogicEvaluationService - JSON Logic evaluation service
+   * @param {import('../../interfaces/IDataRegistry.js').IDataRegistry} deps.dataRegistry - Data registry for loading task definitions
    */
   constructor({ logger, jsonLogicEvaluationService, dataRegistry }) {
     this.#logger = ensureValidLogger(logger);

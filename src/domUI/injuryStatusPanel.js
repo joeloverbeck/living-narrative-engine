@@ -15,7 +15,7 @@
 /** @typedef {import('../anatomy/services/injuryAggregationService.js').default} InjuryAggregationService */
 /** @typedef {import('../anatomy/services/injuryNarrativeFormatterService.js').default} InjuryNarrativeFormatterService */
 /** @typedef {import('../anatomy/services/oxygenAggregationService.js').default} OxygenAggregationService */
-/** @typedef {import('../anatomy/dtos/InjurySummaryDTO.js').InjurySummaryDTO} InjurySummaryDTO */
+/** @typedef {import('../anatomy/services/injuryAggregationService.js').InjurySummaryDTO} InjurySummaryDTO */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { TURN_STARTED_ID } from '../constants/eventIds.js';

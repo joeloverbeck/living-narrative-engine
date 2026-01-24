@@ -6,6 +6,7 @@
 import { describe, it, expect } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ALL_PROTOTYPE_WEIGHT_AXES } from '../../../../../src/constants/prototypeAxisConstants.js';
 
 const lookupPath = path.resolve(
   'data/mods/core/lookups/sexual_prototypes.lookup.json'
@@ -62,25 +63,8 @@ describe('core:sexual_prototypes lookup', () => {
   });
 
   describe('weight validation', () => {
-    const validAxes = [
-      // Mood axes
-      'valence',
-      'arousal',
-      'agency_control',
-      'threat',
-      'engagement',
-      'future_expectancy',
-      'self_evaluation',
-      'affiliation',
-      'inhibitory_control',
-      // Sexual-specific axes
-      'sexual_arousal',
-      'sex_excitation',
-      'sex_inhibition',
-      'sexual_inhibition',
-      // Affect traits (stable personality traits that can influence sexual states)
-      'self_control',
-    ];
+    // Using centralized constants from prototypeAxisConstants.js
+    const validAxes = ALL_PROTOTYPE_WEIGHT_AXES;
 
     Object.entries(lookupData.entries).forEach(([stateName, stateData]) => {
       describe(`${stateName} weights`, () => {
@@ -121,9 +105,9 @@ describe('core:sexual_prototypes lookup', () => {
   });
 
   describe('gate validation', () => {
-    // Pattern includes mood axes, sexual axes, and affect traits
+    // Pattern includes mood axes (including uncertainty), sexual axes, and affect traits
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|affiliation|inhibitory_control|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|self_control)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|affiliation|inhibitory_control|uncertainty|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|self_control)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([stateName, stateData]) => {
       if (stateData.gates) {

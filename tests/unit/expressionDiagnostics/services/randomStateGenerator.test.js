@@ -98,8 +98,9 @@ describe('RandomStateGenerator', () => {
 
     generator.generate('uniform', 'static');
 
-    // 10 mood axes * 2 (current + previous) + 4 affect traits + 3 sexual axes * 2 = 30
-    expect(randomSpy).toHaveBeenCalledTimes(30);
+    const totalValues =
+      MOOD_AXES.length * 2 + AFFECT_TRAITS.length + 3 * 2;
+    expect(randomSpy).toHaveBeenCalledTimes(totalValues);
   });
 
   it('should use two random samples per value for gaussian static sampling', () => {
@@ -107,18 +108,22 @@ describe('RandomStateGenerator', () => {
 
     generator.generate('gaussian', 'static');
 
-    // 30 values * 2 samples each (Box-Muller) = 60
-    expect(randomSpy).toHaveBeenCalledTimes(60);
+    const totalValues =
+      MOOD_AXES.length * 2 + AFFECT_TRAITS.length + 3 * 2;
+    expect(randomSpy).toHaveBeenCalledTimes(totalValues * 2);
   });
 
   it('should derive current values from previous values in dynamic sampling', () => {
-    // For gaussian dynamic: previous mood (10*2) + affect traits (4*2) + previous sexual (3*2) = 34
-    // then current values using deltas
+    // For gaussian dynamic: previous values use #sampleValue (2 randoms each),
+    // then current values use #sampleGaussianDelta (2 randoms each).
+    const previousRandomSamples =
+      (MOOD_AXES.length + AFFECT_TRAITS.length + 3) * 2;
+    const remainingDeltaSamples = (MOOD_AXES.length + 3 - 1) * 2;
     const randomSequence = [
-      ...Array(34).fill(0.5),
+      ...Array(previousRandomSamples).fill(0.5),
       0.25,
       0.5,
-      ...Array(24).fill(0.5),
+      ...Array(remainingDeltaSamples).fill(0.5),
     ];
     const randomSpy = jest
       .spyOn(Math, 'random')

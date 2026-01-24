@@ -41,7 +41,7 @@ export const LLM_MOOD_UPDATE_RESPONSE_SCHEMA = {
       type: 'object',
       additionalProperties: false,
       description:
-        'Mood axis updates. All 8 axes must be provided as absolute values.',
+        'Mood axis updates. All 11 axes must be provided as absolute values.',
       properties: {
         valence: {
           type: 'integer',
@@ -79,6 +79,12 @@ export const LLM_MOOD_UPDATE_RESPONSE_SCHEMA = {
           maximum: 100,
           description: 'Hopeful (+) to hopeless (-)',
         },
+        temporal_orientation: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Future-focused (+) to past-focused (-). Mental time direction.',
+        },
         self_evaluation: {
           type: 'integer',
           minimum: -100,
@@ -91,6 +97,19 @@ export const LLM_MOOD_UPDATE_RESPONSE_SCHEMA = {
           maximum: 100,
           description: 'Connected/warm (+) to cold/detached (-)',
         },
+        inhibitory_control: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Restrained/white-knuckling (+) to disinhibited/impulsive (-)',
+        },
+        uncertainty: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description:
+            'Highly uncertain/cannot integrate (+) to highly certain/coherent model (-)',
+        },
       },
       required: [
         'valence',
@@ -99,8 +118,11 @@ export const LLM_MOOD_UPDATE_RESPONSE_SCHEMA = {
         'threat',
         'engagement',
         'future_expectancy',
+        'temporal_orientation',
         'self_evaluation',
         'affiliation',
+        'inhibitory_control',
+        'uncertainty',
       ],
     },
     sexualUpdate: {
@@ -266,12 +288,12 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
         additionalProperties: false,
       },
     },
-    // Optional mood axis updates (all 8 axes must be provided if present)
+    // Optional mood axis updates (all 11 axes must be provided if present)
     moodUpdate: {
       type: 'object',
       additionalProperties: false,
       description:
-        'Optional mood axis updates. All 8 axes must be provided if present.',
+        'Optional mood axis updates. All 11 axes must be provided if present.',
       properties: {
         valence: {
           type: 'integer',
@@ -309,6 +331,12 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
           maximum: 100,
           description: 'Hopeful (+) to hopeless (-)',
         },
+        temporal_orientation: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Future-focused (+) to past-focused (-). Mental time direction.',
+        },
         self_evaluation: {
           type: 'integer',
           minimum: -100,
@@ -321,6 +349,19 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
           maximum: 100,
           description: 'Connected/warm (+) to cold/detached (-)',
         },
+        inhibitory_control: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description: 'Restrained/white-knuckling (+) to disinhibited/impulsive (-)',
+        },
+        uncertainty: {
+          type: 'integer',
+          minimum: -100,
+          maximum: 100,
+          description:
+            'Highly uncertain/cannot integrate (+) to highly certain/coherent model (-)',
+        },
       },
       required: [
         'valence',
@@ -329,8 +370,11 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
         'threat',
         'engagement',
         'future_expectancy',
+        'temporal_orientation',
         'self_evaluation',
         'affiliation',
+        'inhibitory_control',
+        'uncertainty',
       ],
     },
     // Optional sexual state updates (both fields must be provided if present)

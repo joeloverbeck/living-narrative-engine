@@ -54,7 +54,7 @@ const DEFAULT_MEMORY_PRESSURE_THRESHOLDS = {
  * @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService
  * @typedef {import('../../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry
  * @typedef {import('../../interfaces/IEventBus.js').IEventBus} IEventBus
- * @typedef {import('../../logging/logger.js').default} Logger
+ * @typedef {import('../../logging/loggerStrategy.js').default} Logger
  */
 
 /**

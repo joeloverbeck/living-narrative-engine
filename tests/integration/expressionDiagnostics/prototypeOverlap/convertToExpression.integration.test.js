@@ -69,6 +69,8 @@ describe('PrototypeOverlapAnalyzer - CONVERT_TO_EXPRESSION Integration', () => {
   let dom;
   let container;
   let analyzer;
+  let baseResult;
+  let baseResultRepeat;
 
   /**
    * Setup helper for integration tests.
@@ -107,6 +109,7 @@ describe('PrototypeOverlapAnalyzer - CONVERT_TO_EXPRESSION Integration', () => {
 
         // Register diagnostics services
         registerExpressionDiagnosticsServices(c);
+        c.setOverride(diagnosticsTokens.ISharedContextPoolGenerator, null);
 
         // Register prototypes for testing
         const dataRegistry = c.resolve(tokens.IDataRegistry);
@@ -145,6 +148,14 @@ describe('PrototypeOverlapAnalyzer - CONVERT_TO_EXPRESSION Integration', () => {
   describe('contentment ↔ relief style pair (convert_to_expression candidate)', () => {
     beforeAll(async () => {
       await setup(CONVERT_TO_EXPRESSION_PROTOTYPES);
+      baseResult = await analyzer.analyze({
+        prototypeFamily: 'emotion',
+        sampleCount: 4000,
+      });
+      baseResultRepeat = await analyzer.analyze({
+        prototypeFamily: 'emotion',
+        sampleCount: 4000,
+      });
     });
 
     afterAll(() => {
@@ -152,60 +163,60 @@ describe('PrototypeOverlapAnalyzer - CONVERT_TO_EXPRESSION Integration', () => {
     });
 
     it('should track convert_to_expression in classificationBreakdown', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
       // convert_to_expression pairs are tracked in metadata.classificationBreakdown
-      expect(result.metadata).toBeDefined();
-      expect(result.metadata.classificationBreakdown).toBeDefined();
+      expect(baseResult.metadata).toBeDefined();
+      expect(baseResult.metadata.classificationBreakdown).toBeDefined();
       expect(
-        typeof result.metadata.classificationBreakdown.convertToExpression
+        typeof baseResult.metadata.classificationBreakdown.convertToExpression
       ).toBe('number');
 
       // With properly designed prototypes (nesting + threat <= 0.20),
       // we expect the convert_to_expression count to be >= 1
       expect(
-        result.metadata.classificationBreakdown.convertToExpression
+        baseResult.metadata.classificationBreakdown.convertToExpression
       ).toBeGreaterThanOrEqual(1);
     });
 
     it('should generate recommendations for convert_to_expression pairs', async () => {
-      const result = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
       // convert_to_expression pairs should generate 'prototype_expression_conversion' recommendations
-      const expressionRecs = result.recommendations.filter(
+      const expressionRecs = baseResult.recommendations.filter(
         (r) => r.type === 'prototype_expression_conversion'
       );
 
       // The number of expression recommendations should match the classificationBreakdown count
       expect(expressionRecs.length).toBe(
-        result.metadata.classificationBreakdown.convertToExpression
+        baseResult.metadata.classificationBreakdown.convertToExpression
       );
     });
 
+    it('should include multi-label evidence on convert_to_expression recommendations', async () => {
+      const expressionRecs = baseResult.recommendations.filter(
+        (r) => r.type === 'prototype_expression_conversion'
+      );
+
+      if (expressionRecs.length === 0) {
+        return;
+      }
+
+      const rec = expressionRecs[0];
+      expect(Array.isArray(rec.allMatchingClassifications)).toBe(true);
+      expect(
+        rec.allMatchingClassifications.some(
+          (entry) => entry.type === 'convert_to_expression'
+        )
+      ).toBe(true);
+    });
+
     it('should produce deterministic classification breakdown', async () => {
-      const result1 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      const result2 = await analyzer.analyze({
-        prototypeFamily: 'emotion',
-        sampleCount: 4000,
-      });
-
-      expect(result1.metadata.classificationBreakdown.convertToExpression).toBe(
-        result2.metadata.classificationBreakdown.convertToExpression
+      expect(
+        baseResult.metadata.classificationBreakdown.convertToExpression
+      ).toBe(
+        baseResultRepeat.metadata.classificationBreakdown.convertToExpression
       );
 
       // Overall classification counts should be identical
-      expect(result1.metadata.classificationBreakdown).toEqual(
-        result2.metadata.classificationBreakdown
+      expect(baseResult.metadata.classificationBreakdown).toEqual(
+        baseResultRepeat.metadata.classificationBreakdown
       );
     });
   });

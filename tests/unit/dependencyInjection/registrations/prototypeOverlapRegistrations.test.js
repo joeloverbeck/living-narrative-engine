@@ -17,11 +17,21 @@ import BehavioralOverlapEvaluator from '../../../../src/expressionDiagnostics/se
 import OverlapClassifier from '../../../../src/expressionDiagnostics/services/prototypeOverlap/OverlapClassifier.js';
 import OverlapRecommendationBuilder from '../../../../src/expressionDiagnostics/services/prototypeOverlap/OverlapRecommendationBuilder.js';
 import PrototypeOverlapAnalyzer from '../../../../src/expressionDiagnostics/services/PrototypeOverlapAnalyzer.js';
+import AxisGapAnalyzer from '../../../../src/expressionDiagnostics/services/AxisGapAnalyzer.js';
 import PrototypeAnalysisController from '../../../../src/domUI/prototype-analysis/PrototypeAnalysisController.js';
 import GateConstraintExtractor from '../../../../src/expressionDiagnostics/services/prototypeOverlap/GateConstraintExtractor.js';
 import GateImplicationEvaluator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/GateImplicationEvaluator.js';
 import GateBandingSuggestionBuilder from '../../../../src/expressionDiagnostics/services/prototypeOverlap/GateBandingSuggestionBuilder.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
+
+// V3 Service imports (PROANAOVEV3 series)
+import SharedContextPoolGenerator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/SharedContextPoolGenerator.js';
+import PrototypeVectorEvaluator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/PrototypeVectorEvaluator.js';
+import { wilsonInterval } from '../../../../src/expressionDiagnostics/services/prototypeOverlap/WilsonInterval.js';
+import AgreementMetricsCalculator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/AgreementMetricsCalculator.js';
+import PrototypeProfileCalculator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/PrototypeProfileCalculator.js';
+import GateASTNormalizer from '../../../../src/expressionDiagnostics/services/prototypeOverlap/GateASTNormalizer.js';
+import ActionableSuggestionEngine from '../../../../src/expressionDiagnostics/services/prototypeOverlap/ActionableSuggestionEngine.js';
 
 describe('registerPrototypeOverlapServices', () => {
   /** @type {AppContainer} */
@@ -35,6 +45,7 @@ describe('registerPrototypeOverlapServices', () => {
   let mockContextBuilder;
   let mockPrototypeGateChecker;
   let mockPrototypeRegistryService;
+  let mockContextAxisNormalizer;
 
   beforeEach(() => {
     container = new AppContainer();
@@ -53,6 +64,7 @@ describe('registerPrototypeOverlapServices', () => {
 
     mockPrototypeIntensityCalculator = {
       computeIntensity: jest.fn().mockReturnValue(0.5),
+      computeIntensityFromNormalized: jest.fn().mockReturnValue(0.5),
     };
 
     mockRandomStateGenerator = {
@@ -65,12 +77,19 @@ describe('registerPrototypeOverlapServices', () => {
 
     mockPrototypeGateChecker = {
       checkAllGatesPass: jest.fn().mockReturnValue(true),
+      preParseGates: jest.fn().mockImplementation((gates) => gates),
+      checkParsedGatesPass: jest.fn().mockReturnValue(true),
     };
 
     mockPrototypeRegistryService = {
       getPrototypes: jest.fn().mockReturnValue([]),
       getAllPrototypeKeys: jest.fn().mockReturnValue([]),
       getPrototypesByType: jest.fn().mockReturnValue([]),
+    };
+
+    mockContextAxisNormalizer = {
+      getNormalizedAxes: jest.fn().mockReturnValue({}),
+      getAxisNames: jest.fn().mockReturnValue([]),
     };
 
     // Register foundational dependencies
@@ -97,6 +116,10 @@ describe('registerPrototypeOverlapServices', () => {
     container.register(
       diagnosticsTokens.IPrototypeRegistryService,
       () => mockPrototypeRegistryService
+    );
+    container.register(
+      diagnosticsTokens.IContextAxisNormalizer,
+      () => mockContextAxisNormalizer
     );
   });
 
@@ -202,6 +225,93 @@ describe('registerPrototypeOverlapServices', () => {
       );
     });
 
+    // PROANAOVEV3-009: V3 Service Registration Tests
+    it('should register SharedContextPoolGenerator correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.ISharedContextPoolGenerator,
+        SharedContextPoolGenerator
+      );
+    });
+
+    it('should register PrototypeVectorEvaluator correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IPrototypeVectorEvaluator,
+        PrototypeVectorEvaluator
+      );
+    });
+
+    it('should register WilsonInterval as a function correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      const resolved = container.resolve(diagnosticsTokens.IWilsonInterval);
+      expect(resolved).toBe(wilsonInterval);
+      expect(typeof resolved).toBe('function');
+    });
+
+    it('should register AgreementMetricsCalculator correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IAgreementMetricsCalculator,
+        AgreementMetricsCalculator
+      );
+    });
+
+    it('should register PrototypeProfileCalculator correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IPrototypeProfileCalculator,
+        PrototypeProfileCalculator
+      );
+    });
+
+    it('should register AxisGapAnalyzer correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IAxisGapAnalyzer,
+        AxisGapAnalyzer
+      );
+    });
+
+    it('should register GateASTNormalizer correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IGateASTNormalizer,
+        GateASTNormalizer
+      );
+    });
+
+    it('should register ActionableSuggestionEngine correctly', () => {
+      const registrar = new Registrar(container);
+      registerPrototypeOverlapServices(registrar);
+
+      expectSingleton(
+        container,
+        diagnosticsTokens.IActionableSuggestionEngine,
+        ActionableSuggestionEngine
+      );
+    });
+
     it('should inject config with strictEpsilon into GateConstraintExtractor', () => {
       const registrar = new Registrar(container);
       registerPrototypeOverlapServices(registrar);
@@ -267,6 +377,29 @@ describe('registerPrototypeOverlapServices', () => {
       expect(() =>
         container.resolve(diagnosticsTokens.IPrototypeAnalysisController)
       ).not.toThrow();
+
+      // V3 Services (PROANAOVEV3 series)
+      expect(() =>
+        container.resolve(diagnosticsTokens.ISharedContextPoolGenerator)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IPrototypeVectorEvaluator)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IWilsonInterval)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IAgreementMetricsCalculator)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IPrototypeProfileCalculator)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IGateASTNormalizer)
+      ).not.toThrow();
+      expect(() =>
+        container.resolve(diagnosticsTokens.IActionableSuggestionEngine)
+      ).not.toThrow();
     });
   });
 
@@ -328,6 +461,7 @@ describe('registerPrototypeOverlapServices - fixed behavior', () => {
   let mockContextBuilder;
   let mockPrototypeGateChecker;
   let mockPrototypeRegistryService;
+  let mockContextAxisNormalizer;
 
   beforeEach(() => {
     container = new AppContainer();
@@ -346,6 +480,7 @@ describe('registerPrototypeOverlapServices - fixed behavior', () => {
 
     mockPrototypeIntensityCalculator = {
       computeIntensity: jest.fn().mockReturnValue(0.5),
+      computeIntensityFromNormalized: jest.fn().mockReturnValue(0.5),
     };
 
     mockRandomStateGenerator = {
@@ -358,12 +493,19 @@ describe('registerPrototypeOverlapServices - fixed behavior', () => {
 
     mockPrototypeGateChecker = {
       checkAllGatesPass: jest.fn().mockReturnValue(true),
+      preParseGates: jest.fn().mockImplementation((gates) => gates),
+      checkParsedGatesPass: jest.fn().mockReturnValue(true),
     };
 
     mockPrototypeRegistryService = {
       getPrototypes: jest.fn().mockReturnValue([]),
       getAllPrototypeKeys: jest.fn().mockReturnValue([]),
       getPrototypesByType: jest.fn().mockReturnValue([]),
+    };
+
+    mockContextAxisNormalizer = {
+      getNormalizedAxes: jest.fn().mockReturnValue({}),
+      getAxisNames: jest.fn().mockReturnValue([]),
     };
 
     container.register(tokens.ILogger, () => mockLogger);
@@ -387,6 +529,10 @@ describe('registerPrototypeOverlapServices - fixed behavior', () => {
     container.register(
       diagnosticsTokens.IPrototypeRegistryService,
       () => mockPrototypeRegistryService
+    );
+    container.register(
+      diagnosticsTokens.IContextAxisNormalizer,
+      () => mockContextAxisNormalizer
     );
   });
 

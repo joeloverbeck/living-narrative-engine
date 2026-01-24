@@ -25,6 +25,7 @@ const MOOD_AXES_KEYS = [
   'threat',
   'engagement',
   'future_expectancy',
+  'temporal_orientation',
   'self_evaluation',
   'affiliation',
   'inhibitory_control',

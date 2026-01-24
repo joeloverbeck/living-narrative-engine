@@ -16,11 +16,21 @@ import path from 'path';
 /** @typedef {import('./types.js').ModReferenceMap} ModReferenceMap */
 /** @typedef {import('./types.js').CrossReferenceViolation} CrossReferenceViolation */
 /** @typedef {import('./types.js').ValidationReport} ValidationReport */
+/** @typedef {import('./types.js').ReferenceContext} ReferenceContext */
+
+/**
+ * @typedef {object} ModManifest
+ * @property {Array<{id?: string}> | string[]} [dependencies]
+ * @property {string} [version]
+ */
 
 /**
  * Cross-reference validation error for dependency violations
  */
 class CrossReferenceViolationError extends ModDependencyError {
+  /**
+   * @param {CrossReferenceViolation[]} violations - Violation list.
+   */
   constructor(violations) {
     const violationMessages = violations
       .map((v) => `${v.file}: ${v.message}`)
@@ -89,7 +99,7 @@ class ModCrossReferenceValidator {
    * Validates cross-references for a single mod against its declared dependencies
    *
    * @param {string} modPath - Absolute path to mod directory
-   * @param {Map<string, object>} manifestsMap - Map of mod manifests by ID
+   * @param {Map<string, ModManifest>} manifestsMap - Map of mod manifests by ID
    * @returns {Promise<ValidationReport>} Validation results with violations
    * @throws {CrossReferenceViolationError} If validation fails critically
    */
@@ -147,11 +157,12 @@ class ModCrossReferenceValidator {
       );
       return report;
     } catch (error) {
+      const err = /** @type {Error} */ (error);
       this._logger.error(
         `Cross-reference validation failed for mod ${modId}`,
-        error
+        err
       );
-      throw error;
+      throw err;
     }
   }
 
@@ -159,7 +170,7 @@ class ModCrossReferenceValidator {
    * Enhanced validation with detailed context information and advanced analysis
    *
    * @param {string} modPath - Absolute path to mod directory
-   * @param {Map<string, object>} manifestsMap - Map of mod manifests by ID
+   * @param {Map<string, ModManifest>} manifestsMap - Map of mod manifests by ID
    * @param {object} options - Validation options
    * @param {boolean} options.includeContext - Whether to extract file contexts (default: true)
    * @returns {Promise<ValidationReport>} Enhanced validation results with detailed violations
@@ -195,8 +206,10 @@ class ModCrossReferenceValidator {
         `Mod ${modId} declares ${declaredDependencies.size} dependencies`
       );
 
-      let violations;
-      let extractedReferences;
+      /** @type {CrossReferenceViolation[]} */
+      let violations = [];
+      /** @type {ModReferenceMap} */
+      let extractedReferences = new Map();
 
       if (
         options.includeContext &&
@@ -268,7 +281,7 @@ class ModCrossReferenceValidator {
     } catch (error) {
       this._logger.error(
         `Enhanced cross-reference validation failed for mod ${modId}`,
-        error
+        /** @type {Error} */ (error)
       );
       throw error;
     }
@@ -277,7 +290,7 @@ class ModCrossReferenceValidator {
   /**
    * Validates cross-references for all mods in the ecosystem
    *
-   * @param {Map<string, object>} manifestsMap - Map of all mod manifests
+   * @param {Map<string, ModManifest>} manifestsMap - Map of all mod manifests
    * @returns {Promise<Map<string, ValidationReport>>} Validation results by mod ID
    */
   async validateAllModReferences(manifestsMap) {
@@ -300,8 +313,9 @@ class ModCrossReferenceValidator {
           );
         }
       } catch (error) {
-        this._logger.error(`Failed to validate mod ${modId}`, error);
-        errors.push({ modId, error: error.message });
+        const err = /** @type {Error} */ (error);
+        this._logger.error(`Failed to validate mod ${modId}`, err);
+        errors.push({ modId, error: err.message });
       }
     }
 
@@ -326,7 +340,7 @@ class ModCrossReferenceValidator {
    * Extracts declared dependencies from mod manifest
    *
    * @private
-   * @param {object} manifest - Mod manifest object
+   * @param {ModManifest} manifest - Mod manifest object
    * @returns {Set<string>} Set of declared dependency mod IDs
    */
   _getDeclaredDependencies(manifest) {
@@ -334,8 +348,12 @@ class ModCrossReferenceValidator {
 
     if (manifest.dependencies && Array.isArray(manifest.dependencies)) {
       manifest.dependencies.forEach((dep) => {
-        if (dep && dep.id && typeof dep.id === 'string') {
+        if (dep && typeof dep === 'object' && dep.id && typeof dep.id === 'string') {
           dependencies.add(dep.id);
+          return;
+        }
+        if (typeof dep === 'string') {
+          dependencies.add(dep);
         }
       });
     }
@@ -351,10 +369,11 @@ class ModCrossReferenceValidator {
    * @param {string} modPath - Path to mod directory
    * @param {ModReferenceMap} references - Extracted mod references
    * @param {Set<string>} declaredDeps - Declared dependencies
-   * @param {Map<string, object>} manifestsMap - All mod manifests
+   * @param {Map<string, ModManifest>} manifestsMap - All mod manifests
    * @returns {CrossReferenceViolation[]} List of violations
    */
   _detectViolations(modId, modPath, references, declaredDeps, manifestsMap) {
+    /** @type {CrossReferenceViolation[]} */
     const violations = [];
 
     for (const [referencedModId, components] of references) {
@@ -398,7 +417,7 @@ class ModCrossReferenceValidator {
    * @param {string} modPath - Path to mod directory
    * @param {Map<string, Array<{componentId: string, contexts: Array<object>}>>} contextualReferences - Contextual mod references
    * @param {Set<string>} declaredDeps - Declared dependencies
-   * @param {Map<string, object>} manifestsMap - All mod manifests
+   * @param {Map<string, ModManifest>} manifestsMap - All mod manifests
    * @returns {CrossReferenceViolation[]} List of enhanced violations
    */
   _detectEnhancedViolations(
@@ -408,6 +427,7 @@ class ModCrossReferenceValidator {
     declaredDeps,
     manifestsMap
   ) {
+    /** @type {CrossReferenceViolation[]} */
     const violations = [];
 
     for (const [
@@ -436,7 +456,7 @@ class ModCrossReferenceValidator {
             modPath,
             referencedModId,
             componentId,
-            contexts,
+            /** @type {ReferenceContext[]} */ (contexts),
             Array.from(declaredDeps),
             manifestsMap
           );
@@ -466,6 +486,7 @@ class ModCrossReferenceValidator {
       referencedComponent: componentId,
       file: 'multiple', // TODO: Track specific files in future enhancement
       line: null, // TODO: Track line numbers in future enhancement
+      column: null,
       context: `${referencedModId}:${componentId}`,
       message: `Mod '${modId}' references '${referencedModId}:${componentId}' but doesn't declare '${referencedModId}' as a dependency`,
       declaredDependencies: [...declaredDeps],
@@ -481,9 +502,9 @@ class ModCrossReferenceValidator {
    * @param {string} modPath - Path to mod directory
    * @param {string} referencedModId - Referenced mod ID
    * @param {string} componentId - Referenced component ID
-   * @param {Array<object>} contexts - File contexts where reference appears
+   * @param {ReferenceContext[]} contexts - File contexts where reference appears
    * @param {string[]} declaredDeps - List of declared dependencies
-   * @param {Map<string, object>} manifestsMap - All mod manifests
+   * @param {Map<string, ModManifest>} manifestsMap - All mod manifests
    * @returns {CrossReferenceViolation[]} Array of detailed violations (one per context)
    */
   _createEnhancedViolations(
@@ -495,6 +516,7 @@ class ModCrossReferenceValidator {
     declaredDeps,
     manifestsMap
   ) {
+    /** @type {CrossReferenceViolation[]} */
     const violations = [];
 
     if (contexts.length === 0) {
@@ -566,8 +588,13 @@ class ModCrossReferenceValidator {
   _enhanceViolationWithAnalysis(violation, manifestsMap) {
     // Create a synthetic context for basic violations
     const syntheticContext = {
+      file: 'unknown',
+      line: 0,
+      column: 0,
+      snippet: '',
       type: 'unknown',
       isBlocking: false,
+      isOptional: false,
       isUserFacing: false,
     };
 
@@ -600,9 +627,8 @@ class ModCrossReferenceValidator {
   /**
    * Calculates violation severity based on context
    *
-   * @param context
-   * @param referencedModId
-   * @param _referencedModId
+   * @param {ReferenceContext} context
+   * @param {string} _referencedModId
    * @private
    */
   _calculateSeverity(context, _referencedModId) {
@@ -622,11 +648,9 @@ class ModCrossReferenceValidator {
   /**
    * Analyzes potential impact of violation
    *
-   * @param context
-   * @param referencedModId
-   * @param componentId
-   * @param _referencedModId
-   * @param _componentId
+   * @param {ReferenceContext} context
+   * @param {string} _referencedModId
+   * @param {string} _componentId
    * @private
    */
   _analyzeImpact(context, _referencedModId, _componentId) {
@@ -645,9 +669,9 @@ class ModCrossReferenceValidator {
    * @param {string} modId - ID of the violating mod
    * @param {string} referencedModId - ID of the referenced mod
    * @param {string} componentId - ID of the referenced component
-   * @param {object} context - Context information about the reference
-   * @param {Map<string, object>} manifestsMap - Map of all mod manifests
-   * @returns {Array} Array of fix suggestions
+   * @param {ReferenceContext & { componentId?: string }} context - Context information about the reference
+   * @param {Map<string, ModManifest>} manifestsMap - Map of all mod manifests
+   * @returns {Array<import('./types.js').FixSuggestion>} Array of fix suggestions
    */
   _generateFixSuggestions(
     modId,
@@ -656,6 +680,7 @@ class ModCrossReferenceValidator {
     context,
     manifestsMap
   ) {
+    /** @type {Array<import('./types.js').FixSuggestion>} */
     const fixes = [];
 
     // Primary fix: Add dependency
@@ -705,7 +730,7 @@ class ModCrossReferenceValidator {
    * @param {ModReferenceMap} references - Extracted references
    * @param {Set<string>} declaredDeps - Declared dependencies
    * @param {CrossReferenceViolation[]} violations - Detected violations
-   * @param {Map<string, object>} [manifestsMap] - All mod manifests (optional, for filtering non-existent mods)
+   * @param {Map<string, ModManifest>} [manifestsMap] - All mod manifests (optional, for filtering non-existent mods)
    * @returns {ValidationReport} Complete validation report
    */
   _generateValidationReport(
@@ -713,7 +738,7 @@ class ModCrossReferenceValidator {
     references,
     declaredDeps,
     violations,
-    manifestsMap = null
+    manifestsMap = undefined
   ) {
     const referencedMods = Array.from(references.keys())
       .filter((refMod) => refMod !== modId) // Filter out self-references

@@ -6,7 +6,7 @@
  */
 
 /**
- * The 10 mood axes that define a character's current affective/regulatory state.
+ * The 11 mood axes that define a character's current affective/regulatory state.
  * Each axis ranges from -100 to +100.
  * @type {readonly string[]}
  */
@@ -17,6 +17,7 @@ export const MOOD_AXES = Object.freeze([
   'threat',
   'engagement',
   'future_expectancy',
+  'temporal_orientation',
   'self_evaluation',
   'affiliation',
   'inhibitory_control',

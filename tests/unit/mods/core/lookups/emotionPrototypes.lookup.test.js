@@ -6,6 +6,7 @@
 import { describe, it, expect } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ALL_PROTOTYPE_WEIGHT_AXES } from '../../../../../src/constants/prototypeAxisConstants.js';
 
 const lookupPath = path.resolve(
   'data/mods/core/lookups/emotion_prototypes.lookup.json'
@@ -90,27 +91,8 @@ describe('core:emotion_prototypes lookup', () => {
   });
 
   describe('weight validation', () => {
-    const validAxes = [
-      'valence',
-      'arousal',
-      'agency_control',
-      'threat',
-      'engagement',
-      'future_expectancy',
-      'self_evaluation',
-      'affiliation',
-      'sexual_arousal',
-      'sex_excitation',
-      'sex_inhibition',
-      'sexual_inhibition',
-      // Mood axis (from core:mood component)
-      'inhibitory_control',
-      // Affect trait axes (from core:affect_traits component)
-      'affective_empathy',
-      'cognitive_empathy',
-      'harm_aversion',
-      'self_control',
-    ];
+    // Using centralized constants from prototypeAxisConstants.js
+    const validAxes = ALL_PROTOTYPE_WEIGHT_AXES;
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
       describe(`${emotionName} weights`, () => {
@@ -137,8 +119,9 @@ describe('core:emotion_prototypes lookup', () => {
   });
 
   describe('gate validation', () => {
+    // Pattern includes mood axes (including temporal_orientation and uncertainty), sexual axes, and affect traits
     const gatePattern =
-      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|inhibitory_control|affective_empathy|cognitive_empathy|affiliation|harm_aversion|self_control)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
+      /^(valence|arousal|agency_control|threat|engagement|future_expectancy|temporal_orientation|self_evaluation|sexual_arousal|sex_excitation|sex_inhibition|sexual_inhibition|inhibitory_control|uncertainty|affective_empathy|cognitive_empathy|affiliation|harm_aversion|self_control)\s*(>=|<=|>|<|==)\s*-?[0-9]+(\.[0-9]+)?$/;
 
     Object.entries(lookupData.entries).forEach(([emotionName, emotionData]) => {
       if (emotionData.gates) {

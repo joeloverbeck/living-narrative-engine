@@ -514,7 +514,8 @@
             "self_evaluation": -24,
             "affiliation": -80,
             "inhibitory_control": 70,
-            "uncertainty": 65
+            "uncertainty": 65,
+            "temporal_orientation": -65
         },
         "core:sexual_state": {
             "sex_excitation": 4,

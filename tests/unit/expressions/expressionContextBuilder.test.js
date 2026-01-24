@@ -77,6 +77,7 @@ describe('ExpressionContextBuilder', () => {
       threat: -10,
       engagement: 5,
       future_expectancy: -15,
+      temporal_orientation: 12,
       self_evaluation: 8,
       affiliation: 0,
     };
@@ -107,6 +108,7 @@ describe('ExpressionContextBuilder', () => {
           threat: 0,
           engagement: 0,
           future_expectancy: 0,
+          temporal_orientation: 0,
           self_evaluation: 0,
           affiliation: 0,
           inhibitory_control: 0,
@@ -164,6 +166,7 @@ describe('ExpressionContextBuilder', () => {
       threat: -30,
       engagement: 80,
       future_expectancy: 45,
+      temporal_orientation: -20,
       self_evaluation: 60,
       affiliation: 35,
       inhibitory_control: 20,
@@ -229,6 +232,7 @@ describe('ExpressionContextBuilder', () => {
       threat: 0,
       engagement: 0,
       future_expectancy: 0,
+      temporal_orientation: 0,
       self_evaluation: 0,
       affiliation: 0,
       inhibitory_control: 0,
@@ -250,10 +254,11 @@ describe('ExpressionContextBuilder', () => {
         threat: 3,
         engagement: 4,
         future_expectancy: 5,
-        self_evaluation: 6,
-        affiliation: 7,
-        inhibitory_control: 8,
-        uncertainty: 9,
+        temporal_orientation: 6,
+        self_evaluation: 7,
+        affiliation: 8,
+        inhibitory_control: 9,
+        uncertainty: 10,
       },
     };
 
@@ -333,6 +338,7 @@ describe('ExpressionContextBuilder', () => {
       threat: 0,
       engagement: 0,
       future_expectancy: 0,
+      temporal_orientation: 0,
       self_evaluation: 0,
       affiliation: 0,
       inhibitory_control: 0,
@@ -454,6 +460,7 @@ describe('ExpressionContextBuilder', () => {
         threat: 0,
         engagement: 0,
         future_expectancy: 0,
+        temporal_orientation: 0,
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
@@ -485,6 +492,7 @@ describe('ExpressionContextBuilder', () => {
         threat: 0,
         engagement: 0,
         future_expectancy: 0,
+        temporal_orientation: 0,
         self_evaluation: 0,
         affiliation: 0,
         inhibitory_control: 0,
@@ -504,7 +512,7 @@ describe('ExpressionContextBuilder', () => {
   });
 
   // ============================================
-  // Mood Axes Tests (all 10 canonical axes)
+  // Mood Axes Tests (all 11 canonical axes)
   // ============================================
 
   describe('affiliation axis support', () => {
@@ -540,6 +548,7 @@ describe('ExpressionContextBuilder', () => {
           threat: 3,
           engagement: 4,
           future_expectancy: 5,
+          temporal_orientation: 6,
           self_evaluation: 6,
           affiliation: 15,
           inhibitory_control: 9,

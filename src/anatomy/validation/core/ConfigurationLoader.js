@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
 import { deepFreeze } from '../../../utils/cloneUtils.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 
@@ -10,6 +8,32 @@ const SCHEMA_ID =
   'schema://living-narrative-engine/validation-config.schema.json';
 const DEFAULT_CONFIG_PATH = 'config/validation-config.json';
 const VALID_SEVERITIES = new Set(['error', 'warning', 'info']);
+
+/**
+ * Cached Node.js modules (fs/promises and path) for dynamic loading
+ *
+ * @type {{fs: object, path: object} | null}
+ */
+let nodeModulesCache = null;
+
+/**
+ * Dynamically loads Node.js core modules (fs/promises and path)
+ * to avoid static imports that would fail in browser environments
+ *
+ * @returns {Promise<{fs: object, path: object}>}
+ */
+async function getNodeModules() {
+  if (nodeModulesCache) {
+    return nodeModulesCache;
+  }
+  const dynamicImport = (specifier) => import(specifier);
+  const [fsModule, pathModule] = await Promise.all([
+    dynamicImport('fs/promises'),
+    dynamicImport('path'),
+  ]);
+  nodeModulesCache = { fs: fsModule, path: pathModule };
+  return nodeModulesCache;
+}
 
 /**
  * @description Loads, validates, and merges validation pipeline configuration.
@@ -49,9 +73,9 @@ export class ConfigurationLoader {
    * @returns {Promise<{rawConfig: object, pipelineConfig: object}>}
    */
   async load(configPath, overrides = {}) {
-    const defaultPath = this.#resolvePath(this.#defaultConfigPath);
+    const defaultPath = await this.#resolvePath(this.#defaultConfigPath);
     const requestedPath = configPath
-      ? this.#resolvePath(configPath)
+      ? await this.#resolvePath(configPath)
       : defaultPath;
 
     const defaultConfig = await this.#loadConfigFromFile(defaultPath);
@@ -376,6 +400,7 @@ export class ConfigurationLoader {
       this.#logger.info(
         `ConfigurationLoader: Loading validation config from '${filePath}'`
       );
+      const { fs } = await getNodeModules();
       const fileContents = await fs.readFile(filePath, 'utf-8');
       const parsed = JSON.parse(fileContents);
       await this.#assertSchemaCompliance(parsed, filePath);
@@ -415,11 +440,12 @@ export class ConfigurationLoader {
     }
   }
 
-  #resolvePath(candidatePath) {
+  async #resolvePath(candidatePath) {
     if (!candidatePath || typeof candidatePath !== 'string') {
       throw new Error('ConfigurationLoader: config path must be a string');
     }
 
+    const { path } = await getNodeModules();
     return path.isAbsolute(candidatePath)
       ? candidatePath
       : path.resolve(process.cwd(), candidatePath);

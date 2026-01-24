@@ -339,36 +339,70 @@ export function triggerGarbageCollection() {
  * @type {object|null}
  */
 let v8ModuleCache = null;
-let v8ModuleAttempted = false;
 
 /**
- * Gets the v8 module if available (Node.js only)
+ * Promise for v8 module initialization (prevents multiple concurrent loads)
  *
- * @returns {object|null} The v8 module or null if unavailable
+ * @type {Promise<object|null>|null}
+ */
+let v8ModulePromise = null;
+
+/**
+ * Initiates async loading of the v8 module in Node.js environments.
+ * Returns a promise that resolves to the v8 module or null if unavailable.
+ *
+ * @returns {Promise<object|null>} Promise resolving to v8 module or null
+ */
+function initV8ModuleAsync() {
+  if (v8ModulePromise) {
+    return v8ModulePromise;
+  }
+
+  // Not in Node.js environment - resolve to null immediately
+  if (typeof process === 'undefined' || !process.versions?.node) {
+    v8ModulePromise = Promise.resolve(null);
+    return v8ModulePromise;
+  }
+
+  // Start async loading of v8 module
+  v8ModulePromise = (async () => {
+    try {
+      const dynamicImport = (specifier) => import(specifier);
+      const v8 = await dynamicImport('v8');
+      v8ModuleCache = v8.default || v8;
+      return v8ModuleCache;
+    } catch {
+      // v8 module not available
+      return null;
+    }
+  })();
+
+  return v8ModulePromise;
+}
+
+/**
+ * Gets the v8 module if available (Node.js only).
+ * Returns the cached value synchronously - may return null on first call
+ * if initializeV8Module() hasn't been awaited.
+ *
+ * @returns {object|null} The v8 module or null if unavailable/not yet loaded
  */
 function getV8Module() {
-  // Return cached result if already attempted
-  if (v8ModuleAttempted) {
-    return v8ModuleCache;
+  // Start loading if not already started (fire-and-forget)
+  if (!v8ModulePromise) {
+    initV8ModuleAsync();
   }
+  return v8ModuleCache;
+}
 
-  v8ModuleAttempted = true;
-
-  // Only attempt in Node.js environment
-  if (typeof process === 'undefined' || !process.versions?.node) {
-    return null;
-  }
-
-  try {
-    // Use dynamic import for ES modules or require for CommonJS
-    // In Node.js, we can use require for built-in modules
-    // eslint-disable-next-line no-undef
-    v8ModuleCache = require('v8');
-    return v8ModuleCache;
-  } catch {
-    // v8 module not available
-    return null;
-  }
+/**
+ * Explicitly initializes the v8 module asynchronously.
+ * Call this at Node.js startup to ensure v8 is loaded before getMemoryUsage() calls.
+ *
+ * @returns {Promise<void>}
+ */
+export async function initializeV8Module() {
+  await initV8ModuleAsync();
 }
 
 /**

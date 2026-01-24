@@ -542,4 +542,37 @@ describe('OverlapClassifier - convert_to_expression', () => {
       );
     });
   });
+
+  describe('Multi-label evidence', () => {
+    it('includes convert_to_expression as secondary evidence when merge is primary', () => {
+      const { classifier } = createClassifier();
+
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.28,
+          pOnlyRate: 0.01,
+          qOnlyRate: 0.01,
+        },
+        intensity: {
+          pearsonCorrelation: 0.99,
+          meanAbsDiff: 0.02,
+          dominanceP: 0.3,
+          dominanceQ: 0.3,
+        },
+        passRates: { pA_given_B: 0.5, pB_given_A: 0.99, coPassCount: 800 },
+        gateImplication: createAImpliesBGateImplication(),
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('merge_recommended');
+      const convertMatch = result.allMatchingClassifications.find(
+        (entry) => entry.type === 'convert_to_expression'
+      );
+      expect(convertMatch).toBeDefined();
+      expect(convertMatch.isPrimary).toBe(false);
+    });
+  });
 });

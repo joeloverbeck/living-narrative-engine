@@ -8,7 +8,6 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "frustration_spiral.expression.json",
       "mild_irritation.expression.json"
     ]
   }

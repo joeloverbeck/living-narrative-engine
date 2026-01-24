@@ -117,6 +117,12 @@ class StrictSchemaValidator {
       }
       return validator(data);
     });
+    this.addSchema = jest.fn(async (schema, schemaId) => {
+      this._validators.set(schemaId, () => ({ isValid: true, errors: null }));
+    });
+    this.removeSchema = jest.fn(async (schemaId) => {
+      this._validators.delete(schemaId);
+    });
   }
 }
 
@@ -277,7 +283,7 @@ describe('LookupLoader integration', () => {
 
     expect(result).toEqual({ count: 2, overrides: 0, errors: 0, failures: [] });
     expect(validator.isSchemaLoaded).toHaveBeenCalledWith(LOOKUP_SCHEMA_ID);
-    expect(validator.validate).toHaveBeenCalledTimes(2);
+    expect(validator.validate).toHaveBeenCalledTimes(6);
 
     const storedMoods = registry.get('lookups', 'music:mood_descriptors');
     expect(storedMoods).toMatchObject({
@@ -378,7 +384,7 @@ describe('LookupLoader integration', () => {
       entries: { key1: { value: 1 } },
     });
 
-    expect(schemaValidator.validate).toHaveBeenCalledTimes(2);
+    expect(schemaValidator.validate).toHaveBeenCalledTimes(4);
   });
 
   describe('prototype gate validation', () => {

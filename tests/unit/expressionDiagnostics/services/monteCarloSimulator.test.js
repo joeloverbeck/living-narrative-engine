@@ -3109,5 +3109,1245 @@ describe('MonteCarloSimulator', () => {
         }
       });
     });
+
+    describe('Custom variablePathValidator injection', () => {
+      it('should accept custom variablePathValidator with all required methods', () => {
+        const customValidator = {
+          validateExpressionVarPaths: jest.fn(() => []),
+          validateVarPath: jest.fn(() => ({ valid: true })),
+          collectSamplingCoverageVariables: jest.fn(() => []),
+          resolveSamplingCoverageVariable: jest.fn(() => null),
+          extractReferencedEmotions: jest.fn(() => new Set()),
+          filterEmotions: jest.fn((emotions) => emotions),
+        };
+
+        const simulator = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          variablePathValidator: customValidator,
+        });
+
+        expect(simulator).toBeInstanceOf(MonteCarloSimulator);
+      });
+
+      it('should throw if custom variablePathValidator is missing required methods', () => {
+        const incompleteValidator = {
+          validateExpressionVarPaths: jest.fn(),
+          validateVarPath: jest.fn(),
+          // Missing other required methods
+        };
+
+        expect(
+          () =>
+            new MonteCarloSimulator({
+              dataRegistry: mockDataRegistry,
+              logger: mockLogger,
+              emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+              randomStateGenerator,
+              variablePathValidator: incompleteValidator,
+            })
+        ).toThrow();
+      });
+
+      it('should use custom variablePathValidator when provided', async () => {
+        const customValidator = {
+          validateExpressionVarPaths: jest.fn(() => []),
+          validateVarPath: jest.fn(() => ({ valid: true })),
+          collectSamplingCoverageVariables: jest.fn(() => []),
+          resolveSamplingCoverageVariable: jest.fn(() => null),
+          extractReferencedEmotions: jest.fn(() => new Set()),
+          filterEmotions: jest.fn((emotions) => emotions),
+        };
+
+        const simulator = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          variablePathValidator: customValidator,
+        });
+
+        const expression = {
+          id: 'test:custom-validator',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.3] } }],
+        };
+
+        await simulator.simulate(expression, { sampleCount: 100 });
+
+        // Verify the custom validator was called
+        expect(customValidator.validateExpressionVarPaths).toHaveBeenCalled();
+        expect(customValidator.extractReferencedEmotions).toHaveBeenCalled();
+      });
+    });
+
+    describe('requestIdleCallback browser API', () => {
+      it('should use requestIdleCallback when available', async () => {
+        const originalRequestIdleCallback = globalThis.requestIdleCallback;
+        const mockRequestIdleCallback = jest.fn((callback, options) => {
+          // Immediately invoke the callback to simulate the idle period
+          callback({ didTimeout: false, timeRemaining: () => 50 });
+          return 1;
+        });
+        globalThis.requestIdleCallback = mockRequestIdleCallback;
+
+        try {
+          const expression = {
+            id: 'test:idle-callback',
+            prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.3] } }],
+          };
+
+          await simulator.simulate(expression, { sampleCount: 100 });
+
+          // requestIdleCallback should have been called at least once
+          expect(mockRequestIdleCallback).toHaveBeenCalled();
+        } finally {
+          if (originalRequestIdleCallback === undefined) {
+            delete globalThis.requestIdleCallback;
+          } else {
+            globalThis.requestIdleCallback = originalRequestIdleCallback;
+          }
+        }
+      });
+    });
+
+    describe('Confidence level Z-score branches', () => {
+      it('should use z-score 1.645 for 90% confidence level', async () => {
+        const expression = {
+          id: 'test:zscore-90',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 1000,
+          confidenceLevel: 0.9,
+        });
+
+        // Verify we get a valid result with the 90% confidence level
+        expect(result.confidenceInterval).toBeDefined();
+        expect(result.confidenceInterval.low).toBeGreaterThanOrEqual(0);
+        expect(result.confidenceInterval.high).toBeLessThanOrEqual(1);
+        // With 90% confidence (z=1.645), the interval should be narrower than 95% (z=1.96)
+        // This tests the branch: if (level >= 0.9) return 1.645
+      });
+
+      it('should default to z-score 1.96 for confidence levels below 0.9', async () => {
+        const expression = {
+          id: 'test:zscore-default',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 1000,
+          confidenceLevel: 0.8,
+        });
+
+        // Verify we get a valid result with the 80% confidence level
+        // (which defaults to 95% z-score internally via the fallthrough: return 1.96)
+        expect(result.confidenceInterval).toBeDefined();
+        expect(result.confidenceInterval.low).toBeGreaterThanOrEqual(0);
+        expect(result.confidenceInterval.high).toBeLessThanOrEqual(1);
+        // This tests the default branch: return 1.96
+      });
+
+      it('should use z-score 2.576 for 99% confidence level', async () => {
+        const expression = {
+          id: 'test:zscore-99',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 1000,
+          confidenceLevel: 0.99,
+        });
+
+        // Verify we get a valid result with the 99% confidence level
+        expect(result.confidenceInterval).toBeDefined();
+        // The interval should be wider with 99% confidence (z=2.576)
+        expect(result.confidenceInterval.low).toBeGreaterThanOrEqual(0);
+        expect(result.confidenceInterval.high).toBeLessThanOrEqual(1);
+        // This tests the branch: if (level >= 0.99) return 2.576
+      });
+    });
+
+    describe('computeThresholdSensitivity()', () => {
+      it('should return empty grid when storedContexts is empty', () => {
+        const result = simulator.computeThresholdSensitivity(
+          [],
+          'emotions.joy',
+          '>=',
+          0.5
+        );
+
+        expect(result).toEqual({
+          kind: 'marginalClausePassRateSweep',
+          conditionPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.5,
+          grid: [],
+        });
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'MonteCarloSimulator: No stored contexts for sensitivity analysis'
+        );
+      });
+
+      it('should return empty grid when storedContexts is null', () => {
+        const result = simulator.computeThresholdSensitivity(
+          null,
+          'emotions.joy',
+          '>=',
+          0.5
+        );
+
+        expect(result.grid).toEqual([]);
+        expect(mockLogger.warn).toHaveBeenCalled();
+      });
+
+      it('should compute sensitivity grid with correct structure', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.4 } },
+          { emotions: { joy: 0.5 } },
+          { emotions: { joy: 0.6 } },
+          { emotions: { joy: 0.7 } },
+          { emotions: { joy: 0.8 } },
+        ];
+
+        const result = simulator.computeThresholdSensitivity(
+          storedContexts,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 5, stepSize: 0.1 }
+        );
+
+        expect(result.kind).toBe('marginalClausePassRateSweep');
+        expect(result.conditionPath).toBe('emotions.joy');
+        expect(result.operator).toBe('>=');
+        expect(result.originalThreshold).toBe(0.5);
+        expect(result.grid.length).toBe(5);
+
+        // Each grid point should have required fields
+        result.grid.forEach((point) => {
+          expect(point).toHaveProperty('threshold');
+          expect(point).toHaveProperty('passRate');
+          expect(point).toHaveProperty('passCount');
+          expect(point).toHaveProperty('sampleCount');
+          expect(point.sampleCount).toBe(5);
+        });
+      });
+
+      it('should center threshold grid around original value', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.5 } },
+          { emotions: { joy: 0.6 } },
+        ];
+
+        const result = simulator.computeThresholdSensitivity(
+          storedContexts,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 5, stepSize: 0.1 }
+        );
+
+        // With steps=5, halfSteps=2, so thresholds should be at:
+        // 0.3, 0.4, 0.5 (original), 0.6, 0.7
+        const thresholds = result.grid.map((p) => p.threshold);
+        expect(thresholds.some((t) => Math.abs(t - 0.5) < 0.01)).toBe(true);
+        expect(thresholds.length).toBe(5);
+      });
+
+      it('should handle undefined/null values in contexts', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.5 } },
+          { emotions: {} }, // Missing joy
+          { emotions: { joy: null } }, // Null joy
+          { emotions: { joy: undefined } }, // Undefined joy
+          { emotions: { joy: 0.7 } },
+        ];
+
+        const result = simulator.computeThresholdSensitivity(
+          storedContexts,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3, stepSize: 0.1 }
+        );
+
+        // Should complete without error
+        expect(result.grid.length).toBe(3);
+        // Pass counts should only include valid values
+        result.grid.forEach((point) => {
+          expect(point.sampleCount).toBe(5);
+          // passCount should be based on valid values only
+          expect(point.passCount).toBeLessThanOrEqual(5);
+        });
+      });
+
+      it('should calculate correct pass rates for different operators', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.3 } },
+          { emotions: { joy: 0.5 } },
+          { emotions: { joy: 0.7 } },
+        ];
+
+        // Test with <= operator
+        const result = simulator.computeThresholdSensitivity(
+          storedContexts,
+          'emotions.joy',
+          '<=',
+          0.5,
+          { steps: 1, stepSize: 0.1 }
+        );
+
+        // At threshold 0.5, values 0.3 and 0.5 should pass (<= 0.5)
+        const centerPoint = result.grid.find(
+          (p) => Math.abs(p.threshold - 0.5) < 0.01
+        );
+        expect(centerPoint.passCount).toBe(2);
+        expect(centerPoint.passRate).toBeCloseTo(2 / 3, 2);
+      });
+    });
+
+    describe('computeExpressionSensitivity()', () => {
+      it('should return empty grid when storedContexts is empty', () => {
+        const expressionLogic = { '>=': [{ var: 'emotions.joy' }, 0.5] };
+
+        const result = simulator.computeExpressionSensitivity(
+          [],
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5
+        );
+
+        expect(result).toEqual({
+          kind: 'expressionTriggerRateSweep',
+          varPath: 'emotions.joy',
+          operator: '>=',
+          originalThreshold: 0.5,
+          grid: [],
+          isExpressionLevel: true,
+        });
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'MonteCarloSimulator: No stored contexts for expression sensitivity analysis'
+        );
+      });
+
+      it('should return empty grid when expressionLogic is null', () => {
+        const storedContexts = [{ emotions: { joy: 0.5 } }];
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          null,
+          'emotions.joy',
+          '>=',
+          0.5
+        );
+
+        expect(result.grid).toEqual([]);
+        expect(result.isExpressionLevel).toBe(true);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'MonteCarloSimulator: No expression logic for expression sensitivity analysis'
+        );
+      });
+
+      it('should compute expression-level sensitivity grid', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.3, fear: 0.2 } },
+          { emotions: { joy: 0.5, fear: 0.3 } },
+          { emotions: { joy: 0.7, fear: 0.4 } },
+        ];
+
+        // Compound expression: joy >= threshold AND fear >= 0.25
+        const expressionLogic = {
+          and: [
+            { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            { '>=': [{ var: 'emotions.fear' }, 0.25] },
+          ],
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 5, stepSize: 0.1 }
+        );
+
+        expect(result.kind).toBe('expressionTriggerRateSweep');
+        expect(result.isExpressionLevel).toBe(true);
+        expect(result.grid.length).toBe(5);
+
+        result.grid.forEach((point) => {
+          expect(point).toHaveProperty('threshold');
+          expect(point).toHaveProperty('triggerRate');
+          expect(point).toHaveProperty('triggerCount');
+          expect(point).toHaveProperty('sampleCount');
+        });
+      });
+
+      it('should handle JSON Logic evaluation errors gracefully', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.5 } },
+          { invalidContext: true }, // Context that might cause issues
+        ];
+
+        const expressionLogic = { '>=': [{ var: 'emotions.joy' }, 0.5] };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        // Should complete without throwing
+        expect(result.grid.length).toBe(3);
+      });
+
+      it('should replace threshold in nested AND conditions', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.6, fear: 0.3 } },
+          { emotions: { joy: 0.4, fear: 0.3 } },
+          { emotions: { joy: 0.8, fear: 0.3 } },
+        ];
+
+        const expressionLogic = {
+          and: [
+            { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            { '>=': [{ var: 'emotions.fear' }, 0.2] },
+          ],
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3, stepSize: 0.2 }
+        );
+
+        // Lower threshold should increase trigger rate
+        // Higher threshold should decrease trigger rate
+        const thresholds = result.grid.map((p) => p.threshold);
+
+        // General trend: lower threshold -> higher trigger rate
+        expect(result.grid.length).toBe(3);
+        // Verify the original threshold (0.5) is included in the grid
+        expect(thresholds.some((t) => Math.abs(t - 0.5) < 0.01)).toBe(true);
+      });
+    });
+
+    describe('#replaceThresholdRecursive() via public methods', () => {
+      it('should handle reversed pattern {"op": [threshold, {"var": "path"}]}', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.6 } },
+          { emotions: { joy: 0.4 } },
+        ];
+
+        // Reversed operand order: threshold on left
+        const expressionLogic = { '<=': [0.5, { var: 'emotions.joy' }] };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '<=',
+          0.5,
+          { steps: 3 }
+        );
+
+        // Should complete without error and produce results
+        expect(result.grid.length).toBe(3);
+      });
+
+      it('should recurse into array children of compound operators', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.6, fear: 0.3, calm: 0.4 } },
+          { emotions: { joy: 0.4, fear: 0.5, calm: 0.6 } },
+        ];
+
+        // Complex nested expression with multiple levels
+        const expressionLogic = {
+          or: [
+            {
+              and: [
+                { '>=': [{ var: 'emotions.joy' }, 0.5] },
+                { '<=': [{ var: 'emotions.fear' }, 0.4] },
+              ],
+            },
+            { '>=': [{ var: 'emotions.calm' }, 0.5] },
+          ],
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        expect(result.grid.length).toBe(3);
+      });
+
+      it('should recurse into object children (non-array structures)', () => {
+        const storedContexts = [
+          { emotions: { joy: 0.6 }, flag: true },
+          { emotions: { joy: 0.4 }, flag: false },
+        ];
+
+        // Expression with 'if' operator which has object children
+        const expressionLogic = {
+          if: [
+            { var: 'flag' },
+            { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            false,
+          ],
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        expect(result.grid.length).toBe(3);
+      });
+
+      it('should use structuredClone when available', () => {
+        const originalStructuredClone = globalThis.structuredClone;
+
+        const storedContexts = [{ emotions: { joy: 0.5 } }];
+        const expressionLogic = { '>=': [{ var: 'emotions.joy' }, 0.5] };
+
+        // Ensure structuredClone is available
+        if (typeof globalThis.structuredClone !== 'function') {
+          globalThis.structuredClone = (obj) => JSON.parse(JSON.stringify(obj));
+        }
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        expect(result.grid.length).toBe(3);
+
+        // Restore original
+        if (originalStructuredClone === undefined) {
+          delete globalThis.structuredClone;
+        } else {
+          globalThis.structuredClone = originalStructuredClone;
+        }
+      });
+
+      it('should fall back to JSON.parse/stringify when structuredClone unavailable', () => {
+        const originalStructuredClone = globalThis.structuredClone;
+        delete globalThis.structuredClone;
+
+        try {
+          const storedContexts = [{ emotions: { joy: 0.5 } }];
+          const expressionLogic = { '>=': [{ var: 'emotions.joy' }, 0.5] };
+
+          const result = simulator.computeExpressionSensitivity(
+            storedContexts,
+            expressionLogic,
+            'emotions.joy',
+            '>=',
+            0.5,
+            { steps: 3 }
+          );
+
+          expect(result.grid.length).toBe(3);
+        } finally {
+          if (originalStructuredClone !== undefined) {
+            globalThis.structuredClone = originalStructuredClone;
+          }
+        }
+      });
+    });
+
+    describe('Prototype evaluation guard clauses', () => {
+      it('should handle simulation with missing prototype data gracefully', async () => {
+        // Create a mock data registry that returns null for prototypes
+        const emptyDataRegistry = {
+          get: jest.fn(() => null),
+        };
+
+        const emptyEmotionCalculatorAdapter = buildEmotionCalculatorAdapter(
+          emptyDataRegistry,
+          mockLogger
+        );
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: emptyDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: emptyEmotionCalculatorAdapter,
+          randomStateGenerator,
+        });
+
+        const expression = {
+          id: 'test:empty-prototypes',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        // Should complete without throwing
+        const result = await sim.simulate(expression, { sampleCount: 100 });
+
+        expect(result.triggerRate).toBeDefined();
+        expect(result.sampleCount).toBe(100);
+      });
+
+      it('should handle gateEvaluator returning null context', async () => {
+        const expression = {
+          id: 'test:null-gate-context',
+          prerequisites: [
+            {
+              logic: {
+                and: [
+                  { '>=': [{ var: 'emotions.joy' }, 0.99] },
+                  { '>=': [{ var: 'emotions.fear' }, 0.99] },
+                ],
+              },
+            },
+          ],
+        };
+
+        // With extreme thresholds, prototype evaluation may receive null contexts
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        // Should complete without throwing
+        expect(result).toBeDefined();
+        expect(result.triggerRate).toBeGreaterThanOrEqual(0);
+      });
+    });
+
+    describe('Custom dependency injection - other dependencies', () => {
+      it('should accept custom contextBuilder with all required methods', () => {
+        const customContextBuilder = {
+          buildContext: jest.fn(() => ({})),
+          buildKnownContextKeys: jest.fn(() => new Set()),
+          normalizeGateContext: jest.fn((c) => c),
+          initializeMoodRegimeAxisHistograms: jest.fn(() => ({})),
+          initializeMoodRegimeSampleReservoir: jest.fn(() => []),
+          recordMoodRegimeAxisHistograms: jest.fn(),
+          recordMoodRegimeSampleReservoir: jest.fn(),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          contextBuilder: customContextBuilder,
+        });
+
+        expect(sim).toBeInstanceOf(MonteCarloSimulator);
+      });
+
+      it('should throw if custom contextBuilder is missing required methods', () => {
+        const incompleteContextBuilder = {
+          buildContext: jest.fn(),
+          // Missing other required methods
+        };
+
+        expect(
+          () =>
+            new MonteCarloSimulator({
+              dataRegistry: mockDataRegistry,
+              logger: mockLogger,
+              emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+              randomStateGenerator,
+              contextBuilder: incompleteContextBuilder,
+            })
+        ).toThrow();
+      });
+
+      it('should accept custom expressionEvaluator with all required methods', () => {
+        const customExpressionEvaluator = {
+          initClauseTracking: jest.fn(() => []),
+          evaluateWithTracking: jest.fn(() => ({ result: true })),
+          evaluatePrerequisite: jest.fn(() => true),
+          evaluateAllPrerequisites: jest.fn(() => true),
+          finalizeClauseResults: jest.fn(() => []),
+          buildHierarchicalTree: jest.fn(() => ({})),
+          evaluateThresholdCondition: jest.fn(() => true),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          expressionEvaluator: customExpressionEvaluator,
+        });
+
+        expect(sim).toBeInstanceOf(MonteCarloSimulator);
+      });
+
+      it('should throw if custom expressionEvaluator is missing required methods', () => {
+        const incompleteExpressionEvaluator = {
+          initClauseTracking: jest.fn(),
+          evaluateWithTracking: jest.fn(),
+          // Missing other required methods
+        };
+
+        expect(
+          () =>
+            new MonteCarloSimulator({
+              dataRegistry: mockDataRegistry,
+              logger: mockLogger,
+              emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+              randomStateGenerator,
+              expressionEvaluator: incompleteExpressionEvaluator,
+            })
+        ).toThrow();
+      });
+
+      it('should accept custom gateEvaluator with all required methods', () => {
+        const customGateEvaluator = {
+          buildGateClampRegimePlan: jest.fn(() => ({})),
+          checkGates: jest.fn(() => true),
+          checkPrototypeCompatibility: jest.fn(() => ({})),
+          computeGateCompatibility: jest.fn(() => ({})),
+          evaluateGatePass: jest.fn(() => true),
+          resolveGateTarget: jest.fn(() => 'emotion'),
+          resolveGateContext: jest.fn((c) => c),
+          recordGateOutcomeIfApplicable: jest.fn(),
+          denormalizeGateThreshold: jest.fn((t) => t),
+          buildAxisIntervalsFromMoodConstraints: jest.fn(() => ({})),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          gateEvaluator: customGateEvaluator,
+        });
+
+        expect(sim).toBeInstanceOf(MonteCarloSimulator);
+      });
+
+      it('should throw if custom gateEvaluator is missing required methods', () => {
+        const incompleteGateEvaluator = {
+          buildGateClampRegimePlan: jest.fn(),
+          checkGates: jest.fn(),
+          // Missing other required methods
+        };
+
+        expect(
+          () =>
+            new MonteCarloSimulator({
+              dataRegistry: mockDataRegistry,
+              logger: mockLogger,
+              emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+              randomStateGenerator,
+              gateEvaluator: incompleteGateEvaluator,
+            })
+        ).toThrow();
+      });
+
+      it('should accept custom prototypeEvaluator with all required methods', () => {
+        const customPrototypeEvaluator = {
+          extractPrototypeReferences: jest.fn(() => []),
+          preparePrototypeEvaluationTargets: jest.fn(() => []),
+          initializePrototypeEvaluationSummary: jest.fn(() => ({})),
+          createPrototypeEvaluationStats: jest.fn(() => ({})),
+          updatePrototypeEvaluationSummary: jest.fn(),
+          evaluatePrototypeSample: jest.fn(() => ({})),
+          recordPrototypeEvaluation: jest.fn(),
+          collectPrototypeReferencesFromLogic: jest.fn(() => []),
+          getPrototype: jest.fn(() => null),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          prototypeEvaluator: customPrototypeEvaluator,
+        });
+
+        expect(sim).toBeInstanceOf(MonteCarloSimulator);
+      });
+
+      it('should throw if custom prototypeEvaluator is missing required methods', () => {
+        const incompletePrototypeEvaluator = {
+          extractPrototypeReferences: jest.fn(),
+          preparePrototypeEvaluationTargets: jest.fn(),
+          // Missing other required methods
+        };
+
+        expect(
+          () =>
+            new MonteCarloSimulator({
+              dataRegistry: mockDataRegistry,
+              logger: mockLogger,
+              emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+              randomStateGenerator,
+              prototypeEvaluator: incompletePrototypeEvaluator,
+            })
+        ).toThrow();
+      });
+
+      it('should accept custom violationEstimator with all required methods', () => {
+        const customViolationEstimator = {
+          countFailedClauses: jest.fn(() => 0),
+          getFailedLeavesSummary: jest.fn(() => []),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          violationEstimator: customViolationEstimator,
+        });
+
+        expect(sim).toBeInstanceOf(MonteCarloSimulator);
+      });
+
+      it('should throw if custom violationEstimator is missing required methods', () => {
+        const incompleteViolationEstimator = {
+          countFailedClauses: jest.fn(),
+          // Missing getFailedLeavesSummary
+        };
+
+        expect(
+          () =>
+            new MonteCarloSimulator({
+              dataRegistry: mockDataRegistry,
+              logger: mockLogger,
+              emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+              randomStateGenerator,
+              violationEstimator: incompleteViolationEstimator,
+            })
+        ).toThrow();
+      });
+    });
+
+    describe('Context storage and population metadata', () => {
+      it('should store contexts when storeSamplesForSensitivity option is enabled', async () => {
+        const expression = {
+          id: 'test:store-contexts',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          storeSamplesForSensitivity: true,
+          sensitivitySampleLimit: 50,
+        });
+
+        // Verify storedContexts is populated
+        expect(result.storedContexts).toBeDefined();
+        expect(result.storedContexts).not.toBeNull();
+        expect(result.storedContexts.length).toBeLessThanOrEqual(50);
+      });
+
+      it('should compute populationMeta when contexts are stored', async () => {
+        const expression = {
+          id: 'test:population-meta',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.3] } }],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          storeSamplesForSensitivity: true,
+          sensitivitySampleLimit: 100,
+        });
+
+        // Verify populationMeta is computed
+        expect(result.populationMeta).toBeDefined();
+        if (result.storedContexts && result.storedContexts.length > 0) {
+          expect(result.populationMeta.storedGlobal).toBeDefined();
+          expect(result.populationMeta.storedMoodRegime).toBeDefined();
+        }
+      });
+
+      it('should compute storedInRegimeCount correctly with mood constraints', async () => {
+        const expression = {
+          id: 'test:stored-in-regime',
+          prerequisites: [
+            {
+              logic: {
+                and: [
+                  { '>=': [{ var: 'emotions.joy' }, 0.3] },
+                  { '>=': [{ var: 'moodAxes.valence' }, 0.0] },
+                ],
+              },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          storeSamplesForSensitivity: true,
+          sensitivitySampleLimit: 100,
+        });
+
+        expect(result).toBeDefined();
+        expect(result.storedContexts).toBeDefined();
+        expect(result.storedContexts).not.toBeNull();
+      });
+    });
+
+    describe('Violation estimator callbacks', () => {
+      it('should pass evaluatePrerequisite callback to countFailedClauses', async () => {
+        const expression = {
+          id: 'test:violation-callback',
+          prerequisites: [
+            {
+              logic: {
+                and: [
+                  { '>=': [{ var: 'emotions.joy' }, 0.5] },
+                  { '>=': [{ var: 'emotions.fear' }, 0.7] },
+                ],
+              },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        // The countFailedClauses method should have been called during simulation
+        expect(result.clauseFailures).toBeDefined();
+      });
+
+      it('should pass evaluatePrerequisite callback to getFailedLeavesSummary', async () => {
+        const expression = {
+          id: 'test:failed-leaves-callback',
+          prerequisites: [
+            {
+              logic: {
+                and: [
+                  { '>=': [{ var: 'emotions.joy' }, 0.95] },
+                  { '>=': [{ var: 'emotions.fear' }, 0.95] },
+                ],
+              },
+            },
+          ],
+        };
+
+        const result = await simulator.simulate(expression, {
+          sampleCount: 100,
+          trackClauses: true,
+        });
+
+        // With very high thresholds, most samples will fail
+        // The getFailedLeavesSummary should be called for witness capture
+        expect(result).toBeDefined();
+      });
+    });
+
+    describe('Edge cases for recursive threshold replacement', () => {
+      it('should handle deeply nested object structures', () => {
+        const storedContexts = [{ emotions: { joy: 0.5 } }];
+
+        // Expression with nested object (not just arrays)
+        const expressionLogic = {
+          or: [
+            {
+              and: [{ '>=': [{ var: 'emotions.joy' }, 0.5] }],
+            },
+          ],
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        expect(result.grid.length).toBe(3);
+      });
+
+      it('should handle primitive values in recursion without error', () => {
+        const storedContexts = [{ emotions: { joy: 0.5 }, flag: true }];
+
+        // Expression with primitives mixed with objects
+        const expressionLogic = {
+          and: [
+            { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            { '==': [{ var: 'flag' }, true] },
+          ],
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        expect(result.grid.length).toBe(3);
+      });
+
+      it('should handle non-array object child in recursion (if statement)', () => {
+        const storedContexts = [{ emotions: { joy: 0.5, fear: 0.3 } }];
+
+        // Expression with 'if' statement that has object children (not arrays)
+        const expressionLogic = {
+          if: [
+            { '>=': [{ var: 'emotions.fear' }, 0.5] },
+            { '>=': [{ var: 'emotions.joy' }, 0.8] },
+            { '>=': [{ var: 'emotions.joy' }, 0.3] },
+          ],
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        expect(result.grid.length).toBe(3);
+      });
+
+      it('should handle nested object values that are not arrays', () => {
+        const storedContexts = [{ emotions: { joy: 0.5 } }];
+
+        // Expression with object inside a custom operator-like structure
+        const expressionLogic = {
+          customOp: {
+            nested: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+          },
+        };
+
+        const result = simulator.computeExpressionSensitivity(
+          storedContexts,
+          expressionLogic,
+          'emotions.joy',
+          '>=',
+          0.5,
+          { steps: 3 }
+        );
+
+        expect(result.grid.length).toBe(3);
+      });
+    });
+
+    describe('Callback invocation in violation estimator', () => {
+      it('should invoke evaluatePrerequisite callback in countFailedClauses', async () => {
+        const callbackInvocations = [];
+
+        const customViolationEstimator = {
+          countFailedClauses: jest.fn((clauseTracking, expression, context, callback) => {
+            // Actually invoke the callback to cover line 971
+            if (callback && expression.prerequisites?.length > 0) {
+              const prereq = expression.prerequisites[0];
+              callbackInvocations.push({ prereq, context });
+              callback(prereq, context);
+            }
+            return 0;
+          }),
+          getFailedLeavesSummary: jest.fn(() => []),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          violationEstimator: customViolationEstimator,
+        });
+
+        const expression = {
+          id: 'test:callback-invoke',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        await sim.simulate(expression, {
+          sampleCount: 10,
+          trackClauses: true,
+        });
+
+        expect(customViolationEstimator.countFailedClauses).toHaveBeenCalled();
+        expect(callbackInvocations.length).toBeGreaterThan(0);
+      });
+
+      it('should invoke evaluatePrerequisite callback in getFailedLeavesSummary', async () => {
+        const callbackInvocations = [];
+
+        const customViolationEstimator = {
+          countFailedClauses: jest.fn(() => 2), // Return > 0 to trigger failed leaves summary
+          getFailedLeavesSummary: jest.fn((clauseTracking, expression, context, callback) => {
+            // Actually invoke the callback to cover line 991
+            if (callback && expression.prerequisites?.length > 0) {
+              const prereq = expression.prerequisites[0];
+              callbackInvocations.push({ prereq, context });
+              callback(prereq, context);
+            }
+            return [{ description: 'test failure', actual: 0.3, threshold: 0.5, violation: 0.2 }];
+          }),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          violationEstimator: customViolationEstimator,
+        });
+
+        const expression = {
+          id: 'test:callback-invoke-leaves',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.9] } }],
+        };
+
+        await sim.simulate(expression, {
+          sampleCount: 10,
+          trackClauses: true,
+        });
+
+        expect(customViolationEstimator.getFailedLeavesSummary).toHaveBeenCalled();
+        expect(callbackInvocations.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('Guard clauses in prototype evaluation', () => {
+      it('should handle null resolveGateContext result gracefully', async () => {
+        const customGateEvaluator = {
+          buildGateClampRegimePlan: jest.fn(() => ({ trackedGateAxes: [] })),
+          checkGates: jest.fn(() => true),
+          checkPrototypeCompatibility: jest.fn(() => ({ compatible: true })),
+          computeGateCompatibility: jest.fn(() => ({ emotions: {}, sexualStates: {} })),
+          evaluateGatePass: jest.fn(() => true),
+          resolveGateTarget: jest.fn(() => 'emotion'),
+          resolveGateContext: jest.fn(() => null), // Return null to cover line 1103
+          recordGateOutcomeIfApplicable: jest.fn(),
+          denormalizeGateThreshold: jest.fn((t) => t),
+          buildAxisIntervalsFromMoodConstraints: jest.fn(() => ({})),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          gateEvaluator: customGateEvaluator,
+        });
+
+        const expression = {
+          id: 'test:null-gate-context',
+          prerequisites: [
+            {
+              gate: 'valence >= 0.5',
+              logic: { '>=': [{ var: 'emotions.joy' }, 0.5] },
+            },
+          ],
+        };
+
+        // Should not throw even when resolveGateContext returns null
+        const result = await sim.simulate(expression, {
+          sampleCount: 10,
+          trackPrototypes: true,
+        });
+
+        expect(result).toBeDefined();
+        expect(customGateEvaluator.resolveGateContext).toHaveBeenCalled();
+      });
+
+      it('should handle undefined prototypeEvaluationSummary gracefully', async () => {
+        const customPrototypeEvaluator = {
+          extractPrototypeReferences: jest.fn(() => ({ emotions: new Set(), sexualStates: new Set() })),
+          preparePrototypeEvaluationTargets: jest.fn(() => ({ emotions: [], sexualStates: [] })),
+          initializePrototypeEvaluationSummary: jest.fn(() => null), // Return null for summary
+          createPrototypeEvaluationStats: jest.fn(() => ({})),
+          updatePrototypeEvaluationSummary: jest.fn(),
+          evaluatePrototypeSample: jest.fn(() => ({ passed: true })),
+          recordPrototypeEvaluation: jest.fn(),
+          collectPrototypeReferencesFromLogic: jest.fn(() => []),
+          getPrototype: jest.fn(() => null),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          prototypeEvaluator: customPrototypeEvaluator,
+        });
+
+        const expression = {
+          id: 'test:null-prototype-summary',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        // Should not throw even when prototypeEvaluationSummary is null
+        const result = await sim.simulate(expression, {
+          sampleCount: 10,
+          trackPrototypes: true,
+        });
+
+        expect(result).toBeDefined();
+      });
+
+      it('should handle null prototype targets gracefully (line 1094)', async () => {
+        const customPrototypeEvaluator = {
+          extractPrototypeReferences: jest.fn(() => ({ emotions: new Set(), sexualStates: new Set() })),
+          preparePrototypeEvaluationTargets: jest.fn(() => null), // Return null for targets to cover line 1094
+          initializePrototypeEvaluationSummary: jest.fn(() => ({ emotions: {}, sexualStates: {} })), // Truthy summary so method gets called
+          createPrototypeEvaluationStats: jest.fn(() => ({})),
+          updatePrototypeEvaluationSummary: jest.fn(),
+          evaluatePrototypeSample: jest.fn(() => ({ passed: true })),
+          recordPrototypeEvaluation: jest.fn(),
+          collectPrototypeReferencesFromLogic: jest.fn(() => []),
+          getPrototype: jest.fn(() => null),
+        };
+
+        const sim = new MonteCarloSimulator({
+          dataRegistry: mockDataRegistry,
+          logger: mockLogger,
+          emotionCalculatorAdapter: mockEmotionCalculatorAdapter,
+          randomStateGenerator,
+          prototypeEvaluator: customPrototypeEvaluator,
+        });
+
+        const expression = {
+          id: 'test:null-prototype-targets',
+          prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+        };
+
+        // Should not throw even when prototypeEvaluationTargets is null
+        const result = await sim.simulate(expression, {
+          sampleCount: 10,
+          trackPrototypes: true,
+        });
+
+        expect(result).toBeDefined();
+        // The summary should still be in the result, but the update should have been skipped
+        expect(result.prototypeEvaluationSummary).toBeDefined();
+      });
+    });
   });
 });

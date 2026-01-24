@@ -102,11 +102,13 @@
  * @property {string[]} declaredDependencies - Declared dependencies
  * @property {string[]} referencedMods - All referenced mods
  * @property {string[]} missingDependencies - Mods referenced but not declared
+ * @property {string[]} unusedDependencies - Declared dependencies not referenced
  * @property {object} summary - Summary statistics
  * @property {number} summary.totalReferences - Total component references
  * @property {number} summary.uniqueModsReferenced - Number of unique mods referenced
  * @property {number} summary.violationCount - Number of violations
  * @property {number} summary.missingDependencyCount - Number of missing dependencies
+ * @property {number} summary.unusedDependencyCount - Number of unused declared dependencies
  */
 
 export {};

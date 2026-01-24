@@ -19,8 +19,8 @@ import {
 
 describe('moodAffectConstants', () => {
   describe('MOOD_AXES', () => {
-    it('contains exactly 10 mood axes', () => {
-      expect(MOOD_AXES).toHaveLength(10);
+    it('contains exactly 11 mood axes', () => {
+      expect(MOOD_AXES).toHaveLength(11);
     });
 
     it('contains all expected mood axes in the correct order', () => {
@@ -31,11 +31,17 @@ describe('moodAffectConstants', () => {
         'threat',
         'engagement',
         'future_expectancy',
+        'temporal_orientation',
         'self_evaluation',
         'affiliation',
         'inhibitory_control',
         'uncertainty',
       ]);
+    });
+
+    it('has temporal_orientation at index 6 (after future_expectancy)', () => {
+      expect(MOOD_AXES.indexOf('future_expectancy')).toBe(5);
+      expect(MOOD_AXES.indexOf('temporal_orientation')).toBe(6);
     });
 
     it('is frozen and immutable', () => {
@@ -133,10 +139,14 @@ describe('moodAffectConstants', () => {
     });
 
     it('contains all mood axes', () => {
-      expect(MOOD_AXES_SET.size).toBe(10);
+      expect(MOOD_AXES_SET.size).toBe(11);
       for (const axis of MOOD_AXES) {
         expect(MOOD_AXES_SET.has(axis)).toBe(true);
       }
+    });
+
+    it('contains temporal_orientation', () => {
+      expect(MOOD_AXES_SET.has('temporal_orientation')).toBe(true);
     });
 
     it('does not contain non-mood-axis values', () => {
@@ -173,6 +183,7 @@ describe('moodAffectConstants', () => {
       expect(isMoodAxis('threat')).toBe(true);
       expect(isMoodAxis('engagement')).toBe(true);
       expect(isMoodAxis('future_expectancy')).toBe(true);
+      expect(isMoodAxis('temporal_orientation')).toBe(true);
       expect(isMoodAxis('self_evaluation')).toBe(true);
       expect(isMoodAxis('affiliation')).toBe(true);
       expect(isMoodAxis('inhibitory_control')).toBe(true);

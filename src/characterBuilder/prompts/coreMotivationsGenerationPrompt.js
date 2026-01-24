@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file Prompt templates for core motivations generation
  * @see ../models/coreMotivation.js

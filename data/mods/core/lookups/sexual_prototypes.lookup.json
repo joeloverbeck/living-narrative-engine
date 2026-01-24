@@ -63,6 +63,51 @@
             "type": "number",
             "minimum": -1,
             "maximum": 1
+          },
+          "affiliation": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "inhibitory_control": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "uncertainty": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "temporal_orientation": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "affective_empathy": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "cognitive_empathy": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "harm_aversion": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "self_control": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "baseline_libido": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
           }
         },
         "additionalProperties": false
@@ -172,17 +217,20 @@
       "weights": {
         "sexual_arousal": 0.6,
         "engagement": 0.6,
-        "future_expectancy": 0.5,
+        "future_expectancy": 0.4,
+        "temporal_orientation": 0.5,
         "valence": 0.1,
         "arousal": 0.2,
         "threat": -0.2,
         "self_control": -0.2,
-        "inhibitory_control": 0.0
+        "inhibitory_control": 0.0,
+        "uncertainty": 0.4
       },
       "gates": [
         "engagement >= 0.10",
         "future_expectancy >= 0.10",
-        "sexual_arousal >= 0.1"
+        "sexual_arousal >= 0.10",
+        "uncertainty >= 0.10"
       ]
     },
     "sexual_confidence": {
@@ -194,13 +242,15 @@
         "engagement": 0.15,
         "valence": 0.05,
         "inhibitory_control": 0.3,
-        "self_control": 0.3
+        "self_control": 0.3,
+        "uncertainty": -0.7
       },
       "gates": [
         "sexual_arousal >= 0.25",
         "agency_control >= 0.05",
         "threat <= 0.50",
-        "self_evaluation >= -0.15"
+        "self_evaluation >= -0.15",
+        "uncertainty <= 0.15"
       ]
     },
     "sexual_dominant_pleasure": {
@@ -298,13 +348,16 @@
         "arousal": 0.5,
         "valence": -0.3,
         "inhibitory_control": -0.3,
-        "self_control": -0.4
+        "self_control": -0.4,
+        "temporal_orientation": 0.3,
+        "uncertainty": 0.7
       },
       "gates": [
         "sexual_arousal >= 0.35",
         "threat >= 0.20",
         "agency_control <= 0.10",
-        "self_evaluation <= 0.0"
+        "self_evaluation <= 0.0",
+        "uncertainty >= 0.10"
       ]
     },
     "sexual_frustration": {

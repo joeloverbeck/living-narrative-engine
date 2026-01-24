@@ -15,7 +15,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 // ============================================================================
 
 /**
- * Create mood data with all 10 axes initialized to defaults.
+ * Create mood data with all 11 axes initialized to defaults.
  * @param {object} overrides - Values to override
  * @returns {object} Complete mood data object
  */
@@ -26,6 +26,7 @@ const createMoodData = (overrides = {}) => ({
   threat: 0,
   engagement: 0,
   future_expectancy: 0,
+  temporal_orientation: 0,
   self_evaluation: 0,
   affiliation: 0,
   inhibitory_control: 0,

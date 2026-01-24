@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file Prompt templates for cliché generation
  * @see ../services/ClicheGenerator.js

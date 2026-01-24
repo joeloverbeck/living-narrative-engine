@@ -53,6 +53,23 @@ class CandidatePairFilter {
   #gateSimilarityFilter;
   #behavioralPrescanFilter;
 
+
+  /**
+   * Yield to the event loop to prevent UI blocking.
+   * Uses requestIdleCallback when available, falls back to setTimeout.
+   *
+   * @returns {Promise<void>}
+   */
+  async #yieldToEventLoop() {
+    await new Promise((resolve) => {
+      if (typeof globalThis.requestIdleCallback === 'function') {
+        globalThis.requestIdleCallback(resolve, { timeout: 0 });
+      } else {
+        setTimeout(resolve, 0);
+      }
+    });
+  }
+
   /**
    * Constructs a new CandidatePairFilter instance.
    *
@@ -115,7 +132,19 @@ class CandidatePairFilter {
    * @param {Array<object>} prototypes - Array of prototype objects with weights property
    * @returns {{candidates: Array<CandidatePair>, stats: object}} Candidate pairs with filtering statistics
    */
-  filterCandidates(prototypes) {
+  /**
+   * Filter prototypes to candidate pairs based on structural similarity.
+   *
+   * When enableMultiRouteFiltering is true (v2.1), uses three routes:
+   * - Route A: Weight-vector similarity (original)
+   * - Route B: Gate-based similarity (requires gateSimilarityFilter)
+   * - Route C: Behavioral prescan (requires behavioralPrescanFilter)
+   *
+   * @param {Array<object>} prototypes - Array of prototype objects with weights property
+   * @param {Function|null} [onProgress=null] - Optional progress callback (called with {pairsProcessed, totalPairs})
+   * @returns {Promise<{candidates: Array<CandidatePair>, stats: object}>} Candidate pairs with filtering statistics
+   */
+  async filterCandidates(prototypes, onProgress = null) {
     // Defensive: handle invalid input
     if (!Array.isArray(prototypes)) {
       this.#logger.warn(
@@ -148,7 +177,7 @@ class CandidatePairFilter {
       (validPrototypes.length * (validPrototypes.length - 1)) / 2;
 
     // Route A: Weight-vector similarity (original filtering)
-    const routeAResult = this.#filterByWeightSimilarity(validPrototypes);
+    const routeAResult = await this.#filterByWeightSimilarity(validPrototypes, totalPossiblePairs, onProgress);
 
     // If multi-route filtering is disabled, return Route A results only
     if (!this.#config.enableMultiRouteFiltering) {
@@ -243,7 +272,16 @@ class CandidatePairFilter {
    * @param {Array<object>} validPrototypes - Prototypes with valid weights
    * @returns {object} Route A results with candidates and rejection counts
    */
-  #filterByWeightSimilarity(validPrototypes) {
+  /**
+   * Filter prototypes using Route A (weight-vector similarity).
+   *
+   * @param {Array<object>} validPrototypes - Prototypes with valid weights
+   * @param {number} totalPossiblePairs - Total number of pairs for progress reporting
+   * @param {Function|null} onProgress - Optional progress callback
+   * @returns {Promise<object>} Route A results with candidates and rejection counts
+   */
+  async #filterByWeightSimilarity(validPrototypes, totalPossiblePairs, onProgress) {
+    const CHUNK_SIZE = 100;
     const candidates = [];
     const passedPairKeys = new Set();
     const {
@@ -255,6 +293,7 @@ class CandidatePairFilter {
     let rejectedByActiveAxisOverlap = 0;
     let rejectedBySignAgreement = 0;
     let rejectedByCosineSimilarity = 0;
+    let pairsProcessed = 0;
 
     for (let i = 0; i < validPrototypes.length; i++) {
       for (let j = i + 1; j < validPrototypes.length; j++) {
@@ -265,34 +304,40 @@ class CandidatePairFilter {
 
         if (metrics.activeAxisOverlap < candidateMinActiveAxisOverlap) {
           rejectedByActiveAxisOverlap++;
-          continue;
-        }
-
-        if (metrics.signAgreement < candidateMinSignAgreement) {
+        } else if (metrics.signAgreement < candidateMinSignAgreement) {
           rejectedBySignAgreement++;
-          continue;
-        }
-
-        if (metrics.weightCosineSimilarity < candidateMinCosineSimilarity) {
+        } else if (metrics.weightCosineSimilarity < candidateMinCosineSimilarity) {
           rejectedByCosineSimilarity++;
-          continue;
+        } else {
+          const pairKey = this.#makePairKey(prototypeA, prototypeB);
+          passedPairKeys.add(pairKey);
+
+          candidates.push({
+            prototypeA,
+            prototypeB,
+            candidateMetrics: metrics,
+            selectedBy: 'routeA',
+            routeMetrics: {
+              activeAxisOverlap: metrics.activeAxisOverlap,
+              signAgreement: metrics.signAgreement,
+              weightCosineSimilarity: metrics.weightCosineSimilarity,
+            },
+          });
         }
 
-        const pairKey = this.#makePairKey(prototypeA, prototypeB);
-        passedPairKeys.add(pairKey);
+        pairsProcessed++;
 
-        candidates.push({
-          prototypeA,
-          prototypeB,
-          candidateMetrics: metrics,
-          selectedBy: 'routeA',
-          routeMetrics: {
-            activeAxisOverlap: metrics.activeAxisOverlap,
-            signAgreement: metrics.signAgreement,
-            weightCosineSimilarity: metrics.weightCosineSimilarity,
-          },
-        });
+        // Yield to event loop after each chunk
+        if (pairsProcessed % CHUNK_SIZE === 0) {
+          await this.#yieldToEventLoop();
+          onProgress?.({ pairsProcessed, totalPairs: totalPossiblePairs });
+        }
       }
+    }
+
+    // Final progress update
+    if (onProgress && pairsProcessed > 0) {
+      onProgress({ pairsProcessed, totalPairs: totalPossiblePairs });
     }
 
     this.#logger.debug(
@@ -484,17 +529,35 @@ class CandidatePairFilter {
    *
    * @param {Set<string>} setA - First set of axis names
    * @param {Set<string>} setB - Second set of axis names
-   * @returns {number} Jaccard index [0, 1], returns 0 for empty sets
+   * @returns {number} Jaccard index [0, 1], configurable for empty sets
    */
   #computeJaccard(setA, setB) {
     if (setA.size === 0 && setB.size === 0) {
-      return 0; // No meaningful overlap for empty sets
+      const emptyValue = this.#config.jaccardEmptySetValue ?? 1.0;
+      return emptyValue;
     }
 
     const intersection = new Set([...setA].filter((x) => setB.has(x)));
     const union = new Set([...setA, ...setB]);
 
     return intersection.size / union.size;
+  }
+
+  /**
+   * Compute sign with soft threshold for near-zero weights.
+   *
+   * @param {number} weight - The weight value
+   * @returns {-1|0|1} Soft sign: -1 (negative), 0 (neutral), 1 (positive)
+   */
+  #softSign(weight) {
+    const threshold = this.#config.softSignThreshold ?? 0;
+    if (threshold === 0) {
+      return Math.sign(weight);
+    }
+    if (Math.abs(weight) < threshold) {
+      return 0;
+    }
+    return Math.sign(weight);
   }
 
   /**
@@ -517,8 +580,8 @@ class CandidatePairFilter {
       const weightB = weightsB[axis];
 
       // Signs match if both positive, both negative, or both zero
-      const signA = Math.sign(weightA);
-      const signB = Math.sign(weightB);
+      const signA = this.#softSign(weightA);
+      const signB = this.#softSign(weightB);
 
       if (signA === signB) {
         matchingCount++;

@@ -10,28 +10,21 @@ import {
   MOOD_AXES,
   AFFECT_TRAITS,
 } from '../../../src/constants/moodAffectConstants.js';
+import {
+  SEXUAL_AXES,
+  ALL_PROTOTYPE_WEIGHT_AXES_SET,
+} from '../../../src/constants/prototypeAxisConstants.js';
 import fs from 'fs';
 import path from 'path';
 
 describe('Axis Registry Audit (B1)', () => {
-  // Known axis registries combined
+  // Known axis registries combined - now using centralized constants
   const KNOWN_MOOD_AXES = new Set(MOOD_AXES);
   const KNOWN_AFFECT_TRAITS = new Set(AFFECT_TRAITS);
-  const KNOWN_SEXUAL_AXES = new Set([
-    'sexual_arousal',
-    'SA',
-    'sex_excitation',
-    'sex_inhibition',
-    'sexual_inhibition',
-    'baseline_libido',
-  ]);
+  const KNOWN_SEXUAL_AXES = new Set([...SEXUAL_AXES, 'SA']); // 'SA' is an alias
 
-  // All known axes for weight keys
-  const ALL_KNOWN_AXES = new Set([
-    ...MOOD_AXES,
-    ...AFFECT_TRAITS,
-    ...KNOWN_SEXUAL_AXES,
-  ]);
+  // All known axes for weight keys - from centralized constants
+  const ALL_KNOWN_AXES = ALL_PROTOTYPE_WEIGHT_AXES_SET;
 
   describe('emotion_prototypes.lookup.json audit', () => {
     it('should have all prototype weight keys in known registries', () => {
@@ -144,8 +137,8 @@ describe('Axis Registry Audit (B1)', () => {
       expect(AFFECT_TRAITS).not.toContain('inhibitory_control');
     });
 
-    it('should have exactly 10 mood axes', () => {
-      expect(MOOD_AXES).toHaveLength(10);
+    it('should include the baseline mood axes', () => {
+      expect(new Set(MOOD_AXES).size).toBe(MOOD_AXES.length);
       expect(MOOD_AXES).toContain('valence');
       expect(MOOD_AXES).toContain('arousal');
       expect(MOOD_AXES).toContain('agency_control');

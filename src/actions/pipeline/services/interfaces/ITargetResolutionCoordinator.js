@@ -4,9 +4,9 @@
  */
 
 /** @typedef {import('../../PipelineResult.js').PipelineResult} PipelineResult */
-/** @typedef {import('../../actionTypes.js').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../../actionTypes.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../../../entities/entity.js').default} Entity */
-/** @typedef {import('../../actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../../../actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../../../tracing/traceContext.js').TraceContext|import('../../../tracing/structuredTrace.js').StructuredTrace|import('../../../tracing/actionAwareStructuredTrace.js').default} TraceLike */
 /** @typedef {import('../../../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 

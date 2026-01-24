@@ -33,6 +33,14 @@ describe('OverlapClassifier', () => {
     maxExclusiveRateForSubsumption: 0.01,
     minCorrelationForSubsumption: 0.95,
     minDominanceForSubsumption: 0.95,
+    minGlobalCorrelationForMerge: 0.9,
+    minGlobalCorrelationForSubsumption: 0.85,
+    coPassSampleConfidenceThreshold: 500,
+    minCoPassRatioForReliable: 0.1,
+    coPassCorrelationWeight: 0.6,
+    globalCorrelationWeight: 0.4,
+    maxGlobalMeanAbsDiffForMerge: 0.15,
+    nearMissGlobalCorrelationThreshold: 0.8,
     ...overrides,
   });
 
@@ -68,9 +76,15 @@ describe('OverlapClassifier', () => {
       meanAbsDiff: 0.02,
       dominanceP: 0.3,
       dominanceQ: 0.3,
+      globalMeanAbsDiff: 0.08,
+      globalOutputCorrelation: 0.95,
       ...(overrides.intensity || {}),
     };
-    return { gateOverlap, intensity };
+    const passRates = {
+      coPassCount: 800,
+      ...(overrides.passRates || {}),
+    };
+    return { gateOverlap, intensity, passRates };
   };
 
   /**
@@ -161,6 +175,148 @@ describe('OverlapClassifier', () => {
 
       expect(result.type).toBe('merge_recommended');
       expect(result.subsumedPrototype).toBeUndefined();
+    });
+
+    it('classifies as merge via global correlation when co-pass is unavailable', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.28,
+          pOnlyRate: 0.01,
+          qOnlyRate: 0.01,
+        },
+        intensity: {
+          pearsonCorrelation: NaN,
+          globalOutputCorrelation: 0.92,
+          globalMeanAbsDiff: 0.1,
+          meanAbsDiff: 0.02,
+          dominanceP: 0.3,
+          dominanceQ: 0.3,
+        },
+        passRates: {
+          coPassCount: 50,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('merge_recommended');
+      expect(result.metrics.correlationSource).toBe('global');
+    });
+
+    it('does NOT classify as merge when global correlation is below threshold', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.28,
+          pOnlyRate: 0.01,
+          qOnlyRate: 0.01,
+        },
+        intensity: {
+          pearsonCorrelation: NaN,
+          globalOutputCorrelation: 0.85,
+          globalMeanAbsDiff: 0.1,
+          meanAbsDiff: 0.02,
+          dominanceP: 0.3,
+          dominanceQ: 0.3,
+        },
+        passRates: {
+          coPassCount: 50,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('keep_distinct');
+    });
+
+    it('does NOT classify as merge when global mean abs diff is too high', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.28,
+          pOnlyRate: 0.01,
+          qOnlyRate: 0.01,
+        },
+        intensity: {
+          pearsonCorrelation: NaN,
+          globalOutputCorrelation: 0.95,
+          globalMeanAbsDiff: 0.25,
+          meanAbsDiff: 0.02,
+          dominanceP: 0.3,
+          dominanceQ: 0.3,
+        },
+        passRates: {
+          coPassCount: 50,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('keep_distinct');
+    });
+
+    it('classifies as merge via combined correlation when co-pass is sparse', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.28,
+          pOnlyRate: 0.01,
+          qOnlyRate: 0.01,
+        },
+        intensity: {
+          pearsonCorrelation: 0.94,
+          globalOutputCorrelation: 0.88,
+          globalMeanAbsDiff: 0.1,
+          meanAbsDiff: 0.02,
+          dominanceP: 0.3,
+          dominanceQ: 0.3,
+        },
+        passRates: {
+          coPassCount: 300,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('merge_recommended');
+      expect(result.metrics.correlationSource).toBe('combined');
+    });
+
+    it('uses co-pass correlation when high co-pass samples are present', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.28,
+          pOnlyRate: 0.01,
+          qOnlyRate: 0.01,
+        },
+        intensity: {
+          pearsonCorrelation: 0.985,
+          globalOutputCorrelation: 0.9,
+          meanAbsDiff: 0.02,
+          dominanceP: 0.3,
+          dominanceQ: 0.3,
+        },
+        passRates: {
+          coPassCount: 2000,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('merge_recommended');
+      expect(result.metrics.correlationSource).toBe('co-pass');
     });
 
     it('does NOT classify as merge when onEitherRate too low (dead prototypes)', () => {
@@ -287,6 +443,104 @@ describe('OverlapClassifier', () => {
     });
   });
 
+  describe('Effective correlation selection', () => {
+    it('uses co-pass correlation when count and ratio are reliable', () => {
+      const { classifier } = createClassifier();
+      const result = classifier.classify(createCandidateMetrics(), createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.8,
+          onBothRate: 0.16, // ratio = 0.2
+        },
+        intensity: {
+          pearsonCorrelation: 0.95,
+          globalOutputCorrelation: 0.88,
+        },
+        passRates: {
+          coPassCount: 1000,
+        },
+      }));
+
+      expect(result.metrics.correlationSource).toBe('co-pass');
+      expect(result.metrics.correlationConfidence).toBe('high');
+    });
+
+    it('uses global correlation when co-pass is sparse', () => {
+      const { classifier } = createClassifier();
+      const result = classifier.classify(createCandidateMetrics(), createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.8,
+          onBothRate: 0.016, // ratio = 0.02
+        },
+        intensity: {
+          pearsonCorrelation: NaN,
+          globalOutputCorrelation: 0.88,
+        },
+        passRates: {
+          coPassCount: 50,
+        },
+      }));
+
+      expect(result.metrics.correlationSource).toBe('global');
+      expect(result.metrics.correlationConfidence).toBe('medium');
+    });
+
+    it('combines correlations when co-pass is borderline and global is valid', () => {
+      const { classifier } = createClassifier();
+      const result = classifier.classify(createCandidateMetrics(), createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.04, // ratio = 0.08
+        },
+        intensity: {
+          pearsonCorrelation: 0.92,
+          globalOutputCorrelation: 0.85,
+        },
+        passRates: {
+          coPassCount: 300,
+        },
+      }));
+
+      expect(result.metrics.correlationSource).toBe('combined');
+      expect(result.metrics.correlationConfidence).toBe('medium');
+    });
+
+    it('falls back to sparse co-pass correlation when global is unavailable', () => {
+      const { classifier } = createClassifier();
+      const result = classifier.classify(createCandidateMetrics(), createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.5,
+          onBothRate: 0.05,
+        },
+        intensity: {
+          pearsonCorrelation: 0.9,
+          globalOutputCorrelation: NaN,
+        },
+        passRates: {
+          coPassCount: 100,
+        },
+      }));
+
+      expect(result.metrics.correlationSource).toBe('co-pass-sparse');
+      expect(result.metrics.correlationConfidence).toBe('low');
+    });
+
+    it('returns none when no valid correlation exists', () => {
+      const { classifier } = createClassifier();
+      const result = classifier.classify(createCandidateMetrics(), createBehaviorMetrics({
+        intensity: {
+          pearsonCorrelation: NaN,
+          globalOutputCorrelation: NaN,
+        },
+        passRates: {
+          coPassCount: 0,
+        },
+      }));
+
+      expect(result.metrics.correlationSource).toBe('none');
+      expect(result.metrics.correlationConfidence).toBe('none');
+    });
+  });
+
   describe('Subsumption classification', () => {
     it('classifies as subsumed when A is subset of B', () => {
       const { classifier } = createClassifier();
@@ -311,6 +565,89 @@ describe('OverlapClassifier', () => {
 
       expect(result.type).toBe('subsumed_recommended');
       expect(result.subsumedPrototype).toBe('a');
+    });
+
+    it('classifies as subsumed via global correlation when co-pass is sparse', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.2,
+          pOnlyRate: 0.005,
+          qOnlyRate: 0.095,
+        },
+        intensity: {
+          pearsonCorrelation: NaN,
+          globalOutputCorrelation: 0.87,
+          meanAbsDiff: 0.05,
+          dominanceP: 0.02,
+          dominanceQ: 0.96,
+        },
+        passRates: {
+          coPassCount: 50,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('subsumed_recommended');
+      expect(result.subsumedPrototype).toBe('a');
+    });
+
+    it('does NOT classify as subsumed when global correlation is below threshold', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.2,
+          pOnlyRate: 0.005,
+          qOnlyRate: 0.095,
+        },
+        intensity: {
+          pearsonCorrelation: NaN,
+          globalOutputCorrelation: 0.8,
+          meanAbsDiff: 0.05,
+          dominanceP: 0.02,
+          dominanceQ: 0.96,
+        },
+        passRates: {
+          coPassCount: 50,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('keep_distinct');
+    });
+
+    it('uses co-pass correlation for high co-pass subsumption', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics({
+        gateOverlap: {
+          onEitherRate: 0.3,
+          onBothRate: 0.2,
+          pOnlyRate: 0.005,
+          qOnlyRate: 0.095,
+        },
+        intensity: {
+          pearsonCorrelation: 0.96,
+          globalOutputCorrelation: 0.9,
+          meanAbsDiff: 0.05,
+          dominanceP: 0.02,
+          dominanceQ: 0.96,
+        },
+        passRates: {
+          coPassCount: 1500,
+        },
+      });
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(result.type).toBe('subsumed_recommended');
+      expect(result.metrics.correlationSource).toBe('co-pass');
     });
 
     it('classifies as subsumed when B is subset of A', () => {
@@ -502,6 +839,7 @@ describe('OverlapClassifier', () => {
         },
         intensity: {
           pearsonCorrelation: NaN, // Insufficient data
+          globalOutputCorrelation: NaN,
           meanAbsDiff: 0.02,
           dominanceP: 0.3,
           dominanceQ: 0.3,
@@ -525,6 +863,7 @@ describe('OverlapClassifier', () => {
         },
         intensity: {
           pearsonCorrelation: NaN, // Insufficient data
+          globalOutputCorrelation: NaN,
           meanAbsDiff: 0.05,
           dominanceP: 0.02,
           dominanceQ: 0.96,
@@ -1436,6 +1775,18 @@ describe('OverlapClassifier', () => {
       const result = classifier.classify(candidateMetrics, behaviorMetrics);
 
       expect(result.type).toBe('keep_distinct');
+    });
+
+    it('includes multi-label evidence with primary classification', () => {
+      const { classifier } = createClassifier();
+      const candidateMetrics = createCandidateMetrics();
+      const behaviorMetrics = createBehaviorMetrics();
+
+      const result = classifier.classify(candidateMetrics, behaviorMetrics);
+
+      expect(Array.isArray(result.allMatchingClassifications)).toBe(true);
+      expect(result.allMatchingClassifications[0].type).toBe(result.type);
+      expect(result.allMatchingClassifications[0].isPrimary).toBe(true);
     });
   });
 });

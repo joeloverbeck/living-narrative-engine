@@ -1,350 +1,435 @@
 /**
- * @file Integration tests for global output metrics in prototype overlap analysis
- * Tests that globalMeanAbsDiff, globalL2Distance, and globalOutputCorrelation
- * are properly computed and included in the analysis output.
- * @see src/expressionDiagnostics/services/prototypeOverlap/BehavioralOverlapEvaluator.js
+ * @file Lightweight integration tests for global output metrics computation
+ * Tests BehavioralOverlapEvaluator service with minimal mocked dependencies.
+ * Uses low sample counts for fast execution while validating structure and ranges.
+ *
+ * For full E2E validation with production bootstrap, see:
+ * @see tests/e2e/expressions/diagnostics/globalMetrics.e2e.test.js
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { JSDOM } from 'jsdom';
-import { CommonBootstrapper } from '../../../../src/bootstrapper/CommonBootstrapper.js';
-import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { diagnosticsTokens } from '../../../../src/dependencyInjection/tokens/tokens-diagnostics.js';
-import { registerExpressionServices } from '../../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
-import { registerExpressionDiagnosticsServices } from '../../../../src/dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import BehavioralOverlapEvaluator from '../../../../src/expressionDiagnostics/services/prototypeOverlap/BehavioralOverlapEvaluator.js';
 
 /**
- * Prototypes designed to test global metrics calculation.
- * These have overlapping gates to ensure co-pass samples exist.
+ * Creates a mock logger with all required methods.
+ *
+ * @returns {object} Mock logger
  */
-const TEST_PROTOTYPES = {
-  low_arousal_a: {
-    weights: { valence: -0.4, arousal: -0.6, engagement: -0.5 },
+const createMockLogger = () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+});
+
+/**
+ * Creates a mock prototype intensity calculator.
+ *
+ * @param {number} defaultIntensity - Default intensity to return
+ * @returns {object} Mock intensity calculator
+ */
+const createMockIntensityCalculator = (defaultIntensity = 0.5) => ({
+  computeIntensity: jest.fn().mockReturnValue(defaultIntensity),
+});
+
+/**
+ * Creates a mock random state generator.
+ *
+ * @param {object[]} states - Array of states to return in sequence
+ * @returns {object} Mock state generator
+ */
+const createMockRandomStateGenerator = (states = []) => {
+  let index = 0;
+  const defaultState = {
+    current: { valence: 0, arousal: 0.3, engagement: 0.2 },
+    previous: { valence: 0, arousal: 0, engagement: 0 },
+    affectTraits: {},
+  };
+
+  return {
+    generate: jest.fn(() => {
+      if (states.length > 0 && index < states.length) {
+        return states[index++];
+      }
+      return defaultState;
+    }),
+  };
+};
+
+/**
+ * Creates a mock context builder.
+ *
+ * @returns {object} Mock context builder
+ */
+const createMockContextBuilder = () => ({
+  buildContext: jest.fn(
+    (current, previous, affectTraits) => ({
+      moodAxes: current || { valence: 0, arousal: 0.3 },
+      previousMoodAxes: previous || { valence: 0, arousal: 0 },
+      emotions: {},
+      sexualStates: {},
+    })
+  ),
+});
+
+/**
+ * Creates a mock prototype gate checker.
+ *
+ * @param {boolean} passA - Whether prototype A gates pass
+ * @param {boolean} passB - Whether prototype B gates pass
+ * @returns {object} Mock gate checker
+ */
+const createMockGateChecker = (passA = true, passB = true) => {
+  let callCount = 0;
+  return {
+    checkAllGatesPass: jest.fn((gates) => {
+      // Alternate between A and B based on call order
+      callCount++;
+      // Odd calls are for A, even for B (in each iteration)
+      if (callCount % 2 === 1) {
+        return passA;
+      }
+      return passB;
+    }),
+  };
+};
+
+/**
+ * Creates a mock gate constraint extractor.
+ *
+ * @returns {object} Mock extractor
+ */
+const createMockGateConstraintExtractor = () => ({
+  extract: jest.fn(() => ({
+    parseStatus: 'complete',
+    intervals: [],
+    unparsedGates: [],
+  })),
+});
+
+/**
+ * Creates a mock gate implication evaluator.
+ *
+ * @returns {object} Mock evaluator
+ */
+const createMockGateImplicationEvaluator = () => ({
+  evaluate: jest.fn(() => ({
+    relation: 'independent',
+    direction: null,
+    confidence: 0,
+  })),
+});
+
+/**
+ * Creates default config for BehavioralOverlapEvaluator.
+ *
+ * @returns {object} Config object
+ */
+const createDefaultConfig = () => ({
+  sampleCountPerPair: 10,
+  divergenceExamplesK: 3,
+  dominanceDelta: 0.05,
+  intensityEps: 0.05,
+  minCoPassSamples: 1,
+  minPassSamplesForConditional: 5,
+  highThresholds: [0.4, 0.6, 0.75],
+});
+
+/**
+ * Test prototypes with overlapping gates.
+ */
+const OVERLAPPING_PROTOTYPES = {
+  a: {
+    weights: { valence: 0.5, arousal: 0.5 },
     gates: ['arousal <= 0.40'],
   },
-  low_arousal_b: {
-    weights: { valence: -0.42, arousal: -0.58, engagement: -0.48 },
+  b: {
+    weights: { valence: 0.45, arousal: 0.55 },
     gates: ['arousal <= 0.42'],
   },
 };
 
-/**
- * Prototypes with exclusive gate regions to test global metrics divergence detection.
- * These should show high globalMeanAbsDiff because they rarely fire together.
- */
-const EXCLUSIVE_PROTOTYPES = {
-  high_arousal: {
-    weights: { arousal: 0.8, engagement: 0.6 },
-    gates: ['arousal >= 0.70'], // Only fires when arousal is high
-  },
-  low_arousal: {
-    weights: { arousal: -0.8, engagement: -0.6 },
-    gates: ['arousal <= 0.30'], // Only fires when arousal is low
-  },
-};
+describe('BehavioralOverlapEvaluator - Global Metrics Structure', () => {
+  let evaluator;
+  let mockLogger;
 
-describe('PrototypeOverlapAnalyzer - Global Metrics Integration', () => {
-  let dom;
-  let container;
-  let analyzer;
-
-  beforeAll(async () => {
-    // Setup minimal DOM environment
-    dom = new JSDOM(
-      `
-      <!DOCTYPE html>
-      <html>
-        <body></body>
-      </html>
-    `,
-      {
-        url: 'http://localhost',
-        pretendToBeVisual: true,
-      }
-    );
-
-    global.window = dom.window;
-    global.document = dom.window.document;
-    global.navigator = dom.window.navigator;
-
-    // Bootstrap with minimal configuration - skipModLoading prevents network requests
-    const bootstrapper = new CommonBootstrapper();
-    const result = await bootstrapper.bootstrap({
-      containerConfigType: 'minimal',
-      worldName: 'default',
-      skipModLoading: true,
-      postInitHook: async (services, c) => {
-        // Register expression services (required for IExpressionRegistry)
-        registerExpressionServices(c);
-        // Register diagnostics services
-        registerExpressionDiagnosticsServices(c);
-
-        // Register test prototypes
-        const dataRegistry = c.resolve(tokens.IDataRegistry);
-        dataRegistry.store('lookups', 'core:emotion_prototypes', {
-          entries: TEST_PROTOTYPES,
-        });
-        dataRegistry.store('lookups', 'core:sexual_prototypes', {
-          entries: {},
-        });
-      },
+  beforeEach(() => {
+    mockLogger = createMockLogger();
+    evaluator = new BehavioralOverlapEvaluator({
+      prototypeIntensityCalculator: createMockIntensityCalculator(0.5),
+      randomStateGenerator: createMockRandomStateGenerator(),
+      contextBuilder: createMockContextBuilder(),
+      prototypeGateChecker: createMockGateChecker(true, true),
+      gateConstraintExtractor: createMockGateConstraintExtractor(),
+      gateImplicationEvaluator: createMockGateImplicationEvaluator(),
+      config: createDefaultConfig(),
+      logger: mockLogger,
     });
-
-    if (!result?.container) {
-      throw new Error('Bootstrap failed - container is undefined');
-    }
-
-    container = result.container;
-    analyzer = container.resolve(diagnosticsTokens.IPrototypeOverlapAnalyzer);
   });
 
-  afterAll(() => {
-    if (dom) {
-      dom.window.close();
-    }
-    delete global.window;
-    delete global.document;
-    delete global.navigator;
-  });
-
-  // ==========================================================================
-  // Global metrics presence tests
-  // ==========================================================================
   describe('global metrics presence', () => {
-    it('includes globalMeanAbsDiff in classification metrics', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+    it('returns intensity object with global metrics fields', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
 
-      // Result structure: { recommendations, nearMisses, metadata }
-      // Global metrics are in the classification.metrics on each pair
-      // But pairs are only generated for recommendations, not for all candidates
-      // The closestPair in summaryInsight should have global metrics
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
+      expect(result).toHaveProperty('intensity');
+      expect(result.intensity).toHaveProperty('globalMeanAbsDiff');
+      expect(result.intensity).toHaveProperty('globalL2Distance');
+      expect(result.intensity).toHaveProperty('globalOutputCorrelation');
+    });
 
-      if (closestPair) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair).toHaveProperty('globalMeanAbsDiff');
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(typeof closestPair.globalMeanAbsDiff).toBe('number');
+    it('globalMeanAbsDiff is a number', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
+
+      expect(typeof result.intensity.globalMeanAbsDiff).toBe('number');
+    });
+
+    it('globalL2Distance is a number', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
+
+      expect(typeof result.intensity.globalL2Distance).toBe('number');
+    });
+
+    it('globalOutputCorrelation is a number', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
+
+      expect(typeof result.intensity.globalOutputCorrelation).toBe('number');
+    });
+  });
+
+  describe('global metrics value ranges', () => {
+    it('globalMeanAbsDiff is in range [0, 1] when not NaN', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        20
+      );
+
+      if (!Number.isNaN(result.intensity.globalMeanAbsDiff)) {
+        expect(result.intensity.globalMeanAbsDiff).toBeGreaterThanOrEqual(0);
+        expect(result.intensity.globalMeanAbsDiff).toBeLessThanOrEqual(1);
       }
     });
 
-    it('includes globalL2Distance in classification metrics', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+    it('globalL2Distance is non-negative when not NaN', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        20
+      );
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
-
-      if (closestPair) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair).toHaveProperty('globalL2Distance');
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(typeof closestPair.globalL2Distance).toBe('number');
+      if (!Number.isNaN(result.intensity.globalL2Distance)) {
+        expect(result.intensity.globalL2Distance).toBeGreaterThanOrEqual(0);
       }
     });
 
-    it('includes globalOutputCorrelation in classification metrics', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+    it('globalOutputCorrelation is in range [-1, 1] when not NaN', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        20
+      );
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
-
-      if (closestPair) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair).toHaveProperty('globalOutputCorrelation');
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(typeof closestPair.globalOutputCorrelation).toBe('number');
+      if (!Number.isNaN(result.intensity.globalOutputCorrelation)) {
+        expect(result.intensity.globalOutputCorrelation).toBeGreaterThanOrEqual(-1);
+        expect(result.intensity.globalOutputCorrelation).toBeLessThanOrEqual(1);
       }
     });
   });
 
-  // ==========================================================================
-  // Closest pair composite score tests
-  // ==========================================================================
-  describe('closest pair composite score', () => {
-    it('includes compositeScore in closestPair when pairs exist', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+  describe('co-pass metrics structure', () => {
+    it('returns pearsonCorrelation in intensity object', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
-
-      if (closestPair) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair).toHaveProperty('compositeScore');
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(typeof closestPair.compositeScore).toBe('number');
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.compositeScore).toBeGreaterThanOrEqual(0);
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.compositeScore).toBeLessThanOrEqual(1);
-      }
+      expect(result.intensity).toHaveProperty('pearsonCorrelation');
+      expect(typeof result.intensity.pearsonCorrelation).toBe('number');
     });
 
-    it('includes global metrics in closestPair when pairs exist', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+    it('returns meanAbsDiff in intensity object', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
+      expect(result.intensity).toHaveProperty('meanAbsDiff');
+    });
 
-      if (closestPair) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair).toHaveProperty('globalMeanAbsDiff');
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair).toHaveProperty('globalL2Distance');
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair).toHaveProperty('globalOutputCorrelation');
-      }
+    it('returns rmse in intensity object', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
+
+      expect(result.intensity).toHaveProperty('rmse');
     });
   });
 
-  // ==========================================================================
-  // Global metrics value consistency tests
-  // ==========================================================================
-  describe('global metrics value consistency', () => {
-    it('globalMeanAbsDiff is in expected range [0, 1]', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+  describe('gateOverlap structure', () => {
+    it('returns gateOverlap with required fields', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
-
-      if (closestPair && !Number.isNaN(closestPair.globalMeanAbsDiff)) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.globalMeanAbsDiff).toBeGreaterThanOrEqual(0);
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.globalMeanAbsDiff).toBeLessThanOrEqual(1);
-      }
+      expect(result).toHaveProperty('gateOverlap');
+      expect(result.gateOverlap).toHaveProperty('onEitherRate');
+      expect(result.gateOverlap).toHaveProperty('onBothRate');
+      expect(result.gateOverlap).toHaveProperty('pOnlyRate');
+      expect(result.gateOverlap).toHaveProperty('qOnlyRate');
     });
 
-    it('globalL2Distance is non-negative', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+    it('gateOverlap rates are in range [0, 1]', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
+      expect(result.gateOverlap.onEitherRate).toBeGreaterThanOrEqual(0);
+      expect(result.gateOverlap.onEitherRate).toBeLessThanOrEqual(1);
+      expect(result.gateOverlap.onBothRate).toBeGreaterThanOrEqual(0);
+      expect(result.gateOverlap.onBothRate).toBeLessThanOrEqual(1);
+    });
+  });
 
-      if (closestPair && !Number.isNaN(closestPair.globalL2Distance)) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.globalL2Distance).toBeGreaterThanOrEqual(0);
-      }
+  describe('passRates structure', () => {
+    it('returns passRates with required fields', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
+
+      expect(result).toHaveProperty('passRates');
+      expect(result.passRates).toHaveProperty('passARate');
+      expect(result.passRates).toHaveProperty('passBRate');
+      expect(result.passRates).toHaveProperty('pA_given_B');
+      expect(result.passRates).toHaveProperty('pB_given_A');
+      expect(result.passRates).toHaveProperty('coPassCount');
+    });
+  });
+
+  describe('highCoactivation structure', () => {
+    it('returns highCoactivation with thresholds array', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
+
+      expect(result).toHaveProperty('highCoactivation');
+      expect(result.highCoactivation).toHaveProperty('thresholds');
+      expect(Array.isArray(result.highCoactivation.thresholds)).toBe(true);
     });
 
-    it('globalOutputCorrelation is in expected range [-1, 1] or NaN', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 500,
-      });
+    it('each threshold has required metrics', async () => {
+      const result = await evaluator.evaluate(
+        OVERLAPPING_PROTOTYPES.a,
+        OVERLAPPING_PROTOTYPES.b,
+        10
+      );
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
-
-      if (closestPair && !Number.isNaN(closestPair.globalOutputCorrelation)) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.globalOutputCorrelation).toBeGreaterThanOrEqual(-1);
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.globalOutputCorrelation).toBeLessThanOrEqual(1);
+      for (const threshold of result.highCoactivation.thresholds) {
+        expect(threshold).toHaveProperty('t');
+        expect(threshold).toHaveProperty('pHighA');
+        expect(threshold).toHaveProperty('pHighB');
+        expect(threshold).toHaveProperty('pHighBoth');
+        expect(threshold).toHaveProperty('highJaccard');
+        expect(threshold).toHaveProperty('highAgreement');
       }
     });
   });
 });
 
-describe('PrototypeOverlapAnalyzer - Selection Bias Detection Integration', () => {
-  let dom;
-  let container;
-  let analyzer;
+describe('BehavioralOverlapEvaluator - Exclusive Gates Behavior', () => {
+  it('produces low onBothRate when gates are exclusive', async () => {
+    const mockLogger = createMockLogger();
 
-  beforeAll(async () => {
-    // Setup minimal DOM environment
-    dom = new JSDOM(
-      `
-      <!DOCTYPE html>
-      <html>
-        <body></body>
-      </html>
-    `,
-      {
-        url: 'http://localhost',
-        pretendToBeVisual: true,
-      }
+    // Create gate checker that alternates: A passes, B fails, A fails, B passes
+    let callCount = 0;
+    const exclusiveGateChecker = {
+      checkAllGatesPass: jest.fn(() => {
+        callCount++;
+        // Pattern: A passes (odd, return true), B fails (even, return false)
+        // then A fails, B passes - simulating exclusive gates
+        const sampleIndex = Math.floor((callCount - 1) / 2);
+        const isCallForA = callCount % 2 === 1;
+        if (sampleIndex % 2 === 0) {
+          return isCallForA; // A passes, B fails
+        }
+        return !isCallForA; // A fails, B passes
+      }),
+    };
+
+    const evaluator = new BehavioralOverlapEvaluator({
+      prototypeIntensityCalculator: createMockIntensityCalculator(0.5),
+      randomStateGenerator: createMockRandomStateGenerator(),
+      contextBuilder: createMockContextBuilder(),
+      prototypeGateChecker: exclusiveGateChecker,
+      gateConstraintExtractor: createMockGateConstraintExtractor(),
+      gateImplicationEvaluator: createMockGateImplicationEvaluator(),
+      config: createDefaultConfig(),
+      logger: mockLogger,
+    });
+
+    const result = await evaluator.evaluate(
+      { weights: { arousal: 0.8 }, gates: ['arousal >= 0.70'] },
+      { weights: { arousal: -0.8 }, gates: ['arousal <= 0.30'] },
+      10
     );
 
-    global.window = dom.window;
-    global.document = dom.window.document;
-    global.navigator = dom.window.navigator;
-
-    // Bootstrap with minimal configuration - skipModLoading prevents network requests
-    const bootstrapper = new CommonBootstrapper();
-    const result = await bootstrapper.bootstrap({
-      containerConfigType: 'minimal',
-      worldName: 'default',
-      skipModLoading: true,
-      postInitHook: async (services, c) => {
-        // Register expression services (required for IExpressionRegistry)
-        registerExpressionServices(c);
-        // Register diagnostics services
-        registerExpressionDiagnosticsServices(c);
-
-        // Register exclusive prototypes for testing selection bias detection
-        const dataRegistry = c.resolve(tokens.IDataRegistry);
-        dataRegistry.store('lookups', 'core:emotion_prototypes', {
-          entries: EXCLUSIVE_PROTOTYPES,
-        });
-        dataRegistry.store('lookups', 'core:sexual_prototypes', {
-          entries: {},
-        });
-      },
-    });
-
-    if (!result?.container) {
-      throw new Error('Bootstrap failed - container is undefined');
-    }
-
-    container = result.container;
-    analyzer = container.resolve(diagnosticsTokens.IPrototypeOverlapAnalyzer);
+    // With exclusive gates, onBothRate should be 0
+    expect(result.gateOverlap.onBothRate).toBe(0);
   });
 
-  afterAll(() => {
-    if (dom) {
-      dom.window.close();
-    }
-    delete global.window;
-    delete global.document;
-    delete global.navigator;
-  });
+  it('produces high onBothRate when gates always overlap', async () => {
+    const mockLogger = createMockLogger();
 
-  // ==========================================================================
-  // Selection bias detection: exclusive gates show high global difference
-  // ==========================================================================
-  describe('exclusive firing patterns', () => {
-    it('detects high globalMeanAbsDiff when prototypes fire exclusively', async () => {
-      const result = await analyzer.analyze('emotion', {
-        sampleCount: 1000,
-      });
+    // Gates always pass for both
+    const alwaysPassGateChecker = {
+      checkAllGatesPass: jest.fn(() => true),
+    };
 
-      const closestPair = result.metadata?.summaryInsight?.closestPair;
-
-      if (closestPair) {
-        // With exclusive gates (arousal >= 0.70 vs arousal <= 0.30):
-        // - gateOverlapRatio should be very low (near 0)
-        // - co-pass metrics may be NaN or unreliable
-        // - globalMeanAbsDiff should be HIGH because when one fires, the other doesn't
-
-        // The key insight: even if co-pass correlation is high (or NaN),
-        // globalMeanAbsDiff reveals the true behavioral divergence
-        if (!Number.isNaN(closestPair.globalMeanAbsDiff)) {
-          // With exclusive firing, global diff should be significant
-          // because outA and outB are rarely both non-zero at the same time
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(closestPair.globalMeanAbsDiff).toBeGreaterThan(0);
-        }
-
-        // Gate overlap ratio should be low
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(closestPair.gateOverlapRatio).toBeLessThan(0.5);
-      }
+    const evaluator = new BehavioralOverlapEvaluator({
+      prototypeIntensityCalculator: createMockIntensityCalculator(0.5),
+      randomStateGenerator: createMockRandomStateGenerator(),
+      contextBuilder: createMockContextBuilder(),
+      prototypeGateChecker: alwaysPassGateChecker,
+      gateConstraintExtractor: createMockGateConstraintExtractor(),
+      gateImplicationEvaluator: createMockGateImplicationEvaluator(),
+      config: createDefaultConfig(),
+      logger: mockLogger,
     });
+
+    const result = await evaluator.evaluate(
+      OVERLAPPING_PROTOTYPES.a,
+      OVERLAPPING_PROTOTYPES.b,
+      10
+    );
+
+    // With overlapping gates, onBothRate should be 1.0
+    expect(result.gateOverlap.onBothRate).toBe(1.0);
   });
 });

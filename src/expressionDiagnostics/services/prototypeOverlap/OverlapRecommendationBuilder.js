@@ -53,6 +53,24 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  */
 
 /**
+ * @typedef {object} ActionableSuggestion
+ * @property {string} axis - Axis name to adjust
+ * @property {'gate_lower_bound'|'gate_upper_bound'|'weight_adjustment'} type - Suggestion type
+ * @property {number} suggestedValue - Recommended threshold value
+ * @property {number} confidence - Confidence in suggestion (0-1)
+ * @property {number} estimatedImpact - Estimated overlap reduction (0-1)
+ * @property {boolean} isValid - Whether suggestion passes validation
+ * @property {string} validationMessage - Validation status message
+ */
+
+/**
+ * @typedef {object} V3Data
+ * @property {object} vectorA - Output vector for prototype A
+ * @property {object} vectorB - Output vector for prototype B
+ * @property {Array<object>} contextPool - Shared context pool
+ */
+
+/**
  * @typedef {object} OverlapRecommendation
  * @property {'prototype_merge_suggestion'|'prototype_subsumption_suggestion'|'prototype_overlap_info'} type - Recommendation type based on classification
  * @property {'emotion'|'sexual'} prototypeFamily - Family of prototypes being analyzed
@@ -63,6 +81,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * @property {CandidateMetrics} candidateMetrics - Stage A metrics
  * @property {BehaviorMetrics} behaviorMetrics - Stage B flattened metrics
  * @property {OverlapEvidence} evidence - Supporting evidence
+ * @property {ActionableSuggestion[]} [suggestions] - V3 data-driven suggestions
  */
 
 /**
@@ -77,6 +96,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
 class OverlapRecommendationBuilder {
   #config;
   #logger;
+  #actionableSuggestionEngine;
 
   /**
    * Constructs a new OverlapRecommendationBuilder instance.
@@ -84,16 +104,29 @@ class OverlapRecommendationBuilder {
    * @param {object} deps - Dependencies object
    * @param {object} deps.config - PROTOTYPE_OVERLAP_CONFIG with activeAxisEpsilon
    * @param {import('../../../interfaces/coreServices.js').ILogger} deps.logger - ILogger
+   * @param {object} [deps.actionableSuggestionEngine] - Optional V3 ActionableSuggestionEngine
    */
-  constructor({ config, logger }) {
+  constructor({ config, logger, actionableSuggestionEngine = null }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['debug', 'warn', 'error'],
+      requiredMethods: ['debug', 'warn', 'error', 'info'],
     });
 
     this.#validateConfig(config, logger);
 
     this.#config = config;
     this.#logger = logger;
+    this.#actionableSuggestionEngine = actionableSuggestionEngine;
+
+    if (actionableSuggestionEngine) {
+      validateDependency(
+        actionableSuggestionEngine,
+        'IActionableSuggestionEngine',
+        logger,
+        {
+          requiredMethods: ['generateSuggestions'],
+        }
+      );
+    }
   }
 
   /**
@@ -107,6 +140,7 @@ class OverlapRecommendationBuilder {
    * @param {Array<DivergenceExample>} divergenceExamples - Top K divergence examples
    * @param {Array<object>} [bandingSuggestions] - Gate banding suggestions from GateBandingSuggestionBuilder
    * @param {'emotion'|'sexual'} [prototypeFamily] - Family of prototypes being analyzed
+   * @param {V3Data} [v3Data] - V3 data for data-driven suggestions
    * @returns {OverlapRecommendation} Complete recommendation
    */
   build(
@@ -117,7 +151,8 @@ class OverlapRecommendationBuilder {
     behaviorMetrics,
     divergenceExamples,
     bandingSuggestions = [],
-    prototypeFamily = 'emotion'
+    prototypeFamily = 'emotion',
+    v3Data = null
   ) {
     const type = this.#mapClassificationToType(classification);
     const severity = this.#computeSeverity(classification, behaviorMetrics);
@@ -143,10 +178,17 @@ class OverlapRecommendationBuilder {
       ? bandingSuggestions
       : [];
 
+    // V3: Generate data-driven suggestions if engine and data are available
+    const dataDrivenSuggestions = this.#generateDataDrivenSuggestions(
+      v3Data,
+      classification?.type ?? 'unknown'
+    );
+
     this.#logger.debug(
       `OverlapRecommendationBuilder: Built ${type} recommendation - ` +
         `severity=${severity.toFixed(3)}, confidence=${confidence.toFixed(3)}, ` +
-        `suggestedGateBands=${normalizedBandingSuggestions.length}`
+        `suggestedGateBands=${normalizedBandingSuggestions.length}, ` +
+        `v3Suggestions=${dataDrivenSuggestions.length}`
     );
 
     return {
@@ -168,6 +210,7 @@ class OverlapRecommendationBuilder {
       evidence,
       thresholdAnalysis,
       suggestedGateBands: normalizedBandingSuggestions,
+      suggestions: dataDrivenSuggestions,
     };
   }
 
@@ -741,6 +784,52 @@ class OverlapRecommendationBuilder {
       dominanceP: this.#safeNumber(intensity.dominanceP, 0),
       dominanceQ: this.#safeNumber(intensity.dominanceQ, 0),
     };
+  }
+
+  /**
+   * Generate data-driven suggestions using ActionableSuggestionEngine.
+   *
+   * @param {V3Data|null} v3Data - V3 data with vectors and context pool
+   * @param {string} classificationType - Classification type for logging
+   * @returns {ActionableSuggestion[]} Valid suggestions (empty if engine or data unavailable)
+   */
+  #generateDataDrivenSuggestions(v3Data, classificationType) {
+    // Return empty if engine not provided
+    if (!this.#actionableSuggestionEngine) {
+      return [];
+    }
+
+    // Return empty if v3Data is missing or incomplete
+    if (!v3Data?.vectorA || !v3Data?.vectorB || !v3Data?.contextPool) {
+      return [];
+    }
+
+    const allSuggestions = this.#actionableSuggestionEngine.generateSuggestions(
+      v3Data.vectorA,
+      v3Data.vectorB,
+      v3Data.contextPool,
+      classificationType
+    );
+
+    // Filter to valid suggestions only
+    const validSuggestions = allSuggestions.filter((s) => s.isValid);
+
+    // Log validation status for filtered suggestions
+    const invalidSuggestions = allSuggestions.filter((s) => !s.isValid);
+    if (invalidSuggestions.length > 0) {
+      this.#logger.warn(
+        `Filtered ${invalidSuggestions.length} invalid suggestions: ` +
+          invalidSuggestions.map((s) => s.validationMessage).join('; ')
+      );
+    }
+
+    if (validSuggestions.length > 0) {
+      this.#logger.info(
+        `Generated ${validSuggestions.length} valid data-driven suggestions`
+      );
+    }
+
+    return validSuggestions;
   }
 
   /**

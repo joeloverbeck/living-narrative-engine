@@ -5,9 +5,7 @@ import { tokens } from './dependencyInjection/tokens.js';
 import { diagnosticsTokens } from './dependencyInjection/tokens/tokens-diagnostics.js';
 import { registerExpressionServices } from './dependencyInjection/registrations/expressionsRegistrations.js';
 import { registerExpressionDiagnosticsServices } from './dependencyInjection/registrations/expressionDiagnosticsRegistrations.js';
-import { registerPrototypeOverlapServices } from './dependencyInjection/registrations/prototypeOverlapRegistrations.js';
 import { shouldAutoInitializeDom } from './utils/environmentUtils.js';
-import { Registrar } from './utils/registrarHelpers.js';
 
 /**
  * Initialize the Prototype Analysis page.
@@ -22,8 +20,6 @@ async function initialize() {
       postInitHook: async (services, container) => {
         registerExpressionServices(container);
         registerExpressionDiagnosticsServices(container);
-        const registrar = new Registrar(container);
-        registerPrototypeOverlapServices(registrar);
 
         const logger = container.resolve(tokens.ILogger);
         logger.info('[PrototypeAnalysis] Bootstrap complete.');

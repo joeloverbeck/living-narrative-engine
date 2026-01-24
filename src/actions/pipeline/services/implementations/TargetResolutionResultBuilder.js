@@ -37,7 +37,7 @@ export default class TargetResolutionResultBuilder {
    * @param {object} resolvedTargets - Resolved targets derived from legacy scopes.
    * @param {Array} targetContexts - Target contexts preserved for compatibility.
    * @param {object} conversionResult - Legacy conversion result containing target definitions.
-   * @param {import('../../actionTypes.js').ActionDefinition} actionDef - Action definition metadata.
+   * @param {import('../../../actionTypes.js').ActionDefinition} actionDef - Action definition metadata.
    * @returns {PipelineResult}
    */
   buildLegacyResult(
@@ -79,7 +79,7 @@ export default class TargetResolutionResultBuilder {
    * @param {object} resolvedTargets - Resolved targets map keyed by target key.
    * @param {Array} targetContexts - Flattened target contexts.
    * @param {object} targetDefinitions - Target definition metadata.
-   * @param {import('../../actionTypes.js').ActionDefinition} actionDef - Action definition metadata.
+   * @param {import('../../../actionTypes.js').ActionDefinition} actionDef - Action definition metadata.
    * @param {DetailedResolutionResults|undefined} detailedResults - Optional detailed resolution diagnostics.
    * @returns {PipelineResult}
    */
@@ -222,7 +222,7 @@ export default class TargetResolutionResultBuilder {
    * @private
    * @description Build fallback target definitions for legacy actions when conversion data is missing.
    * @param {object} conversionResult - Legacy conversion result.
-   * @param {import('../../actionTypes.js').ActionDefinition} actionDef - Action definition metadata.
+   * @param {import('../../../actionTypes.js').ActionDefinition} actionDef - Action definition metadata.
    * @returns {object}
    */
   #buildLegacyFallbackDefinitions(conversionResult, actionDef) {

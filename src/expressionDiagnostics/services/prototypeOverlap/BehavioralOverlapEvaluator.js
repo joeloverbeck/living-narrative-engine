@@ -135,6 +135,7 @@ class BehavioralOverlapEvaluator {
   #gateImplicationEvaluator;
   #config;
   #logger;
+  #agreementMetricsCalculator;
 
   /**
    * Constructs a new BehavioralOverlapEvaluator instance.
@@ -146,6 +147,7 @@ class BehavioralOverlapEvaluator {
    * @param {object} deps.prototypeGateChecker - IPrototypeGateChecker with checkAllGatesPass()
    * @param {object} deps.gateConstraintExtractor - IGateConstraintExtractor with extract()
    * @param {object} deps.gateImplicationEvaluator - IGateImplicationEvaluator with evaluate()
+   * @param {object} [deps.agreementMetricsCalculator] - IAgreementMetricsCalculator with calculate() (V3 optional)
    * @param {object} deps.config - Configuration with sampleCountPerPair, divergenceExamplesK, dominanceDelta
    * @param {import('../../../interfaces/coreServices.js').ILogger} deps.logger - ILogger
    */
@@ -156,6 +158,7 @@ class BehavioralOverlapEvaluator {
     prototypeGateChecker,
     gateConstraintExtractor,
     gateImplicationEvaluator,
+    agreementMetricsCalculator,
     config,
     logger,
   }) {
@@ -196,6 +199,16 @@ class BehavioralOverlapEvaluator {
       { requiredMethods: ['evaluate'] }
     );
 
+    // V3 optional dependency (PROANAOVEV3-011): validate only if provided
+    if (agreementMetricsCalculator) {
+      validateDependency(
+        agreementMetricsCalculator,
+        'IAgreementMetricsCalculator',
+        logger,
+        { requiredMethods: ['calculate'] }
+      );
+    }
+
     this.#validateConfig(config, logger);
 
     this.#prototypeIntensityCalculator = prototypeIntensityCalculator;
@@ -204,22 +217,47 @@ class BehavioralOverlapEvaluator {
     this.#prototypeGateChecker = prototypeGateChecker;
     this.#gateConstraintExtractor = gateConstraintExtractor;
     this.#gateImplicationEvaluator = gateImplicationEvaluator;
+    this.#agreementMetricsCalculator = agreementMetricsCalculator ?? null;
     this.#config = config;
     this.#logger = logger;
   }
 
   /**
-   * Evaluate behavioral overlap between two prototypes via Monte Carlo sampling.
+   * Evaluate behavioral overlap between two prototypes.
+   *
+   * **V2 Mode (Monte Carlo)**: Pass a sample count number for Monte Carlo sampling.
    * Processes samples in chunks and yields to the event loop between chunks
    * to keep the UI responsive during long-running analyses.
    *
+   * **V3 Mode (Vector-Based)**: Pass an options object with pre-computed vectors
+   * for efficient O(1) vector operations using AgreementMetricsCalculator.
+   *
    * @param {object} prototypeA - First prototype with gates and weights properties
    * @param {object} prototypeB - Second prototype with gates and weights properties
-   * @param {number} sampleCount - Number of contexts to sample
-   * @param {function(number, number): void} [onProgress] - Optional progress callback (completed, total)
+   * @param {number|{vectorA: object, vectorB: object}} sampleCountOrOptions - V2: sample count (number), V3: options with vectorA/vectorB
+   * @param {function(number, number): void} [onProgress] - Optional progress callback (V2 only)
    * @returns {Promise<BehavioralMetrics>} Computed behavioral metrics
    */
-  async evaluate(prototypeA, prototypeB, sampleCount, onProgress) {
+  async evaluate(prototypeA, prototypeB, sampleCountOrOptions, onProgress) {
+    // Detect V3 mode: options object with pre-computed vectors
+    const isV3Mode =
+      typeof sampleCountOrOptions === 'object' &&
+      sampleCountOrOptions !== null &&
+      'vectorA' in sampleCountOrOptions &&
+      'vectorB' in sampleCountOrOptions &&
+      sampleCountOrOptions.vectorA &&
+      sampleCountOrOptions.vectorB;
+
+    if (isV3Mode) {
+      return this.#evaluateViaVectors(
+        prototypeA,
+        prototypeB,
+        sampleCountOrOptions
+      );
+    }
+
+    // V2 mode: Monte Carlo sampling
+    const sampleCount = sampleCountOrOptions;
     const resolvedSampleCount = this.#resolveSampleCount(sampleCount);
     const divergenceK = this.#config.divergenceExamplesK ?? 5;
     const dominanceDelta = this.#config.dominanceDelta ?? 0.05;
@@ -548,6 +586,112 @@ class BehavioralOverlapEvaluator {
   }
 
   /**
+   * Evaluate behavioral overlap using pre-computed prototype output vectors (V3 mode).
+   * Uses AgreementMetricsCalculator for efficient O(1) vector operations.
+   *
+   * @param {object} prototypeA - First prototype (used for logging/context only in V3)
+   * @param {object} prototypeB - Second prototype (used for logging/context only in V3)
+   * @param {object} options - V3 options with pre-computed vectors
+   * @param {object} options.vectorA - Pre-computed output vector for prototype A
+   * @param {boolean[]} options.vectorA.gateResults - Array of gate pass results per context
+   * @param {number[]} options.vectorA.intensities - Array of computed intensities per context
+   * @param {object} options.vectorB - Pre-computed output vector for prototype B
+   * @param {boolean[]} options.vectorB.gateResults - Array of gate pass results per context
+   * @param {number[]} options.vectorB.intensities - Array of computed intensities per context
+   * @returns {BehavioralMetrics} Computed behavioral metrics with agreementMetrics
+   * @throws {Error} If agreementMetricsCalculator was not provided to constructor
+   */
+  #evaluateViaVectors(prototypeA, prototypeB, options) {
+    const { vectorA, vectorB } = options;
+
+    if (!this.#agreementMetricsCalculator) {
+      throw new Error(
+        'BehavioralOverlapEvaluator: agreementMetricsCalculator required for V3 vector-based evaluation'
+      );
+    }
+
+    // Compute metrics via AgreementMetricsCalculator
+    const agreementMetrics = this.#agreementMetricsCalculator.calculate(
+      vectorA,
+      vectorB
+    );
+
+    const sampleCount = vectorA.gateResults?.length ?? 0;
+
+    // Compute derived gate overlap rates from agreement metrics
+    // onEitherRate approximation: based on activationJaccard inverse
+    // J = coPass / (passA + passB - coPass), so passA + passB - coPass = coPass / J
+    // But we don't have passA/passB directly, so we use what's available
+    const coPassRate = sampleCount > 0 ? agreementMetrics.coPassCount / sampleCount : 0;
+
+    // Estimate passA and passB by iterating vectors (needed for backward compatibility)
+    let passACount = 0;
+    let passBCount = 0;
+    for (let i = 0; i < sampleCount; i++) {
+      if (vectorA.gateResults[i]) passACount++;
+      if (vectorB.gateResults[i]) passBCount++;
+    }
+    const passARate = sampleCount > 0 ? passACount / sampleCount : 0;
+    const passBRate = sampleCount > 0 ? passBCount / sampleCount : 0;
+
+    // Compute gate overlap stats
+    const onBothCount = agreementMetrics.coPassCount;
+    const pOnlyCount = passACount - onBothCount;
+    const qOnlyCount = passBCount - onBothCount;
+    const onEitherCount = passACount + passBCount - onBothCount;
+
+    const gateOverlap = {
+      onEitherRate: sampleCount > 0 ? onEitherCount / sampleCount : 0,
+      onBothRate: coPassRate,
+      pOnlyRate: sampleCount > 0 ? pOnlyCount / sampleCount : 0,
+      qOnlyRate: sampleCount > 0 ? qOnlyCount / sampleCount : 0,
+    };
+
+    // Map V3 metrics to backward-compatible intensity format
+    const intensity = {
+      pearsonCorrelation: agreementMetrics.pearsonCoPass,
+      meanAbsDiff: agreementMetrics.maeCoPass,
+      rmse: agreementMetrics.rmseCoPass,
+      pctWithinEps: NaN, // Not computed in V3 mode
+      dominanceP: 0, // Not computed in V3 mode (would need per-sample comparison)
+      dominanceQ: 0,
+      globalMeanAbsDiff: agreementMetrics.maeGlobal,
+      globalL2Distance: agreementMetrics.rmseGlobal,
+      globalOutputCorrelation: agreementMetrics.pearsonGlobal,
+    };
+
+    // Apply minimum conditional probability guardrail
+    const minPassForConditional = this.#config.minPassSamplesForConditional ?? 200;
+    const passRates = {
+      passARate,
+      passBRate,
+      pA_given_B: passBCount >= minPassForConditional ? agreementMetrics.pA_given_B : NaN,
+      pB_given_A: passACount >= minPassForConditional ? agreementMetrics.pB_given_A : NaN,
+      coPassCount: agreementMetrics.coPassCount,
+      passACount,
+      passBCount,
+    };
+
+    this.#logger.debug(
+      `BehavioralOverlapEvaluator (V3): Evaluated ${sampleCount} samples via vectors, ` +
+        `onBothRate=${gateOverlap.onBothRate.toFixed(4)}, ` +
+        `correlation=${Number.isNaN(intensity.pearsonCorrelation) ? 'NaN' : intensity.pearsonCorrelation.toFixed(4)}`
+    );
+
+    // Return backward-compatible format with V3 agreementMetrics addition
+    return {
+      gateOverlap,
+      intensity,
+      divergenceExamples: [], // Not available in V3 mode (requires per-sample context)
+      passRates,
+      highCoactivation: null, // Not available in V3 mode (requires threshold tracking)
+      gateImplication: null, // Would need separate gate constraint analysis
+      gateParseInfo: null, // Would need separate gate parsing
+      agreementMetrics, // V3: Full agreement metrics from AgreementMetricsCalculator
+    };
+  }
+
+  /**
    * Resolve the sample count, ensuring it's a valid positive integer.
    *
    * @param {number} sampleCount - Requested sample count
@@ -829,6 +973,46 @@ class BehavioralOverlapEvaluator {
   }
 
   /**
+   * Normalize raw axis values to [0, 1] for display consistency.
+   *
+   * @param {string} axis - Axis name
+   * @param {number} rawValue - Raw axis value
+   * @returns {number} Normalized value in [0, 1]
+   */
+  #normalizeAxisValue(axis, rawValue) {
+    if (typeof rawValue !== 'number' || !Number.isFinite(rawValue)) {
+      return rawValue;
+    }
+
+    // Mood axes use [-100, 100] while traits/sexual axes use [0, 100] or [-50, 50].
+    if (MOOD_AXES_SET.has(axis)) {
+      return this.#clamp01((rawValue + 100) / 200);
+    }
+
+    if (AFFECT_TRAITS_SET.has(axis)) {
+      return this.#clamp01(rawValue / 100);
+    }
+
+    if (axis === 'sexual_arousal') {
+      return this.#clamp01(rawValue);
+    }
+
+    if (axis === 'baseline_libido') {
+      return this.#clamp01((rawValue + 50) / 100);
+    }
+
+    if (SEXUAL_AXIS_NAMES.has(axis)) {
+      return this.#clamp01(rawValue / 100);
+    }
+
+    return rawValue;
+  }
+
+  #clamp01(value) {
+    return Math.max(0, Math.min(1, value));
+  }
+
+  /**
    * Format a context object into a human-readable summary string.
    * Extracts top attribute names and values for concise display.
    * Only includes axes that are relevant to the prototypes being compared.
@@ -838,7 +1022,7 @@ class BehavioralOverlapEvaluator {
    * @param {object} weightsB - Weights from prototype B
    * @param {string[]} gatesA - Gates from prototype A
    * @param {string[]} gatesB - Gates from prototype B
-   * @returns {string} Formatted summary (e.g., "arousal: 0.70, valence: -0.30")
+   * @returns {string} Formatted summary (e.g., "arousal: 0.70, valence: 0.35")
    */
   #formatContextSummary(context, weightsA, weightsB, gatesA, gatesB) {
     if (!context || typeof context !== 'object') {
@@ -870,7 +1054,12 @@ class BehavioralOverlapEvaluator {
       return '';
     }
 
-    return top3.map(([key, value]) => `${key}: ${value.toFixed(2)}`).join(', ');
+    return top3
+      .map(([key, value]) => {
+        const normalizedValue = this.#normalizeAxisValue(key, value);
+        return `${key}: ${normalizedValue.toFixed(2)}`;
+      })
+      .join(', ');
   }
 }
 

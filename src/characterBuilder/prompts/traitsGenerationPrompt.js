@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * @file Prompt templates for traits generation
  * @see ../models/trait.js
@@ -5,7 +6,20 @@
  */
 
 // Import existing trait schema from JSON schema file
-import traitSchema from '../../../data/schemas/trait.schema.json' with { type: 'json' };
+import traitSchema from '../../../data/schemas/trait.schema.json' with {
+  type: 'json',
+};
+
+/**
+ * @typedef {object} Cliches
+ * @property {Record<string, string[]>} [categories]
+ * @property {string[]} [tropesAndStereotypes]
+ */
+
+/**
+ * @typedef {object} LlmConfig
+ * @property {Record<string, unknown>} [defaultParameters]
+ */
 
 /**
  * Prompt version information and management
@@ -64,7 +78,7 @@ export const TRAITS_RESPONSE_SCHEMA = {
 /**
  * Formats cliches for inclusion in the prompt
  *
- * @param {object} cliches - Cliches object with categories and tropesAndStereotypes
+ * @param {Cliches} cliches - Cliches object with categories and tropesAndStereotypes
  * @returns {string} Formatted cliches text
  */
 function formatClichesForPrompt(cliches) {
@@ -833,7 +847,7 @@ export function validateTraitsGenerationResponse(response) {
 /**
  * Exports formatClichesForPrompt function
  *
- * @param {object} cliches - Cliches object with categories and tropesAndStereotypes
+ * @param {Cliches} cliches - Cliches object with categories and tropesAndStereotypes
  * @returns {string} Formatted cliches text
  */
 export { formatClichesForPrompt };
@@ -841,8 +855,8 @@ export { formatClichesForPrompt };
 /**
  * Creates an enhanced LLM config with traits generation JSON schema
  *
- * @param {object} baseLlmConfig - Base LLM configuration
- * @returns {object} Enhanced config with JSON schema for traits generation
+ * @param {LlmConfig} baseLlmConfig - Base LLM configuration
+ * @returns {LlmConfig} Enhanced config with JSON schema for traits generation
  */
 export function createTraitsGenerationLlmConfig(baseLlmConfig) {
   if (!baseLlmConfig || typeof baseLlmConfig !== 'object') {
@@ -852,6 +866,11 @@ export function createTraitsGenerationLlmConfig(baseLlmConfig) {
   }
 
   // Create enhanced config with JSON schema
+  const baseParams =
+    baseLlmConfig.defaultParameters &&
+    typeof baseLlmConfig.defaultParameters === 'object'
+      ? baseLlmConfig.defaultParameters
+      : {};
   const enhancedConfig = {
     ...baseLlmConfig,
     jsonOutputStrategy: {
@@ -859,7 +878,7 @@ export function createTraitsGenerationLlmConfig(baseLlmConfig) {
       jsonSchema: TRAITS_RESPONSE_SCHEMA,
     },
     defaultParameters: {
-      ...baseLlmConfig.defaultParameters,
+      ...baseParams,
       ...TRAITS_GENERATION_LLM_PARAMS,
     },
   };

@@ -17,8 +17,11 @@ describe('LLM Output Validation Pipeline Integration', () => {
     threat: -5,
     engagement: 20,
     future_expectancy: 10,
+    temporal_orientation: 0,
     self_evaluation: 5,
     affiliation: 5,
+    inhibitory_control: 0,
+    uncertainty: 5,
   };
   const baseSexualUpdate = {
     sex_excitation: 10,

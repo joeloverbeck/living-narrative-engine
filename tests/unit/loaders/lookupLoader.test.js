@@ -25,9 +25,11 @@ describe('LookupLoader', () => {
       pathResolver: { resolveModContentPath: jest.fn() },
       dataFetcher: { fetch: jest.fn() },
       schemaValidator: {
-        validate: jest.fn(),
+        validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
         getValidator: jest.fn(),
-        isSchemaLoaded: jest.fn(),
+        isSchemaLoaded: jest.fn().mockReturnValue(false),
+        addSchema: jest.fn().mockResolvedValue(true),
+        removeSchema: jest.fn(),
       },
       dataRegistry: { store: jest.fn(), get: jest.fn() },
       logger: {

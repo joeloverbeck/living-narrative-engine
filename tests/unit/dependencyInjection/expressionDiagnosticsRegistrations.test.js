@@ -350,6 +350,10 @@ describe('expressionDiagnosticsRegistrations', () => {
       );
     });
 
+    it('should export IAxisGapAnalyzer token', () => {
+      expect(diagnosticsTokens.IAxisGapAnalyzer).toBe('IAxisGapAnalyzer');
+    });
+
     it('should be frozen', () => {
       expect(Object.isFrozen(diagnosticsTokens)).toBe(true);
     });

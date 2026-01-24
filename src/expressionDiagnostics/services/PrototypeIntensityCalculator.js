@@ -166,6 +166,33 @@ class PrototypeIntensityCalculator {
   }
 
   /**
+   * Compute emotion intensity from weights using pre-normalized axes.
+   * This is the optimized hot path for batch evaluation.
+   *
+   * @param {object} weights - Axis weights.
+   * @param {{moodAxes: object, sexualAxes: object, traitAxes: object}} normalizedAxes - Pre-normalized context axes.
+   * @returns {number} Normalized intensity in [0, 1].
+   */
+  computeIntensityFromNormalized(weights, normalizedAxes) {
+    let rawSum = 0;
+    let sumAbsWeights = 0;
+
+    for (const [axis, weight] of Object.entries(weights)) {
+      const value = resolveAxisValue(
+        axis,
+        normalizedAxes.moodAxes,
+        normalizedAxes.sexualAxes,
+        normalizedAxes.traitAxes
+      );
+      rawSum += weight * value;
+      sumAbsWeights += Math.abs(weight);
+    }
+
+    if (sumAbsWeights === 0) return 0;
+    return Math.max(0, Math.min(1, rawSum / sumAbsWeights));
+  }
+
+  /**
    * Compute percentile from sorted array.
    * @param {number[]} sortedArr - Sorted array of values
    * @param {number} p - Percentile (0-1)

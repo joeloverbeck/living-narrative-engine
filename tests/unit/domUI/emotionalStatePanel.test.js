@@ -77,9 +77,11 @@ const createDefaultMoodData = () => ({
   threat: 0,
   engagement: 0,
   future_expectancy: 0,
+  temporal_orientation: 0,
   self_evaluation: 0,
   affiliation: 0,
   inhibitory_control: 0,
+  uncertainty: 0,
 });
 
 const createMoodData = (overrides = {}) => ({
@@ -459,7 +461,7 @@ describe('EmotionalStatePanel', () => {
   });
 
   describe('bar rendering', () => {
-    it('renders all 9 mood axes', () => {
+    it('renders all 11 mood axes', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -468,7 +470,7 @@ describe('EmotionalStatePanel', () => {
       handler({ payload: { entityId: 'test-entity' } });
 
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(9);
+      expect(axes.length).toBe(11);
     });
 
     it('renders positive value bars extending right from center', () => {
@@ -712,9 +714,71 @@ describe('EmotionalStatePanel', () => {
       // Should not throw
       expect(() => handler({ payload: { entityId: 'test-entity' } })).not.toThrow();
 
-      // Should still render all axes, with missing values treated as 0
+      // Should still render all 11 axes, with missing values treated as 0
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      expect(axes.length).toBe(9);
+      expect(axes.length).toBe(11);
+    });
+
+    it('renders temporal_orientation axis with correct labels', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const temporalOrientationAxis = panelElement.querySelector('[data-axis="temporal_orientation"]');
+      expect(temporalOrientationAxis).not.toBeNull();
+
+      const leftLabel = temporalOrientationAxis.querySelector('.emotional-state-panel__label--left');
+      const rightLabel = temporalOrientationAxis.querySelector('.emotional-state-panel__label--right');
+
+      expect(leftLabel.textContent).toBe('Past-focused');
+      expect(rightLabel.textContent).toBe('Future-focused');
+    });
+
+    it('renders temporal_orientation positive value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ temporal_orientation: 75 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const temporalOrientationAxis = panelElement.querySelector('[data-axis="temporal_orientation"]');
+      const barFill = temporalOrientationAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--positive')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(0, 206, 209)'); // #00CED1
+    });
+
+    it('renders temporal_orientation negative value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ temporal_orientation: -60 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const temporalOrientationAxis = panelElement.querySelector('[data-axis="temporal_orientation"]');
+      const barFill = temporalOrientationAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--negative')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(139, 69, 19)'); // #8B4513
+    });
+
+    it('renders temporal_orientation axis in correct position (7th)', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
+      const seventhAxis = axes[6]; // 0-indexed, so index 6 is 7th axis
+
+      expect(seventhAxis.getAttribute('data-axis')).toBe('temporal_orientation');
     });
 
     it('renders affiliation axis with correct labels', () => {
@@ -765,7 +829,7 @@ describe('EmotionalStatePanel', () => {
       expect(barFill.style.backgroundColor).toBe('rgb(78, 115, 223)'); // #4e73df
     });
 
-    it('renders affiliation axis in correct position (8th)', () => {
+    it('renders affiliation axis in correct position (9th)', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -774,9 +838,9 @@ describe('EmotionalStatePanel', () => {
       handler({ payload: { entityId: 'test-entity' } });
 
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
-      const eighthAxis = axes[7]; // 0-indexed, so index 7 is 8th axis
+      const ninthAxis = axes[8]; // 0-indexed, so index 8 is 9th axis
 
-      expect(eighthAxis.getAttribute('data-axis')).toBe('affiliation');
+      expect(ninthAxis.getAttribute('data-axis')).toBe('affiliation');
     });
 
     it('renders inhibitory_control axis with correct labels', () => {
@@ -827,7 +891,69 @@ describe('EmotionalStatePanel', () => {
       expect(barFill.style.backgroundColor).toBe('rgb(255, 112, 67)'); // #FF7043
     });
 
-    it('renders inhibitory_control axis in correct position (9th/last)', () => {
+    it('renders inhibitory_control axis in correct position (10th)', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
+      const tenthAxis = axes[9]; // 0-indexed, so index 9 is 10th axis
+
+      expect(tenthAxis.getAttribute('data-axis')).toBe('inhibitory_control');
+    });
+
+    it('renders uncertainty axis with correct labels', () => {
+      const mockEntity = createMockEntity(true, createMoodData());
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const uncertaintyAxis = panelElement.querySelector('[data-axis="uncertainty"]');
+      expect(uncertaintyAxis).not.toBeNull();
+
+      const leftLabel = uncertaintyAxis.querySelector('.emotional-state-panel__label--left');
+      const rightLabel = uncertaintyAxis.querySelector('.emotional-state-panel__label--right');
+
+      expect(leftLabel.textContent).toBe('Certain');
+      expect(rightLabel.textContent).toBe('Uncertain');
+    });
+
+    it('renders uncertainty positive value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ uncertainty: 75 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const uncertaintyAxis = panelElement.querySelector('[data-axis="uncertainty"]');
+      const barFill = uncertaintyAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--positive')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(123, 31, 162)'); // #7B1FA2
+    });
+
+    it('renders uncertainty negative value with correct color', () => {
+      const mockEntity = createMockEntity(true, createMoodData({ uncertainty: -60 }));
+      deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      new EmotionalStatePanel(deps);
+      const handler = getEventHandler(TURN_STARTED_ID);
+      handler({ payload: { entityId: 'test-entity' } });
+
+      const uncertaintyAxis = panelElement.querySelector('[data-axis="uncertainty"]');
+      const barFill = uncertaintyAxis.querySelector('.emotional-state-panel__bar-fill');
+
+      expect(barFill.classList.contains('emotional-state-panel__bar-fill--negative')).toBe(true);
+      expect(barFill.style.backgroundColor).toBe('rgb(79, 195, 247)'); // #4FC3F7
+    });
+
+    it('renders uncertainty axis in correct position (11th/last)', () => {
       const mockEntity = createMockEntity(true, createMoodData());
       deps.entityManager.getEntityInstance.mockReturnValue(mockEntity);
 
@@ -838,7 +964,7 @@ describe('EmotionalStatePanel', () => {
       const axes = panelElement.querySelectorAll('.emotional-state-panel__axis');
       const lastAxis = axes[axes.length - 1];
 
-      expect(lastAxis.getAttribute('data-axis')).toBe('inhibitory_control');
+      expect(lastAxis.getAttribute('data-axis')).toBe('uncertainty');
     });
   });
 
