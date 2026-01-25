@@ -214,6 +214,7 @@ describe('ExpressionDiagnosticsController - witness state section formatting', (
     };
 
     mockDataRegistry = {
+      get: jest.fn().mockReturnValue(null),
       getLookupData: jest.fn().mockReturnValue(null),
     };
 

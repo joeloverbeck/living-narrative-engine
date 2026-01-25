@@ -179,3 +179,66 @@ export const formatConstraints = (constraints) => {
     })
     .join(', ');
 };
+
+/**
+ * Converts axis constraints Map (from PrototypeConstraintAnalyzer) to MoodConstraint array format.
+ * This enables reuse of existing population filtering with prototype-derived constraints.
+ *
+ * @param {Map<string, {min?: number, max?: number}>} axisConstraints - Axis constraints from prototype gates
+ * @returns {Array<{varPath: string, operator: string, threshold: number, source: string}>} MoodConstraint array
+ */
+export const convertAxisConstraintsToMoodConstraints = (axisConstraints) => {
+  const constraints = [];
+  if (!axisConstraints || !(axisConstraints instanceof Map)) {
+    return constraints;
+  }
+
+  for (const [axis, bounds] of axisConstraints.entries()) {
+    const varPath = `moodAxes.${axis}`;
+
+    if (typeof bounds.min === 'number') {
+      constraints.push({
+        varPath,
+        operator: '>=',
+        threshold: bounds.min,
+        source: 'prototype-gate',
+      });
+    }
+    if (typeof bounds.max === 'number') {
+      constraints.push({
+        varPath,
+        operator: '<=',
+        threshold: bounds.max,
+        source: 'prototype-gate',
+      });
+    }
+  }
+  return constraints;
+};
+
+/**
+ * Merges direct mood constraints (from explicit moodAxes.* references) with
+ * prototype-derived constraints (from prototype gates).
+ * Direct constraints take precedence for duplicates.
+ *
+ * @param {Array<{varPath: string, operator: string, threshold: number}>} directConstraints - From extractMoodConstraints()
+ * @param {Array<{varPath: string, operator: string, threshold: number, source?: string}>} prototypeConstraints - From convertAxisConstraintsToMoodConstraints()
+ * @returns {Array<{varPath: string, operator: string, threshold: number, source?: string}>} Merged constraints
+ */
+export const mergeConstraints = (directConstraints, prototypeConstraints) => {
+  const direct = Array.isArray(directConstraints) ? directConstraints : [];
+  const prototype = Array.isArray(prototypeConstraints) ? prototypeConstraints : [];
+
+  const merged = [...direct];
+  const directKeys = new Set(
+    direct.map((c) => `${c.varPath}:${c.operator}`)
+  );
+
+  for (const c of prototype) {
+    const key = `${c.varPath}:${c.operator}`;
+    if (!directKeys.has(key)) {
+      merged.push(c);
+    }
+  }
+  return merged;
+};

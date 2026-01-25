@@ -200,5 +200,5 @@
     },
     "category": "loss",
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0013
+    "triggerRate": 0.0019
 }

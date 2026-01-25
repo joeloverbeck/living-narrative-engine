@@ -38,6 +38,7 @@ describe('DelegatingDecisionProvider', () => {
     expect(delegate).toHaveBeenCalledWith(actor, context, actions, abortSignal);
     expect(decision).toEqual({
       chosenIndex: 1,
+      cognitiveLedger: null,
       moodUpdate: null,
       sexualUpdate: null,
       speech: 'hello',

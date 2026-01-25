@@ -842,6 +842,8 @@ describe('aiRegistrations', () => {
           [tokens.IAIPromptPipeline]: { pipeline: true },
           [tokens.LLMAdapter]: { adapter: true },
           [tokens.ILLMResponseProcessor]: { processor: true },
+          [tokens.IPerceptionLogProvider]: { perceptionLog: true },
+          [tokens.ISafeEventDispatcher]: { dispatcher: true },
           [tokens.ILogger]: logger,
         })
       );
@@ -852,6 +854,8 @@ describe('aiRegistrations', () => {
         aiPromptPipeline: { pipeline: true },
         llmAdapter: { adapter: true },
         llmResponseProcessor: { processor: true },
+        perceptionLogProvider: { perceptionLog: true },
+        safeEventDispatcher: { dispatcher: true },
         logger,
       });
 

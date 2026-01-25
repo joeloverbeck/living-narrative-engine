@@ -146,6 +146,6 @@
         "limited": "I sense a quickening energy showing in small movements and a forward-focused attention, as if waiting is suddenly hard to do."
     },
     "category": "joy",
-    "diagnosticStatus": "frequent",
-    "triggerRate": 0.0215
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0093
 }

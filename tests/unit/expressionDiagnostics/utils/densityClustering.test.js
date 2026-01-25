@@ -240,6 +240,116 @@ describe('DensityClusteringService', () => {
     });
   });
 
+  describe('performance and cluster expansion', () => {
+    it('should handle large datasets efficiently (100+ points)', () => {
+      const service = new DensityClusteringService({
+        logger: createLogger(),
+      });
+
+      // Generate 150 points in 3 clusters of 50 points each
+      // Use tight angle spread within clusters (max ~15° = 0.26 rad → cosine distance ~0.03)
+      const points = [];
+
+      // Cluster A: around (1, 0) - angles -0.13 to +0.13 radians
+      for (let i = 0; i < 50; i++) {
+        const angle = (i * 0.0052) - 0.13; // ~15° total spread
+        points.push({
+          id: `a${i}`,
+          vector: { x: Math.cos(angle), y: Math.sin(angle) },
+        });
+      }
+
+      // Cluster B: around (0, 1) - angles around 90 degrees
+      for (let i = 0; i < 50; i++) {
+        const angle = Math.PI / 2 + (i * 0.0052) - 0.13;
+        points.push({
+          id: `b${i}`,
+          vector: { x: Math.cos(angle), y: Math.sin(angle) },
+        });
+      }
+
+      // Cluster C: around (-1, 0) - angles around 180 degrees
+      for (let i = 0; i < 50; i++) {
+        const angle = Math.PI + (i * 0.0052) - 0.13;
+        points.push({
+          id: `c${i}`,
+          vector: { x: Math.cos(angle), y: Math.sin(angle) },
+        });
+      }
+
+      const startTime = Date.now();
+      const result = service.cluster(points, 0.1, 3);
+      const elapsed = Date.now() - startTime;
+
+      // Should complete within reasonable time (< 1 second for 150 points)
+      expect(elapsed).toBeLessThan(1000);
+
+      // Should identify 3 distinct clusters
+      expect(result.size).toBe(3);
+
+      // Verify each cluster has approximately 50 points
+      for (const [, members] of result) {
+        expect(members.length).toBeGreaterThan(40);
+        expect(members.length).toBeLessThanOrEqual(50);
+      }
+    });
+
+    it('should not process duplicate IDs during cluster expansion', () => {
+      const logger = createLogger();
+      const service = new DensityClusteringService({ logger });
+
+      // Create a dense cluster where every point is a neighbor of every other
+      // This tests that the seedSetLookup correctly prevents duplicates
+      const points = [];
+      for (let i = 0; i < 10; i++) {
+        points.push({
+          id: `p${i}`,
+          vector: { x: 1, y: 0.01 * i }, // Very similar vectors
+        });
+      }
+
+      const result = service.cluster(points, 0.5, 2);
+
+      // All points should be in one cluster
+      expect(result.size).toBe(1);
+      const members = Array.from(result.values())[0];
+
+      // Verify no duplicates in result
+      const uniqueMembers = new Set(members);
+      expect(uniqueMembers.size).toBe(members.length);
+      expect(members.length).toBe(10);
+    });
+
+    it('should handle cluster expansion with many neighbors correctly', () => {
+      const service = new DensityClusteringService({
+        logger: createLogger(),
+      });
+
+      // Create a chain-like structure where each point connects to next
+      // This tests that seedSet grows correctly during expansion
+      const points = [];
+      for (let i = 0; i < 20; i++) {
+        // Each point is slightly rotated from the previous
+        const angle = (i * Math.PI) / 40; // 0 to ~90 degrees total
+        points.push({
+          id: `chain${i}`,
+          vector: { x: Math.cos(angle), y: Math.sin(angle) },
+        });
+      }
+
+      // With epsilon 0.15 and minPoints 2, adjacent points connect
+      // forming a chain cluster
+      const result = service.cluster(points, 0.15, 2);
+
+      // Should form one connected cluster (chain propagation)
+      expect(result.size).toBe(1);
+      const members = Array.from(result.values())[0];
+
+      // All points should be in the cluster
+      expect(members.length).toBe(20);
+    });
+  });
+
   describe('cosine distance calculation', () => {
     it('should return 0 for identical vectors', () => {
       const service = new DensityClusteringService({

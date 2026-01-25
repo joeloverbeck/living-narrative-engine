@@ -19,7 +19,7 @@ exports[`MonteCarloReportGenerator Snapshot Tests Edge Case Snapshots generates 
 
 - **Total samples**: 10,000 (in-regime 0; 0.00%)
 - **Stored contexts**: 4 of 10,000 (in-regime 4; 100.00%; limit 4)
-- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
 > **Note**: Stored contexts are capped at 4, so sections labeled "Population: stored-*" may not match full-sample counts.
 
 
@@ -263,7 +263,7 @@ exports[`MonteCarloReportGenerator Snapshot Tests Edge Case Snapshots generates 
 
 - **Total samples**: 10,000 (in-regime 0; 0.00%)
 - **Stored contexts**: 4 of 10,000 (in-regime 4; 100.00%; limit 4)
-- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
 > **Note**: Stored contexts are capped at 4, so sections labeled "Population: stored-*" may not match full-sample counts.
 
 
@@ -424,7 +424,7 @@ exports[`MonteCarloReportGenerator Snapshot Tests Full Report Snapshots generate
 
 - **Total samples**: 10,000 (in-regime 0; 0.00%)
 - **Stored contexts**: 4 of 10,000 (in-regime 4; 100.00%; limit 4)
-- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
 > **Note**: Stored contexts are capped at 4, so sections labeled "Population: stored-*" may not match full-sample counts.
 
 
@@ -549,7 +549,7 @@ exports[`MonteCarloReportGenerator Snapshot Tests Full Report Snapshots generate
 
 - **Total samples**: 10,000 (in-regime 0; 0.00%)
 - **Stored contexts**: 4 of 10,000 (in-regime 4; 100.00%; limit 4)
-- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
 > **Note**: Stored contexts are capped at 4, so sections labeled "Population: stored-*" may not match full-sample counts.
 
 
@@ -893,7 +893,7 @@ exports[`MonteCarloReportGenerator Snapshot Tests Full Report Snapshots generate
 
 - **Total samples**: 10,000 (in-regime 0; 0.00%)
 - **Stored contexts**: 0 of 10,000 (in-regime 0; 0.00%; limit 0)
-- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
 
 ---
 
@@ -1199,7 +1199,7 @@ exports[`MonteCarloReportGenerator Snapshot Tests Full Report Snapshots generate
 
 - **Total samples**: 10,000 (in-regime 0; 0.00%)
 - **Stored contexts**: 4 of 10,000 (in-regime 4; 100.00%; limit 4)
-- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
 > **Note**: Stored contexts are capped at 4, so sections labeled "Population: stored-*" may not match full-sample counts.
 
 
@@ -1365,8 +1365,8 @@ None
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | +1.00 | [0.40, 1.00] | 1.00 | 1.000 | — |
-| arousal | +0.60 | [0.30, 1.00] | 1.00 | 0.600 | — |
+| valence | +1.00 | [-1.00, 1.00] | 1.00 | 1.000 | — |
+| arousal | +0.60 | [-1.00, 1.00] | 1.00 | 0.600 | — |
 
 **Gates** ✅:
 - ✅ \`valence >= 0.3\` - Satisfiable | **Observed Fail Rate**: 100.00%
@@ -1430,10 +1430,10 @@ None
 ##### 🧠 fear <= 0.30 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.38]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 1.00]
 - **Threshold**: 0.30
 - **Status**: sometimes
-- **Slack**: feasibility +0.300; always -0.083
+- **Slack**: feasibility +0.300; always -0.700
 - **Tuning direction**: loosen -> threshold up, tighten -> threshold down
 **Sum|Weights|**: 2.40 | **Required Raw Sum**: 0.72
 
@@ -1452,18 +1452,16 @@ None
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | -0.80 | [0.40, 1.00] | 0.40 | -0.320 | ⚠️ negative_weight_high_min |
-| arousal | +0.70 | [0.30, 1.00] | 1.00 | 0.700 | — |
-| threat | +0.90 | [-1.00, 0.60] | 0.60 | 0.540 | ⚠️ positive_weight_low_max |
+| valence | -0.80 | [-1.00, 1.00] | -1.00 | 0.800 | — |
+| arousal | +0.70 | [-1.00, 1.00] | 1.00 | 0.700 | — |
+| threat | +0.90 | [-1.00, 1.00] | 1.00 | 0.900 | — |
 
 **Gates** ✅:
 - ✅ \`threat >= 0.2\` - Satisfiable | **Observed Fail Rate**: 100.00%
 
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.80) but constraint requires min 0.40
-- ⚠️ **threat**: Has positive weight (+0.90) but constraint limits max to 0.60
+**Binding Axes**: None (all axes can reach optimal values)
 
-**Analysis**: Threshold 0.3 is achievable (min: 0.000). Binding conflicts: valence has negative weight (-0.80) but constraint requires min=0.40; threat has positive weight (+0.90) but constraint limits it to max=0.60
+**Analysis**: Threshold 0.3 is achievable (min: 0.000)
 
 **Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
 
@@ -1561,8 +1559,8 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
 | Rank | Prototype | Gate Pass | P(I≥t) | Conflict | Composite |
 |------|-----------|-----------|--------|----------|-----------|
 | 1 | **joy** | 0.00% | 0.00% | 0.00% | 0.35 |
-| 2 | **curiosity** | 0.00% | 0.00% | 0.00% | 0.35 |
-| 3 | **fear** | 0.00% | 0.00% | 66.67% | 0.22 |
+| 2 | **fear** | 0.00% | 0.00% | 0.00% | 0.35 |
+| 3 | **curiosity** | 0.00% | 0.00% | 0.00% | 0.35 |
 
 ### Top 3 Prototype Details
 
@@ -1571,16 +1569,15 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
 - **Intensity Distribution**: P50=0.00, P90=0.00, P95=0.00
 - **Conflicting Axes**: None
 
-#### 2. curiosity
+#### 2. fear
 
 - **Intensity Distribution**: P50=0.00, P90=0.00, P95=0.00
 - **Conflicting Axes**: None
 
-#### 3. fear
+#### 3. curiosity
 
 - **Intensity Distribution**: P50=0.00, P90=0.00, P95=0.00
-- **Conflicting Axes**: valence (weight=-0.80, wants negative), threat (weight=0.90, wants positive)
-- **Conflict Magnitude**: 1.70
+- **Conflicting Axes**: None
 
 ---
 
@@ -1597,37 +1594,29 @@ Analysis of which prototypes best match the expression's constraint pattern.
 
 **Population**: stored-mood-regime (N=3; predicate: moodAxes.arousal >= 0.3, moodAxes.threat <= 0.6, moodAxes.valence >= 0.4; hash: 441edcdd).
 
-### Target Signature
-
-| Axis | Direction | Importance |
-|------|-----------|------------|
-| valence | ↑ High | 0.60 |
-| arousal | ↑ High | 0.57 |
-| threat | ↓ Low | 0.35 |
-
 ### Top 5 by Cosine Similarity
 
 | Rank | Prototype | Similarity | Gate Pass | Combined |
 |------|-----------|------------|-----------|----------|
-| 1 | **joy** | 0.90 | 0.00% | 0.54 |
-| 2 | **curiosity** | 0.89 | 0.00% | 0.54 |
-| 3 | **fear** | -0.31 | 0.00% | -0.19 |
+| 1 | **joy** | 0.00 | 0.00% | 0.00 |
+| 2 | **fear** | 0.00 | 0.00% | 0.00 |
+| 3 | **curiosity** | 0.00 | 0.00% | 0.00 |
 
 ### Top 5 by Gate Pass Rate
 
 | Rank | Prototype | Gate Pass | Similarity | Combined |
 |------|-----------|-----------|------------|----------|
-| 1 | **joy** | 0.00% | 0.90 | 0.54 |
-| 2 | **fear** | 0.00% | -0.31 | -0.19 |
-| 3 | **curiosity** | 0.00% | 0.89 | 0.54 |
+| 1 | **joy** | 0.00% | 0.00 | 0.00 |
+| 2 | **fear** | 0.00% | 0.00 | 0.00 |
+| 3 | **curiosity** | 0.00% | 0.00 | 0.00 |
 
 ### Top 5 by Combined Score
 
 | Rank | Prototype | Combined | Similarity | Gate Pass |
 |------|-----------|----------|------------|----------|
-| 1 | **joy** | 0.54 | 0.90 | 0.00% |
-| 2 | **curiosity** | 0.54 | 0.89 | 0.00% |
-| 3 | **fear** | -0.19 | -0.31 | 0.00% |
+| 1 | **joy** | 0.00 | 0.00 | 0.00% |
+| 2 | **fear** | 0.00 | 0.00 | 0.00% |
+| 3 | **curiosity** | 0.00 | 0.00 | 0.00% |
 
 ---
 
@@ -1639,17 +1628,17 @@ Analysis of prototype coverage in "prototype space".
 
 ### ✅ Good Coverage
 
-**Nearest Distance**: 0.17 - within acceptable range.
+**Nearest Distance**: 0.47 - within acceptable range.
 
-**Distance Context**: Distance 0.17 is farther than 0% of prototype nearest-neighbor distances (z=-1.24).
+**Distance Context**: Distance 0.47 is farther than 67% of prototype nearest-neighbor distances (z=0.43).
 
 ### k-Nearest Prototypes
 
 | Rank | Prototype | Distance | Weight Dist | Gate Dist |
 |------|-----------|----------|-------------|----------|
-| 1 | **curiosity** | 0.17 | 0.25 | 0.00 |
-| 2 | **joy** | 0.22 | 0.31 | 0.00 |
-| 3 | **fear** | 0.76 | 1.09 | 0.00 |
+| 1 | **curiosity** | 0.47 | 0.67 | 0.00 |
+| 2 | **fear** | 0.56 | 0.80 | 0.00 |
+| 3 | **joy** | 0.58 | 0.82 | 0.00 |
 
 ---
 
@@ -1744,7 +1733,7 @@ exports[`MonteCarloReportGenerator Snapshot Tests Full Report Snapshots generate
 
 - **Total samples**: 10,000 (in-regime 0; 0.00%)
 - **Stored contexts**: 4 of 10,000 (in-regime 4; 100.00%; limit 4)
-- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).
+- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
 > **Note**: Stored contexts are capped at 4, so sections labeled "Population: stored-*" may not match full-sample counts.
 
 

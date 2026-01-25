@@ -11,14 +11,21 @@ import {
 /**
  * @typedef {object} PCAResult
  * @property {number} residualVarianceRatio - Ratio of unexplained variance.
- * @property {number} additionalSignificantComponents - Components beyond expected with significant variance.
+ * @property {number} additionalSignificantComponents - Components beyond expected with significant variance (alias for significantBeyondExpected).
+ * @property {number} significantComponentCount - Total significant components (broken-stick count).
+ * @property {number} expectedComponentCount - Expected component count (median active axes K).
+ * @property {number} significantBeyondExpected - Components beyond expected (significantCount - expectedCount).
+ * @property {number} axisCount - Dynamic K value (median active axes per prototype) used for residual calculation.
  * @property {Array<{prototypeId: string, loading: number}>} topLoadingPrototypes - Top 10 extreme prototypes.
  * @property {string[]} dimensionsUsed - Axes included in analysis.
+ * @property {string[]} excludedSparseAxes - Axes excluded due to low usage (below pcaMinAxisUsageRatio threshold).
  * @property {number[]} cumulativeVariance - Cumulative variance explained per component.
  * @property {number[]} explainedVariance - Individual variance explained per component (ratio 0-1).
  * @property {number} componentsFor80Pct - Components needed for 80% variance.
  * @property {number} componentsFor90Pct - Components needed for 90% variance.
  * @property {Array<{prototypeId: string, error: number}>} reconstructionErrors - Top 5 worst-fitting prototypes.
+ * @property {Record<string, number>|null} residualEigenvector - First eigenvector beyond expected, mapped to axis names (null if none).
+ * @property {number} residualEigenvectorIndex - Index of residual eigenvector (-1 if none).
  */
 
 /**
@@ -34,6 +41,20 @@ export class PCAAnalysisService {
    * @param {number} [config.pcaKaiserThreshold] - Minimum eigenvalue for significance (default: 1.0).
    * @param {number} [config.activeAxisEpsilon] - Minimum weight magnitude for active axis (default: 0).
    * @param {'broken-stick'|'kaiser'} [config.pcaComponentSignificanceMethod] - Method for component significance (default: 'broken-stick').
+   * @param {number} [config.pcaMinAxisUsageRatio] - Minimum fraction of prototypes that must use an axis for PCA inclusion (default: 0.1).
+   */
+  /**
+   * Create a PCAAnalysisService.
+   *
+   * @param {object} [config] - Configuration options.
+   * @param {number} [config.pcaKaiserThreshold] - Minimum eigenvalue for significance (default: 1.0).
+   * @param {number} [config.activeAxisEpsilon] - Minimum weight magnitude for active axis (default: 0).
+   * @param {'broken-stick'|'kaiser'} [config.pcaComponentSignificanceMethod] - Method for component significance (default: 'broken-stick').
+   * @param {number} [config.pcaMinAxisUsageRatio] - Minimum fraction of prototypes that must use an axis for PCA inclusion (default: 0.1).
+   * @param {'center-only'|'z-score'} [config.pcaNormalizationMethod] - Normalization method for PCA (default: 'center-only').
+   * @param {'variance-80'|'variance-90'|'broken-stick'|'median-active'} [config.pcaExpectedDimensionMethod] - Method for computing expected dimensionality K (default: 'variance-80').
+   * @param {number} [config.jacobiConvergenceTolerance] - Jacobi eigendecomposition convergence tolerance (default: 1e-10).
+   * @param {number|null} [config.jacobiMaxIterationsOverride] - Override for Jacobi max iterations (default: null, uses 50*n²).
    */
   constructor(config = {}) {
     this.#config = {
@@ -41,6 +62,12 @@ export class PCAAnalysisService {
       activeAxisEpsilon: config.activeAxisEpsilon ?? 0,
       pcaComponentSignificanceMethod:
         config.pcaComponentSignificanceMethod ?? 'broken-stick',
+      pcaMinAxisUsageRatio: config.pcaMinAxisUsageRatio ?? 0.1,
+      pcaNormalizationMethod: config.pcaNormalizationMethod ?? 'center-only',
+      pcaExpectedDimensionMethod:
+        config.pcaExpectedDimensionMethod ?? 'variance-80',
+      jacobiConvergenceTolerance: config.jacobiConvergenceTolerance ?? 1e-10,
+      jacobiMaxIterationsOverride: config.jacobiMaxIterationsOverride ?? null,
     };
   }
 
@@ -55,59 +82,41 @@ export class PCAAnalysisService {
       return this.#createEmptyResult();
     }
 
-    const { matrix, axes, prototypeIds } = this.#buildWeightMatrix(prototypes);
+    const { matrix, axes, prototypeIds, excludedSparseAxes } =
+      this.#buildWeightMatrix(prototypes);
 
     if (axes.length === 0 || matrix.length < 2) {
-      return this.#createEmptyResult();
+      return this.#createEmptyResult(excludedSparseAxes);
     }
 
     const hasNonZero = matrix.some((row) =>
       row.some((value) => Math.abs(value) > 0)
     );
     if (!hasNonZero) {
-      return this.#createEmptyResult();
+      return this.#createEmptyResult(excludedSparseAxes);
     }
 
-    const standardized = this.#standardizeMatrix(matrix);
-    if (!standardized.hasVariance) {
-      return this.#createEmptyResult();
+    const normalized = this.#normalizeMatrix(matrix);
+    if (!normalized.hasVariance) {
+      return this.#createEmptyResult(excludedSparseAxes);
     }
 
-    const covariance = this.#computeCovariance(standardized.matrix);
+    const covariance = this.#computeCovariance(normalized.matrix);
     if (!covariance || covariance.length === 0) {
-      return this.#createEmptyResult();
+      return this.#createEmptyResult(excludedSparseAxes);
     }
 
     const eigen = this.#computeEigenDecomposition(covariance);
     if (!eigen || eigen.values.length === 0) {
-      return this.#createEmptyResult();
+      return this.#createEmptyResult(excludedSparseAxes);
     }
 
     const totalVariance = eigen.values.reduce((sum, value) => sum + value, 0);
     if (totalVariance <= 0) {
-      return this.#createEmptyResult();
+      return this.#createEmptyResult(excludedSparseAxes);
     }
 
-    const axisCount = this.#computeExpectedAxisCount(prototypes, axes);
-    const residualValues = eigen.values.slice(axisCount);
-    const residualVariance = residualValues.reduce((sum, value) => sum + value, 0);
-    const residualVarianceRatio = Math.min(
-      1,
-      Math.max(0, residualVariance / totalVariance)
-    );
-    const additionalSignificantComponents = this.#computeAdditionalSignificantComponents(
-      eigen.values,
-      totalVariance,
-      axisCount
-    );
-    const topLoadingPrototypes = this.#computeExtremePrototypes({
-      axisCount,
-      eigenvectors: eigen.vectors,
-      matrix: standardized.matrix,
-      prototypeIds,
-    });
-
-    // Compute cumulative variance from eigenvalues
+    // Compute cumulative variance from eigenvalues (needed for variance-based K methods)
     const cumulativeVariance = [];
     let cumulative = 0;
     for (const eigenvalue of eigen.values) {
@@ -126,43 +135,100 @@ export class PCAAnalysisService {
     const componentsFor90Pct =
       cumulativeVariance.findIndex((v) => v >= 0.9) + 1 || axes.length;
 
+    // Compute expected axis count using configured method
+    const axisCount = this.#computeExpectedAxisCount({
+      prototypes,
+      axes,
+      eigenvalues: eigen.values,
+      totalVariance,
+      componentsFor80Pct,
+      componentsFor90Pct,
+    });
+
+    const residualValues = eigen.values.slice(axisCount);
+    const residualVariance = residualValues.reduce((sum, value) => sum + value, 0);
+    const residualVarianceRatio = Math.min(
+      1,
+      Math.max(0, residualVariance / totalVariance)
+    );
+    const { significantComponentCount, significantBeyondExpected } =
+      this.#computeSignificantComponentMetrics(
+        eigen.values,
+        totalVariance,
+        axisCount
+      );
+    // Alias for backward compatibility
+    const additionalSignificantComponents = significantBeyondExpected;
+    const topLoadingPrototypes = this.#computeExtremePrototypes({
+      axisCount,
+      eigenvectors: eigen.vectors,
+      matrix: normalized.matrix,
+      prototypeIds,
+    });
+
     // Compute reconstruction errors for prototypes
     const reconstructionErrors = this.#computeReconstructionErrors({
-      matrix: standardized.matrix,
+      matrix: normalized.matrix,
       eigenvectors: eigen.vectors,
       axisCount,
       prototypeIds,
     });
 
+    // Extract residual eigenvector (first component beyond expected K)
+    let residualEigenvector = null;
+    let residualEigenvectorIndex = -1;
+    if (axisCount < eigen.vectors.length) {
+      residualEigenvectorIndex = axisCount;
+      residualEigenvector = this.#buildResidualEigenvector(
+        eigen.vectors[axisCount],
+        axes
+      );
+    }
+
     return {
       residualVarianceRatio,
       additionalSignificantComponents,
+      significantComponentCount,
+      expectedComponentCount: axisCount,
+      significantBeyondExpected,
+      axisCount,
       topLoadingPrototypes,
       dimensionsUsed: axes,
+      excludedSparseAxes,
       cumulativeVariance,
       explainedVariance,
       componentsFor80Pct,
       componentsFor90Pct,
       reconstructionErrors,
+      residualEigenvector,
+      residualEigenvectorIndex,
     };
   }
 
   /**
    * Create an empty PCA result.
    *
+   * @param {string[]} [excludedSparseAxes] - Axes excluded due to sparse usage.
    * @returns {PCAResult} Empty result object.
    */
-  #createEmptyResult() {
+  #createEmptyResult(excludedSparseAxes = []) {
     return {
       residualVarianceRatio: 0,
       additionalSignificantComponents: 0,
+      significantComponentCount: 0,
+      expectedComponentCount: 0,
+      significantBeyondExpected: 0,
+      axisCount: 0,
       topLoadingPrototypes: [],
       dimensionsUsed: [],
+      excludedSparseAxes,
       cumulativeVariance: [],
       explainedVariance: [],
       componentsFor80Pct: 0,
       componentsFor90Pct: 0,
       reconstructionErrors: [],
+      residualEigenvector: null,
+      residualEigenvectorIndex: -1,
     };
   }
 
@@ -170,7 +236,7 @@ export class PCAAnalysisService {
    * Build the weight matrix from prototypes.
    *
    * @param {Array} prototypes - Prototype objects.
-   * @returns {{matrix: number[][], axes: string[], prototypeIds: string[]}} Matrix data.
+   * @returns {{matrix: number[][], axes: string[], prototypeIds: string[], excludedSparseAxes: string[]}} Matrix data.
    */
   #buildWeightMatrix(prototypes) {
     const axisSet = new Set();
@@ -188,6 +254,13 @@ export class PCAAnalysisService {
     });
 
     let axes = Array.from(axisSet).sort();
+
+    // Filter sparse axes before variance selection to avoid z-score inflation
+    const minUsageRatio = this.#config.pcaMinAxisUsageRatio;
+    const { included: denseAxes, excluded: excludedSparseAxes } =
+      this.#filterSparseAxes(prototypes, axes, minUsageRatio);
+    axes = denseAxes;
+
     const axisLimit = Math.min(axes.length, prototypes.length);
 
     if (axes.length > axisLimit) {
@@ -206,7 +279,45 @@ export class PCAAnalysisService {
         prototype?.id ?? prototype?.prototypeId ?? `prototype-${index}`
     );
 
-    return { matrix, axes, prototypeIds };
+    return { matrix, axes, prototypeIds, excludedSparseAxes };
+  }
+
+  /**
+   * Filter out sparse axes that are used by too few prototypes.
+   *
+   * Sparse axes can inflate apparent dimensionality when z-scored because
+   * the few non-zero values become extreme outliers (3+ standard deviations).
+   * This filtering addresses the z-score inflation problem.
+   *
+   * @param {Array} prototypes - Prototype objects.
+   * @param {string[]} axes - All available axes.
+   * @param {number} minUsageRatio - Minimum fraction of prototypes that must use an axis.
+   * @returns {{included: string[], excluded: string[]}} Filtered axes.
+   */
+  #filterSparseAxes(prototypes, axes, minUsageRatio) {
+    // minUsageRatio of 0 disables filtering (backward compatibility)
+    if (minUsageRatio <= 0) {
+      return { included: axes, excluded: [] };
+    }
+
+    const minCount = Math.max(2, Math.ceil(prototypes.length * minUsageRatio));
+    const included = [];
+    const excluded = [];
+
+    for (const axis of axes) {
+      const usageCount = prototypes.filter((p) => {
+        const value = p?.weights?.[axis];
+        return typeof value === 'number' && Math.abs(value) > 0;
+      }).length;
+
+      if (usageCount >= minCount) {
+        included.push(axis);
+      } else {
+        excluded.push(axis);
+      }
+    }
+
+    return { included, excluded };
   }
 
   /**
@@ -242,11 +353,23 @@ export class PCAAnalysisService {
    * @param {number[][]} matrix - Input matrix.
    * @returns {{matrix: number[][], hasVariance: boolean}} Standardized matrix and variance flag.
    */
-  #standardizeMatrix(matrix) {
+  /**
+   * Normalize matrix using configured method.
+   *
+   * - 'center-only': Subtracts mean only, preserving original scale. Recommended for
+   *   prototype weights which are already on a comparable scale [-1, 1].
+   * - 'z-score': Subtracts mean and divides by standard deviation. Forces all axes
+   *   to unit variance, which can cause rare axes to dominate.
+   *
+   * @param {number[][]} matrix - Input matrix.
+   * @returns {{matrix: number[][], hasVariance: boolean}} Normalized matrix and variance flag.
+   */
+  #normalizeMatrix(matrix) {
     const rowCount = matrix.length;
     const columnCount = matrix[0]?.length ?? 0;
     const means = new Array(columnCount).fill(0);
     const stdDevs = new Array(columnCount).fill(0);
+    const useZScore = this.#config.pcaNormalizationMethod === 'z-score';
 
     for (let col = 0; col < columnCount; col += 1) {
       let sum = 0;
@@ -256,33 +379,40 @@ export class PCAAnalysisService {
       means[col] = sum / rowCount;
     }
 
-    for (let col = 0; col < columnCount; col += 1) {
-      let sumSquares = 0;
-      for (let row = 0; row < rowCount; row += 1) {
-        const diff = matrix[row][col] - means[col];
-        sumSquares += diff ** 2;
+    if (useZScore) {
+      for (let col = 0; col < columnCount; col += 1) {
+        let sumSquares = 0;
+        for (let row = 0; row < rowCount; row += 1) {
+          const diff = matrix[row][col] - means[col];
+          sumSquares += diff ** 2;
+        }
+        const variance = sumSquares / Math.max(1, rowCount - 1);
+        stdDevs[col] = Math.sqrt(variance);
       }
-      const variance = sumSquares / Math.max(1, rowCount - 1);
-      stdDevs[col] = Math.sqrt(variance);
     }
 
-    const standardized = new Array(rowCount);
+    const normalized = new Array(rowCount);
     let hasVariance = false;
 
     for (let row = 0; row < rowCount; row += 1) {
-      standardized[row] = new Array(columnCount);
+      normalized[row] = new Array(columnCount);
       for (let col = 0; col < columnCount; col += 1) {
-        const stdDev = stdDevs[col];
-        const value =
-          stdDev > 0 ? (matrix[row][col] - means[col]) / stdDev : 0;
-        standardized[row][col] = value;
+        let value;
+        if (useZScore) {
+          const stdDev = stdDevs[col];
+          value = stdDev > 0 ? (matrix[row][col] - means[col]) / stdDev : 0;
+        } else {
+          // center-only: just subtract mean
+          value = matrix[row][col] - means[col];
+        }
+        normalized[row][col] = value;
         if (value !== 0) {
           hasVariance = true;
         }
       }
     }
 
-    return { matrix: standardized, hasVariance };
+    return { matrix: normalized, hasVariance };
   }
 
   /**
@@ -331,8 +461,9 @@ export class PCAAnalysisService {
       row[i] = 1;
       return row;
     });
-    const maxIterations = 50 * size * size;
-    const tolerance = 1e-10;
+    const maxIterations =
+      this.#config.jacobiMaxIterationsOverride ?? 50 * size * size;
+    const tolerance = this.#config.jacobiConvergenceTolerance ?? 1e-10;
 
     for (let iter = 0; iter < maxIterations; iter += 1) {
       let max = 0;
@@ -405,54 +536,110 @@ export class PCAAnalysisService {
    * @param {string[]} axes - Available axes.
    * @returns {number} Expected axis count.
    */
-  #computeExpectedAxisCount(prototypes, axes) {
-    const epsilon = this.#config.activeAxisEpsilon;
-    const counts = prototypes.map((prototype) => {
-      const weights = prototype?.weights ?? {};
-      let active = 0;
-      for (const axis of axes) {
-        const value = weights[axis];
-        if (typeof value === 'number' && Math.abs(value) >= epsilon) {
-          active += 1;
-        }
+  /**
+   * Compute expected axis count based on configured method.
+   *
+   * - 'variance-80': Number of components needed to explain 80% of variance.
+   * - 'variance-90': Number of components needed to explain 90% of variance.
+   * - 'broken-stick': Number of components exceeding broken-stick threshold.
+   * - 'median-active': Median active axes per prototype (original method).
+   *
+   * @param {object} params - Parameters object.
+   * @param {Array} params.prototypes - Prototype objects.
+   * @param {string[]} params.axes - Available axes.
+   * @param {number[]} params.eigenvalues - Eigenvalues sorted in descending order.
+   * @param {number} params.totalVariance - Sum of all eigenvalues.
+   * @param {number} params.componentsFor80Pct - Components needed for 80% variance.
+   * @param {number} params.componentsFor90Pct - Components needed for 90% variance.
+   * @returns {number} Expected axis count.
+   */
+  #computeExpectedAxisCount({
+    prototypes,
+    axes,
+    eigenvalues,
+    totalVariance,
+    componentsFor80Pct,
+    componentsFor90Pct,
+  }) {
+    const method = this.#config.pcaExpectedDimensionMethod;
+
+    switch (method) {
+      case 'variance-80':
+        return Math.max(1, Math.min(componentsFor80Pct, axes.length));
+
+      case 'variance-90':
+        return Math.max(1, Math.min(componentsFor90Pct, axes.length));
+
+      case 'broken-stick': {
+        // Use the broken-stick distribution to determine significant components
+        const significantCount = countSignificantComponentsBrokenStick(
+          eigenvalues,
+          totalVariance
+        );
+        return Math.max(1, Math.min(significantCount, axes.length));
       }
-      return active;
-    });
 
-    const sorted = counts.slice().sort((a, b) => a - b);
-    const median = computeMedian(sorted);
-    const axisCount = Math.max(1, Math.floor(median));
+      case 'median-active':
+      default: {
+        // Original method: median active axes per prototype
+        const epsilon = this.#config.activeAxisEpsilon;
+        const counts = prototypes.map((prototype) => {
+          const weights = prototype?.weights ?? {};
+          let active = 0;
+          for (const axis of axes) {
+            const value = weights[axis];
+            if (typeof value === 'number' && Math.abs(value) >= epsilon) {
+              active += 1;
+            }
+          }
+          return active;
+        });
 
-    return Math.min(axisCount, axes.length);
+        const sorted = counts.slice().sort((a, b) => a - b);
+        const median = computeMedian(sorted);
+        const axisCount = Math.max(1, Math.floor(median));
+
+        return Math.min(axisCount, axes.length);
+      }
+    }
   }
 
   /**
-   * Compute the number of additional significant components beyond expected axis count.
+   * Compute significant component metrics with both raw counts and difference.
    *
    * Uses either the broken-stick rule or Kaiser criterion based on configuration.
    *
    * @param {number[]} eigenvalues - All eigenvalues sorted in descending order.
    * @param {number} totalVariance - Sum of all eigenvalues.
-   * @param {number} axisCount - Expected number of axes (components to exclude from "additional").
-   * @returns {number} Number of additional significant components.
+   * @param {number} axisCount - Expected number of axes (K).
+   * @returns {{significantComponentCount: number, significantBeyondExpected: number}} Metrics object.
    */
-  #computeAdditionalSignificantComponents(eigenvalues, totalVariance, axisCount) {
+  #computeSignificantComponentMetrics(eigenvalues, totalVariance, axisCount) {
     const method = this.#config.pcaComponentSignificanceMethod;
 
     if (method === 'broken-stick') {
-      // Broken-stick counts total significant components, so subtract expected
-      const totalSignificant = countSignificantComponentsBrokenStick(
+      // Broken-stick counts total significant components
+      const significantComponentCount = countSignificantComponentsBrokenStick(
         eigenvalues,
         totalVariance
       );
-      return Math.max(0, totalSignificant - axisCount);
+      const significantBeyondExpected = Math.max(
+        0,
+        significantComponentCount - axisCount
+      );
+      return { significantComponentCount, significantBeyondExpected };
     }
 
     // Fallback: Kaiser criterion on residual eigenvalues
-    const residualValues = eigenvalues.slice(axisCount);
-    return residualValues.filter(
+    // For Kaiser, count total significant first, then compute beyond expected
+    const significantComponentCount = eigenvalues.filter(
       (value) => value >= this.#config.pcaKaiserThreshold
     ).length;
+    const significantBeyondExpected = Math.max(
+      0,
+      significantComponentCount - axisCount
+    );
+    return { significantComponentCount, significantBeyondExpected };
   }
 
   /**
@@ -548,5 +735,20 @@ export class PCAAnalysisService {
     return errors
       .sort((a, b) => b.error - a.error)
       .slice(0, 5);
+  }
+
+  /**
+   * Build the residual eigenvector mapped to axis names.
+   *
+   * @param {number[]} eigenvector - Eigenvector array from eigen decomposition.
+   * @param {string[]} axes - Axis names in the same order as the eigenvector indices.
+   * @returns {Record<string, number>} Eigenvector mapped to axis names.
+   */
+  #buildResidualEigenvector(eigenvector, axes) {
+    const result = {};
+    for (let i = 0; i < axes.length; i += 1) {
+      result[axes[i]] = i < eigenvector.length ? eigenvector[i] : 0;
+    }
+    return result;
   }
 }

@@ -66,6 +66,7 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
       moodUpdatePromptPipeline: env.moodUpdatePromptPipeline,
       llmAdapter: env.llmAdapter,
       entityDisplayDataProvider: env.entityDisplayDataProvider,
+      perceptionLogProvider: env.perceptionLogProvider,
     });
     // Use the already created gameEngine instance if available to avoid double instantiation
     const engine = env.instance || env.createInstance();
@@ -154,6 +155,15 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
 
   getEntityDisplayDataProvider() {
     return this.entityDisplayDataProvider;
+  }
+
+  /**
+   * Returns the perception log provider mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockPerceptionLogProvider>} Perception log provider mock.
+   */
+  getPerceptionLogProvider() {
+    return this.perceptionLogProvider;
   }
 }
 const engineSuiteHooks = (() => {

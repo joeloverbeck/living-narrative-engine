@@ -71,8 +71,15 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
    * @returns {Promise<import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionResult>} Finalized decision result
    */
   async decide(actor, context, actions, abortSignal) {
-    const { index, speech, thoughts, notes, moodUpdate, sexualUpdate } =
-      await this.choose(actor, context, actions, abortSignal);
+    const {
+      index,
+      speech,
+      thoughts,
+      notes,
+      moodUpdate,
+      sexualUpdate,
+      cognitiveLedger,
+    } = await this.choose(actor, context, actions, abortSignal);
 
     // Only validate non-null indexes (null means no decision could be made)
     if (index !== null) {
@@ -94,6 +101,7 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
       notes: notes ?? null,
       moodUpdate: moodUpdate ?? null,
       sexualUpdate: sexualUpdate ?? null,
+      cognitiveLedger: cognitiveLedger ?? null,
     };
   }
 }

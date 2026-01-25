@@ -26,4 +26,20 @@ export class IPerceptionLogProvider {
       "Method 'get(actor, logger, dispatcher)' must be implemented."
     );
   }
+
+  /**
+   * Checks if the perception log for the given actor is empty.
+   * Returns true if the actor has no perception log or has no entries.
+   *
+   * @param {Entity} actor - The AI-controlled entity.
+   * @param {ILogger} logger - An instance of the logger.
+   * @param {import('./ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
+   * Safe dispatcher for SYSTEM_ERROR_OCCURRED_ID events.
+   * @returns {Promise<boolean>} A promise that resolves to true if empty, false otherwise.
+   */
+  async isEmpty(actor, logger, dispatcher) {
+    throw new Error(
+      "Method 'isEmpty(actor, logger, dispatcher)' must be implemented."
+    );
+  }
 }

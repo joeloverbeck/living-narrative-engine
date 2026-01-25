@@ -10,17 +10,17 @@
                     {
                         ">=": [
                             {
-                                "var": "emotions.focused_absorption"
+                                "var": "emotions.flow"
                             },
-                            0.55
+                            0.62
                         ]
                     },
                     {
                         ">=": [
                             {
-                                "var": "emotions.flow"
+                                "var": "emotions.focused_absorption"
                             },
-                            0.58
+                            0.6
                         ]
                     },
                     {
@@ -28,47 +28,7 @@
                             {
                                 "var": "emotions.release"
                             },
-                            0.22
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            20
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.agency_control"
-                            },
-                            15
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.threat"
-                            },
-                            12
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            40
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.arousal"
-                            },
-                            -30
+                            0.25
                         ]
                     },
                     {
@@ -78,7 +38,7 @@
                                     {
                                         "var": "emotions.interest"
                                     },
-                                    0.45
+                                    0.35
                                 ]
                             },
                             {
@@ -86,7 +46,43 @@
                                     {
                                         "var": "emotions.fascination"
                                     },
-                                    0.45
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.curiosity"
+                                    },
+                                    0.32
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.confidence"
+                                    },
+                                    0.18
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.calm"
+                                    },
+                                    0.18
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.contentment"
+                                    },
+                                    0.15
                                 ]
                             }
                         ]
@@ -94,7 +90,7 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.transfixed"
+                                "var": "emotions.executive_focus"
                             },
                             0.45
                         ]
@@ -102,25 +98,33 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.entranced"
-                            },
-                            0.35
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
-                                "var": "emotions.executive_focus"
-                            },
-                            0.55
-                        ]
-                    },
-                    {
-                        "<=": [
-                            {
                                 "var": "emotions.stress_acute"
                             },
-                            0.3
+                            0.18
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.18
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.unease"
+                            },
+                            0.18
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dread"
+                            },
+                            0.15
                         ]
                     },
                     {
@@ -128,12 +132,12 @@
                             {
                                 "var": "emotions.anxiety"
                             },
-                            0.28
+                            0.1
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires emotion conditions (focused_absorption, flow, release, interest, fascination, transfixed, entranced, executive_focus, stress_acute, anxiety); mood axes (engagement, agency_control, threat, arousal)."
+            "failure_message": "Requires: strong flow + focused_absorption + release; plus intrinsic pull (interest/fascination/curiosity) and a low-friction tone (confidence/calm/contentment); while staying below effortful-control and stress/alerting signals (executive_focus, stress_acute, hypervigilance, unease, dread, anxiety)."
         },
         {
             "logic": {
@@ -145,7 +149,7 @@
                                     {
                                         "var": "previousEmotions.flow"
                                     },
-                                    0.58
+                                    0.62
                                 ]
                             },
                             {
@@ -153,7 +157,7 @@
                                     {
                                         "var": "emotions.flow"
                                     },
-                                    0.58
+                                    0.62
                                 ]
                             }
                         ]
@@ -165,7 +169,7 @@
                                     {
                                         "var": "previousEmotions.focused_absorption"
                                     },
-                                    0.55
+                                    0.6
                                 ]
                             },
                             {
@@ -173,7 +177,7 @@
                                     {
                                         "var": "emotions.focused_absorption"
                                     },
-                                    0.55
+                                    0.6
                                 ]
                             }
                         ]
@@ -185,7 +189,7 @@
                                     {
                                         "var": "previousEmotions.release"
                                     },
-                                    0.22
+                                    0.25
                                 ]
                             },
                             {
@@ -193,7 +197,67 @@
                                     {
                                         "var": "emotions.release"
                                     },
-                                    0.22
+                                    0.25
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.interest"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.interest"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.fascination"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.fascination"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.curiosity"
+                                    },
+                                    0.32
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.curiosity"
+                                    },
+                                    0.32
                                 ]
                             }
                         ]
@@ -210,7 +274,7 @@
                                     }
                                 ]
                             },
-                            0.08
+                            0.1
                         ]
                     },
                     {
@@ -225,7 +289,7 @@
                                     }
                                 ]
                             },
-                            0.08
+                            0.1
                         ]
                     },
                     {
@@ -240,47 +304,72 @@
                                     }
                                 ]
                             },
-                            0.07
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "-": [
-                                    {
-                                        "var": "moodAxes.engagement"
-                                    },
-                                    {
-                                        "var": "previousMoodAxes.engagement"
-                                    }
-                                ]
-                            },
-                            12
+                            0.08
                         ]
                     },
                     {
                         "and": [
                             {
-                                ">": [
+                                ">=": [
                                     {
-                                        "var": "previousMoodAxes.threat"
+                                        "var": "previousEmotions.stress_acute"
                                     },
-                                    20
+                                    0.25
                                 ]
                             },
                             {
                                 "<=": [
                                     {
-                                        "var": "moodAxes.threat"
+                                        "var": "emotions.stress_acute"
                                     },
-                                    12
+                                    0.18
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.hypervigilance"
+                                    },
+                                    0.25
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.hypervigilance"
+                                    },
+                                    0.18
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.unease"
+                                    },
+                                    0.22
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.unease"
+                                    },
+                                    0.18
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires emotion conditions (flow, focused_absorption, release); mood axes (engagement, threat); state change detection from previous values for transition detection."
+            "failure_message": "Requires a detectable transition into flow-absorption: crossing key thresholds, a meaningful rise in flow/focused_absorption/release, an intrinsic-interest spike, or a clear drop in stress/alerting emotions."
         }
     ],
     "actor_description": "The noise in my head drops out. My attention narrows until there's only the next step, and my body keeps meeting it without hesitation. I'm not forcing anything-decisions arrive already made, corrections happen before they become mistakes, and time stops feeling like time. There's a clean, quiet momentum to it, like I'm being pulled forward along a track I can finally trust.",
@@ -291,5 +380,5 @@
     },
     "category": "attention",
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.002
+    "triggerRate": 0.00062
 }

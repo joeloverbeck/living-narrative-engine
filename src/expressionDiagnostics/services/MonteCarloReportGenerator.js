@@ -11,6 +11,8 @@ import {
   filterContextsByConstraints,
   formatConstraints,
   hasOrMoodConstraints,
+  convertAxisConstraintsToMoodConstraints,
+  mergeConstraints,
 } from '../utils/moodRegimeUtils.js';
 import {
   REPORT_INTEGRITY_EPSILON,
@@ -227,10 +229,15 @@ class MonteCarloReportGenerator {
     const hasOrMoodConstraintsFlag = hasOrMoodConstraints(prerequisites, {
       includeMoodAlias: true,
     });
-    const moodConstraints = extractMoodConstraints(prerequisites, {
+    // Extract direct moodAxes.* constraints from prerequisites
+    const directMoodConstraints = extractMoodConstraints(prerequisites, {
       includeMoodAlias: true,
       andOnly: true,
     });
+    // Convert prototype-derived axis constraints to mood constraint format
+    const gateBasedConstraints = convertAxisConstraintsToMoodConstraints(axisConstraints);
+    // Merge: direct constraints take precedence, prototype gates fill gaps
+    const moodConstraints = mergeConstraints(directMoodConstraints, gateBasedConstraints);
     const storedPopulations = this.#coreSectionGenerator.buildStoredContextPopulations(
       simulationResult.storedContexts,
       moodConstraints
@@ -428,10 +435,15 @@ class MonteCarloReportGenerator {
       ? simulationResult.reportIntegrityWarnings
       : [];
     const axisConstraints = this.#extractAxisConstraints(prerequisites);
-    const moodConstraints = extractMoodConstraints(prerequisites, {
+    // Extract direct moodAxes.* constraints from prerequisites
+    const directMoodConstraints = extractMoodConstraints(prerequisites, {
       includeMoodAlias: true,
       andOnly: true,
     });
+    // Convert prototype-derived axis constraints to mood constraint format
+    const gateBasedConstraints = convertAxisConstraintsToMoodConstraints(axisConstraints);
+    // Merge: direct constraints take precedence, prototype gates fill gaps
+    const moodConstraints = mergeConstraints(directMoodConstraints, gateBasedConstraints);
     const storedPopulations = this.#coreSectionGenerator.buildStoredContextPopulations(
       simulationResult.storedContexts,
       moodConstraints

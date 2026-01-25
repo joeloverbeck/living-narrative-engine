@@ -88,6 +88,15 @@ describe('Sensitivity scalar parity integration', () => {
         }
         return null;
       }),
+      getLookupData: jest.fn((lookupId) => {
+        if (lookupId === 'core:emotion_prototypes') {
+          return mockEmotionPrototypes;
+        }
+        if (lookupId === 'core:sexual_prototypes') {
+          return mockSexualPrototypes;
+        }
+        return null;
+      }),
     };
 
     const randomStateGenerator = createDeterministicGenerator();
@@ -112,6 +121,7 @@ describe('Sensitivity scalar parity integration', () => {
       logger,
       sensitivityAnalyzer,
       monteCarloReportGenerator: new MonteCarloReportGenerator({ logger }),
+      dataRegistry,
     });
   });
 

@@ -6,12 +6,10 @@
 import {
   collectAxes,
   buildPrototypeLookup,
-  getAxisUnitVectors,
   normalizeVector,
   computeVectorMagnitude,
-  computeNearestAxisDistance,
+  checkSubspaceGap,
 } from '../../utils/vectorMathUtils.js';
-import { computeAdaptiveDistanceThreshold } from '../../utils/adaptiveThresholdUtils.js';
 
 /**
  * @typedef {object} CoverageGapResult
@@ -23,6 +21,7 @@ import { computeAdaptiveDistanceThreshold } from '../../utils/adaptiveThresholdU
  * @property {number} [clusterMagnitude] - Magnitude of cluster centroid (if magnitude-aware).
  * @property {number} [clusterSize] - Number of prototypes in cluster (if magnitude-aware).
  * @property {number} [gapScore] - Magnitude-weighted gap score (if magnitude-aware).
+ * @property {Record<number, {distance: number, subspaceAxes: string[]}>} [subspaceDistances] - Distances to k-subspaces.
  */
 
 /**
@@ -44,6 +43,8 @@ export class CoverageGapDetector {
    * @param {number} [config.dbscanEpsilon] - DBSCAN epsilon parameter (default: 0.4).
    * @param {number} [config.dbscanMinPoints] - DBSCAN minPoints parameter (default: 3).
    * @param {number} [config.adaptiveThresholdSeed] - Seed for adaptive threshold RNG (default: 42).
+   * @param {number} [config.coverageGapMaxSubspaceDimension] - Max k for subspace testing (default: 3).
+   * @param {Record<number, number>} [config.coverageGapSubspaceThresholds] - Thresholds per subspace dimension.
    * @param {object} [densityClusteringService] - Optional DensityClusteringService for DBSCAN clustering.
    */
   constructor(config = {}, densityClusteringService = null) {
@@ -59,6 +60,13 @@ export class CoverageGapDetector {
       dbscanEpsilon: config.dbscanEpsilon ?? 0.4,
       dbscanMinPoints: config.dbscanMinPoints ?? 3,
       adaptiveThresholdSeed: config.adaptiveThresholdSeed ?? 42,
+      coverageGapMaxSubspaceDimension:
+        config.coverageGapMaxSubspaceDimension ?? 3,
+      coverageGapSubspaceThresholds: config.coverageGapSubspaceThresholds ?? {
+        1: 0.6,
+        2: 0.5,
+        3: 0.4,
+      },
     };
     this.#densityClusteringService = densityClusteringService;
   }
@@ -94,14 +102,7 @@ export class CoverageGapDetector {
       return [];
     }
 
-    const axisUnitVectors = getAxisUnitVectors(axes);
     const prototypeLookup = buildPrototypeLookup(prototypes);
-
-    // Get distance threshold - may be adaptive or static
-    const distanceThreshold = this.#getEffectiveDistanceThreshold(
-      prototypes,
-      axes
-    );
 
     const minClusterSize = Math.max(
       1,
@@ -137,13 +138,28 @@ export class CoverageGapDetector {
         continue;
       }
 
-      const distanceToNearestAxis = computeNearestAxisDistance(
-        suggestedAxisDirection,
-        axisUnitVectors
+      // Use multi-axis subspace distance checking
+      // Gap is flagged only if distant from ALL subspace dimensions (k=1,2,...,maxK)
+      const maxK = Math.min(
+        this.#config.coverageGapMaxSubspaceDimension,
+        axes.length
       );
-      if (distanceToNearestAxis < distanceThreshold) {
+      const subspaceThresholds = this.#config.coverageGapSubspaceThresholds;
+
+      const subspaceResult = checkSubspaceGap(
+        suggestedAxisDirection,
+        axes,
+        subspaceThresholds,
+        maxK
+      );
+
+      // If not a gap in the subspace sense, skip this cluster
+      if (!subspaceResult.isGap) {
         continue;
       }
+
+      // Extract k=1 distance for backward compatibility
+      const distanceToNearestAxis = subspaceResult.distances[1]?.distance ?? 1;
 
       // Compute magnitude-weighted gap score
       let gapScore = distanceToNearestAxis;
@@ -159,6 +175,7 @@ export class CoverageGapDetector {
         distanceToNearestAxis,
         suggestedAxisDirection,
         clusteringMethod,
+        subspaceDistances: subspaceResult.distances,
       };
 
       // Only include magnitude-aware fields when feature is enabled
@@ -254,42 +271,6 @@ export class CoverageGapDetector {
     }
 
     return centroid;
-  }
-
-  /**
-   * Gets the effective distance threshold for coverage gap detection.
-   * Uses adaptive threshold if enabled and sufficient prototypes, otherwise static.
-   *
-   * @param {Array} prototypes - Array of prototype objects.
-   * @param {string[]} axes - Array of axis names.
-   * @returns {number} The effective distance threshold.
-   */
-  #getEffectiveDistanceThreshold(prototypes, axes) {
-    const staticThreshold = Number.isFinite(
-      this.#config.coverageGapAxisDistanceThreshold
-    )
-      ? this.#config.coverageGapAxisDistanceThreshold
-      : 0.6;
-
-    // Adaptive thresholds (only if enabled and sufficient data)
-    if (
-      this.#config.enableAdaptiveThresholds &&
-      Array.isArray(prototypes) &&
-      prototypes.length >= 10 &&
-      Array.isArray(axes) &&
-      axes.length > 0
-    ) {
-      const adaptive = computeAdaptiveDistanceThreshold({
-        prototypes,
-        axes,
-        seed: this.#config.adaptiveThresholdSeed,
-      });
-      if (Number.isFinite(adaptive) && adaptive > 0) {
-        return adaptive;
-      }
-    }
-
-    return staticThreshold;
   }
 
   /**

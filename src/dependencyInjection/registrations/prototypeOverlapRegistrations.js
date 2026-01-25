@@ -39,6 +39,10 @@ import { MultiAxisConflictDetector } from '../../expressionDiagnostics/services/
 import { AxisGapRecommendationBuilder } from '../../expressionDiagnostics/services/axisGap/AxisGapRecommendationBuilder.js';
 import { AxisGapReportSynthesizer } from '../../expressionDiagnostics/services/axisGap/AxisGapReportSynthesizer.js';
 
+// Candidate Axis Validation Services
+import { CandidateAxisExtractor } from '../../expressionDiagnostics/services/axisGap/CandidateAxisExtractor.js';
+import { CandidateAxisValidator } from '../../expressionDiagnostics/services/axisGap/CandidateAxisValidator.js';
+
 /**
  * Register Prototype Overlap Analysis services.
  *
@@ -360,6 +364,20 @@ export function registerPrototypeOverlapServices(registrar) {
       )
   );
 
+  // CandidateAxisExtractor: extracts candidate axes from analysis signals
+  registrar.singletonFactory(
+    diagnosticsTokens.ICandidateAxisExtractor,
+    (c) =>
+      new CandidateAxisExtractor(PROTOTYPE_OVERLAP_CONFIG, c.resolve(tokens.ILogger))
+  );
+
+  // CandidateAxisValidator: validates candidate axes against improvement metrics
+  registrar.singletonFactory(
+    diagnosticsTokens.ICandidateAxisValidator,
+    (c) =>
+      new CandidateAxisValidator(PROTOTYPE_OVERLAP_CONFIG, c.resolve(tokens.ILogger))
+  );
+
   // AxisGapAnalyzer: orchestrator for axis gap detection (uses sub-services)
   registrar.singletonFactory(
     diagnosticsTokens.IAxisGapAnalyzer,
@@ -377,6 +395,12 @@ export function registerPrototypeOverlapServices(registrar) {
           diagnosticsTokens.IMultiAxisConflictDetector
         ),
         reportSynthesizer: c.resolve(diagnosticsTokens.IAxisGapReportSynthesizer),
+        candidateAxisExtractor: c.resolve(
+          diagnosticsTokens.ICandidateAxisExtractor
+        ),
+        candidateAxisValidator: c.resolve(
+          diagnosticsTokens.ICandidateAxisValidator
+        ),
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),
       })

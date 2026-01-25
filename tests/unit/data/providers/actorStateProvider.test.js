@@ -6,6 +6,9 @@ import {
   LIKES_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
   APPARENT_AGE_COMPONENT_ID,
+  MOOD_COMPONENT_ID,
+  SEXUAL_STATE_COMPONENT_ID,
+  AFFECT_TRAITS_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -108,5 +111,67 @@ describe('ActorStateProvider', () => {
     const state = provider.build(entity, logger);
 
     expect(state[APPARENT_AGE_COMPONENT_ID]).toBeUndefined();
+  });
+
+  it('extracts mood component to top level when present', () => {
+    const moodData = { valence: 50, arousal: 30, agency_control: 40 };
+    const components = {
+      [MOOD_COMPONENT_ID]: moodData,
+    };
+    const entity = new MockEntity('actor5', components);
+    const provider = new ActorStateProvider();
+
+    const state = provider.build(entity, logger);
+
+    expect(state[MOOD_COMPONENT_ID]).toEqual(moodData);
+    expect(state[MOOD_COMPONENT_ID]).not.toBe(moodData);
+  });
+
+  it('extracts sexual_state component to top level when present', () => {
+    const sexualStateData = { sex_excitation: 20, sex_inhibition: 10 };
+    const components = {
+      [SEXUAL_STATE_COMPONENT_ID]: sexualStateData,
+    };
+    const entity = new MockEntity('actor6', components);
+    const provider = new ActorStateProvider();
+
+    const state = provider.build(entity, logger);
+
+    expect(state[SEXUAL_STATE_COMPONENT_ID]).toEqual(sexualStateData);
+    expect(state[SEXUAL_STATE_COMPONENT_ID]).not.toBe(sexualStateData);
+  });
+
+  it('extracts affect_traits component to top level when present', () => {
+    const affectTraitsData = {
+      affective_empathy: 75,
+      cognitive_empathy: 60,
+      harm_aversion: 80,
+      self_control: 55,
+      disgust_sensitivity: 40,
+      ruminative_tendency: 70,
+      evaluation_sensitivity: 50,
+    };
+    const components = {
+      [AFFECT_TRAITS_COMPONENT_ID]: affectTraitsData,
+    };
+    const entity = new MockEntity('actor7', components);
+    const provider = new ActorStateProvider();
+
+    const state = provider.build(entity, logger);
+
+    expect(state[AFFECT_TRAITS_COMPONENT_ID]).toEqual(affectTraitsData);
+    expect(state[AFFECT_TRAITS_COMPONENT_ID]).not.toBe(affectTraitsData);
+  });
+
+  it('does not extract affect_traits when component is absent', () => {
+    const components = {
+      [NAME_COMPONENT_ID]: { text: 'Test' },
+    };
+    const entity = new MockEntity('actor8', components);
+    const provider = new ActorStateProvider();
+
+    const state = provider.build(entity, logger);
+
+    expect(state[AFFECT_TRAITS_COMPONENT_ID]).toBeUndefined();
   });
 });

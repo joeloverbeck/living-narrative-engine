@@ -181,5 +181,5 @@
     },
     "category": "threat",
     "diagnosticStatus": "normal",
-    "triggerRate": 0.0056
+    "triggerRate": 0.0054
 }

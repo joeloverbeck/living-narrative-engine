@@ -883,6 +883,29 @@ class CharacterDataXmlBuilder {
   }
 
   /**
+   * Formats affect traits for LLM prompt display.
+   * These are stable personality traits affecting empathy and moral emotions.
+   *
+   * @param {object|null} affectTraits - Affect traits component data
+   * @returns {string} Formatted affect traits string (empty if null)
+   */
+  #formatAffectTraits(affectTraits) {
+    if (!affectTraits) return '';
+    const AFFECT_TRAIT_NAMES = [
+      'affective_empathy',
+      'cognitive_empathy',
+      'harm_aversion',
+      'self_control',
+      'disgust_sensitivity',
+      'ruminative_tendency',
+      'evaluation_sensitivity',
+    ];
+    return AFFECT_TRAIT_NAMES.map(
+      (trait) => `${trait}: ${affectTraits[trait] ?? 50}`
+    ).join(', ');
+  }
+
+  /**
    * Builds the inner state XML section containing emotional and sexual state.
    * Follows same pattern as #buildPhysicalConditionSection (uses #wrapSection and wrap(tag, content, 2)).
    *
@@ -939,6 +962,21 @@ class CharacterDataXmlBuilder {
           this.#xmlBuilder.wrap(
             'sex_variables',
             this.#xmlBuilder.escape(sexVariablesText),
+            2
+          )
+        );
+      }
+    }
+
+    if (options.includeMoodAxes && emotionalState.affectTraits) {
+      const affectTraitsText = this.#formatAffectTraits(
+        emotionalState.affectTraits
+      );
+      if (affectTraitsText) {
+        parts.push(
+          this.#xmlBuilder.wrap(
+            'affect_traits',
+            this.#xmlBuilder.escape(affectTraitsText),
             2
           )
         );

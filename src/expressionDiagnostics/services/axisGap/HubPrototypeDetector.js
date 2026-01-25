@@ -9,6 +9,7 @@ import { clamp01 } from '../../utils/vectorMathUtils.js';
  * @typedef {object} HubResult
  * @property {string} prototypeId - Hub prototype identifier.
  * @property {number} hubScore - Hub score based on degree and edge weight variance.
+ * @property {number} betweennessCentrality - Normalized betweenness centrality [0, 1].
  * @property {string[]} overlappingPrototypes - Neighbor prototype IDs.
  * @property {number} neighborhoodDiversity - Number of distinct clusters among neighbors.
  * @property {string} suggestedAxisConcept - Suggested axis based on neighbor weights.
@@ -25,8 +26,10 @@ export class HubPrototypeDetector {
    *
    * @param {object} [config] - Configuration options.
    * @param {number} [config.hubMinDegree] - Minimum degree to be considered a hub (default: 4).
+   * @param {number} [config.hubMinDegreeRatio] - Minimum degree as ratio of total nodes (default: 0.1).
    * @param {number} [config.hubMaxEdgeWeight] - Maximum edge weight threshold (default: 0.9).
    * @param {number} [config.hubMinNeighborhoodDiversity] - Minimum neighborhood diversity (default: 2).
+   * @param {number} [config.hubBetweennessWeight] - Weight for betweenness centrality in hub detection (default: 0.3).
    * @param {number} [config.compositeScoreGateOverlapWeight] - Weight for gate overlap in composite (default: 0.3).
    * @param {number} [config.compositeScoreCorrelationWeight] - Weight for correlation in composite (default: 0.2).
    * @param {number} [config.compositeScoreGlobalDiffWeight] - Weight for global diff in composite (default: 0.5).
@@ -34,8 +37,10 @@ export class HubPrototypeDetector {
   constructor(config = {}) {
     this.#config = {
       hubMinDegree: config.hubMinDegree ?? 4,
+      hubMinDegreeRatio: config.hubMinDegreeRatio ?? 0.1,
       hubMaxEdgeWeight: config.hubMaxEdgeWeight ?? 0.9,
       hubMinNeighborhoodDiversity: config.hubMinNeighborhoodDiversity ?? 2,
+      hubBetweennessWeight: config.hubBetweennessWeight ?? 0.3,
       compositeScoreGateOverlapWeight:
         config.compositeScoreGateOverlapWeight ?? 0.3,
       compositeScoreCorrelationWeight:
@@ -55,15 +60,23 @@ export class HubPrototypeDetector {
    */
   detect(pairResults, profiles = new Map(), prototypes = []) {
     if (!Array.isArray(pairResults) || pairResults.length === 0) {
-      return [];
+      return { hubs: [], diagnostics: this.#emptyDiagnostics() };
     }
 
     const graph = this.buildOverlapGraph(pairResults);
     if (graph.size === 0) {
-      return [];
+      return { hubs: [], diagnostics: this.#emptyDiagnostics() };
     }
 
-    const hubMinDegree = Math.max(1, Math.floor(this.#config.hubMinDegree));
+    // Compute adaptive hub minimum degree
+    const numNodes = graph.size;
+    const degreeFloor = Math.max(1, Math.floor(this.#config.hubMinDegree));
+    const degreeRatio = this.#config.hubMinDegreeRatio ?? 0.1;
+    const hubMinDegree = Math.max(
+      degreeFloor,
+      Math.floor(numNodes * degreeRatio)
+    );
+
     const hubMaxEdgeWeight = Number.isFinite(this.#config.hubMaxEdgeWeight)
       ? this.#config.hubMaxEdgeWeight
       : 0.9;
@@ -72,44 +85,85 @@ export class HubPrototypeDetector {
       Math.floor(this.#config.hubMinNeighborhoodDiversity)
     );
 
+    // Compute betweenness centrality for all nodes
+    const betweenness = this.computeBetweennessCentrality(graph);
+
     const hubs = [];
 
+    // Diagnostic counters
+    let passedDegreeFilter = 0;
+    let filteredEdgeCount = 0;
+    let passedDiversityFilter = 0;
+
     for (const [nodeId, neighbors] of graph.entries()) {
-      const neighborIds = Array.from(neighbors.keys());
-      const degree = neighborIds.length;
-      if (degree < hubMinDegree) {
-        continue;
+      const rawDegree = neighbors.size;
+
+      // Fix: Filter edges rather than disqualifying entire node
+      // A hub with 10 good connections and 1 near-duplicate should still be considered
+      const eligibleEdges = new Map();
+      for (const [neighborId, weight] of neighbors.entries()) {
+        if (weight <= hubMaxEdgeWeight) {
+          eligibleEdges.set(neighborId, weight);
+        }
       }
 
-      const edgeWeights = Array.from(neighbors.values());
-      if (edgeWeights.some((weight) => weight > hubMaxEdgeWeight)) {
-        continue;
+      const eligibleDegree = eligibleEdges.size;
+      const excludedEdges = rawDegree - eligibleDegree;
+
+      if (excludedEdges > 0) {
+        filteredEdgeCount += excludedEdges;
       }
 
+      // Check degree on filtered edges
+      if (eligibleDegree < hubMinDegree) {
+        continue;
+      }
+      passedDegreeFilter += 1;
+
+      // Use filtered edges for diversity check
+      const eligibleNeighborIds = Array.from(eligibleEdges.keys());
       const neighborhoodDiversity = this.#getNeighborhoodDiversity(
-        neighborIds,
+        eligibleNeighborIds,
         profiles
       );
       if (neighborhoodDiversity < hubMinNeighborhoodDiversity) {
         continue;
       }
+      passedDiversityFilter += 1;
 
-      const hubScore = this.computeHubScore(edgeWeights);
+      // Use filtered edges for scoring
+      const eligibleWeights = Array.from(eligibleEdges.values());
+      const hubScore = this.computeHubScore(eligibleWeights);
+      const betweennessCentrality = betweenness.get(nodeId) ?? 0;
 
       hubs.push({
         prototypeId: nodeId,
         hubScore,
-        overlappingPrototypes: neighborIds.slice().sort(),
+        betweennessCentrality,
+        overlappingPrototypes: eligibleNeighborIds.slice().sort(),
         neighborhoodDiversity,
+        eligibleDegree,
+        excludedEdges,
         suggestedAxisConcept: this.#suggestAxisConcept(
           nodeId,
-          neighborIds,
+          eligibleNeighborIds,
           prototypes
         ),
       });
     }
 
-    return hubs;
+    const diagnostics = {
+      totalNodes: numNodes,
+      passedDegreeFilter,
+      filteredEdgeCount,
+      passedDiversityFilter,
+      effectiveHubMinDegree: hubMinDegree,
+      hubMaxEdgeWeight,
+      hubMinNeighborhoodDiversity,
+      hubsDetected: hubs.length,
+    };
+
+    return { hubs, diagnostics };
   }
 
   /**
@@ -144,8 +198,122 @@ export class HubPrototypeDetector {
   }
 
   /**
+   * Compute betweenness centrality for all nodes using Brandes' algorithm.
+   * Betweenness centrality measures how often a node lies on shortest paths.
+   *
+   * @param {Map<string, Map<string, number>>} graph - Adjacency map.
+   * @returns {Map<string, number>} Node ID to normalized betweenness [0, 1].
+   */
+  computeBetweennessCentrality(graph) {
+    const betweenness = new Map();
+    const nodes = Array.from(graph.keys());
+
+    // Initialize betweenness to 0 for all nodes
+    for (const node of nodes) {
+      betweenness.set(node, 0);
+    }
+
+    // Handle edge cases
+    if (nodes.length <= 2) {
+      return betweenness;
+    }
+
+    // Brandes' algorithm: run BFS from each source
+    for (const source of nodes) {
+      // Single-source shortest paths
+      const stack = [];
+      const predecessors = new Map();
+      const sigma = new Map(); // Number of shortest paths
+      const distance = new Map();
+      const delta = new Map(); // Dependency accumulator
+
+      for (const node of nodes) {
+        predecessors.set(node, []);
+        sigma.set(node, 0);
+        distance.set(node, -1);
+        delta.set(node, 0);
+      }
+
+      sigma.set(source, 1);
+      distance.set(source, 0);
+
+      // BFS traversal
+      const queue = [source];
+      while (queue.length > 0) {
+        const current = queue.shift();
+        stack.push(current);
+
+        const neighbors = graph.get(current);
+        if (!neighbors) continue;
+
+        const currentDist = distance.get(current);
+
+        for (const neighbor of neighbors.keys()) {
+          // First visit - discovered via BFS
+          if (distance.get(neighbor) < 0) {
+            distance.set(neighbor, currentDist + 1);
+            queue.push(neighbor);
+          }
+          // Shortest path to neighbor via current
+          if (distance.get(neighbor) === currentDist + 1) {
+            sigma.set(neighbor, sigma.get(neighbor) + sigma.get(current));
+            predecessors.get(neighbor).push(current);
+          }
+        }
+      }
+
+      // Accumulate dependencies in reverse BFS order
+      while (stack.length > 0) {
+        const current = stack.pop();
+        const preds = predecessors.get(current);
+
+        for (const pred of preds) {
+          const sigmaRatio = sigma.get(pred) / sigma.get(current);
+          const deltaCurrent = delta.get(current);
+          delta.set(pred, delta.get(pred) + sigmaRatio * (1 + deltaCurrent));
+        }
+
+        if (current !== source) {
+          betweenness.set(
+            current,
+            betweenness.get(current) + delta.get(current)
+          );
+        }
+      }
+    }
+
+    // Normalize betweenness to [0, 1]
+    // For undirected graphs, divide by 2 since each pair is counted twice
+    // Normalization factor: (n-1)(n-2)/2 for undirected graphs
+    const n = nodes.length;
+    const normFactor = n > 2 ? ((n - 1) * (n - 2)) / 2 : 1;
+
+    let maxBetweenness = 0;
+    for (const [node, value] of betweenness.entries()) {
+      const normalized = value / 2 / normFactor; // Divide by 2 for undirected
+      betweenness.set(node, normalized);
+      if (normalized > maxBetweenness) {
+        maxBetweenness = normalized;
+      }
+    }
+
+    // Scale to [0, 1] based on actual max if needed
+    if (maxBetweenness > 1) {
+      for (const [node, value] of betweenness.entries()) {
+        betweenness.set(node, value / maxBetweenness);
+      }
+    }
+
+    return betweenness;
+  }
+
+  /**
    * Compute hub score from edge weights.
-   * Score = degree * (1 - variance), rewarding high connectivity with even weights.
+   * Score = degree * (1 - normalizedVariance), rewarding high connectivity with even weights.
+   *
+   * Edge weights are clamped to [0, 1], so maximum variance is 0.25 (achieved when
+   * half the values are 0 and half are 1). We normalize variance to [0, 1] range
+   * to ensure the full penalty spectrum is available.
    *
    * @param {number[]} edgeWeights - Array of edge weights.
    * @returns {number} Hub score.
@@ -161,8 +329,13 @@ export class HubPrototypeDetector {
     const variance =
       edgeWeights.reduce((sum, value) => sum + (value - mean) ** 2, 0) /
       edgeWeights.length;
-    const clampedVariance = clamp01(variance);
-    const score = degree * (1 - clampedVariance);
+
+    // Maximum variance for [0,1] bounded values is 0.25 (half 0s, half 1s)
+    // Normalize to [0, 1] range for full penalty spectrum
+    const MAX_VARIANCE_FOR_UNIT_INTERVAL = 0.25;
+    const normalizedVariance = clamp01(variance / MAX_VARIANCE_FOR_UNIT_INTERVAL);
+
+    const score = degree * (1 - normalizedVariance);
     return Math.max(0, score);
   }
 
@@ -216,7 +389,7 @@ export class HubPrototypeDetector {
   /**
    * Coerce a prototype ID to string.
    *
-   * @param {*} rawId - Raw ID value.
+   * @param {unknown} rawId - Raw ID value.
    * @returns {string|null} Coerced ID or null.
    */
   #coercePrototypeId(rawId) {
@@ -409,5 +582,24 @@ export class HubPrototypeDetector {
     }
 
     return bestAxis ?? 'shared overlap';
+  }
+
+
+  /**
+   * Create empty diagnostics object for early returns.
+   *
+   * @returns {object} Empty diagnostics.
+   */
+  #emptyDiagnostics() {
+    return {
+      totalNodes: 0,
+      passedDegreeFilter: 0,
+      filteredEdgeCount: 0,
+      passedDiversityFilter: 0,
+      effectiveHubMinDegree: 0,
+      hubMaxEdgeWeight: 0,
+      hubMinNeighborhoodDiversity: 0,
+      hubsDetected: 0,
+    };
   }
 }

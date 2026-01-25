@@ -53,4 +53,52 @@ export class PerceptionLogProvider extends IPerceptionLogProvider {
     }
     return perceptionLogDto;
   }
+
+  /**
+   * @override
+   * @param {Entity} actor
+   * @param {ILogger} logger
+   * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher
+   */
+  async isEmpty(actor, logger, dispatcher) {
+    logger.debug(
+      `PerceptionLogProvider.isEmpty: Checking perception log for actor ${actor.id}`
+    );
+    try {
+      if (!actor.hasComponent(PERCEPTION_LOG_COMPONENT_ID)) {
+        logger.debug(
+          `PerceptionLogProvider.isEmpty: Actor ${actor.id} has no perception log component`
+        );
+        return true;
+      }
+      const perceptionData = actor.getComponentData(PERCEPTION_LOG_COMPONENT_ID);
+      if (
+        !perceptionData ||
+        !Array.isArray(perceptionData.logEntries) ||
+        perceptionData.logEntries.length === 0
+      ) {
+        logger.debug(
+          `PerceptionLogProvider.isEmpty: Actor ${actor.id} perception log is empty`
+        );
+        return true;
+      }
+      logger.debug(
+        `PerceptionLogProvider.isEmpty: Actor ${actor.id} has ${perceptionData.logEntries.length} entries`
+      );
+      return false;
+    } catch (error) {
+      // Fail safe: treat errors as empty to avoid blocking gameplay
+      if (dispatcher) {
+        safeDispatchError(
+          dispatcher,
+          `PerceptionLogProvider.isEmpty: Error checking perception log for ${actor.id}: ${error.message}`,
+          { error }
+        );
+      }
+      logger.debug(
+        `PerceptionLogProvider.isEmpty: Error occurred, treating as empty for safety`
+      );
+      return true;
+    }
+  }
 }

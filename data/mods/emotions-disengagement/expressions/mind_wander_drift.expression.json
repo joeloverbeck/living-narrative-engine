@@ -145,5 +145,5 @@
         "limited": "For a brief stretch, {actor} seems mentally elsewhere—present in body, but attention drifting."
     },
     "diagnosticStatus": "normal",
-    "triggerRate": 0.0093
+    "triggerRate": 0.0083
 }

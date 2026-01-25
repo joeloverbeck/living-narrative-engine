@@ -209,5 +209,5 @@
     },
     "category": "shutdown",
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0017
+    "triggerRate": 0.0014
 }

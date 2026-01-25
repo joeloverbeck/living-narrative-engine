@@ -259,6 +259,7 @@ class ExpressionDiagnosticsController {
       logger,
       sensitivityAnalyzer,
       monteCarloReportGenerator: reportGenerator,
+      dataRegistry,
     });
   }
 

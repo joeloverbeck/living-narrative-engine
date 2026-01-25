@@ -147,7 +147,10 @@ describe('ExpressionDiagnosticsController recommendations UI', () => {
       computeSensitivityData: jest.fn().mockReturnValue([]),
       computeGlobalSensitivityData: jest.fn().mockReturnValue([]),
     };
-    mockDataRegistry = { getLookupData: jest.fn().mockReturnValue({}) };
+    mockDataRegistry = {
+      get: jest.fn().mockReturnValue(null),
+      getLookupData: jest.fn().mockReturnValue({}),
+    };
   });
 
   afterEach(() => {

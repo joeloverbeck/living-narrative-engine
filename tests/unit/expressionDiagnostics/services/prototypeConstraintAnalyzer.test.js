@@ -344,27 +344,16 @@ describe('PrototypeConstraintAnalyzer', () => {
   });
 
   describe('extractAxisConstraints', () => {
-    it('should extract >= constraints from prerequisites', () => {
+    // Note: extractAxisConstraints now derives constraints from prototype gates
+    // referenced in prerequisites (emotions.* and sexualStates.* patterns),
+    // NOT from direct moodAxes.* patterns in prerequisites.
+
+    it('should extract constraints from emotion prototype gates', () => {
+      // joy prototype has gate: 'valence >= 0.35'
       const prerequisites = [
         {
           logic: {
-            '>=': [{ var: 'moodAxes.affiliation' }, 20],
-          },
-        },
-      ];
-
-      const constraints = analyzer.extractAxisConstraints(prerequisites);
-
-      expect(constraints.has('affiliation')).toBe(true);
-      // 20 normalized to 0.2
-      expect(constraints.get('affiliation').min).toBeCloseTo(0.2, 5);
-    });
-
-    it('should extract <= constraints from prerequisites', () => {
-      const prerequisites = [
-        {
-          logic: {
-            '<=': [{ var: 'moodAxes.valence' }, -10],
+            '>=': [{ var: 'emotions.joy' }, 0.5],
           },
         },
       ];
@@ -372,17 +361,39 @@ describe('PrototypeConstraintAnalyzer', () => {
       const constraints = analyzer.extractAxisConstraints(prerequisites);
 
       expect(constraints.has('valence')).toBe(true);
-      // -10 normalized to -0.1
-      expect(constraints.get('valence').max).toBeCloseTo(-0.1, 5);
+      // Gate value 0.35 converted to threshold 35, then normalized to 0.35
+      expect(constraints.get('valence').min).toBeCloseTo(0.35, 5);
     });
 
-    it('should handle nested AND logic', () => {
+    it('should extract multiple constraints from emotion with multiple gates', () => {
+      // anger prototype has gates: 'valence <= -0.15', 'arousal >= 0.10'
+      const prerequisites = [
+        {
+          logic: {
+            '>=': [{ var: 'emotions.anger' }, 0.4],
+          },
+        },
+      ];
+
+      const constraints = analyzer.extractAxisConstraints(prerequisites);
+
+      expect(constraints.has('valence')).toBe(true);
+      expect(constraints.has('arousal')).toBe(true);
+      // valence <= -0.15 means max = -0.15
+      expect(constraints.get('valence').max).toBeCloseTo(-0.15, 5);
+      // arousal >= 0.10 means min = 0.10
+      expect(constraints.get('arousal').min).toBeCloseTo(0.1, 5);
+    });
+
+    it('should combine gates from multiple prototype references', () => {
+      // joy: valence >= 0.35
+      // anger: valence <= -0.15, arousal >= 0.10
       const prerequisites = [
         {
           logic: {
             and: [
-              { '>=': [{ var: 'moodAxes.affiliation' }, 20] },
-              { '<=': [{ var: 'moodAxes.valence' }, -10] },
+              { '>=': [{ var: 'emotions.joy' }, 0.5] },
+              { '>=': [{ var: 'emotions.anger' }, 0.3] },
             ],
           },
         },
@@ -390,41 +401,25 @@ describe('PrototypeConstraintAnalyzer', () => {
 
       const constraints = analyzer.extractAxisConstraints(prerequisites);
 
-      expect(constraints.has('affiliation')).toBe(true);
+      // Both prototypes have valence constraints - deduplication keeps most restrictive
       expect(constraints.has('valence')).toBe(true);
+      expect(constraints.has('arousal')).toBe(true);
     });
 
-    it('should handle nested OR logic', () => {
+    it('should return empty map when prerequisites have no prototype refs', () => {
+      // Direct moodAxes patterns are NOT extracted anymore
       const prerequisites = [
         {
           logic: {
-            or: [
-              { '>=': [{ var: 'moodAxes.threat' }, 10] },
-              { '>=': [{ var: 'moodAxes.arousal' }, 15] },
-            ],
+            '>=': [{ var: 'moodAxes.threat' }, 10],
           },
         },
       ];
 
       const constraints = analyzer.extractAxisConstraints(prerequisites);
 
-      // OR-only constraints are ignored (AND-only mood regime)
+      // No emotion/sexual prototype references, so no gates to extract
       expect(constraints.size).toBe(0);
-    });
-
-    it('should extract constraints from mood alias paths', () => {
-      const prerequisites = [
-        {
-          logic: {
-            '>=': [{ var: 'mood.valence' }, 30],
-          },
-        },
-      ];
-
-      const constraints = analyzer.extractAxisConstraints(prerequisites);
-
-      expect(constraints.has('valence')).toBe(true);
-      expect(constraints.get('valence').min).toBeCloseTo(0.3, 5);
     });
 
     it('should return empty map for empty prerequisites', () => {
@@ -437,24 +432,46 @@ describe('PrototypeConstraintAnalyzer', () => {
       expect(constraints.size).toBe(0);
     });
 
-    it('should handle multiple constraints on same axis', () => {
+    it('should skip prerequisites without logic property', () => {
+      const prerequisites = [{ someOtherProp: 'value' }];
+      const constraints = analyzer.extractAxisConstraints(prerequisites);
+      expect(constraints.size).toBe(0);
+    });
+
+    it('should handle prototype with no gates defined', () => {
+      // Create local analyzer with prototype that has no gates
+      const noGatesPrototypes = {
+        neutral: {
+          weights: { valence: 0 },
+          // no gates property
+        },
+      };
+
+      const localRegistry = {
+        get: jest.fn(),
+        getLookupData: jest.fn((lookupKey) => {
+          if (lookupKey === 'core:emotion_prototypes') {
+            return { entries: noGatesPrototypes };
+          }
+          return null;
+        }),
+      };
+
+      const localAnalyzer = new PrototypeConstraintAnalyzer({
+        dataRegistry: localRegistry,
+        logger: mockLogger,
+      });
+
       const prerequisites = [
         {
           logic: {
-            and: [
-              { '>=': [{ var: 'moodAxes.arousal' }, -5] },
-              { '<=': [{ var: 'moodAxes.arousal' }, 55] },
-            ],
+            '>=': [{ var: 'emotions.neutral' }, 0.5],
           },
         },
       ];
 
-      const constraints = analyzer.extractAxisConstraints(prerequisites);
-
-      expect(constraints.has('arousal')).toBe(true);
-      const arousal = constraints.get('arousal');
-      expect(arousal.min).toBeCloseTo(-0.05, 5);
-      expect(arousal.max).toBeCloseTo(0.55, 5);
+      const constraints = localAnalyzer.extractAxisConstraints(prerequisites);
+      expect(constraints.size).toBe(0);
     });
   });
 

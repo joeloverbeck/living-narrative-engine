@@ -207,5 +207,5 @@
     },
     "category": "threat",
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0024
+    "triggerRate": 0.0022
 }

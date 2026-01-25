@@ -402,6 +402,7 @@ describe('ExpressionDiagnosticsController', () => {
     };
 
     mockDataRegistry = {
+      get: jest.fn().mockReturnValue(null),
       getLookupData: jest.fn().mockReturnValue(null),
     };
   });

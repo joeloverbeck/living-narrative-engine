@@ -8,7 +8,9 @@ import { computeMedianAndIQR } from '../../utils/statisticalUtils.js';
 /**
  * @typedef {object} ConflictResult
  * @property {string} prototypeId - Prototype identifier.
- * @property {number} activeAxisCount - Number of active axes.
+ * @property {number} activeAxisCount - Number of active axes (|weight| >= activeAxisEpsilon).
+ * @property {number} [strongAxisCount] - Number of strongly used axes (|weight| >= strongAxisThreshold).
+ * @property {string[]} [strongAxes] - Axes with weights >= strongAxisThreshold (sorted).
  * @property {number} signBalance - Balance between positive/negative axes (0-1).
  * @property {string[]} positiveAxes - Axes with positive weights.
  * @property {string[]} negativeAxes - Axes with negative weights.
@@ -26,17 +28,21 @@ export class MultiAxisConflictDetector {
    * Create a MultiAxisConflictDetector.
    *
    * @param {object} [config] - Configuration options.
-   * @param {number} [config.activeAxisEpsilon] - Minimum weight for active axis (default: 0).
+   * @param {number} [config.activeAxisEpsilon] - Minimum weight for active axis (default: 0.08).
+   * @param {number} [config.strongAxisThreshold] - Minimum weight for strongly used axis (default: 0.25).
    * @param {number} [config.highAxisLoadingThreshold] - IQR multiplier for high loading (default: 1.5).
+   * @param {number} [config.minIQRFloor] - Minimum IQR value to prevent sparsity when data is homogeneous (default: 0.5).
    * @param {number} [config.signTensionMinMagnitude] - Minimum |weight| for sign tension (default: 0.2).
    * @param {number} [config.signTensionMinHighAxes] - Minimum high-magnitude axes (default: 2).
    * @param {number} [config.multiAxisSignBalanceThreshold] - Sign balance threshold (default: 0.4).
    */
   constructor(config = {}) {
     this.#config = {
-      activeAxisEpsilon: config.activeAxisEpsilon ?? 0,
+      activeAxisEpsilon: config.activeAxisEpsilon ?? 0.08,
+      strongAxisThreshold: config.strongAxisThreshold ?? 0.25,
       highAxisLoadingThreshold:
         config.highAxisLoadingThreshold ?? config.multiAxisUsageThreshold ?? 1.5,
+      minIQRFloor: config.minIQRFloor ?? 0.5,
       signTensionMinMagnitude: config.signTensionMinMagnitude ?? 0.2,
       signTensionMinHighAxes: config.signTensionMinHighAxes ?? 2,
       multiAxisSignBalanceThreshold: config.multiAxisSignBalanceThreshold ?? 0.4,
@@ -100,7 +106,8 @@ export class MultiAxisConflictDetector {
 
   /**
    * Detect prototypes with unusually high active axis count.
-   * Uses IQR-based threshold.
+   * Uses Tukey's fence (Q3 + k*IQR) with an IQR floor to prevent false positives
+   * when axis counts are homogeneous.
    *
    * @param {Array} prototypes - Prototype objects.
    * @returns {ConflictResult[]} Prototypes with high axis loading.
@@ -111,7 +118,9 @@ export class MultiAxisConflictDetector {
     }
 
     const epsilon = Math.max(0, this.#config.activeAxisEpsilon);
+    const strongThreshold = Math.max(0, this.#config.strongAxisThreshold);
     const usageThreshold = this.#config.highAxisLoadingThreshold;
+    const minIQRFloor = this.#config.minIQRFloor;
 
     const summaries = prototypes.map((prototype, index) => {
       const prototypeId =
@@ -128,9 +137,17 @@ export class MultiAxisConflictDetector {
         activeAxisCount
       );
 
+      // Compute strong axis count (axes with |weight| >= strongAxisThreshold)
+      const { positiveAxes: strongPositive, negativeAxes: strongNegative } =
+        this.#categorizeAxes(weights, strongThreshold);
+      const strongAxisCount = strongPositive.length + strongNegative.length;
+      const strongAxes = [...strongPositive, ...strongNegative].sort();
+
       return {
         prototypeId,
         activeAxisCount,
+        strongAxisCount,
+        strongAxes,
         signBalance,
         positiveAxes: positiveAxes.slice().sort(),
         negativeAxes: negativeAxes.slice().sort(),
@@ -139,8 +156,11 @@ export class MultiAxisConflictDetector {
     });
 
     const counts = summaries.map((entry) => entry.activeAxisCount);
-    const { median, iqr } = computeMedianAndIQR(counts);
-    const axisThreshold = median + iqr * usageThreshold;
+    const { iqr, q3 } = computeMedianAndIQR(counts);
+    // Apply IQR floor to prevent massive false positives when data is homogeneous
+    const effectiveIQR = Math.max(iqr, minIQRFloor);
+    // Standard Tukey's fence: Q3 + k*IQR
+    const axisThreshold = q3 + effectiveIQR * usageThreshold;
 
     return summaries.filter((entry) => entry.activeAxisCount > axisThreshold);
   }

@@ -68,7 +68,7 @@ describe('MonteCarloReportGenerator - Population Labels', () => {
     expect(report).toContain('## Population Summary');
     expect(report).toContain('**Stored contexts**: 20 of 100');
     expect(report).toContain('Stored contexts are capped at 20');
-    expect(report).toContain('**Mood regime**: AND-only mood constraints');
+    expect(report).toContain('**Mood regime**: Mood axis constraints derived from gates');
   });
 
   it('adds stored-context population labels to every stored-context section', () => {

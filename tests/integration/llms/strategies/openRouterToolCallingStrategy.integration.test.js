@@ -1,10 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { OpenRouterToolCallingStrategy } from '../../../../src/llms/strategies/openRouterToolCallingStrategy.js';
 import { EnvironmentContext } from '../../../../src/llms/environmentContext.js';
-import {
-  OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA,
-  OPENROUTER_DEFAULT_TOOL_DESCRIPTION,
-} from '../../../../src/llms/constants/llmConstants.js';
+import { OPENROUTER_DEFAULT_TOOL_DESCRIPTION } from '../../../../src/llms/constants/llmConstants.js';
 import { LLMStrategyError } from '../../../../src/llms/errors/LLMStrategyError.js';
 import { createEnhancedMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
@@ -169,7 +166,7 @@ describe('Integration: OpenRouterToolCallingStrategy', () => {
     });
   });
 
-  it('buildToolSchema falls back to the default handler when custom schema is invalid', () => {
+  it('buildToolSchema returns null when custom schema is invalid and no default fallback exists', () => {
     const strategy = new OpenRouterToolCallingStrategy({
       httpClient: new RecordingHttpClient(() => ({})),
       logger: createEnhancedMockLogger(),
@@ -182,16 +179,9 @@ describe('Integration: OpenRouterToolCallingStrategy', () => {
       }
     );
 
-    expect(schema).toEqual({
-      type: 'function',
-      function: {
-        name: 'game_ai_action_speech',
-        description: OPENROUTER_DEFAULT_TOOL_DESCRIPTION,
-        parameters:
-          OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-          OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA,
-      },
-    });
+    // When an invalid custom schema is provided and no default fallback exists,
+    // buildToolSchema returns null after catching the error from buildDefaultToolSchema
+    expect(schema).toBeNull();
   });
 
   it('buildToolSchema returns null when no tools are supplied', () => {
@@ -282,25 +272,21 @@ describe('Integration: OpenRouterToolCallingStrategy', () => {
     ).toThrow(LLMStrategyError);
   });
 
-  it('falls back to the default schema when request options omit toolSchema', () => {
+  it('throws when request options omit toolSchema (no default fallback available)', () => {
     const strategy = new OpenRouterToolCallingStrategy({
       httpClient: new RecordingHttpClient(() => ({})),
       logger: createEnhancedMockLogger(),
     });
 
-    const payload = strategy._buildProviderRequestPayloadAdditions(
-      { messages: [] },
-      { ...BASE_CONFIG },
-      { toolName: 'recon_tool' }
-    );
-
-    expect(payload.tools[0].function.parameters).toEqual(
-      OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA.schema ||
-        OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA
-    );
-    expect(payload.tools[0].function.description).toBe(
-      OPENROUTER_DEFAULT_TOOL_DESCRIPTION
-    );
+    // When toolSchema is omitted from request options, _buildProviderRequestPayloadAdditions
+    // now throws because no default fallback schema is available
+    expect(() =>
+      strategy._buildProviderRequestPayloadAdditions(
+        { messages: [] },
+        { ...BASE_CONFIG },
+        { toolName: 'recon_tool' }
+      )
+    ).toThrow(LLMStrategyError);
   });
 
   it('throws when provider payload lacks the expected tool name', async () => {

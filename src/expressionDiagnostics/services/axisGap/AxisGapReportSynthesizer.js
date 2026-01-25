@@ -29,6 +29,7 @@ const REASON_TO_FAMILY_MAP = {
 /**
  * Family names that are metadata-only and should not contribute to
  * confidence scoring or recommendation generation.
+ *
  * @type {Set<string>}
  */
 const METADATA_ONLY_FAMILIES = new Set(['metadata']);
@@ -54,6 +55,20 @@ const METADATA_ONLY_FAMILIES = new Set(['metadata']);
  */
 
 /**
+ * @typedef {object} CandidateAxisResult
+ * @property {string} candidateId - Unique identifier for this candidate.
+ * @property {'pca_residual'|'coverage_gap'|'hub_derived'} source - Origin of candidate.
+ * @property {Record<string, number>} direction - Normalized direction vector.
+ * @property {object} improvement - Improvement metrics.
+ * @property {number} improvement.rmseReduction - RMSE reduction ratio.
+ * @property {number} improvement.strongAxisReduction - Strong axis count reduction.
+ * @property {number} improvement.coUsageReduction - Co-usage reduction ratio.
+ * @property {boolean} isRecommended - Whether the candidate is recommended.
+ * @property {'add_axis'|'refine_prototypes'|'insufficient_data'} recommendation - Recommendation type.
+ * @property {string[]} affectedPrototypes - IDs of affected prototypes.
+ */
+
+/**
  * @typedef {object} AxisGapReport
  * @property {object} summary - Report summary.
  * @property {object} pcaAnalysis - PCA analysis results.
@@ -62,6 +77,7 @@ const METADATA_ONLY_FAMILIES = new Set(['metadata']);
  * @property {ConflictResult[]} multiAxisConflicts - Multi-axis conflicts.
  * @property {ConflictResult[]} highAxisLoadings - High axis loading conflicts.
  * @property {ConflictResult[]} signTensions - Sign tension conflicts.
+ * @property {CandidateAxisResult[]|null} candidateAxes - Candidate axis validation results.
  * @property {Recommendation[]} recommendations - Generated recommendations.
  * @property {PrototypeWeightSummary[]} prototypeWeightSummaries - Weight summaries.
  */
@@ -93,6 +109,7 @@ export class AxisGapReportSynthesizer {
       pcaResidualVarianceThreshold: config.pcaResidualVarianceThreshold ?? 0.15,
       residualVarianceThreshold: config.residualVarianceThreshold ?? 0.15,
       reconstructionErrorThreshold: config.reconstructionErrorThreshold ?? 0.5,
+      pcaRequireCorroboration: config.pcaRequireCorroboration ?? true,
     };
     this.#recommendationBuilder = recommendationBuilder;
   }
@@ -107,6 +124,7 @@ export class AxisGapReportSynthesizer {
    * @param {number} [totalPrototypes] - Total prototypes analyzed.
    * @param {Array<{id?: string, prototypeId?: string, weights?: Record<string, number>}>} [prototypes] - Prototype objects.
    * @param {SplitConflicts} [splitConflicts] - Split conflict types.
+   * @param {CandidateAxisResult[]|null} [candidateAxisValidation] - Optional candidate axis validation results.
    * @returns {AxisGapReport} Synthesized report.
    */
   synthesize(
@@ -116,9 +134,14 @@ export class AxisGapReportSynthesizer {
     conflicts,
     totalPrototypes = 0,
     prototypes = [],
-    splitConflicts = {}
+    splitConflicts = {},
+    candidateAxisValidation = null
   ) {
-    const { highAxisLoadings = [], signTensions = [] } = splitConflicts;
+    const {
+      highAxisLoadings = [],
+      signTensions = [],
+      hubDiagnostics = null,
+    } = splitConflicts;
 
     const methodsTriggered = this.#countTriggeredMethods(pcaResult, hubs, gaps, conflicts);
     const prototypeWeightSummaries = this.computePrototypeWeightSummaries(
@@ -132,29 +155,50 @@ export class AxisGapReportSynthesizer {
 
     let recommendations = [];
     if (this.#recommendationBuilder) {
-      recommendations = this.#recommendationBuilder.generate(pcaResult, hubs, gaps, conflicts);
+      recommendations = this.#recommendationBuilder.generate(
+        pcaResult,
+        hubs,
+        gaps,
+        conflicts,
+        candidateAxisValidation
+      );
       this.#recommendationBuilder.sortByPriority(recommendations);
+    }
+
+    // Build signal breakdown with optional candidate axis counts
+    const signalBreakdown = {
+      pcaSignals:
+        pcaResult.residualVarianceRatio > this.#config.residualVarianceThreshold ? 1 : 0,
+      hubSignals: hubs.length,
+      coverageGapSignals: gaps.length,
+      multiAxisConflictSignals: conflicts.length,
+      highAxisLoadingSignals: highAxisLoadings.length,
+      signTensionSignals: signTensions.length,
+    };
+
+    // Add candidate axis validation counts if available
+    if (Array.isArray(candidateAxisValidation)) {
+      signalBreakdown.candidateAxisCount = candidateAxisValidation.length;
+      signalBreakdown.recommendedCandidateCount = candidateAxisValidation.filter(
+        (c) => c.isRecommended
+      ).length;
     }
 
     return {
       summary: {
         totalPrototypesAnalyzed: totalPrototypes,
         recommendationCount: recommendations.length,
-        signalBreakdown: {
-          pcaSignals:
-            pcaResult.residualVarianceRatio > this.#config.residualVarianceThreshold ? 1 : 0,
-          hubSignals: hubs.length,
-          coverageGapSignals: gaps.length,
-          multiAxisConflictSignals: conflicts.length,
-          highAxisLoadingSignals: highAxisLoadings.length,
-          signTensionSignals: signTensions.length,
-        },
+        signalBreakdown,
         confidence,
         potentialGapsDetected: recommendations.length,
       },
       pcaAnalysis: {
         residualVarianceRatio: pcaResult.residualVarianceRatio,
         additionalSignificantComponents: pcaResult.additionalSignificantComponents,
+        significantComponentCount: pcaResult.significantComponentCount ?? 0,
+        expectedComponentCount: pcaResult.expectedComponentCount ?? 0,
+        significantBeyondExpected: pcaResult.significantBeyondExpected ?? 0,
+        axisCount: pcaResult.axisCount ?? 0,
         topLoadingPrototypes: pcaResult.topLoadingPrototypes,
         cumulativeVariance: pcaResult.cumulativeVariance ?? [],
         explainedVariance: pcaResult.explainedVariance ?? [],
@@ -163,10 +207,12 @@ export class AxisGapReportSynthesizer {
         reconstructionErrors: pcaResult.reconstructionErrors ?? [],
       },
       hubPrototypes: hubs,
+      hubDiagnostics,
       coverageGaps: gaps,
       multiAxisConflicts: conflicts,
       highAxisLoadings,
       signTensions,
+      candidateAxes: candidateAxisValidation,
       recommendations,
       prototypeWeightSummaries,
     };
@@ -200,6 +246,7 @@ export class AxisGapReportSynthesizer {
       multiAxisConflicts: [],
       highAxisLoadings: [],
       signTensions: [],
+      candidateAxes: null,
       recommendations: [],
       prototypeWeightSummaries: [],
     };
@@ -348,25 +395,54 @@ export class AxisGapReportSynthesizer {
    * @param {ConflictResult[]} conflicts - Multi-axis conflict results.
    * @returns {number} Number of triggered methods.
    */
+  /**
+   * Count how many detection methods triggered a signal.
+   *
+   * When pcaRequireCorroboration is true (default), PCA triggers ONLY if:
+   * 1. additionalSignificantComponents > 0, OR
+   * 2. residualVariance is high AND at least one other signal is present
+   *
+   * This prevents false positives from residual variance alone in well-structured data.
+   *
+   * @param {object} pcaResult - PCA analysis result.
+   * @param {Array} hubs - Detected hub prototypes.
+   * @param {Array} gaps - Detected axis gaps.
+   * @param {Array} conflicts - Detected multi-axis conflicts.
+   * @returns {number} Number of triggered detection methods.
+   */
   #countTriggeredMethods(pcaResult, hubs, gaps, conflicts) {
     let count = 0;
     const pcaThreshold = Number.isFinite(this.#config.pcaResidualVarianceThreshold)
       ? this.#config.pcaResidualVarianceThreshold
       : 0.15;
 
-    if (
-      pcaResult.residualVarianceRatio >= pcaThreshold ||
-      pcaResult.additionalSignificantComponents > 0
-    ) {
+    const hasSignificantComponents = pcaResult.additionalSignificantComponents > 0;
+    const hasHighResidual = pcaResult.residualVarianceRatio >= pcaThreshold;
+    const hasHubs = Array.isArray(hubs) && hubs.length > 0;
+    const hasGaps = Array.isArray(gaps) && gaps.length > 0;
+    const hasConflicts = Array.isArray(conflicts) && conflicts.length > 0;
+    const hasOtherSignals = hasHubs || hasGaps || hasConflicts;
+
+    // Apply corroboration logic when enabled
+    if (this.#config.pcaRequireCorroboration) {
+      // PCA triggers only with significant components OR high residual + other signals
+      if (hasSignificantComponents || (hasHighResidual && hasOtherSignals)) {
+        count += 1;
+      }
+    } else {
+      // Original behavior: high residual OR significant components triggers PCA
+      if (hasHighResidual || hasSignificantComponents) {
+        count += 1;
+      }
+    }
+
+    if (hasHubs) {
       count += 1;
     }
-    if (Array.isArray(hubs) && hubs.length > 0) {
+    if (hasGaps) {
       count += 1;
     }
-    if (Array.isArray(gaps) && gaps.length > 0) {
-      count += 1;
-    }
-    if (Array.isArray(conflicts) && conflicts.length > 0) {
+    if (hasConflicts) {
       count += 1;
     }
 
@@ -444,6 +520,10 @@ export class AxisGapReportSynthesizer {
     return {
       residualVarianceRatio: 0,
       additionalSignificantComponents: 0,
+      significantComponentCount: 0,
+      expectedComponentCount: 0,
+      significantBeyondExpected: 0,
+      axisCount: 0,
       topLoadingPrototypes: [],
       dimensionsUsed: [],
       cumulativeVariance: [],

@@ -163,6 +163,7 @@ describe('AbstractDecisionProvider base logic', () => {
       notes: null,
       moodUpdate: null,
       sexualUpdate: null,
+      cognitiveLedger: null,
     });
   });
 
@@ -193,6 +194,10 @@ describe('AbstractDecisionProvider base logic', () => {
 
     const abortController = new AbortController();
     const expectedNotes = [{ text: 'note', subject: 'subject' }];
+    const expectedCognitiveLedger = {
+      settled_conclusions: ['Realized something'],
+      open_questions: ['What next?'],
+    };
     const provider = new RichProvider({
       result: {
         index: 1,
@@ -209,6 +214,7 @@ describe('AbstractDecisionProvider base logic', () => {
           self_evaluation: 8,
         },
         sexualUpdate: { sex_excitation: 40, sex_inhibition: 10 },
+        cognitiveLedger: expectedCognitiveLedger,
       },
       logger: mockLogger,
       safeEventDispatcher: mockDispatcher,
@@ -239,6 +245,7 @@ describe('AbstractDecisionProvider base logic', () => {
         self_evaluation: 8,
       },
       sexualUpdate: { sex_excitation: 40, sex_inhibition: 10 },
+      cognitiveLedger: expectedCognitiveLedger,
     });
     expect(captured).toEqual({
       actor,
@@ -246,5 +253,49 @@ describe('AbstractDecisionProvider base logic', () => {
       actions,
       abortSignal: abortController.signal,
     });
+  });
+
+  it('decide passes through cognitiveLedger from choose', async () => {
+    class LedgerProvider extends AbstractDecisionProvider {
+      #ledger;
+
+      constructor({ ledger, logger, safeEventDispatcher }) {
+        super({ logger, safeEventDispatcher });
+        this.#ledger = ledger;
+      }
+
+      async choose() {
+        return {
+          index: 1,
+          cognitiveLedger: this.#ledger,
+        };
+      }
+    }
+
+    const testLedger = {
+      settled_conclusions: ['Insight A', 'Insight B'],
+      open_questions: ['Question X'],
+    };
+    const provider = new LedgerProvider({
+      ledger: testLedger,
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    const result = await provider.decide({ id: 'actor-ledger' }, {}, ['action']);
+
+    expect(result.cognitiveLedger).toEqual(testLedger);
+  });
+
+  it('decide returns null cognitiveLedger when choose does not provide it', async () => {
+    const provider = new TestProvider({
+      index: 1,
+      logger: mockLogger,
+      safeEventDispatcher: mockDispatcher,
+    });
+
+    const result = await provider.decide({ id: 'actor-no-ledger' }, {}, ['action']);
+
+    expect(result.cognitiveLedger).toBeNull();
   });
 });

@@ -309,6 +309,13 @@ const simpleFactories = {
         .mockReturnValue({ isValid: true, used: 100, limit: 4096 }),
     },
   },
+  createMockPerceptionLogProvider: {
+    methods: ['get', 'isEmpty'],
+    defaults: {
+      get: jest.fn().mockResolvedValue([]),
+      isEmpty: jest.fn().mockResolvedValue(true),
+    },
+  },
 };
 
 const generatedFactories = generateFactories(simpleFactories);
@@ -328,6 +335,7 @@ export const {
   createMockLLMRequestExecutor,
   createMockLLMErrorMapper,
   createMockTokenEstimator,
+  createMockPerceptionLogProvider,
 } = generatedFactories;
 
 const baseCreateMockAIPromptPipeline =

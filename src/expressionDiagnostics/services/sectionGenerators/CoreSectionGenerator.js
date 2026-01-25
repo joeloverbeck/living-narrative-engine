@@ -167,7 +167,7 @@ class CoreSectionGenerator {
       ? `\n> **Note**: Stored contexts are capped at ${limitStr}, so sections labeled "Population: stored-*" may not match full-sample counts.\n`
       : '';
 
-    return `## Population Summary\n\n- **Total samples**: ${totalSampleStr} (in-regime ${inRegimeSampleStr}; ${this.#formattingService.formatPercentage(inRegimeSampleRate)})\n- **Stored contexts**: ${storedStr} of ${totalSampleStr} (in-regime ${storedInRegimeStr}; ${this.#formattingService.formatPercentage(storedInRegimeRate)}; limit ${limitStr})\n- **Mood regime**: AND-only mood constraints from prerequisites (moodAxes.* or mood.*).${limitNote}\n\n---\n`;
+    return `## Population Summary\n\n- **Total samples**: ${totalSampleStr} (in-regime ${inRegimeSampleStr}; ${this.#formattingService.formatPercentage(inRegimeSampleRate)})\n- **Stored contexts**: ${storedStr} of ${totalSampleStr} (in-regime ${storedInRegimeStr}; ${this.#formattingService.formatPercentage(storedInRegimeRate)}; limit ${limitStr})\n- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.${limitNote}\n\n---\n`;
   }
 
   /**

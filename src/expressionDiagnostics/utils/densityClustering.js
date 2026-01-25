@@ -87,7 +87,10 @@ class DensityClusteringService {
       labels.set(point.id, clusterId);
 
       // Expand cluster
+      // Use both array (for iteration order) and Set (for O(1) membership lookup)
+      // This avoids O(n²) behavior from seedSet.includes() during cluster expansion
       const seedSet = [...neighbors];
+      const seedSetLookup = new Set(neighbors);
       let seedIdx = 0;
 
       while (seedIdx < seedSet.length) {
@@ -116,10 +119,11 @@ class DensityClusteringService {
 
         // Standard DBSCAN: include point itself in count
         if (neighborNeighbors.length + 1 >= minPts) {
-          // Add new neighbors to seed set (avoiding duplicates)
+          // Add new neighbors to seed set (avoiding duplicates via O(1) Set lookup)
           for (const nn of neighborNeighbors) {
-            if (!seedSet.includes(nn)) {
+            if (!seedSetLookup.has(nn)) {
               seedSet.push(nn);
+              seedSetLookup.add(nn);
             }
           }
         }

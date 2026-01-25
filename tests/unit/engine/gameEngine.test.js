@@ -590,6 +590,10 @@ describeEngineSuite('GameEngine', (context) => {
       context.bed
         .getEntityDisplayDataProvider()
         .getEntityName.mockReturnValue('Actor Name');
+      // Configure perception log to be non-empty so mood prompt generation is triggered
+      context.bed
+        .getPerceptionLogProvider()
+        .isEmpty.mockResolvedValue(false);
       context.bed
         .getMoodUpdatePromptPipeline()
         .generateMoodUpdatePrompt.mockResolvedValue(moodPrompt);

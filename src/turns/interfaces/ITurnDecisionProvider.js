@@ -9,6 +9,7 @@
  * @property {Array<{text: string, subject: string, context?: string, timestamp?: string}>|null} notes        - Optional structured notes
  * @property {{ valence: number, arousal: number, agency_control: number, threat: number, engagement: number, future_expectancy: number, self_evaluation: number }|null} moodUpdate - Optional mood update from AI decisions
  * @property {{ sex_excitation: number, sex_inhibition: number }|null} sexualUpdate - Optional sexual state update from AI decisions
+ * @property {{ settled_conclusions: string[], open_questions: string[] }|null} cognitiveLedger - Optional cognitive ledger tracking settled conclusions and open questions
  */
 
 /**

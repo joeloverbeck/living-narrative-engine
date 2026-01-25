@@ -8,7 +8,6 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "aesthetic_appreciation_soften.expression.json",
       "inspired_uplift.expression.json"
     ]
   }

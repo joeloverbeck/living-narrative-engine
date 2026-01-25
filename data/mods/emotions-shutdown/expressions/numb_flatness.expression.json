@@ -174,5 +174,5 @@
     },
     "category": "shutdown",
     "diagnosticStatus": "normal",
-    "triggerRate": 0.0067
+    "triggerRate": 0.0062
 }

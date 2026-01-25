@@ -378,6 +378,19 @@ class PrototypeOverlapAnalyzer {
     let closestPair = null;
     let highestCompositeScore = -Infinity;
 
+    // Initial Stage 3 progress to ensure UI updates before main loop
+    if (totalPairs > 0) {
+      await this.#yieldToEventLoop();
+      onProgress?.('evaluating', {
+        pairIndex: 0,
+        pairTotal: totalPairs,
+        sampleIndex: 0,
+        sampleTotal: isV3Mode ? (contextPool?.length ?? 1) : sampleCount,
+        stageNumber: EVALUATING_STAGE,
+        totalStages: TOTAL_STAGES,
+      });
+    }
+
     for (let i = 0; i < totalPairs; i++) {
       const { prototypeA, prototypeB, candidateMetrics } = pairsToEvaluate[i];
       const protoIdA = prototypeA.id ?? prototypeA;
@@ -397,6 +410,10 @@ class PrototypeOverlapAnalyzer {
             vectorB: outputVectors.get(protoIdB),
           }
         );
+        // Yield periodically to keep UI responsive during V3 evaluation
+        if (i > 0 && i % CLASSIFICATION_YIELD_INTERVAL === 0) {
+          await this.#yieldToEventLoop();
+        }
         // Report progress for V3 (no sample-level progress, report pair completion)
         onProgress?.('evaluating', {
           pairIndex: i + 1,

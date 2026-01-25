@@ -8,8 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "post_loss_settling.expression.json",
-      "quiet_acceptance_after_loss.expression.json"
+      "post_loss_settling.expression.json"
     ]
   }
 }

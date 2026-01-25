@@ -39,13 +39,13 @@ describe('PrototypeConstraintAnalyzer axis conflicts', () => {
   });
 
   it('flags positive weights when constraint max narrows default bounds', () => {
-    const axisConstraints = analyzer.extractAxisConstraints([
-      {
-        logic: {
-          '<=': [{ var: 'moodAxes.valence' }, 60],
-        },
-      },
-    ]);
+    // Create constraints directly to test conflict detection logic
+    // (extraction is tested separately in prototypeConstraintAnalyzer.test.js)
+    const axisConstraints = new Map();
+    axisConstraints.set('valence', {
+      max: 0.6,
+      sources: [{ varPath: 'moodAxes.valence', operator: '<=', threshold: 60 }],
+    });
 
     const result = analyzer.analyzeEmotionThreshold(
       'joy',
@@ -66,13 +66,13 @@ describe('PrototypeConstraintAnalyzer axis conflicts', () => {
   });
 
   it('flags negative weights when constraint min narrows default bounds', () => {
-    const axisConstraints = analyzer.extractAxisConstraints([
-      {
-        logic: {
-          '>=': [{ var: 'moodAxes.valence' }, -20],
-        },
-      },
-    ]);
+    // Create constraints directly to test conflict detection logic
+    // (extraction is tested separately in prototypeConstraintAnalyzer.test.js)
+    const axisConstraints = new Map();
+    axisConstraints.set('valence', {
+      min: -0.2,
+      sources: [{ varPath: 'moodAxes.valence', operator: '>=', threshold: -20 }],
+    });
 
     const result = analyzer.analyzeEmotionThreshold(
       'dread',

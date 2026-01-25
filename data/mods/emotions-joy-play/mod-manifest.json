@@ -10,8 +10,7 @@
     "expressions": [
       "amused_chuckle.expression.json",
       "joy_burst.expression.json",
-      "playful_mischief.expression.json",
-      "relief_laughter_discharge.expression.json"
+      "playful_mischief.expression.json"
     ]
   }
 }

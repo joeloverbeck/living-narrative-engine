@@ -469,6 +469,8 @@ export function registerAITurnPipeline(registrar, logger) {
         aiPromptPipeline: c.resolve(tokens.IAIPromptPipeline),
         llmAdapter: c.resolve(tokens.LLMAdapter),
         llmResponseProcessor: c.resolve(tokens.ILLMResponseProcessor),
+        perceptionLogProvider: c.resolve(tokens.IPerceptionLogProvider),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         logger: c.resolve(tokens.ILogger),
       })
   );

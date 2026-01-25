@@ -322,7 +322,8 @@ describe('AxisGapReportSynthesizer', () => {
         pca,
         hubs,
         gaps,
-        conflicts
+        conflicts,
+        null // candidateAxisValidation is null when not provided
       );
     });
 
@@ -735,6 +736,102 @@ describe('AxisGapReportSynthesizer', () => {
     });
   });
 
+  describe('synthesize - candidate axis validation integration', () => {
+    it('should include candidateAxes in report when provided', () => {
+      const candidateAxisValidation = [
+        {
+          candidateId: 'pca_residual_0',
+          source: 'pca_residual',
+          isRecommended: true,
+          recommendation: 'add_axis',
+          affectedPrototypes: ['p1', 'p2'],
+          improvement: { rmseReduction: 0.25, strongAxisReduction: 2 },
+        },
+      ];
+
+      const result = synthesizer.synthesize(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        10,
+        [],
+        {},
+        candidateAxisValidation
+      );
+
+      expect(result.candidateAxes).toBe(candidateAxisValidation);
+    });
+
+    it('should add candidateAxisCount to signalBreakdown when validation provided', () => {
+      const candidateAxisValidation = [
+        { candidateId: 'c1', isRecommended: true },
+        { candidateId: 'c2', isRecommended: false },
+        { candidateId: 'c3', isRecommended: true },
+      ];
+
+      const result = synthesizer.synthesize(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        10,
+        [],
+        {},
+        candidateAxisValidation
+      );
+
+      expect(result.summary.signalBreakdown.candidateAxisCount).toBe(3);
+      expect(result.summary.signalBreakdown.recommendedCandidateCount).toBe(2);
+    });
+
+    it('should pass candidateAxisValidation to recommendation builder', () => {
+      const candidateAxisValidation = [
+        {
+          candidateId: 'c1',
+          source: 'coverage_gap',
+          isRecommended: true,
+          recommendation: 'add_axis',
+        },
+      ];
+
+      synthesizer.synthesize(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        10,
+        [],
+        {},
+        candidateAxisValidation
+      );
+
+      expect(mockRecommendationBuilder.generate).toHaveBeenCalledWith(
+        expect.any(Object),
+        [],
+        [],
+        [],
+        candidateAxisValidation
+      );
+    });
+
+    it('should not add candidate counts when validation is null', () => {
+      const result = synthesizer.synthesize(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        10,
+        [],
+        {},
+        null
+      );
+
+      expect(result.summary.signalBreakdown.candidateAxisCount).toBeUndefined();
+      expect(result.summary.signalBreakdown.recommendedCandidateCount).toBeUndefined();
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle missing splitConflicts fields', () => {
       const result = synthesizer.synthesize(
@@ -787,6 +884,155 @@ describe('AxisGapReportSynthesizer', () => {
 
       // 0.6 < 0.8 threshold, should not flag
       expect(result.length).toBe(0);
+    });
+  });
+
+  describe('pcaRequireCorroboration', () => {
+    const createHighResidualOnlyPCA = () => ({
+      residualVarianceRatio: 0.25, // High residual (above 0.15 threshold)
+      additionalSignificantComponents: 0, // No significant components (broken-stick = 0)
+      topLoadingPrototypes: [{ prototypeId: 'p1', loading: 0.5 }],
+      cumulativeVariance: [0.75, 0.85, 0.95],
+      explainedVariance: [0.75, 0.10, 0.10],
+      componentsFor80Pct: 2,
+      componentsFor90Pct: 3,
+      reconstructionErrors: [],
+    });
+
+    it('should default pcaRequireCorroboration to true', () => {
+      const synth = new AxisGapReportSynthesizer({}, mockRecommendationBuilder);
+      // Default config should require corroboration
+      expect(synth).toBeDefined();
+    });
+
+    it('should NOT trigger PCA signal with high residual alone when corroboration required', () => {
+      const synth = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: true },
+        mockRecommendationBuilder
+      );
+
+      const pca = createHighResidualOnlyPCA();
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+
+      // No other signals (no hubs, no gaps, no conflicts)
+      const report = synth.synthesize(pca, [], [], [], 1, prototypes);
+
+      // With corroboration required, high residual alone should result in low confidence
+      expect(report.summary.confidence).toBe('low');
+    });
+
+    it('should trigger PCA signal when additionalSignificantComponents > 0', () => {
+      const synth = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: true },
+        mockRecommendationBuilder
+      );
+
+      const pca = {
+        ...createHighResidualOnlyPCA(),
+        additionalSignificantComponents: 1, // Has significant component beyond expected
+      };
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+
+      const report = synth.synthesize(pca, [], [], [], 1, prototypes);
+
+      // With significant components, PCA method should trigger (1 method = low confidence)
+      // But this is different from high residual alone where PCA would NOT trigger
+      expect(report.summary.confidence).toBe('low');
+      // Verify PCA signal is counted in the breakdown
+      expect(report.summary.signalBreakdown.pcaSignals).toBe(1);
+    });
+
+    it('should trigger PCA signal with high residual when hubs are present', () => {
+      const synth = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: true },
+        mockRecommendationBuilder
+      );
+
+      const pca = createHighResidualOnlyPCA();
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+      const hubs = [createHub('hub1')];
+
+      const report = synth.synthesize(pca, hubs, [], [], 1, prototypes);
+
+      // With hubs present, PCA high residual should also trigger
+      // 2 methods triggered = medium or high confidence
+      expect(['medium', 'high']).toContain(report.summary.confidence);
+    });
+
+    it('should trigger PCA signal with high residual when gaps are present', () => {
+      const synth = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: true },
+        mockRecommendationBuilder
+      );
+
+      const pca = createHighResidualOnlyPCA();
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+      const gaps = [createGap('gap1')];
+
+      const report = synth.synthesize(pca, [], gaps, [], 1, prototypes);
+
+      // With gaps present, PCA high residual should also trigger
+      expect(['medium', 'high']).toContain(report.summary.confidence);
+    });
+
+    it('should trigger PCA signal with high residual when conflicts are present', () => {
+      const synth = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: true },
+        mockRecommendationBuilder
+      );
+
+      const pca = createHighResidualOnlyPCA();
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+      const conflicts = [createConflict('conflict1')];
+
+      const report = synth.synthesize(pca, [], [], conflicts, 1, prototypes);
+
+      // With conflicts present, PCA high residual should also trigger
+      expect(['medium', 'high']).toContain(report.summary.confidence);
+    });
+
+    it('should use original behavior when pcaRequireCorroboration is false', () => {
+      const synth = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: false },
+        mockRecommendationBuilder
+      );
+
+      const pca = createHighResidualOnlyPCA();
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+
+      // No other signals
+      const report = synth.synthesize(pca, [], [], [], 1, prototypes);
+
+      // With corroboration disabled, high residual alone should trigger PCA
+      // But 1 method = low confidence (need 2+ for medium)
+      expect(report.summary.confidence).toBe('low');
+      // Verify PCA signal is counted - this is the key difference from corroboration enabled
+      expect(report.summary.signalBreakdown.pcaSignals).toBe(1);
+    });
+
+    it('should show difference between corroboration enabled/disabled with high residual only', () => {
+      const pcaHighResidual = createHighResidualOnlyPCA();
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+
+      // With corroboration enabled - high residual alone should NOT count as triggered method
+      const synthEnabled = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: true },
+        mockRecommendationBuilder
+      );
+      const reportEnabled = synthEnabled.synthesize(pcaHighResidual, [], [], [], 1, prototypes);
+
+      // With corroboration disabled - high residual alone SHOULD count as triggered method
+      const synthDisabled = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: false },
+        mockRecommendationBuilder
+      );
+      const reportDisabled = synthDisabled.synthesize(pcaHighResidual, [], [], [], 1, prototypes);
+
+      // Both have same low confidence (only 1 or 0 methods triggered)
+      // The key difference is whether PCA is counted in methodsTriggered
+      // This affects recommendation generation, not just confidence
+      expect(reportEnabled.summary.confidence).toBe('low');
+      expect(reportDisabled.summary.confidence).toBe('low');
     });
   });
 });

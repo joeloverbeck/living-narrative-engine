@@ -90,6 +90,7 @@ describe('Integration – AI decision flow', () => {
         thoughts: null,
         notes: null,
         chosenIndex: 1,
+        cognitiveLedger: null,
       },
       availableActions: [
         {

@@ -79,6 +79,7 @@ describe('HumanDecisionProvider', () => {
     // Assert: Check that the result is correctly structured
     expect(result).toEqual({
       chosenIndex: 2,
+      cognitiveLedger: null,
       moodUpdate: null,
       sexualUpdate: null,
       speech: 'I choose the second option.',
@@ -102,6 +103,7 @@ describe('HumanDecisionProvider', () => {
     // Assert
     expect(result).toEqual({
       chosenIndex: 1,
+      cognitiveLedger: null,
       moodUpdate: null,
       sexualUpdate: null,
       speech: null,

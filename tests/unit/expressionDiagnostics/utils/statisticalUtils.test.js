@@ -60,17 +60,31 @@ describe('statisticalUtils', () => {
       const result = computeMedianAndIQR([]);
       expect(result.median).toBe(0);
       expect(result.iqr).toBe(0);
+      expect(result.q1).toBe(0);
+      expect(result.q3).toBe(0);
     });
 
     it('should return zeros for null/undefined', () => {
-      expect(computeMedianAndIQR(null)).toEqual({ median: 0, iqr: 0 });
-      expect(computeMedianAndIQR(undefined)).toEqual({ median: 0, iqr: 0 });
+      expect(computeMedianAndIQR(null)).toEqual({
+        median: 0,
+        iqr: 0,
+        q1: 0,
+        q3: 0,
+      });
+      expect(computeMedianAndIQR(undefined)).toEqual({
+        median: 0,
+        iqr: 0,
+        q1: 0,
+        q3: 0,
+      });
     });
 
     it('should return zeros for array with only non-finite values', () => {
       expect(computeMedianAndIQR([NaN, Infinity, -Infinity])).toEqual({
         median: 0,
         iqr: 0,
+        q1: 0,
+        q3: 0,
       });
     });
 
@@ -91,24 +105,30 @@ describe('statisticalUtils', () => {
       expect(result.iqr).toBe(2);
     });
 
-    it('should compute median and IQR for odd-length array', () => {
+    it('should compute median, IQR, q1, and q3 for odd-length array', () => {
       // [1, 2, 3, 4, 5] - median=3, Q1=1.5, Q3=4.5, IQR=3
       const result = computeMedianAndIQR([3, 1, 5, 2, 4]);
       expect(result.median).toBe(3);
       expect(result.iqr).toBe(3);
+      expect(result.q1).toBe(1.5);
+      expect(result.q3).toBe(4.5);
     });
 
-    it('should compute median and IQR for even-length array', () => {
+    it('should compute median, IQR, q1, and q3 for even-length array', () => {
       // [1, 2, 3, 4] - median=2.5, Q1=1.5, Q3=3.5, IQR=2
       const result = computeMedianAndIQR([3, 1, 4, 2]);
       expect(result.median).toBe(2.5);
       expect(result.iqr).toBe(2);
+      expect(result.q1).toBe(1.5);
+      expect(result.q3).toBe(3.5);
     });
 
-    it('should handle uniform distribution (IQR = 0)', () => {
+    it('should handle uniform distribution (IQR = 0) with correct q1 and q3', () => {
       const result = computeMedianAndIQR([5, 5, 5, 5]);
       expect(result.median).toBe(5);
       expect(result.iqr).toBe(0);
+      expect(result.q1).toBe(5);
+      expect(result.q3).toBe(5);
     });
 
     it('should handle negative values', () => {
