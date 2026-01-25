@@ -394,7 +394,7 @@ describe('prototypeGateUtils', () => {
       );
 
       expect(constraints).toHaveLength(1);
-      expect(constraints[0].varPath).toBe('moodAxes.sex_excitation');
+      expect(constraints[0].varPath).toBe('sexualAxes.sex_excitation');
     });
   });
 

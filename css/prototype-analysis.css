@@ -521,6 +521,106 @@
   font-size: 0.75rem;
 }
 
+/* Excluded and unused axes sections */
+.excluded-axes-section,
+.unused-axes-section {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--surface-color, #f8f8f8);
+  border-radius: 6px;
+  border-left: 3px solid var(--warning-color, #f0ad4e);
+}
+
+.unused-axes-section {
+  border-left-color: var(--alert-color, #d9534f);
+}
+
+.excluded-axes-header,
+.unused-axes-header {
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  color: var(--secondary-text-color);
+}
+
+.excluded-axes-help,
+.unused-axes-help {
+  font-size: 0.75rem;
+  color: var(--tertiary-text-color, #888);
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
+}
+
+.excluded-axes-tags,
+.unused-axes-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.dimension-tag.excluded {
+  display: inline-block;
+  background: var(--warning-bg-color, #fcf8e3);
+  border: 1px solid var(--warning-color, #f0ad4e);
+  padding: 0.125rem 0.375rem;
+  margin: 0.125rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--warning-text-color, #8a6d3b);
+}
+
+.dimension-tag.unused {
+  display: inline-block;
+  background: var(--alert-bg-color, #f2dede);
+  border: 1px solid var(--alert-color, #d9534f);
+  padding: 0.125rem 0.375rem;
+  margin: 0.125rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--alert-text-color, #a94442);
+}
+
+/* Unused-in-gates section (axes in weights but not gates) */
+.unused-in-gates-section {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--surface-color, #f8f8f8);
+  border-radius: 6px;
+  border-left: 3px solid var(--info-color, #5bc0de);
+}
+
+.unused-in-gates-header {
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  color: var(--secondary-text-color);
+}
+
+.unused-in-gates-help {
+  font-size: 0.75rem;
+  color: var(--tertiary-text-color, #888);
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
+}
+
+.unused-in-gates-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.dimension-tag.gate-unused {
+  display: inline-block;
+  background: var(--info-bg-color, #d9edf7);
+  border: 1px solid var(--info-color, #5bc0de);
+  padding: 0.125rem 0.375rem;
+  margin: 0.125rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--info-text-color, #31708f);
+}
+
 .top-loading-list {
   margin-top: 0.75rem;
 }
@@ -1134,4 +1234,632 @@
 
 .logic-note strong {
   color: var(--primary-text-color);
+}
+
+/* Technical Report Link */
+.technical-report-link {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--accent-color-primary);
+  text-decoration: none;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.technical-report-link:hover {
+  text-decoration: underline;
+}
+
+/* Model Integrity Panel */
+.integrity-panel {
+  background: var(--panel-background-secondary);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.integrity-panel h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: var(--primary-text-color);
+  font-weight: 600;
+}
+
+.integrity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.integrity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--panel-background);
+  border-radius: 6px;
+  border: 1px solid var(--border-color-subtle);
+}
+
+.integrity-status {
+  font-size: 1rem;
+  width: 1.5rem;
+  text-align: center;
+}
+
+.integrity-status.pending {
+  color: var(--secondary-text-color);
+}
+
+.integrity-status.pass {
+  color: var(--status-pass-color, #4ade80);
+}
+
+.integrity-status.fail {
+  color: var(--status-fail-color, #ef4444);
+}
+
+.integrity-label {
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+  flex: 1;
+}
+
+.integrity-help {
+  font-size: 0.75rem;
+  color: var(--accent-color-primary);
+  cursor: help;
+}
+
+.integrity-summary {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+.integrity-summary.all-pass {
+  color: var(--status-pass-color, #4ade80);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.integrity-summary.has-failures {
+  color: var(--status-fail-color, #ef4444);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ===========================
+   Polarity Analysis Section
+   =========================== */
+
+.polarity-analysis-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color-subtle);
+}
+
+.polarity-analysis-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.polarity-summary-item {
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: var(--input-bg-color);
+  border-radius: 6px;
+  border-left: 4px solid var(--accent-color-primary);
+}
+
+.polarity-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.polarity-summary-count {
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+.polarity-summary-badge,
+.actionable-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--status-extremely-rare-fill);
+  color: black;
+}
+
+.polarity-analysis-item {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--panel-bg-color);
+  border-radius: 4px;
+  border-left: 3px solid var(--border-color-subtle);
+}
+
+.polarity-analysis-item:hover {
+  background: var(--input-bg-color);
+}
+
+.polarity-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.polarity-axis-name {
+  font-family: monospace;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--primary-text-color);
+}
+
+.polarity-direction-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.polarity-direction-badge.polarity-positive {
+  background: var(--status-normal-fill);
+  color: white;
+}
+
+.polarity-direction-badge.polarity-negative {
+  background: var(--status-impossible-fill);
+  color: white;
+}
+
+.polarity-item-details {
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+  line-height: 1.5;
+}
+
+.polarity-counts {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.polarity-action-hint {
+  display: block;
+  font-style: italic;
+  color: var(--accent-color-primary);
+}
+
+.polarity-warnings-item {
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  background: rgba(255, 200, 0, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid var(--status-extremely-rare-fill);
+}
+
+.polarity-warnings-header {
+  margin-bottom: 0.5rem;
+}
+
+.polarity-warnings-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.polarity-warnings-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+}
+
+.polarity-warnings-list li {
+  margin-bottom: 0.25rem;
+}
+
+/* Complexity Analysis Section */
+.complexity-analysis-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  background-color: var(--surface-color);
+}
+
+.complexity-analysis-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.complexity-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.complexity-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.complexity-summary-label {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  font-weight: 500;
+}
+
+.complexity-summary-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Distribution Section */
+.complexity-distribution-section {
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.complexity-distribution-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.complexity-histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 80px;
+  padding: 0.5rem 0;
+  padding-bottom: 1.5rem; /* Space for labels below */
+  padding-top: 1.5rem; /* Space for counts above */
+}
+
+/* Container for each histogram bar and its labels */
+.histogram-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  min-width: 24px;
+  max-width: 45px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.histogram-bar {
+  width: 100%;
+  min-height: 4px;
+  background-color: var(--primary-color);
+  border-radius: 2px 2px 0 0;
+  transition: background-color 0.2s;
+}
+
+.histogram-bar:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Label showing the axis count (below the bar) */
+.histogram-label {
+  font-size: 0.7rem;
+  color: var(--secondary-text-color);
+  margin-top: 0.25rem;
+}
+
+/* Count showing frequency (above the bar) */
+.histogram-count {
+  font-size: 0.65rem;
+  color: var(--secondary-text-color);
+  font-weight: 500;
+  position: absolute;
+  top: -1.25rem;
+}
+
+/* Legacy classes for backward compatibility */
+.histogram-bar-label {
+  position: absolute;
+  bottom: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--secondary-text-color);
+}
+
+.histogram-bar-count {
+  position: absolute;
+  top: -1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--secondary-text-color);
+  font-weight: 500;
+}
+
+/* Histogram Table Fallback */
+.histogram-table-fallback {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+}
+
+.histogram-table-fallback summary {
+  cursor: pointer;
+  color: var(--secondary-text-color);
+}
+
+.histogram-table-fallback summary:hover {
+  color: var(--primary-text-color);
+}
+
+.histogram-data-table {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-collapse: collapse;
+}
+
+.histogram-data-table th,
+.histogram-data-table td {
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  border: 1px solid var(--border-color, #ddd);
+}
+
+.histogram-data-table th {
+  background-color: var(--background-color-alt, #f5f5f5);
+  font-weight: 600;
+}
+
+.complexity-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Co-occurrence Bundles Section */
+.complexity-bundles-section {
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.complexity-bundles-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.bundles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.bundle-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.bundle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bundle-axes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.bundle-axis-tag {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.bundle-metrics {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+}
+
+.bundle-frequency {
+  font-weight: 500;
+}
+
+.bundle-support {
+  opacity: 0.8;
+}
+
+.bundle-concept {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+/* Outliers Section */
+.complexity-outliers-section {
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.complexity-outliers-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.outliers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.outlier-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--warning-color);
+}
+
+.outlier-item.high-complexity {
+  border-left-color: var(--error-color);
+}
+
+.outlier-item.low-complexity {
+  border-left-color: var(--info-color);
+}
+
+.outlier-id {
+  font-family: var(--monospace-font);
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.outlier-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background-color: var(--background-color);
+}
+
+/* Recommendations Section */
+.complexity-recommendations-section {
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.complexity-recommendations-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.complexity-recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.complexity-recommendation-item {
+  padding: 0.75rem;
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--info-color);
+}
+
+.complexity-recommendation-item[data-type="consider_new_axis"] {
+  border-left-color: var(--success-color);
+}
+
+.complexity-recommendation-item[data-type="reduce_complexity"] {
+  border-left-color: var(--warning-color);
+}
+
+.complexity-recommendation-item[data-type="balance_complexity"] {
+  border-left-color: var(--info-color);
+}
+
+.recommendation-type-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.recommendation-type-badge.consider_new_axis {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.recommendation-type-badge.reduce_complexity {
+  background-color: var(--warning-color);
+  color: var(--text-color);
+}
+
+.recommendation-type-badge.balance_complexity {
+  background-color: var(--info-color);
+  color: white;
+}
+
+.recommendation-reason {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.recommendation-action {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+.empty-complexity-message {
+  padding: 1rem;
+  text-align: center;
+  color: var(--secondary-text-color);
+  font-style: italic;
 }

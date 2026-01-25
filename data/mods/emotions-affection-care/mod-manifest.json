@@ -8,10 +8,7 @@
   "gameVersion": ">=0.0.1",
   "content": {
     "expressions": [
-      "comforted_vulnerability.expression.json",
-      "compassionate_concern.expression.json",
-      "steady_sympathy.expression.json",
-      "warm_affection.expression.json"
+      "comforted_vulnerability.expression.json"
     ]
   }
 }

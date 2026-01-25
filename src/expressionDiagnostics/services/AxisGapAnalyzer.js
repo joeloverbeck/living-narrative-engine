@@ -31,6 +31,8 @@ class AxisGapAnalyzer {
   #multiAxisConflictDetector;
   #candidateAxisExtractor;
   #candidateAxisValidator;
+  #axisPolarityAnalyzer;
+  #prototypeComplexityAnalyzer;
   #reportSynthesizer;
   #config;
   #logger;
@@ -47,6 +49,8 @@ class AxisGapAnalyzer {
    * @param {object} deps.reportSynthesizer - Report synthesis service.
    * @param {object} [deps.candidateAxisExtractor] - Optional candidate axis extractor.
    * @param {object} [deps.candidateAxisValidator] - Optional candidate axis validator.
+   * @param {object} [deps.axisPolarityAnalyzer] - Optional axis polarity analyzer.
+   * @param {object} [deps.prototypeComplexityAnalyzer] - Optional prototype complexity analyzer.
    * @param {object} deps.config - PROTOTYPE_OVERLAP_CONFIG with axis gap thresholds.
    * @param {object} deps.logger - ILogger instance.
    */
@@ -59,6 +63,8 @@ class AxisGapAnalyzer {
     reportSynthesizer,
     candidateAxisExtractor = null,
     candidateAxisValidator = null,
+    axisPolarityAnalyzer = null,
+    prototypeComplexityAnalyzer = null,
     config,
     logger,
   }) {
@@ -110,6 +116,22 @@ class AxisGapAnalyzer {
         { requiredMethods: ['validate'] }
       );
     }
+    if (axisPolarityAnalyzer) {
+      validateDependency(
+        axisPolarityAnalyzer,
+        'IAxisPolarityAnalyzer',
+        logger,
+        { requiredMethods: ['analyze'] }
+      );
+    }
+    if (prototypeComplexityAnalyzer) {
+      validateDependency(
+        prototypeComplexityAnalyzer,
+        'IPrototypeComplexityAnalyzer',
+        logger,
+        { requiredMethods: ['analyze'] }
+      );
+    }
 
     if (!config || typeof config !== 'object') {
       throw new Error('AxisGapAnalyzer requires config object');
@@ -122,6 +144,8 @@ class AxisGapAnalyzer {
     this.#multiAxisConflictDetector = multiAxisConflictDetector;
     this.#candidateAxisExtractor = candidateAxisExtractor;
     this.#candidateAxisValidator = candidateAxisValidator;
+    this.#axisPolarityAnalyzer = axisPolarityAnalyzer;
+    this.#prototypeComplexityAnalyzer = prototypeComplexityAnalyzer;
     this.#reportSynthesizer = reportSynthesizer;
     this.#config = config;
     this.#logger = logger;
@@ -170,7 +194,10 @@ class AxisGapAnalyzer {
       this.#config.enableCandidateAxisValidation &&
       this.#candidateAxisExtractor &&
       this.#candidateAxisValidator;
-    const totalPhases = hasValidation ? 5 : 4;
+    const hasPolarity = !!this.#axisPolarityAnalyzer;
+    const hasComplexity = !!this.#prototypeComplexityAnalyzer;
+    const totalPhases =
+      4 + (hasPolarity ? 1 : 0) + (hasComplexity ? 1 : 0) + (hasValidation ? 1 : 0);
 
     // Phase 1: PCA Analysis
     onProgress('pca_analysis', { phase: 1, total: totalPhases });
@@ -217,10 +244,39 @@ class AxisGapAnalyzer {
       }
     );
 
-    // Phase 5: Candidate Axis Validation (optional)
+    // Phase 5: Axis Polarity Analysis (optional)
+    let phaseCounter = 5;
+    let polarityAnalysis = null;
+    if (hasPolarity) {
+      onProgress('polarity_analysis', { phase: phaseCounter, total: totalPhases });
+      polarityAnalysis = this.#axisPolarityAnalyzer.analyze(prototypes);
+      this.#logger.debug('AxisGapAnalyzer: Polarity analysis complete', {
+        totalAxesAnalyzed: polarityAnalysis.totalAxesAnalyzed,
+        imbalancedCount: polarityAnalysis.imbalancedCount,
+      });
+      phaseCounter++;
+    }
+
+    // Phase 5/6: Complexity Analysis (optional)
+    let complexityAnalysis = null;
+    if (hasComplexity) {
+      onProgress('complexity_analysis', { phase: phaseCounter, total: totalPhases });
+      complexityAnalysis = this.#prototypeComplexityAnalyzer.analyze(prototypes);
+      this.#logger.debug('AxisGapAnalyzer: Complexity analysis complete', {
+        totalPrototypes: complexityAnalysis.totalPrototypes,
+        averageComplexity: complexityAnalysis.averageComplexity,
+        bundleCount: complexityAnalysis.coOccurrence?.bundles?.length ?? 0,
+      });
+      phaseCounter++;
+    }
+
+    // Phase 5/6/7: Candidate Axis Validation (optional)
     let candidateAxisValidation = null;
     if (hasValidation) {
-      onProgress('candidate_axis_validation', { phase: 5, total: totalPhases });
+      onProgress('candidate_axis_validation', {
+        phase: phaseCounter,
+        total: totalPhases,
+      });
       candidateAxisValidation = this.#runCandidateAxisValidation(
         pcaResult,
         gaps,
@@ -243,7 +299,7 @@ class AxisGapAnalyzer {
       conflicts,
       prototypes.length,
       prototypes,
-      { highAxisLoadings, signTensions, hubDiagnostics },
+      { highAxisLoadings, signTensions, hubDiagnostics, polarityAnalysis, complexityAnalysis },
       candidateAxisValidation
     );
   }

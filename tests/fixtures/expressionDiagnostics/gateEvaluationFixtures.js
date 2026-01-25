@@ -6,6 +6,8 @@ export const gateClampPlanExpression = {
   id: 'test:gate_plan',
   description: 'Expression referencing emotion + sexual prototypes with gates',
   prerequisites: [
+    { logic: { '>=': [{ var: 'moodAxes.threat' }, -100] } },
+    { logic: { '>=': [{ var: 'sexualAxes.sex_excitation' }, -100] } },
     { logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } },
     { logic: { '>=': [{ var: 'sexualStates.aroused' }, 0.4] } },
   ],
@@ -15,7 +17,8 @@ export const gateCompatibilityExpression = {
   id: 'test:gate_compatibility',
   description: 'Expression with mood regime constraints and gated prototypes',
   prerequisites: [
-    { logic: { '<=': [{ var: 'moodAxes.valence' }, 20] } },
+    { logic: { '>=': [{ var: 'moodAxes.valence' }, -20] } },
+    { logic: { '<=': [{ var: 'moodAxes.valence' }, 60] } },
     { logic: { '>=': [{ var: 'emotions.serenity' }, 0.4] } },
     { logic: { '>=': [{ var: 'emotions.panic' }, 0.4] } },
   ],
@@ -24,7 +27,10 @@ export const gateCompatibilityExpression = {
 export const gateOutcomeExpression = {
   id: 'test:gate_outcome',
   description: 'Expression that records gate pass/fail and lost passes',
-  prerequisites: [{ logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } }],
+  prerequisites: [
+    { logic: { '>=': [{ var: 'moodAxes.threat' }, -100] } },
+    { logic: { '>=': [{ var: 'emotions.joy' }, 0.5] } },
+  ],
 };
 
 export const gateEvaluationPrototypes = {

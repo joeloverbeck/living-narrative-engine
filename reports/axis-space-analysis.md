@@ -35,19 +35,27 @@ The Axis Space Analysis system analyzes prototype expressions across multiple em
 
 ### Input Data Structure
 
-Prototypes are objects with axis constraints:
+Prototypes are objects with weight coefficients (used for scoring) and optional activation gates:
 
 ```javascript
 {
   id: "prototype_id",
-  axisConstraints: {
-    "axis_name": { min: -1.0, max: 1.0 },  // Range constraint
-    "axis_name": { exact: 0.5 }             // Exact constraint
-  }
+  weights: {
+    "axis_name": 0.6,    // Scalar coefficient in [-1, 1]
+    "axis_name": -0.3    // Negative = anti-correlation with axis
+  },
+  gates: [               // Optional activation prerequisites
+    "axis_name >= 0.10"
+  ]
 }
 ```
 
-Axes are normalized to [-1, 1] range.
+**Important distinction**:
+- **Weights**: Scalar coefficients in [-1, 1] that determine how strongly an axis influences the prototype's score
+- **Gates**: Optional prerequisite conditions that must be satisfied for the prototype to activate
+- **Axis values**: The actual state values (e.g., `sexual_arousal`), typically in [0, 1]
+
+The PCA analysis operates on **weights**, not gates, to answer: "Are the axes sufficient to describe emotional variation?"
 
 ---
 
@@ -71,8 +79,8 @@ AxisGapAnalyzer (Orchestrator)
 
 ### Data Flow
 
-1. **Input**: Array of prototypes with axis constraints
-2. **Preprocessing**: Build constraint matrix (prototypes × axes)
+1. **Input**: Array of prototypes with axis weights
+2. **Preprocessing**: Build weight matrix (prototypes × axes)
 3. **Analysis**: Run 4 detection phases in parallel
 4. **Synthesis**: Combine findings into structured report
 5. **Output**: JSON report with findings and recommendations
@@ -92,15 +100,15 @@ Principal Component Analysis determines:
 
 ### 3.2 Algorithm Steps
 
-#### Step 1: Build Constraint Matrix
+#### Step 1: Build Weight Matrix
 
 ```javascript
-// For each prototype, extract midpoint of each axis constraint
-matrix[i][j] = (constraint.min + constraint.max) / 2
-// Or for exact constraints:
-matrix[i][j] = constraint.exact
-// Missing constraints default to 0
+// For each prototype, extract weight coefficient for each axis
+matrix[i][j] = prototype.weights[axis_j] ?? 0
+// Missing weights default to 0 (neutral influence)
 ```
+
+**Note**: The analysis uses weight coefficients, not activation gates. This answers "can axes represent prototype patterns?" through the influence each axis has on prototype scoring.
 
 **Dimensions**: `n × m` where n = prototypes, m = axes
 
@@ -265,16 +273,19 @@ Identify prototypes that:
 
 Build a bipartite-like graph:
 - **Nodes**: Prototypes and Axes
-- **Edges**: Prototype-to-Axis when prototype has constraint on that axis
+- **Edges**: Prototype-to-Axis when prototype has a non-zero weight on that axis
 
 ```javascript
 // Adjacency representation
 edges = []
 for each prototype:
-  for each axis in prototype.axisConstraints:
-    edges.push({ prototype, axis, weight: constraintStrength })
+  for each axis in prototype.weights:
+    const weight = prototype.weights[axis]
+    if (weight !== 0) {
+      edges.push({ prototype, axis, weight: Math.abs(weight) })
+    }
 
-// Constraint strength = max - min (range) or 1.0 for exact
+// Edge weight = absolute value of weight coefficient (magnitude of influence)
 ```
 
 ### 4.3 Brandes' Algorithm for Betweenness Centrality
@@ -339,9 +350,9 @@ hubScore = degree * (1 - variance)
 
 Where:
 - `degree`: Number of axes the prototype constrains
-- `variance`: Variance of constraint strengths across axes
+- `variance`: Variance of weight magnitudes across axes
 
-**Rationale**: High degree with consistent constraint strength indicates a balanced hub.
+**Rationale**: High degree with consistent weight magnitudes indicates a balanced hub.
 
 ### 4.5 Hub Classification
 
@@ -399,8 +410,8 @@ Identify regions of the axis space that lack prototype coverage:
 
 ```javascript
 // For each prototype, create a vector
-vector[i] = midpointOfConstraint(prototype, axis_i)
-// Missing constraints = 0 (neutral)
+vector[i] = prototype.weights[axis_i] ?? 0
+// Missing weights = 0 (neutral)
 ```
 
 ### 5.4 Distance Metrics
@@ -625,14 +636,12 @@ function detectOutliers(values, k = 1.5) {
 function findHighLoadings(prototype, threshold) {
   highLoadings = []
 
-  for each [axis, constraint] of prototype.axisConstraints:
-    midpoint = (constraint.min + constraint.max) / 2
-
-    if abs(midpoint) >= threshold:
+  for each [axis, weight] of prototype.weights:
+    if abs(weight) >= threshold:
       highLoadings.push({
         axis,
-        value: midpoint,
-        sign: midpoint > 0 ? 'positive' : 'negative'
+        value: weight,
+        sign: weight > 0 ? 'positive' : 'negative'
       })
 
   return highLoadings
@@ -669,7 +678,11 @@ function detectSignTension(highLoadings) {
 
 ### 6.4 Semantic Conflict Rules
 
+**Note**: This analysis operates on weight coefficients. Mixed positive/negative weights represent opposing influences on the emotion score, which is semantically meaningful (not a bug). For example, a prototype with `{engagement: 0.6, withdrawal: -0.4}` indicates the emotion is positively correlated with engagement and negatively correlated with withdrawal.
+
 Some axis pairs are semantically expected to conflict:
+
+> **Note**: The following is illustrative pseudo-code showing one possible approach to semantic conflict detection. The actual implementation in `MultiAxisConflictDetector.js` uses statistical methods (Tukey's fence with IQR-based outlier detection) rather than hardcoded conflict pairs. This pseudo-code is provided for conceptual understanding only.
 
 ```javascript
 const CONFLICTING_PAIRS = [
@@ -999,9 +1012,26 @@ function wilsonConfidenceInterval(successes, trials, confidence = 0.95) {
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `hubMinDegree` | 4 | Minimum axis connections for hub |
+| `hubMinDegree` | 4 | Floor for minimum axis connections (see adaptive behavior below) |
+| `hubMinDegreeRatio` | 0.1 | Minimum degree as fraction of total nodes (adaptive scaling) |
+| `hubMaxEdgeWeight` | 0.9 | Maximum edge weight threshold (filters near-duplicates) |
+| `hubMinNeighborhoodDiversity` | 2 | Minimum distinct clusters among neighbors |
+| `hubBetweennessWeight` | 0.3 | Weight for betweenness in hub scoring |
 | `hubMinBetweenness` | 0.1 | Minimum betweenness centrality |
 | `hubMinScore` | 0.5 | Minimum hub score |
+
+#### Adaptive Degree Threshold
+
+The effective minimum degree is computed adaptively at runtime:
+
+```javascript
+const hubMinDegree = Math.max(
+  degreeFloor,                        // Fixed floor (default: 4)
+  Math.floor(numNodes * degreeRatio)  // Scales with graph size
+);
+```
+
+For a graph with 100 prototypes and `hubMinDegreeRatio: 0.1`, the effective threshold is `max(4, 10) = 10`.
 
 ### 9.3 Coverage Gap Configuration
 
@@ -1289,15 +1319,14 @@ The confidence calculation is based on how many independent detection methods (P
 ```typescript
 interface Prototype {
   id: string;
-  axisConstraints: {
-    [axisName: string]: {
-      min?: number;  // -1 to 1
-      max?: number;  // -1 to 1
-      exact?: number; // -1 to 1
-    }
+  weights: {
+    [axisName: string]: number;  // Scalar coefficient in [-1, 1]
   };
+  gates?: string[];  // Optional activation prerequisites (e.g., "engagement >= 0.10")
 }
 ```
+
+**Clarification**: The PCA and hub detection analyses operate on `weights` (influence coefficients), not `gates` (activation prerequisites). This design choice means the analysis answers "Are the axes sufficient to describe emotional variation?" rather than "Do we have a prototype for every plausible emotional state?"
 
 ### A.2 Analysis Result Format
 
@@ -1335,7 +1364,7 @@ Where:
 - n = number of prototypes
 - m = number of axes
 - V = nodes in graph (n + m)
-- E = edges (constraints)
+- E = edges (prototype-axis weighted connections)
 - C = number of clusters
 
 ---
@@ -1348,6 +1377,560 @@ Where:
 4. **DBSCAN**: Ester, M. et al. (1996). "A Density-Based Algorithm for Discovering Clusters". KDD.
 5. **Tukey's Fence**: Tukey, J.W. (1977). Exploratory Data Analysis.
 6. **Wilson Confidence Interval**: Wilson, E.B. (1927). "Probable Inference, the Law of Succession, and Statistical Inference". JASA.
+
+---
+
+## 11. ChatGPT Claims Assessment (2026-01-25)
+
+This section documents an external review where ChatGPT incorrectly claimed bugs existed in the axis-space analysis system around "sexual axis" representations. After thorough investigation, **all claims were incorrect or based on misunderstanding the design**.
+
+### 11.1 Claims Summary
+
+| Claim | Assessment | Verdict |
+|-------|------------|---------|
+| Schema mismatch: `sexual_arousal` [-1,1] vs [0,1] | **Confusion**: Schema is for *weights* (which can be [-1,1]), not axis values. Description correctly notes axis values are [0,1]. | **Not a Bug** |
+| `baseline_libido / 100` gives wrong values | Intentional design: baseline has 50% influence of excitation/inhibition | **Not a Bug** |
+| Validation can't catch nonsense | Validation works correctly for the intended design | **Incorrect** |
+
+### 11.2 Key Insight: Weights vs Axis Values
+
+ChatGPT confused two distinct concepts:
+
+1. **Axis values** (e.g., `sexual_arousal`): The actual state value, which is [0, 1] via `clamp01()`
+2. **Weights**: Coefficients that multiply axis values to compute prototype scores, which are [-1, 1]
+
+The schema at lines 47-50 of `sexual_prototypes.lookup.schema.json` defines **weight ranges** for `sexual_arousal`, not axis value ranges. Weights can be negative (anti-correlation). The description at line 10 correctly notes: "sexual_arousal is in [0, 1]" (referring to axis values).
+
+### 11.3 Why the Formula is Correct
+
+The formula in `EmotionCalculatorService.js`:
+
+```javascript
+sexual_arousal = clamp01((excitation - inhibition + baseline) / 100)
+```
+
+With:
+- `sex_excitation` in [0, 100]
+- `sex_inhibition` in [0, 100]
+- `baseline_libido` in [-50, 50]
+
+This is **intentional design**:
+- `excitation - inhibition` contributes up to ±100 (normalized to ±1.0)
+- `baseline_libido` contributes up to ±50 (normalized to ±0.5)
+- Baseline has **50% influence** compared to excitation/inhibition by design
+- `clamp01()` ensures final value is always [0, 1]
+
+### 11.4 Real Issue Found
+
+One minor JSDoc documentation error was discovered:
+
+**File**: `src/emotions/emotionCalculatorService.js:30`
+**Problem**: Said `baseline_libido: [0..100]` but actual range is `[-50..50]`
+**Status**: ✅ Fixed
+
+### 11.5 Existing Test Coverage
+
+The system's correctness is already validated by existing tests:
+- `tests/unit/emotions/emotionCalculatorService.test.js:194-203` - confirms clamping works
+- `tests/unit/mods/core/components/sexualState.component.test.js` - validates [-50, 50] range
+- `tests/unit/expressionDiagnostics/services/randomStateGenerator.test.js` - validates baseline range
+
+### 11.6 Lessons Learned
+
+1. **Schema documentation is dual-purpose**: Weight ranges in prototype schemas are for scoring coefficients, not for axis value bounds
+2. **Intentional asymmetric influence**: The 50% baseline influence is a design choice, not a bug
+3. **Clamping guarantees bounds**: The `clamp01()` function ensures axis values are always valid regardless of intermediate calculations
+
+---
+
+## 12. ChatGPT Claims Assessment: Model Integrity and Analysis Methodology (2026-01-25)
+
+This section documents a second external review where ChatGPT made claims about alleged deficiencies in the axis-space analysis system's model integrity and detection methodology. After thorough investigation, **all three claims were incorrect or based on misunderstanding the existing infrastructure**.
+
+### 12.1 Claims Summary
+
+| # | Claim | What ChatGPT Said | Reality | Verdict |
+|---|-------|-------------------|---------|---------|
+| 1 | Add Model Integrity Phase | "Fail fast if prototype references axis not in registry" | Already exists: `axisRegistryAudit.test.js`, `prototypeAxisConstants.js`, schema `additionalProperties: false` | **Already Exists** |
+| 2 | Separate Weight-space and Gate-space | "Run both analyses then fuse" | Different feature request. Current design intentionally analyzes weights only (documented in Section 1) | **Out of Scope** |
+| 3 | Replace Tukey Fence with Hack Detector | "Current method is wrong tool" | System uses 4 independent methods with corroboration. Tukey fence has `minIQRFloor=0.5` safeguard. Sign tensions are metadata-only | **Not Needed** |
+
+### 12.2 Claim 1: Model Integrity Phase Already Exists
+
+ChatGPT suggested adding a "fail fast" validation phase to detect when prototypes reference axes not in the registry. This infrastructure already exists at multiple levels:
+
+#### 12.2.1 Centralized Axis Constants (`src/constants/prototypeAxisConstants.js`)
+
+The system maintains a single source of truth for valid axes:
+
+```javascript
+export const SEXUAL_AXES = Object.freeze([
+  'sexual_arousal', 'sex_excitation', 'sex_inhibition',
+  'sexual_inhibition', 'baseline_libido',
+]);
+
+export const ALL_PROTOTYPE_WEIGHT_AXES = Object.freeze([
+  ...EMOTION_AXES,
+  ...MOOD_AXES,
+  ...SEXUAL_AXES,
+]);
+
+export const ALL_PROTOTYPE_WEIGHT_AXES_SET = new Set(ALL_PROTOTYPE_WEIGHT_AXES);
+
+export function isValidPrototypeWeightAxis(name) {
+  return ALL_PROTOTYPE_WEIGHT_AXES_SET.has(name);
+}
+```
+
+#### 12.2.2 Audit Test Suite (`tests/unit/expressionDiagnostics/axisRegistryAudit.test.js`)
+
+Automated tests validate that all prototypes use only known axes:
+
+```javascript
+it('should only have weight keys that exist in the known axis registries', () => {
+  const weightKeys = Object.keys(prototype.weights || {});
+  weightKeys.forEach(key => {
+    expect(ALL_PROTOTYPE_WEIGHT_AXES_SET.has(key)).toBe(true);
+  });
+});
+```
+
+#### 12.2.3 Schema Validation
+
+Expression schemas use `additionalProperties: false` to reject unknown axis names at load time, providing fail-fast behavior before analysis even begins.
+
+### 12.3 Claim 2: Weight-space vs Gate-space Analysis
+
+ChatGPT suggested the system should analyze both "weight-space" (influence coefficients) and "gate-space" (activation conditions) separately, then fuse the results.
+
+#### 12.3.1 Design Decision: Weight-Only Analysis
+
+This suggestion represents a **different feature request**, not a bug in the current system. The axis-space analysis intentionally focuses on weight-space for the following reasons:
+
+1. **Weights are the primary determinant** of which prototype activates given a mood state
+2. **Gates are binary filters** that enable/disable prototypes entirely, not gradient influences
+3. **Weight overlap** is the meaningful metric for expression similarity
+
+#### 12.3.2 Section 1 Documentation
+
+The current scope is documented in Section 1 of this report:
+> "The analysis examines prototype weight vectors to identify dimensional inadequacy..."
+
+Gate-space analysis would be a separate feature with different goals (e.g., "what mood states can never trigger any expression?").
+
+### 12.4 Claim 3: Multi-Axis Conflict Detection Methodology
+
+ChatGPT claimed that using Tukey's fence for multi-axis conflict detection is the "wrong tool" and should be replaced with a "hack detector."
+
+#### 12.4.1 Four-Signal Corroboration Design
+
+The system does not rely on any single detection method. It uses **four independent signals** that must corroborate:
+
+| Signal | Method | Threshold | What It Detects |
+|--------|--------|-----------|-----------------|
+| PCA Analysis | Residual variance | >15% | Missing dimensions not captured by current axes |
+| Hub Prototypes | Betweenness centrality | Statistical outliers | Prototypes connecting multiple clusters |
+| Coverage Gaps | K-means + silhouette | Poor alignment | Behavioral clusters without matching axes |
+| Multi-Axis Conflicts | Tukey's fence | 1.5×IQR above Q3 | Prototypes with unusually high axis counts |
+
+#### 12.4.2 Tukey's Fence Safeguards
+
+The multi-axis conflict detector includes protection against the concern ChatGPT raised:
+
+```javascript
+// Minimum IQR floor prevents false positives when variance is low
+const minIQRFloor = 0.5;
+const effectiveIQR = Math.max(iqr, minIQRFloor);
+const upperFence = q3 + (1.5 * effectiveIQR);
+```
+
+The `minIQRFloor = 0.5` ensures that when all prototypes have similar axis counts (low variance), the fence doesn't collapse to an unreasonably tight range.
+
+#### 12.4.3 Sign Tensions Are Metadata-Only
+
+ChatGPT may have confused sign tensions with a detection method. As documented in the UI:
+> **Note:** Mixed positive/negative weights are *normal* for emotional prototypes. This section shows structural patterns for understanding, not defects requiring action. Sign tensions **do not contribute to confidence scoring or recommendations**.
+
+Sign tensions are purely informational metadata, not a signal used for verdict determination.
+
+### 12.5 Why "MAYBE" Verdict with 0 Recommendations is Correct
+
+ChatGPT questioned how the system could report a "MAYBE" verdict while showing 0 recommendations. This is **correct behavior**:
+
+1. **MAYBE means uncertainty**, not "something is wrong"
+2. The verdict reflects that **some signals were triggered** but not enough for confident action
+3. **0 recommendations** means the system found no specific prototypes or axes to flag
+4. This state indicates: "Worth monitoring, but no clear action items identified"
+
+The decision logic (documented in the UI):
+- **YES**: (High residual AND coverage gaps) OR (Hub prototypes AND multi-axis conflicts)
+- **MAYBE**: High residual alone, OR any other single signal
+- **NO**: Residual ≤15% AND no detection signals
+
+### 12.6 Lessons Learned
+
+1. **Validation exists at multiple layers**: Schema, constants, tests - not all visible in UI
+2. **Weight-space vs gate-space** are different concerns with different analysis goals
+3. **Multi-signal corroboration** is more robust than any single "hack detector"
+4. **Uncertainty verdicts are valid** - "MAYBE" with no recommendations is a legitimate state
+
+### 12.7 Action Taken
+
+To prevent future confusion, the UI will be enhanced to display model integrity check status, making existing validation visible rather than hidden in tests and schemas.
+
+---
+
+## 13. ChatGPT Claims Assessment: Candidate Axis Validation (2026-01-25)
+
+This section documents a third external review where ChatGPT made two claims about the axis-space analysis system. After thorough investigation, **one claim was a UI bug, the other was a misunderstanding of the intentional design**.
+
+### 13.1 Claims Summary
+
+| # | Claim | ChatGPT's Evidence | Actual Root Cause | Verdict |
+|---|-------|-------------------|-------------------|---------|
+| 1 | "Enable candidate-axis validation (and make it automatic)" | Report shows "No candidate axes analyzed (validation may be disabled)." | **UI message was misleading**. Validation IS enabled; the extractor found 0 candidates (PCA: 0 significant beyond expected, gaps: 0, hubs: 0), so validator had nothing to validate. | **UI Bug Fixed** |
+| 2 | "Fix distance metric for coverage gaps" - cosine hides magnitude, suggests hybrid `d = α * cosine + (1-α) * euclidean(z-scored)` | Concern that cosine distance ignores intensity differences | **Intentional design**. Cosine detects direction coverage; magnitude weights priority ranking via `gapScore = distance * log1p(mag * size)`. For emotion space, this is semantically correct. | **No Change Needed** |
+
+### 13.2 Claim 1: Candidate Axis Validation
+
+#### 13.2.1 The Confusion
+
+The system has two stages for candidate axes:
+1. **`CandidateAxisExtractor.extract()`** - finds candidates from PCA residuals, coverage gaps, and hub prototypes
+2. **`CandidateAxisValidator.validate()`** - validates extracted candidates against criteria
+
+ChatGPT saw the UI message "No candidate axes analyzed (validation may be disabled)" and concluded the validation system was broken or disabled.
+
+#### 13.2.2 The Reality
+
+In the analyzed data:
+- **PCA Analysis**: `significantBeyondExpected = 0` (broken-stick found no additional components needed)
+- **Coverage Gaps**: 0 detected
+- **Hub Candidates**: 0 detected
+
+The extractor correctly found **0 candidates**, so the validator had nothing to validate. Validation was always enabled - the UI message simply conflated "no extraction results" with "disabled validation."
+
+#### 13.2.3 Fix Applied
+
+**File**: `src/domUI/prototype-analysis/PrototypeAnalysisController.js`
+
+**Before**:
+```javascript
+emptyMsg.textContent =
+  'No candidate axes analyzed (validation may be disabled).';
+```
+
+**After**:
+```javascript
+emptyMsg.textContent =
+  'No candidate axes to validate (extraction found 0 significant components, 0 coverage gaps, 0 hub candidates).';
+```
+
+### 13.3 Claim 2: Distance Metric for Coverage Gaps
+
+#### 13.3.1 ChatGPT's Concern
+
+ChatGPT suggested the coverage gap detection should use a hybrid distance metric:
+```
+d = α * cosine + (1-α) * euclidean(z-scored)
+```
+
+The concern was that pure cosine distance "hides magnitude differences" - e.g., mild vs intense versions of the same emotion would appear identical.
+
+#### 13.3.2 Why Current Design is Correct
+
+The current implementation in `CoverageGapDetector.detect()`:
+
+```javascript
+// Flow:
+1. Compute cluster centroid (includes magnitude)
+2. Store clusterMagnitude BEFORE normalization
+3. Normalize to get suggestedAxisDirection
+4. checkSubspaceGap() with cosine on NORMALIZED direction
+5. gapScore = distanceToNearestAxis * log1p(clusterMagnitude * clusterSize)
+```
+
+**Key insight**: For emotion space analysis, cosine distance is semantically correct because:
+- "Mild sadness" and "intense sadness" share the same **direction** in emotion space
+- Intensity is captured by **axis values** (0.3 vs 0.9), not by separate axes
+- The magnitude is preserved for **priority ranking** via the `gapScore` formula
+
+A hybrid metric would create **false positives** by flagging intensity variants as needing separate axes, which would bloat the axis system unnecessarily.
+
+#### 13.3.3 Decision
+
+**No change required**. The current cosine + magnitude-weighting design is intentional and appropriate for emotion space analysis. The magnitude information is not "hidden" - it's correctly used for priority ranking rather than direction detection.
+
+### 13.4 Lessons Learned
+
+1. **UI messages must be precise**: "Validation may be disabled" was misleading when the actual cause was "no candidates to validate"
+2. **Distance metric choice depends on domain**: Cosine distance is correct for direction-based queries in emotion space
+3. **Magnitude is not lost**: The system preserves magnitude for ranking purposes, just separates it from direction detection
+
+---
+
+## Section 14: ChatGPT Claims Assessment (January 2026)
+
+### 14.1 Overview
+
+ChatGPT suggested four "vital analytics" improvements to the prototype analysis system. This section documents the investigation findings and decisions.
+
+| Claim | Verdict | Action |
+|-------|---------|--------|
+| A) Axis correlation | **Design Choice** | Document explanation |
+| B) Unused/rare axes | **TRUE** | Implement detection |
+| C) Gate-space analysis | **Out of Scope** | Document exclusion |
+| D) Expression-driven gaps | **Already Exists** | No action needed |
+
+### 14.2 Claim A: Axis Disentanglement/Correlation
+
+#### 14.2.1 ChatGPT's Concern
+
+ChatGPT flagged these axis pairs as "extremely correlated":
+- `contamination_salience ↔ disgust_sensitivity`
+- `evaluation_pressure ↔ evaluation_sensitivity`
+- `inhibitory_control ↔ self_control`
+- `rumination ↔ ruminative_tendency`
+
+#### 14.2.2 Investigation Result
+
+These pairs do co-occur in prototypes, but this is **intentional semantic design**:
+- `inhibitory_control` = mood axis (current state, transient)
+- `self_control` = affect trait (stable personality characteristic)
+
+The system correctly distinguishes between:
+- **MOOD_AXES** (14): Transient emotional states
+- **AFFECT_TRAITS** (7): Stable personality traits
+- **SEXUAL_AXES** (5): Sexual-specific dimensions
+
+#### 14.2.3 Decision
+
+**No code change needed.** Axis co-occurrence is by design (state vs trait distinction).
+
+### 14.3 Claim B: Unused and Rare Axes
+
+#### 14.3.1 ChatGPT's Concern
+
+ChatGPT claimed:
+- `baseline_libido` is defined but never used
+- `sex_excitation` is rare (appears in very few prototypes)
+
+#### 14.3.2 Investigation Result
+
+**STATUS (January 2026 update):**
+
+The original claims below were accurate when investigated but became stale:
+
+- **`baseline_libido`**: Originally unused (0 occurrences). **NOW used in 18 prototypes** with weight values 0.1-0.25.
+- **`sex_excitation`**: Used only in GATES (e.g., `sex_excitation <= 0.25`), NOT in prototype weights. Correctly flagged as "Unused but Defined" in weight-space analysis.
+
+**Original claims (historical reference):**
+- ~~`baseline_libido` is defined but NEVER used~~ - Now used in weights
+- `sex_excitation` appears only in gates, not weights - Still accurate
+
+#### 14.3.3 Implementation
+
+The system already tracks "Excluded Sparse Axes" (used by <10% prototypes) via:
+- `PCAAnalysisService.#filterSparseAxes()`
+- UI rendering with `#renderExcludedSparseAxes()`
+
+**Gap identified**: No detection for "Unused but Defined" axes (0% usage).
+
+**Implementation added** (January 2026):
+1. `PCAAnalysisService.js` now computes `unusedDefinedAxes` against `ALL_PROTOTYPE_WEIGHT_AXES`
+2. `AxisGapReportSynthesizer.js` includes `unusedDefinedAxes` in reports
+3. `PrototypeAnalysisController.js` adds `#renderUnusedDefinedAxes()` method
+4. UI displays unused axes with distinct styling (red alert) vs sparse axes (yellow warning)
+
+### 14.4 Claim C: Gate-Space Analysis
+
+#### 14.4.1 ChatGPT's Concern
+
+ChatGPT suggested analyzing "gate activation volume" and "dead zones" where no expression gates fire.
+
+#### 14.4.2 Investigation Result
+
+**Out of Scope** because:
+1. Gates are binary prerequisites (e.g., `sexual_arousal >= 0.35`), not continuous
+2. The current system analyzes weight-space via PCA, not gate-space
+3. Gate analysis would be a fundamentally different feature
+
+#### 14.4.3 Decision
+
+**No change.** Gate-space analysis is a separate feature request, not an improvement to axis analysis.
+
+### 14.5 Claim D: Expression-Driven Gaps
+
+#### 14.5.1 ChatGPT's Concern
+
+ChatGPT suggested tracking axis appearance in expression prerequisites.
+
+#### 14.5.2 Investigation Result
+
+**Already exists:**
+- `PrototypeConstraintAnalyzer` handles this
+- `CandidateAxisExtractor` uses constraint analysis
+- Monte Carlo reports include this analysis
+
+#### 14.5.3 Decision
+
+**No action needed.** The feature already exists.
+
+### 14.6 Summary of Changes
+
+| Change | Type | Files Modified |
+|--------|------|----------------|
+| Add `unusedDefinedAxes` detection | Feature | `PCAAnalysisService.js` |
+| Include in report | Feature | `AxisGapReportSynthesizer.js` |
+| Add UI rendering | Feature | `PrototypeAnalysisController.js`, `prototype-analysis.html` |
+| Add CSS styling | Style | `prototype-analysis.css` |
+| Add unit tests | Tests | `PCAAnalysisService.test.js` |
+| Document assessment | Docs | This section |
+
+---
+
+## Section 15: External Claim Assessment - January 2026
+
+This section addresses external claims about the gap detection system and documents the Excluded-Axis Reliance Flag enhancement.
+
+### 15.1 Claim A: Bootstrap/Uncertainty for Stability
+
+**Claim:** Point estimates for residual variance are unstable; bootstrap CI would prevent threshold jitter.
+
+**Assessment:** NOT A BUG - Design philosophy difference.
+
+The system intentionally uses **multi-signal corroboration** rather than statistical uncertainty:
+- PCA triggers only when `hasSignificantComponents || (hasHighResidual && hasOtherSignals)` (AxisGapRecommendationBuilder.js:164)
+- A prototype needs confirmation from multiple detection families to receive high confidence
+- This is more robust than bootstrap because it requires agreement across fundamentally different detection methods
+
+Bootstrap would add significant computational overhead for marginal benefit given the corroboration approach already handles threshold sensitivity.
+
+### 15.2 Claim B: Always Compute Residual Direction
+
+**Claim:** Even when broken-stick finds no significant components, extract residual directions as hypotheses.
+
+**Assessment:** ALREADY IMPLEMENTED.
+
+The `residualEigenvector` is always computed in `PCAAnalysisService.js`:
+```javascript
+let residualEigenvector = null;
+if (axisCount < eigen.vectors.length) {
+  residualEigenvectorIndex = axisCount;
+  residualEigenvector = this.#buildResidualEigenvector(
+    eigen.vectors[axisCount],
+    axes
+  );
+}
+```
+
+This extracts the first component beyond `expectedDimension` regardless of broken-stick significance.
+
+### 15.3 Claim C: Separate Three Diagnoses
+
+**Claim:** "High residual" loosely maps to "missing axis" but could mean axis gap, redundancy, or outliers.
+
+**Assessment:** ALREADY IMPLEMENTED via family system.
+
+The `REASON_TO_FAMILY_MAP` in `AxisGapReportSynthesizer.js` provides clear separation:
+- **Axis Gap:** `pca` family (high_reconstruction_error, extreme_projection)
+- **Axis Redundancy:** `conflicts` family (multi_axis_conflict, high_axis_loading)
+- **Outliers:** Handled by corroboration - high reconstruction without other signals → LOW priority INVESTIGATE
+- **Metadata:** `sign_tension` → metadata-only family, excluded from confidence
+
+The recommendation builder handles each differently:
+- HIGH priority: PCA + coverage gap (strong evidence)
+- MEDIUM priority: Single strong signal
+- LOW priority: Uncorroborated findings
+
+### 15.4 Claim D: Excluded-Axis Reliance Flag
+
+**Claim:** Prototypes with poor fit that rely heavily on excluded (sparse) axes should be flagged as artifacts.
+
+**Assessment:** IMPLEMENTED as enhancement.
+
+The system now computes `excludedAxisReliance` for each prototype in reconstruction errors:
+- `excludedAxisReliance`: Ratio of squared weights on excluded sparse axes to total squared weights (0-1)
+- `reliesOnExcludedAxes`: Boolean flag when reliance > 25%
+
+This helps distinguish:
+- **True high residual:** Prototype needs new axis → `reliesOnExcludedAxes: false`
+- **Artifact high residual:** Poor fit due to sparse axis reliance → `reliesOnExcludedAxes: true`
+
+When `reliesOnExcludedAxes` is true, the evidence includes a warning that the prototype relies heavily on excluded sparse axes, suggesting the user may need to adjust `pcaMinAxisUsageRatio` rather than add a new axis.
+
+#### Implementation Details
+
+**PCAAnalysisService.js - `#computeReconstructionErrors`:**
+```javascript
+// Compute excluded axis reliance for this prototype
+const prototypeWeights = prototype?.weights ?? {};
+
+let excludedAxisWeightSquared = 0;
+let totalWeightSquared = 0;
+
+for (const [axis, weight] of Object.entries(prototypeWeights)) {
+  const weightSq = weight * weight;
+  totalWeightSquared += weightSq;
+  if (excludedSparseAxes.includes(axis)) {
+    excludedAxisWeightSquared += weightSq;
+  }
+}
+
+const excludedAxisReliance = totalWeightSquared > 0
+  ? excludedAxisWeightSquared / totalWeightSquared
+  : 0;
+const reliesOnExcludedAxes = excludedAxisReliance > 0.25; // 25% threshold
+```
+
+**AxisGapRecommendationBuilder.js - Evidence building:**
+```javascript
+// Add excluded-axis reliance warnings
+const prototypesRelyingOnExcluded = reconstructionErrors.filter(
+  (e) => e && typeof e === 'object' && e.reliesOnExcludedAxes === true
+);
+for (const entry of prototypesRelyingOnExcluded) {
+  const reliancePct = ((entry.excludedAxisReliance ?? 0) * 100).toFixed(0);
+  evidence.push(
+    `⚠️ ${entry.prototypeId} relies ${reliancePct}% on excluded sparse axes (consider adjusting pcaMinAxisUsageRatio)`
+  );
+}
+```
+
+### 15.5 Files Modified for Claim D Implementation
+
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `PCAAnalysisService.js` | Feature | Added `excludedAxisReliance` and `reliesOnExcludedAxes` computation to `#computeReconstructionErrors` |
+| `AxisGapRecommendationBuilder.js` | Feature | Added excluded-axis reliance warnings to INVESTIGATE evidence |
+| `PCAAnalysisService.test.js` | Tests | Added unit tests for excluded axis reliance computation |
+| `axis-space-analysis.md` | Docs | This section documenting claim assessments |
+
+### 15.6 External Review Assessment (January 2026)
+
+A ChatGPT review of the analysis system suggested three improvements:
+
+| Claim | Assessment | Conclusion |
+|-------|------------|------------|
+| 1. Treat excluded sparse axes as first-class signal | **Already Implemented** | `excludedAxisReliance` tracking exists (see 15.4) |
+| 2. Add residual clustering to detect missing axes | **Design Decision** | Broken-stick analysis serves this purpose |
+| 3. Replace hard cutoffs with scale-free thresholds | **Partially Implemented** | Remaining hard thresholds are intentional |
+
+**Claim 1 - Excluded Axis Tracking:**
+The system already computes `excludedAxisReliance` for each prototype and surfaces warnings in recommendations when prototypes rely heavily on excluded sparse axes. Evidence appears in analysis output:
+```
+⚠️ sexual_performance_anxiety relies 28% on excluded sparse axes (consider adjusting pcaMinAxisUsageRatio)
+```
+
+**Claim 2 - Residual Clustering:**
+The existing broken-stick analysis provides a stronger statistical foundation for detecting coherent dimensions vs noise. When broken-stick finds 0 additional significant components, it means the eigenvalue distribution matches random expectation—variance is diffuse across many small components rather than concentrated in discoverable hidden dimensions. K-means clustering on noise would produce arbitrary clusters, not real dimensions.
+
+**Claim 3 - Scale-Free Thresholds:**
+The system appropriately mixes adaptive and fixed thresholds:
+- **Adaptive:** `enableAdaptiveThresholds`, `adaptiveThresholdPercentile`, `hubMinDegreeRatio`
+- **Fixed (intentionally):** `pcaResidualVarianceThreshold` (15% is universally meaningful), `pcaMinAxisUsageRatio` (definitional boundary), `hubBetweennessThreshold` (already normalized to [0,1])
+
+**Conclusion:** No implementation changes required. The review highlighted existing features that could benefit from better UI explanation to prevent similar misunderstandings.
 
 ---
 

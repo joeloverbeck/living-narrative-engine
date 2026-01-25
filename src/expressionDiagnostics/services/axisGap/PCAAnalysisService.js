@@ -7,6 +7,8 @@ import {
   computeMedian,
   countSignificantComponentsBrokenStick,
 } from '../../utils/statisticalUtils.js';
+import { ALL_PROTOTYPE_WEIGHT_AXES } from '../../../constants/prototypeAxisConstants.js';
+import GateConstraint from '../../models/GateConstraint.js';
 
 /**
  * @typedef {object} PCAResult
@@ -19,6 +21,8 @@ import {
  * @property {Array<{prototypeId: string, loading: number}>} topLoadingPrototypes - Top 10 extreme prototypes.
  * @property {string[]} dimensionsUsed - Axes included in analysis.
  * @property {string[]} excludedSparseAxes - Axes excluded due to low usage (below pcaMinAxisUsageRatio threshold).
+ * @property {string[]} unusedDefinedAxes - Axes defined in ALL_PROTOTYPE_WEIGHT_AXES but not used by any prototype.
+ * @property {string[]} unusedInGates - Axes used in prototype weights but not referenced in any prototype gates.
  * @property {number[]} cumulativeVariance - Cumulative variance explained per component.
  * @property {number[]} explainedVariance - Individual variance explained per component (ratio 0-1).
  * @property {number} componentsFor80Pct - Components needed for 80% variance.
@@ -82,38 +86,43 @@ export class PCAAnalysisService {
       return this.#createEmptyResult();
     }
 
-    const { matrix, axes, prototypeIds, excludedSparseAxes } =
+    const { matrix, axes, prototypeIds, excludedSparseAxes, unusedDefinedAxes } =
       this.#buildWeightMatrix(prototypes);
 
+    // Extract gate axes to compute weight-gate mismatch
+    const gateAxes = this.#extractGateAxes(prototypes);
+    // Axes used in weights (axes from buildWeightMatrix) but not in any gates
+    const unusedInGates = axes.filter((axis) => !gateAxes.has(axis)).sort();
+
     if (axes.length === 0 || matrix.length < 2) {
-      return this.#createEmptyResult(excludedSparseAxes);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
     }
 
     const hasNonZero = matrix.some((row) =>
       row.some((value) => Math.abs(value) > 0)
     );
     if (!hasNonZero) {
-      return this.#createEmptyResult(excludedSparseAxes);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
     }
 
     const normalized = this.#normalizeMatrix(matrix);
     if (!normalized.hasVariance) {
-      return this.#createEmptyResult(excludedSparseAxes);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
     }
 
     const covariance = this.#computeCovariance(normalized.matrix);
     if (!covariance || covariance.length === 0) {
-      return this.#createEmptyResult(excludedSparseAxes);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
     }
 
     const eigen = this.#computeEigenDecomposition(covariance);
     if (!eigen || eigen.values.length === 0) {
-      return this.#createEmptyResult(excludedSparseAxes);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
     }
 
     const totalVariance = eigen.values.reduce((sum, value) => sum + value, 0);
     if (totalVariance <= 0) {
-      return this.#createEmptyResult(excludedSparseAxes);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
     }
 
     // Compute cumulative variance from eigenvalues (needed for variance-based K methods)
@@ -172,6 +181,8 @@ export class PCAAnalysisService {
       eigenvectors: eigen.vectors,
       axisCount,
       prototypeIds,
+      prototypes,
+      excludedSparseAxes,
     });
 
     // Extract residual eigenvector (first component beyond expected K)
@@ -195,6 +206,8 @@ export class PCAAnalysisService {
       topLoadingPrototypes,
       dimensionsUsed: axes,
       excludedSparseAxes,
+      unusedDefinedAxes,
+      unusedInGates,
       cumulativeVariance,
       explainedVariance,
       componentsFor80Pct,
@@ -209,9 +222,11 @@ export class PCAAnalysisService {
    * Create an empty PCA result.
    *
    * @param {string[]} [excludedSparseAxes] - Axes excluded due to sparse usage.
+   * @param {string[]} [unusedDefinedAxes] - Axes defined but not used by any prototype.
+   * @param {string[]} [unusedInGates] - Axes in weights but not in any gates.
    * @returns {PCAResult} Empty result object.
    */
-  #createEmptyResult(excludedSparseAxes = []) {
+  #createEmptyResult(excludedSparseAxes = [], unusedDefinedAxes = [], unusedInGates = []) {
     return {
       residualVarianceRatio: 0,
       additionalSignificantComponents: 0,
@@ -222,6 +237,8 @@ export class PCAAnalysisService {
       topLoadingPrototypes: [],
       dimensionsUsed: [],
       excludedSparseAxes,
+      unusedDefinedAxes,
+      unusedInGates,
       cumulativeVariance: [],
       explainedVariance: [],
       componentsFor80Pct: 0,
@@ -233,10 +250,41 @@ export class PCAAnalysisService {
   }
 
   /**
+   * Extract all unique axis names referenced in prototype gates.
+   *
+   * Parses gate strings like "valence >= 0.35" to extract axis names.
+   * Used to compute unusedInGates (axes in weights but not in gates).
+   *
+   * @param {Array} prototypes - Prototype objects with gates arrays.
+   * @returns {Set<string>} Set of unique axis names found in gates.
+   */
+  #extractGateAxes(prototypes) {
+    const gateAxes = new Set();
+
+    for (const proto of prototypes) {
+      const gates = proto?.gates;
+      if (!Array.isArray(gates)) continue;
+
+      for (const gateStr of gates) {
+        if (typeof gateStr !== 'string') continue;
+        try {
+          const gateConstraint = GateConstraint.parse(gateStr);
+          gateAxes.add(gateConstraint.axis);
+        } catch {
+          // Skip unparseable gates
+          continue;
+        }
+      }
+    }
+
+    return gateAxes;
+  }
+
+  /**
    * Build the weight matrix from prototypes.
    *
    * @param {Array} prototypes - Prototype objects.
-   * @returns {{matrix: number[][], axes: string[], prototypeIds: string[], excludedSparseAxes: string[]}} Matrix data.
+   * @returns {{matrix: number[][], axes: string[], prototypeIds: string[], excludedSparseAxes: string[], unusedDefinedAxes: string[]}} Matrix data.
    */
   #buildWeightMatrix(prototypes) {
     const axisSet = new Set();
@@ -254,6 +302,12 @@ export class PCAAnalysisService {
     });
 
     let axes = Array.from(axisSet).sort();
+
+    // Compute unused defined axes: axes in the registry but not used by any prototype
+    // This captures axes with 0% usage (different from sparse axes with 1-9% usage)
+    const unusedDefinedAxes = ALL_PROTOTYPE_WEIGHT_AXES.filter(
+      (axis) => !axisSet.has(axis)
+    );
 
     // Filter sparse axes before variance selection to avoid z-score inflation
     const minUsageRatio = this.#config.pcaMinAxisUsageRatio;
@@ -279,7 +333,7 @@ export class PCAAnalysisService {
         prototype?.id ?? prototype?.prototypeId ?? `prototype-${index}`
     );
 
-    return { matrix, axes, prototypeIds, excludedSparseAxes };
+    return { matrix, axes, prototypeIds, excludedSparseAxes, unusedDefinedAxes };
   }
 
   /**
@@ -679,9 +733,18 @@ export class PCAAnalysisService {
    * @param {number[][]} params.eigenvectors - PCA eigenvectors.
    * @param {number} params.axisCount - Components to use for reconstruction.
    * @param {string[]} params.prototypeIds - Prototype identifiers.
-   * @returns {Array<{prototypeId: string, error: number}>} Top 5 worst-fitting prototypes.
+   * @param {Array<{id: string, weights: {[key: string]: number}}>} [params.prototypes] - Original prototypes for weight access. Defaults to empty array.
+   * @param {string[]} [params.excludedSparseAxes] - Axes excluded due to sparse usage. Defaults to empty array.
+   * @returns {Array<{prototypeId: string, error: number, excludedAxisReliance: number, reliesOnExcludedAxes: boolean}>} Top 5 worst-fitting prototypes with excluded axis reliance info.
    */
-  #computeReconstructionErrors({ matrix, eigenvectors, axisCount, prototypeIds }) {
+  #computeReconstructionErrors({
+    matrix,
+    eigenvectors,
+    axisCount,
+    prototypeIds,
+    prototypes = [],
+    excludedSparseAxes = [],
+  }) {
     if (
       !matrix ||
       matrix.length === 0 ||
@@ -695,6 +758,14 @@ export class PCAAnalysisService {
     const componentCount = Math.min(axisCount, eigenvectors.length);
     const featureCount = matrix[0].length;
     const errors = [];
+
+    // Build a lookup map from prototypeId to prototype object for weight access
+    const prototypeMap = new Map();
+    for (const proto of prototypes) {
+      if (proto && proto.id) {
+        prototypeMap.set(proto.id, proto);
+      }
+    }
 
     for (let rowIdx = 0; rowIdx < matrix.length; rowIdx += 1) {
       const original = matrix[rowIdx];
@@ -725,16 +796,39 @@ export class PCAAnalysisService {
       }
       const rmse = Math.sqrt(sumSquaredError / featureCount);
 
+      // Compute excluded axis reliance for this prototype
+      const prototypeId = prototypeIds[rowIdx];
+      const prototype = prototypeMap.get(prototypeId);
+      const prototypeWeights = prototype?.weights ?? {};
+
+      let excludedAxisWeightSquared = 0;
+      let totalWeightSquared = 0;
+
+      for (const [axis, weight] of Object.entries(prototypeWeights)) {
+        const weightSq = weight * weight;
+        totalWeightSquared += weightSq;
+        if (excludedSparseAxes.includes(axis)) {
+          excludedAxisWeightSquared += weightSq;
+        }
+      }
+
+      const excludedAxisReliance =
+        totalWeightSquared > 0
+          ? excludedAxisWeightSquared / totalWeightSquared
+          : 0;
+      // Flag as relying on excluded axes if >25% of weight is on excluded axes
+      const reliesOnExcludedAxes = excludedAxisReliance > 0.25;
+
       errors.push({
-        prototypeId: prototypeIds[rowIdx],
+        prototypeId,
         error: rmse,
+        excludedAxisReliance,
+        reliesOnExcludedAxes,
       });
     }
 
     // Sort by error descending (worst fitting first)
-    return errors
-      .sort((a, b) => b.error - a.error)
-      .slice(0, 5);
+    return errors.sort((a, b) => b.error - a.error).slice(0, 5);
   }
 
   /**

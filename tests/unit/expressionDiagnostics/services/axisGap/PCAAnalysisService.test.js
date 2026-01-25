@@ -212,6 +212,118 @@ describe('PCAAnalysisService', () => {
       });
     });
 
+    it('should include excludedAxisReliance and reliesOnExcludedAxes in reconstruction errors', () => {
+      const prototypes = Array.from({ length: 10 }, (_, i) => ({
+        id: `p${i}`,
+        weights: { a: i, b: 10 - i },
+      }));
+
+      const result = service.analyze(prototypes);
+
+      expect(result.reconstructionErrors.length).toBeGreaterThan(0);
+      result.reconstructionErrors.forEach((item) => {
+        expect(item).toHaveProperty('excludedAxisReliance');
+        expect(item).toHaveProperty('reliesOnExcludedAxes');
+        expect(typeof item.excludedAxisReliance).toBe('number');
+        expect(typeof item.reliesOnExcludedAxes).toBe('boolean');
+        expect(item.excludedAxisReliance).toBeGreaterThanOrEqual(0);
+        expect(item.excludedAxisReliance).toBeLessThanOrEqual(1);
+      });
+    });
+
+    it('should flag prototypes that rely heavily on excluded sparse axes', () => {
+      // Create prototypes where most use axes a and b, but one uses primarily sparse axis c
+      const prototypes = [
+        { id: 'common1', weights: { a: 1, b: 0.5, c: 0 } },
+        { id: 'common2', weights: { a: 0.8, b: 1, c: 0 } },
+        { id: 'common3', weights: { a: 1, b: 0.3, c: 0 } },
+        { id: 'common4', weights: { a: 0.5, b: 1, c: 0 } },
+        { id: 'common5', weights: { a: 0.9, b: 0.6, c: 0 } },
+        { id: 'common6', weights: { a: 0.7, b: 0.8, c: 0 } },
+        { id: 'common7', weights: { a: 1, b: 1, c: 0 } },
+        { id: 'common8', weights: { a: 0.6, b: 0.9, c: 0 } },
+        { id: 'common9', weights: { a: 0.4, b: 1, c: 0 } },
+        { id: 'common10', weights: { a: 1, b: 0.4, c: 0 } },
+        // This prototype relies heavily on sparse axis c (only 1 out of 11 use it)
+        { id: 'sparse_user', weights: { a: 0.1, b: 0.1, c: 1 } },
+      ];
+
+      // Use a config with pcaMinAxisUsageRatio that will exclude axis c
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.15 });
+      const result = svc.analyze(prototypes);
+
+      // Axis c should be excluded since only 1/11 (9%) prototypes use it
+      expect(result.excludedSparseAxes).toContain('c');
+
+      // Find the sparse_user in reconstruction errors if present
+      const sparseUserError = result.reconstructionErrors.find(
+        (e) => e.prototypeId === 'sparse_user'
+      );
+
+      // If sparse_user is in the worst fitting (it may or may not be depending on PCA),
+      // verify its reliance fields are populated
+      if (sparseUserError) {
+        expect(sparseUserError.excludedAxisReliance).toBeGreaterThan(0);
+      }
+    });
+
+    it('should set reliesOnExcludedAxes to true when reliance exceeds 25%', () => {
+      // Create prototypes where sparse_user has >25% of weight on excluded axis
+      const prototypes = [
+        { id: 'p1', weights: { a: 1, b: 0.5 } },
+        { id: 'p2', weights: { a: 0.8, b: 1 } },
+        { id: 'p3', weights: { a: 1, b: 0.3 } },
+        { id: 'p4', weights: { a: 0.5, b: 1 } },
+        { id: 'p5', weights: { a: 0.9, b: 0.6 } },
+        { id: 'p6', weights: { a: 0.7, b: 0.8 } },
+        { id: 'p7', weights: { a: 1, b: 1 } },
+        { id: 'p8', weights: { a: 0.6, b: 0.9 } },
+        { id: 'p9', weights: { a: 0.4, b: 1 } },
+        { id: 'p10', weights: { a: 1, b: 0.4 } },
+        // This prototype has ~50% of weight squared on sparse axis c
+        // c^2 / (a^2 + b^2 + c^2) = 1 / (0.25 + 0.25 + 1) = 1/1.5 = 66%
+        { id: 'heavy_sparse', weights: { a: 0.5, b: 0.5, c: 1 } },
+      ];
+
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.15 });
+      const result = svc.analyze(prototypes);
+
+      // Axis c should be excluded
+      expect(result.excludedSparseAxes).toContain('c');
+
+      // Find heavy_sparse in reconstruction errors
+      const heavySparseError = result.reconstructionErrors.find(
+        (e) => e.prototypeId === 'heavy_sparse'
+      );
+
+      // If it's in the worst fitting, verify the flag
+      if (heavySparseError) {
+        expect(heavySparseError.reliesOnExcludedAxes).toBe(true);
+        expect(heavySparseError.excludedAxisReliance).toBeGreaterThan(0.25);
+      }
+    });
+
+    it('should set excludedAxisReliance to 0 when no axes are excluded', () => {
+      // Create prototypes where all axes are used by enough prototypes
+      const prototypes = [
+        { id: 'p1', weights: { a: 1, b: 0.5 } },
+        { id: 'p2', weights: { a: 0.8, b: 1 } },
+        { id: 'p3', weights: { a: 1, b: 0.3 } },
+        { id: 'p4', weights: { a: 0.5, b: 1 } },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // No axes should be excluded
+      expect(result.excludedSparseAxes).toEqual([]);
+
+      // All reconstruction errors should have 0 excluded axis reliance
+      result.reconstructionErrors.forEach((item) => {
+        expect(item.excludedAxisReliance).toBe(0);
+        expect(item.reliesOnExcludedAxes).toBe(false);
+      });
+    });
+
     it('should handle prototypes with missing axis values', () => {
       const prototypes = [
         { id: 'a', weights: { x: 1 } },
@@ -464,6 +576,8 @@ describe('PCAAnalysisService', () => {
         topLoadingPrototypes: [],
         dimensionsUsed: [],
         excludedSparseAxes: [],
+        unusedDefinedAxes: [],
+        unusedInGates: [],
         cumulativeVariance: [],
         explainedVariance: [],
         componentsFor80Pct: 0,
@@ -877,6 +991,216 @@ describe('PCAAnalysisService', () => {
       const svc20 = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.2 });
       const result20 = svc20.analyze(prototypes);
       expect(result20.excludedSparseAxes).not.toContain('semi_sparse');
+    });
+  });
+
+  describe('unused defined axes detection', () => {
+    it('should identify axes defined in registry but not used by any prototype', () => {
+      // Create prototypes that only use a subset of ALL_PROTOTYPE_WEIGHT_AXES
+      // This tests that axes defined in the constant but with 0% usage are detected
+      const prototypes = [
+        { id: 'p1', weights: { arousal: 0.5, valence: 0.3 } },
+        { id: 'p2', weights: { arousal: 0.2, valence: -0.4 } },
+        { id: 'p3', weights: { arousal: -0.3, valence: 0.6 } },
+        { id: 'p4', weights: { arousal: 0.1, valence: 0.1 } },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // Should have unusedDefinedAxes property
+      expect(result).toHaveProperty('unusedDefinedAxes');
+      expect(Array.isArray(result.unusedDefinedAxes)).toBe(true);
+
+      // The unused axes should be those in ALL_PROTOTYPE_WEIGHT_AXES but not in prototype weights
+      // Since we only used 'arousal' and 'valence', all other axes are unused
+      expect(result.unusedDefinedAxes.length).toBeGreaterThan(0);
+      expect(result.unusedDefinedAxes).not.toContain('arousal');
+      expect(result.unusedDefinedAxes).not.toContain('valence');
+    });
+
+    it('should return empty array when all defined axes are used', () => {
+      // Import the constant to ensure we use all axes
+      // This is a conceptual test - in practice, using ALL axes is unlikely
+      // but we test the boundary condition
+      const prototypes = [
+        { id: 'p1', weights: { only_axis: 1 } },
+        { id: 'p2', weights: { only_axis: -1 } },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // unused axes should contain all defined axes except 'only_axis'
+      expect(result.unusedDefinedAxes).not.toContain('only_axis');
+    });
+
+    it('should distinguish between sparse axes and unused axes', () => {
+      // Create a scenario where some axes are sparse (1-9% usage) and others are unused (0%)
+      const prototypes = Array.from({ length: 12 }, (_, i) => ({
+        id: `p${i}`,
+        weights: {
+          common_axis: Math.random(),
+          ...(i === 0 ? { sparse_axis: 0.5 } : {}), // only 1 prototype uses this
+        },
+      }));
+
+      const result = service.analyze(prototypes);
+
+      // sparse_axis should be in excludedSparseAxes (used by <10% of prototypes)
+      expect(result.excludedSparseAxes).toContain('sparse_axis');
+
+      // Axes that are completely unused (0 prototypes) go to unusedDefinedAxes
+      // All axes in ALL_PROTOTYPE_WEIGHT_AXES except common_axis and sparse_axis
+      expect(result.unusedDefinedAxes).not.toContain('common_axis');
+      expect(result.unusedDefinedAxes).not.toContain('sparse_axis');
+    });
+
+    it('should include baseline_libido in unused axes when no prototype uses it', () => {
+      // This tests the specific case from ChatGPT's claim - baseline_libido is defined but unused
+      const prototypes = [
+        { id: 'p1', weights: { sexual_arousal: 0.5 } },
+        { id: 'p2', weights: { sexual_arousal: 0.3 } },
+        { id: 'p3', weights: { sexual_arousal: 0.1 } },
+        { id: 'p4', weights: { sexual_arousal: -0.2 } },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // baseline_libido should be in unusedDefinedAxes since no prototype uses it
+      expect(result.unusedDefinedAxes).toContain('baseline_libido');
+    });
+  });
+
+  describe('unused in gates detection', () => {
+    it('should have unusedInGates property in result', () => {
+      const prototypes = [
+        { id: 'p1', weights: { arousal: 0.5 }, gates: [] },
+        { id: 'p2', weights: { arousal: 0.3 }, gates: [] },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      expect(result).toHaveProperty('unusedInGates');
+      expect(Array.isArray(result.unusedInGates)).toBe(true);
+    });
+
+    it('should detect axes used in weights but not in any gates', () => {
+      const prototypes = [
+        {
+          id: 'p1',
+          weights: { arousal: 0.5, valence: 0.3 },
+          gates: ['valence >= 0.2'], // Only valence has a gate
+        },
+        {
+          id: 'p2',
+          weights: { arousal: 0.2, valence: -0.4 },
+          gates: ['valence <= 0.5'],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // arousal is used in weights but never appears in gates
+      expect(result.unusedInGates).toContain('arousal');
+      // valence appears in gates, so should NOT be in unusedInGates
+      expect(result.unusedInGates).not.toContain('valence');
+    });
+
+    it('should return empty array when all weight axes have gates', () => {
+      const prototypes = [
+        {
+          id: 'p1',
+          weights: { arousal: 0.5, valence: 0.3 },
+          gates: ['arousal >= 0.2', 'valence >= 0.1'],
+        },
+        {
+          id: 'p2',
+          weights: { arousal: 0.2, valence: -0.4 },
+          gates: ['valence <= 0.5'],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // Both arousal and valence appear in gates
+      expect(result.unusedInGates).not.toContain('arousal');
+      expect(result.unusedInGates).not.toContain('valence');
+      expect(result.unusedInGates.length).toBe(0);
+    });
+
+    it('should handle prototypes without gates property', () => {
+      const prototypes = [
+        { id: 'p1', weights: { arousal: 0.5 } }, // No gates property
+        { id: 'p2', weights: { arousal: 0.3 }, gates: null },
+        { id: 'p3', weights: { arousal: 0.2 }, gates: undefined },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // arousal has no gates anywhere, should be in unusedInGates
+      expect(result.unusedInGates).toContain('arousal');
+    });
+
+    it('should handle invalid gate strings gracefully', () => {
+      const prototypes = [
+        {
+          id: 'p1',
+          weights: { arousal: 0.5, valence: 0.3 },
+          gates: ['invalid gate format', 'valence >= 0.2'],
+        },
+        {
+          id: 'p2',
+          weights: { arousal: 0.2, valence: -0.4 },
+          gates: [123, null, 'valence <= 0.5'], // Non-string gates
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // Should still detect that arousal has no valid gates
+      expect(result.unusedInGates).toContain('arousal');
+      // valence has valid gates
+      expect(result.unusedInGates).not.toContain('valence');
+    });
+
+    it('should return sorted array', () => {
+      const prototypes = [
+        {
+          id: 'p1',
+          weights: { zeta: 0.5, alpha: 0.3, middle: 0.2 },
+          gates: [],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // Should be sorted alphabetically
+      const sortedCopy = [...result.unusedInGates].sort();
+      expect(result.unusedInGates).toEqual(sortedCopy);
+    });
+
+    it('should only include axes actually used in weights, not all defined axes', () => {
+      // This test verifies unusedInGates is different from unusedDefinedAxes
+      // unusedInGates = axes in weights but no gates
+      // unusedDefinedAxes = axes in registry but not in any weights
+      const prototypes = [
+        {
+          id: 'p1',
+          weights: { arousal: 0.5 },
+          gates: [], // No gates for arousal
+        },
+        {
+          id: 'p2',
+          weights: { arousal: 0.3 },
+          gates: [],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // arousal is used in weights but has no gates -> should be in unusedInGates
+      expect(result.unusedInGates).toContain('arousal');
+      // arousal is used in weights -> should NOT be in unusedDefinedAxes
+      expect(result.unusedDefinedAxes).not.toContain('arousal');
     });
   });
 

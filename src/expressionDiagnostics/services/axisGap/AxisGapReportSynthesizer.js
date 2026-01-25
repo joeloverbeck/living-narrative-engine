@@ -141,6 +141,8 @@ export class AxisGapReportSynthesizer {
       highAxisLoadings = [],
       signTensions = [],
       hubDiagnostics = null,
+      polarityAnalysis = null,
+      complexityAnalysis = null,
     } = splitConflicts;
 
     const methodsTriggered = this.#countTriggeredMethods(pcaResult, hubs, gaps, conflicts);
@@ -205,6 +207,10 @@ export class AxisGapReportSynthesizer {
         componentsFor80Pct: pcaResult.componentsFor80Pct ?? 0,
         componentsFor90Pct: pcaResult.componentsFor90Pct ?? 0,
         reconstructionErrors: pcaResult.reconstructionErrors ?? [],
+        dimensionsUsed: pcaResult.dimensionsUsed ?? [],
+        excludedSparseAxes: pcaResult.excludedSparseAxes ?? [],
+        unusedDefinedAxes: pcaResult.unusedDefinedAxes ?? [],
+        unusedInGates: pcaResult.unusedInGates ?? [],
       },
       hubPrototypes: hubs,
       hubDiagnostics,
@@ -212,6 +218,8 @@ export class AxisGapReportSynthesizer {
       multiAxisConflicts: conflicts,
       highAxisLoadings,
       signTensions,
+      polarityAnalysis,
+      complexityAnalysis,
       candidateAxes: candidateAxisValidation,
       recommendations,
       prototypeWeightSummaries,
@@ -242,10 +250,13 @@ export class AxisGapReportSynthesizer {
       },
       pcaAnalysis: this.#createEmptyPCAResult(),
       hubPrototypes: [],
+      hubDiagnostics: null,
       coverageGaps: [],
       multiAxisConflicts: [],
       highAxisLoadings: [],
       signTensions: [],
+      polarityAnalysis: null,
+      complexityAnalysis: null,
       candidateAxes: null,
       recommendations: [],
       prototypeWeightSummaries: [],
@@ -531,6 +542,9 @@ export class AxisGapReportSynthesizer {
       componentsFor80Pct: 0,
       componentsFor90Pct: 0,
       reconstructionErrors: [],
+      excludedSparseAxes: [],
+      unusedDefinedAxes: [],
+      unusedInGates: [],
     };
   }
 }

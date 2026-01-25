@@ -335,7 +335,7 @@ describe('AxisGapAnalyzer', () => {
           conflicts,
           prototypes.length,
           prototypes,
-          { highAxisLoadings, signTensions, hubDiagnostics: null },
+          { highAxisLoadings, signTensions, hubDiagnostics: null, polarityAnalysis: null, complexityAnalysis: null },
           null // candidateAxisValidation is null when validation services not provided
         );
       });

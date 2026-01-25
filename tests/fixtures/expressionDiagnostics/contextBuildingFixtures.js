@@ -12,6 +12,7 @@ export const simpleContextExpression = {
           { '>=': [{ var: 'emotions.joy' }, 0.1] },
           { '>=': [{ var: 'sexualStates.aroused' }, 0.1] },
           { '>=': [{ var: 'moodAxes.valence' }, -100] },
+          { '>=': [{ var: 'sexualAxes.sex_excitation' }, -100] },
         ],
       },
     },
@@ -29,6 +30,7 @@ export const moodRegimeExpression = {
   description: 'Expression that triggers mood-regime histogram tracking',
   prerequisites: [
     { logic: { '>=': [{ var: 'moodAxes.valence' }, -100] } },
+    { logic: { '>=': [{ var: 'sexualAxes.sex_excitation' }, -100] } },
     { logic: { '>=': [{ var: 'emotions.joy' }, 0.1] } },
     { logic: { '>=': [{ var: 'sexualStates.aroused' }, 0.1] } },
   ],

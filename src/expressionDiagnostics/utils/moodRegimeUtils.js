@@ -1,3 +1,8 @@
+import {
+  extractConstraintsFromPrototypeGates,
+  extractPrototypeReferencesFromLogic,
+} from './prototypeGateUtils.js';
+
 const COMPARISON_OPERATORS = ['>=', '<=', '>', '<', '=='];
 
 const DEFAULT_OPTIONS = {
@@ -8,15 +13,24 @@ const DEFAULT_OPTIONS = {
 const isMoodVarPath = (varPath, includeMoodAlias) => {
   if (typeof varPath !== 'string') return false;
   if (varPath.startsWith('moodAxes.')) return true;
+  if (varPath.startsWith('sexualAxes.')) return true;
   return includeMoodAlias && varPath.startsWith('mood.');
 };
 
-const getNestedValue = (obj, path) => {
+/**
+ * Safely retrieve a nested value from an object using a dot-notation path.
+ * This is the canonical implementation used for consistent constraint evaluation
+ * across MonteCarloSimulator, CoreSectionGenerator, and ReportIntegrityAnalyzer.
+ * @param {object} obj - The source object
+ * @param {string} path - Dot-notation path (e.g., 'moodAxes.valence')
+ * @returns {*} The value at path, or undefined if not found
+ */
+export const getNestedValue = (obj, path) => {
   if (!obj || !path) return undefined;
   const parts = path.split('.');
   let current = obj;
   for (const part of parts) {
-    if (current == null) return undefined;
+    if (current === null || current === undefined) return undefined;
     current = current[part];
   }
   return current;
@@ -240,5 +254,120 @@ export const mergeConstraints = (directConstraints, prototypeConstraints) => {
       merged.push(c);
     }
   }
-  return merged;
+
+  // Sort constraints deterministically to ensure hash consistency
+  return merged.sort((a, b) => {
+    const pathCompare = String(a.varPath).localeCompare(String(b.varPath));
+    if (pathCompare !== 0) return pathCompare;
+    const opCompare = String(a.operator).localeCompare(String(b.operator));
+    if (opCompare !== 0) return opCompare;
+    return Number(a.threshold) - Number(b.threshold);
+  });
+};
+
+/**
+ * Extracts mood constraints from both:
+ * 1. Direct moodAxes.* references in prerequisites
+ * 2. Prototype gate-derived constraints from emotion/sexual prototypes
+ *
+ * @param {Array} prerequisites - Expression prerequisites
+ * @param {object} dataRegistry - Data registry for prototype lookups (can be null)
+ * @param {object} [options] - Options for extraction
+ * @param {boolean} [options.includeMoodAlias=true] - Include mood.* alias paths
+ * @param {boolean} [options.andOnly=true] - Only extract from AND conditions
+ * @returns {Array} Merged mood constraints array
+ */
+export const extractMergedMoodConstraints = (
+  prerequisites,
+  dataRegistry,
+  options = {}
+) => {
+  const { includeMoodAlias = true, andOnly = true } = options;
+
+  const directConstraints = extractMoodConstraints(prerequisites, {
+    includeMoodAlias,
+    andOnly,
+  });
+
+  if (!dataRegistry) {
+    return directConstraints;
+  }
+
+  const gateConstraints = extractConstraintsFromPrototypeGates(
+    prerequisites,
+    dataRegistry,
+    { deduplicateByAxis: true }
+  );
+
+  return mergeConstraints(directConstraints, gateConstraints);
+};
+
+/**
+ * Classifies what types of constraints an expression uses in its prerequisites.
+ * This helps determine whether the expression is "prototype-only" (uses only
+ * emotions.X or sexualStates.X references without direct moodAxes.X constraints),
+ * which affects how mood regime filtering should be interpreted.
+ *
+ * @param {Array} prerequisites - Expression prerequisites array
+ * @returns {{
+ *   hasDirectMoodConstraints: boolean,  // Uses moodAxes.X directly
+ *   hasPrototypeConstraints: boolean,   // Uses emotions.X or sexualStates.X
+ *   isPrototypeOnly: boolean,           // ONLY uses prototype refs (no direct mood)
+ *   prototypeRefs: Array<{prototypeId: string, type: string, varPath: string}>  // List of prototype references
+ * }}
+ */
+export const classifyPrerequisiteTypes = (prerequisites) => {
+  const result = {
+    hasDirectMoodConstraints: false,
+    hasPrototypeConstraints: false,
+    isPrototypeOnly: false,
+    prototypeRefs: [],
+  };
+
+  if (!Array.isArray(prerequisites) || prerequisites.length === 0) {
+    return result;
+  }
+
+  // Check for direct moodAxes.* constraints
+  const directConstraints = extractMoodConstraints(prerequisites, {
+    includeMoodAlias: true,
+    andOnly: false, // Check all constraints including OR blocks
+  });
+  result.hasDirectMoodConstraints = directConstraints.length > 0;
+
+  // Check for prototype references (emotions.*, sexualStates.*)
+  const prototypeRefs = [];
+  for (const prereq of prerequisites) {
+    if (prereq?.logic) {
+      const refs = extractPrototypeReferencesFromLogic(prereq.logic);
+      prototypeRefs.push(...refs);
+    }
+  }
+
+  // Deduplicate and sort for determinism
+  const seen = new Set();
+  const uniqueRefs = [];
+  for (const ref of prototypeRefs) {
+    const key = `${ref.type}:${ref.prototypeId}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueRefs.push(ref);
+    }
+  }
+
+  // Sort deterministically by type, then by prototypeId
+  uniqueRefs.sort((a, b) => {
+    const typeCompare = String(a.type).localeCompare(String(b.type));
+    if (typeCompare !== 0) return typeCompare;
+    return String(a.prototypeId).localeCompare(String(b.prototypeId));
+  });
+
+  result.prototypeRefs = uniqueRefs;
+  result.hasPrototypeConstraints = uniqueRefs.length > 0;
+
+  // Expression is "prototype-only" if it uses prototype refs but NO direct mood constraints
+  result.isPrototypeOnly =
+    result.hasPrototypeConstraints && !result.hasDirectMoodConstraints;
+
+  return result;
 };

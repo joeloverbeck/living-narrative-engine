@@ -70,6 +70,7 @@ async function initialize() {
         // Create report generator and modal for Monte Carlo report generation
         const reportGenerator = new MonteCarloReportGenerator({
           logger,
+          dataRegistry,
           prototypeConstraintAnalyzer,
           prototypeFitRankingService,
         });

@@ -201,6 +201,8 @@ describe('MonteCarloSimulator - Prototype Evaluation Behavior', () => {
     const expression = {
       id: 'test:prototype_gate_counts',
       prerequisites: [
+        { logic: { '>=': [{ var: 'moodAxes.valence' }, -100] } },
+        { logic: { '>=': [{ var: 'sexualAxes.sex_excitation' }, -100] } },
         { logic: { '>=': [{ var: 'emotions.joy' }, 0.2] } },
         { logic: { '>=': [{ var: 'sexualStates.aroused' }, 0.2] } },
       ],

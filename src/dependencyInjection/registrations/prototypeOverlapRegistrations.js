@@ -43,6 +43,10 @@ import { AxisGapReportSynthesizer } from '../../expressionDiagnostics/services/a
 import { CandidateAxisExtractor } from '../../expressionDiagnostics/services/axisGap/CandidateAxisExtractor.js';
 import { CandidateAxisValidator } from '../../expressionDiagnostics/services/axisGap/CandidateAxisValidator.js';
 
+// Optional Axis Analysis Services (Phase 2/3 enhancements)
+import { AxisPolarityAnalyzer } from '../../expressionDiagnostics/services/axisGap/AxisPolarityAnalyzer.js';
+import { PrototypeComplexityAnalyzer } from '../../expressionDiagnostics/services/axisGap/PrototypeComplexityAnalyzer.js';
+
 /**
  * Register Prototype Overlap Analysis services.
  *
@@ -378,6 +382,26 @@ export function registerPrototypeOverlapServices(registrar) {
       new CandidateAxisValidator(PROTOTYPE_OVERLAP_CONFIG, c.resolve(tokens.ILogger))
   );
 
+  // AxisPolarityAnalyzer: analyzes axis polarity distribution (Phase 2 enhancement)
+  registrar.singletonFactory(
+    diagnosticsTokens.IAxisPolarityAnalyzer,
+    (c) =>
+      new AxisPolarityAnalyzer({
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // PrototypeComplexityAnalyzer: analyzes prototype complexity and co-occurrence bundles (Phase 3 enhancement)
+  registrar.singletonFactory(
+    diagnosticsTokens.IPrototypeComplexityAnalyzer,
+    (c) =>
+      new PrototypeComplexityAnalyzer({
+        config: PROTOTYPE_OVERLAP_CONFIG,
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
   // AxisGapAnalyzer: orchestrator for axis gap detection (uses sub-services)
   registrar.singletonFactory(
     diagnosticsTokens.IAxisGapAnalyzer,
@@ -400,6 +424,12 @@ export function registerPrototypeOverlapServices(registrar) {
         ),
         candidateAxisValidator: c.resolve(
           diagnosticsTokens.ICandidateAxisValidator
+        ),
+        axisPolarityAnalyzer: c.resolve(
+          diagnosticsTokens.IAxisPolarityAnalyzer
+        ),
+        prototypeComplexityAnalyzer: c.resolve(
+          diagnosticsTokens.IPrototypeComplexityAnalyzer
         ),
         config: PROTOTYPE_OVERLAP_CONFIG,
         logger: c.resolve(tokens.ILogger),

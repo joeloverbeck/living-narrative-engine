@@ -406,8 +406,8 @@ describe('PrototypeConstraintAnalyzer', () => {
       expect(constraints.has('arousal')).toBe(true);
     });
 
-    it('should return empty map when prerequisites have no prototype refs', () => {
-      // Direct moodAxes patterns are NOT extracted anymore
+    it('should extract direct moodAxes constraints even without prototype refs', () => {
+      // Direct moodAxes.* constraints ARE extracted (takes precedence over prototype gates)
       const prerequisites = [
         {
           logic: {
@@ -418,8 +418,34 @@ describe('PrototypeConstraintAnalyzer', () => {
 
       const constraints = analyzer.extractAxisConstraints(prerequisites);
 
-      // No emotion/sexual prototype references, so no gates to extract
-      expect(constraints.size).toBe(0);
+      // Direct moodAxes.* patterns should be extracted
+      expect(constraints.size).toBe(1);
+      expect(constraints.has('threat')).toBe(true);
+      const threatConstraint = constraints.get('threat');
+      // Values are normalized to [-1, 1] range (10 / 100 = 0.1)
+      expect(threatConstraint.min).toBe(0.1);
+    });
+
+    it('should let direct moodAxes constraints take precedence over prototype gates', () => {
+      // Direct valence >= 60 should override prototype gate valence >= 35
+      const prerequisites = [
+        {
+          logic: {
+            and: [
+              { '>=': [{ var: 'moodAxes.valence' }, 60] },
+              { '>=': [{ var: 'emotions.flow' }, 0.5] },
+            ],
+          },
+        },
+      ];
+
+      const constraints = analyzer.extractAxisConstraints(prerequisites);
+
+      // Should have valence constraint
+      expect(constraints.has('valence')).toBe(true);
+      const valenceConstraint = constraints.get('valence');
+      // Direct constraint of 60 (normalized to 0.6) takes precedence over prototype gate's 35 (0.35)
+      expect(valenceConstraint.min).toBe(0.6);
     });
 
     it('should return empty map for empty prerequisites', () => {
