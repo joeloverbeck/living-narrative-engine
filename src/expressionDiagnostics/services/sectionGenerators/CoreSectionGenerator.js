@@ -3,7 +3,7 @@
  */
 
 import { buildSamplingCoverageConclusions } from '../samplingCoverageConclusions.js';
-import { evaluateConstraint } from '../../utils/moodRegimeUtils.js';
+import { evaluateConstraint, getNestedValue } from '../../utils/moodRegimeUtils.js';
 import {
   buildPopulationHash,
   buildPopulationPredicate,
@@ -132,9 +132,10 @@ class CoreSectionGenerator {
   /**
    * Generate the population summary block near the report header.
    * @param {object|null} populationSummary
+   * @param {object} [simulationResult] - Optional full simulation result for prototype-only metrics
    * @returns {string}
    */
-  generatePopulationSummary(populationSummary) {
+  generatePopulationSummary(populationSummary, simulationResult = null) {
     if (!populationSummary) {
       return '';
     }
@@ -167,7 +168,38 @@ class CoreSectionGenerator {
       ? `\n> **Note**: Stored contexts are capped at ${limitStr}, so sections labeled "Population: stored-*" may not match full-sample counts.\n`
       : '';
 
-    return `## Population Summary\n\n- **Total samples**: ${totalSampleStr} (in-regime ${inRegimeSampleStr}; ${this.#formattingService.formatPercentage(inRegimeSampleRate)})\n- **Stored contexts**: ${storedStr} of ${totalSampleStr} (in-regime ${storedInRegimeStr}; ${this.#formattingService.formatPercentage(storedInRegimeRate)}; limit ${limitStr})\n- **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.${limitNote}\n\n---\n`;
+    // Extract prototype-only expression metrics if available
+    const isPrototypeOnly = simulationResult?.isPrototypeOnlyExpression ?? false;
+    const moodRegimeSemantics = simulationResult?.moodRegimeSemantics ?? 'direct-mood-constraints';
+    const intensityPassRate = simulationResult?.intensityPassRate;
+    const intensityPassCount = simulationResult?.intensityPassCount;
+
+    // Build regime description based on expression type
+    let regimeDescription;
+    let intensitySection = '';
+
+    if (isPrototypeOnly) {
+      regimeDescription = 'Mood axis constraints derived from prototype gates (minimum activation thresholds). ' +
+        'See **Intensity Pass Rate** below for actual probability of meeting intensity thresholds.';
+
+      // Add intensity pass rate for prototype-only expressions
+      if (typeof intensityPassRate === 'number' && typeof intensityPassCount === 'number') {
+        const intensityPctStr = this.#formattingService.formatPercentage(intensityPassRate);
+        const intensityCountStr = this.#formattingService.formatCount(intensityPassCount);
+        intensitySection = `\n- **Intensity pass rate**: ${intensityPctStr} (${intensityCountStr} of ${inRegimeSampleStr} gate-passing contexts met intensity thresholds)`;
+      }
+    } else {
+      regimeDescription = 'Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.';
+    }
+
+    // Add note for prototype-only expressions explaining the semantic difference
+    const prototypeOnlyNote = isPrototypeOnly
+      ? `\n> **Note**: This expression uses prototype-based prerequisites (\`emotions.*\`, \`sexualStates.*\`) without direct \`moodAxes.*\` constraints. ` +
+        `The "mood regime" represents prototype gate thresholds (minimum activation), not the actual intensity requirements. ` +
+        `The **Intensity Pass Rate** metric shows what fraction of gate-passing contexts also satisfy the intensity thresholds.\n`
+      : '';
+
+    return `## Population Summary\n\n- **Total samples**: ${totalSampleStr} (in-regime ${inRegimeSampleStr}; ${this.#formattingService.formatPercentage(inRegimeSampleRate)})\n- **Stored contexts**: ${storedStr} of ${totalSampleStr} (in-regime ${storedInRegimeStr}; ${this.#formattingService.formatPercentage(storedInRegimeRate)}; limit ${limitStr})${intensitySection}\n- **Mood regime**: ${regimeDescription}${prototypeOnlyNote}${limitNote}\n\n---\n`;
   }
 
   /**
@@ -927,10 +959,9 @@ class CoreSectionGenerator {
     }
 
     return moodConstraints.every((constraint) => {
-      const value = this.#statisticalService.getNestedValue(
-        context,
-        constraint.varPath
-      );
+      // Use the canonical getNestedValue from moodRegimeUtils for consistency
+      // with MonteCarloSimulator's population hash calculation
+      const value = getNestedValue(context, constraint.varPath);
       return evaluateConstraint(
         value,
         constraint.operator,

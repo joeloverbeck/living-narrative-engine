@@ -6,8 +6,10 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import jsonLogic from 'json-logic-js';
 import {
+  classifyPrerequisiteTypes,
   evaluateConstraint,
-  extractMoodConstraints,
+  extractMergedMoodConstraints,
+  getNestedValue,
 } from '../utils/moodRegimeUtils.js';
 import {
   buildPopulationHash,
@@ -236,6 +238,9 @@ class MonteCarloSimulator {
   /** @type {object} */
   #variablePathValidator;
 
+  /** @type {object} */
+  #dataRegistry;
+
   /**
    * @param {object} deps
    * @param {object} deps.dataRegistry - IDataRegistry
@@ -294,6 +299,7 @@ class MonteCarloSimulator {
 
     this.#logger = logger;
     this.#randomStateGenerator = randomStateGenerator;
+    this.#dataRegistry = dataRegistry;
     if (contextBuilder !== undefined) {
       validateDependency(contextBuilder, 'IMonteCarloContextBuilder', logger, {
         requiredMethods: [
@@ -492,16 +498,23 @@ class MonteCarloSimulator {
       clauseTracking
     );
 
-    const moodConstraints = extractMoodConstraints(expression?.prerequisites, {
-      includeMoodAlias: true,
-      andOnly: true,
-    });
+    const moodConstraints = extractMergedMoodConstraints(
+      expression?.prerequisites,
+      this.#dataRegistry,
+      { includeMoodAlias: true, andOnly: true }
+    );
     const moodRegimeDefined = moodConstraints.length > 0;
+
+    // Classify prerequisite types to detect prototype-only expressions
+    const prereqTypes = classifyPrerequisiteTypes(expression?.prerequisites);
+    const isPrototypeOnlyExpression = prereqTypes.isPrototypeOnly;
+
     const gateCompatibility = this.#computeGateCompatibility(
       expression,
       moodConstraints
     );
     let inRegimeSampleCount = 0;
+    let intensityPassCount = 0; // Contexts where intensity >= threshold within regime
     const trackedGateAxes = gateClampRegimePlan.trackedGateAxes ?? [];
     const moodRegimeAxisHistograms =
       this.#contextBuilder.initializeMoodRegimeAxisHistograms(trackedGateAxes);
@@ -607,6 +620,17 @@ class MonteCarloSimulator {
               moodRegimeHistogramAxes,
               context
             );
+          }
+          // Track intensity pass rate for prototype-only expressions
+          if (isPrototypeOnlyExpression) {
+            const intensityResult = this.#evaluatePrototypeIntensities(
+              expression,
+              context,
+              prereqTypes.prototypeRefs
+            );
+            if (intensityResult.allIntensitiesPass) {
+              intensityPassCount++;
+            }
           }
         }
 
@@ -801,6 +825,17 @@ class MonteCarloSimulator {
       witnessAnalysis,
       unseededVarWarnings,
       prototypeEvaluationSummary,
+      // Prototype-only expression metrics (for expressions using emotions.*/sexualStates.*)
+      isPrototypeOnlyExpression,
+      intensityPassRate: isPrototypeOnlyExpression
+        ? inRegimeSampleCount > 0
+          ? intensityPassCount / inRegimeSampleCount
+          : 0
+        : null,
+      intensityPassCount: isPrototypeOnlyExpression ? intensityPassCount : null,
+      moodRegimeSemantics: isPrototypeOnlyExpression
+        ? 'prototype-gate-derived'
+        : 'direct-mood-constraints',
       // Stored contexts for sensitivity analysis (null if not enabled)
       storedContexts,
       populationSummary: {
@@ -994,14 +1029,14 @@ class MonteCarloSimulator {
 
   /**
    * Get nested value from object using dot notation.
-   *
+   * Delegates to the canonical implementation in moodRegimeUtils.
    * @private
    * @param {object} obj
    * @param {string} path
    * @returns {*}
    */
   #getNestedValue(obj, path) {
-    return path.split('.').reduce((o, k) => o?.[k], obj);
+    return getNestedValue(obj, path);
   }
 
   /**
@@ -1057,6 +1092,121 @@ class MonteCarloSimulator {
       const value = this.#getNestedValue(context, constraint.varPath);
       return evaluateConstraint(value, constraint.operator, constraint.threshold);
     });
+  }
+
+  /**
+   * Evaluates prototype intensity thresholds for prototype-only expressions.
+   * Extracts intensity comparisons from prerequisites (e.g., emotions.flow >= 0.62)
+   * and evaluates them against the context's computed emotion/sexual state values.
+   *
+   * @private
+   * @param {object} expression - The expression with prerequisites
+   * @param {object} context - Built context with computed emotions/sexualStates
+   * @param {Array<{prototypeId: string, type: string, varPath: string}>} prototypeRefs - Prototype references
+   * @returns {{ allIntensitiesPass: boolean, details: Array<{varPath: string, operator: string, threshold: number, actualValue: number, passed: boolean}> }}
+   */
+  #evaluatePrototypeIntensities(expression, context, prototypeRefs) {
+    const details = [];
+
+    if (!expression?.prerequisites || !Array.isArray(expression.prerequisites)) {
+      return { allIntensitiesPass: true, details };
+    }
+
+    // Extract intensity conditions from prerequisites
+    // Look for patterns like: {">=" : [{"var": "emotions.flow"}, 0.62]}
+    const intensityConditions = [];
+    const comparisonOps = ['>=', '<=', '>', '<', '=='];
+
+    const extractFromLogic = (logic) => {
+      if (!logic || typeof logic !== 'object') return;
+
+      for (const op of comparisonOps) {
+        if (logic[op] && Array.isArray(logic[op])) {
+          const [left, right] = logic[op];
+
+          // Pattern: {"op": [{"var": "emotions.X"}, threshold]}
+          if (left?.var && typeof right === 'number') {
+            const varPath = left.var;
+            // Check if this is a prototype reference (emotions.*, sexualStates.*, previous*)
+            if (
+              varPath.startsWith('emotions.') ||
+              varPath.startsWith('sexualStates.') ||
+              varPath.startsWith('previousEmotions.') ||
+              varPath.startsWith('previousSexualStates.')
+            ) {
+              intensityConditions.push({
+                varPath,
+                operator: op,
+                threshold: right,
+              });
+            }
+          }
+
+          // Pattern: {"op": [threshold, {"var": "emotions.X"}]}
+          if (right?.var && typeof left === 'number') {
+            const varPath = right.var;
+            if (
+              varPath.startsWith('emotions.') ||
+              varPath.startsWith('sexualStates.') ||
+              varPath.startsWith('previousEmotions.') ||
+              varPath.startsWith('previousSexualStates.')
+            ) {
+              // Flip operator for reversed operand order
+              const flippedOp =
+                op === '>=' ? '<=' : op === '<=' ? '>=' : op === '>' ? '<' : op === '<' ? '>' : op;
+              intensityConditions.push({
+                varPath,
+                operator: flippedOp,
+                threshold: left,
+              });
+            }
+          }
+        }
+      }
+
+      // Recurse into and/or blocks
+      if (logic.and && Array.isArray(logic.and)) {
+        for (const clause of logic.and) {
+          extractFromLogic(clause);
+        }
+      }
+      if (logic.or && Array.isArray(logic.or)) {
+        for (const clause of logic.or) {
+          extractFromLogic(clause);
+        }
+      }
+    };
+
+    for (const prereq of expression.prerequisites) {
+      if (prereq?.logic) {
+        extractFromLogic(prereq.logic);
+      }
+    }
+
+    // Evaluate each intensity condition against the context
+    let allPass = true;
+    for (const condition of intensityConditions) {
+      const actualValue = this.#getNestedValue(context, condition.varPath);
+      const passed = evaluateConstraint(
+        actualValue,
+        condition.operator,
+        condition.threshold
+      );
+
+      details.push({
+        varPath: condition.varPath,
+        operator: condition.operator,
+        threshold: condition.threshold,
+        actualValue: typeof actualValue === 'number' ? actualValue : null,
+        passed,
+      });
+
+      if (!passed) {
+        allPass = false;
+      }
+    }
+
+    return { allIntensitiesPass: allPass, details };
   }
 
   /**

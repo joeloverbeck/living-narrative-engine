@@ -10,6 +10,7 @@
 import GateConstraint from '../models/GateConstraint.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { extractConstraintsFromPrototypeGates } from '../utils/prototypeGateUtils.js';
+import { extractMoodConstraints } from '../utils/moodRegimeUtils.js';
 
 /**
  * @typedef {object} PrototypeAnalysisResult
@@ -28,6 +29,7 @@ import { extractConstraintsFromPrototypeGates } from '../utils/prototypeGateUtil
  * @property {BindingAxisInfo[]} axisAnalysis - Full analysis of all axes
  * @property {number} sumAbsWeights - Sum of absolute weights
  * @property {number} requiredRawSum - Required raw sum for threshold
+ * @property {boolean} hasImpossibleConstraints - Whether any axis has conflicting constraints (min > max)
  * @property {string} explanation - Human-readable explanation
  */
 
@@ -42,6 +44,7 @@ import { extractConstraintsFromPrototypeGates } from '../utils/prototypeGateUtil
  * @property {number} optimalValue - Value that maximizes contribution
  * @property {number} contribution - Contribution to raw sum
  * @property {boolean} isBinding - Whether constraint limits optimal value
+ * @property {boolean} isImpossible - Whether constraintMin > constraintMax (conflicting constraints from multiple prototypes)
  * @property {string} conflictType - 'positive_weight_low_max' | 'negative_weight_high_min' | null
  * @property {number} lostRawSum - Raw lost magnitude from default bounds
  * @property {number|null} lostIntensity - Lost magnitude normalized by sumAbsWeights
@@ -147,6 +150,9 @@ class PrototypeConstraintAnalyzer {
     const maxAchievable = Math.min(1.0, Math.max(0, maxRawSum / sumAbsWeights));
     const minAchievable = 0;
 
+    // Check for impossible constraints (min > max from conflicting prototype gates)
+    const hasImpossibleConstraints = axisAnalysis.some((a) => a.isImpossible);
+
     // Identify binding axes
     const bindingAxes = axisAnalysis.filter((a) => a.isBinding);
 
@@ -194,6 +200,7 @@ class PrototypeConstraintAnalyzer {
       axisAnalysis,
       sumAbsWeights,
       requiredRawSum: threshold * sumAbsWeights,
+      hasImpossibleConstraints,
       explanation,
     };
   }
@@ -215,7 +222,33 @@ class PrototypeConstraintAnalyzer {
       return constraints;
     }
 
-    // Extract constraints from prototype gates rather than direct moodAxes.* patterns
+    // Track which axes have direct constraints (they take precedence)
+    const directConstraintAxes = new Set();
+
+    // Step 1: Extract direct moodAxes.* constraints from prerequisites
+    // Direct constraints take precedence over prototype-gate derived constraints
+    const directConstraints = extractMoodConstraints(prerequisites, {
+      includeMoodAlias: true,
+      andOnly: true,
+    });
+
+    for (const constraint of directConstraints) {
+      const axis = this.#getAxisFromVarPath(constraint.varPath);
+      if (!axis) {
+        continue;
+      }
+      directConstraintAxes.add(axis);
+      this.#applyConstraint(
+        constraints,
+        axis,
+        constraint.operator,
+        constraint.threshold,
+        constraint
+      );
+    }
+
+    // Step 2: Extract constraints from prototype gates
+    // These fill in gaps for axes not covered by direct constraints
     const gateConstraints = extractConstraintsFromPrototypeGates(
       prerequisites,
       this.#dataRegistry,
@@ -227,13 +260,16 @@ class PrototypeConstraintAnalyzer {
       if (!axis) {
         continue;
       }
-      this.#applyConstraint(
-        constraints,
-        axis,
-        constraint.operator,
-        constraint.threshold,
-        constraint
-      );
+      // Only apply gate constraints for axes without direct constraints
+      if (!directConstraintAxes.has(axis)) {
+        this.#applyConstraint(
+          constraints,
+          axis,
+          constraint.operator,
+          constraint.threshold,
+          constraint
+        );
+      }
     }
 
     return constraints;
@@ -265,15 +301,18 @@ class PrototypeConstraintAnalyzer {
       let contribution;
       let isBinding = false;
       let conflictType = null;
+      // Detect impossible constraints where min > max (from conflicting prototype gates)
+      const isImpossible = constraintMin > constraintMax;
 
       if (weight > 0) {
         // Positive weight: want max axis value
         // Optimal is unbounded max (1.0 for mood axes)
         const unbound = defaultMax;
-        optimalValue = constraintMax;
+        // For impossible constraints, use default bounds to avoid artificially low theoretical max
+        optimalValue = isImpossible ? defaultMax : constraintMax;
         contribution = weight * optimalValue;
 
-        if (constraintMax < unbound) {
+        if (!isImpossible && constraintMax < unbound) {
           isBinding = true;
           conflictType = 'positive_weight_low_max';
         }
@@ -281,13 +320,14 @@ class PrototypeConstraintAnalyzer {
         // Negative weight: want min axis value
         // Optimal is unbounded min (-1.0 for mood axes)
         const unbound = defaultMin;
-        optimalValue = constraintMin;
+        // For impossible constraints, use default bounds to avoid artificially low theoretical max
+        optimalValue = isImpossible ? defaultMin : constraintMin;
         // For negative weight, contribution = weight * optimalValue
         // To maximize, we want the most negative axis value
         contribution = weight * optimalValue;
         // Since weight is negative and we're using min, contribution is positive
 
-        if (constraintMin > unbound) {
+        if (!isImpossible && constraintMin > unbound) {
           isBinding = true;
           conflictType = 'negative_weight_high_min';
         }
@@ -316,6 +356,7 @@ class PrototypeConstraintAnalyzer {
         optimalValue,
         contribution,
         isBinding,
+        isImpossible,
         conflictType,
         lostRawSum,
         lostIntensity,

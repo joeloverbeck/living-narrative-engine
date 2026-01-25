@@ -256,6 +256,171 @@ describe('AxisGapRecommendationBuilder', () => {
     });
   });
 
+  describe('generate - LOW priority: Diffuse residual variance', () => {
+    it('should generate LOW INVESTIGATE when high residual but no corroboration', () => {
+      // High residual but no significant components and no other signals
+      const pca = {
+        residualVarianceRatio: 0.25, // Above 0.15 threshold
+        additionalSignificantComponents: 0, // No concentrated dimensions
+        topLoadingPrototypes: [],
+        reconstructionErrors: [
+          { prototypeId: 'worst1', error: 0.3 },
+          { prototypeId: 'worst2', error: 0.25 },
+          { prototypeId: 'worst3', error: 0.2 },
+        ],
+        residualEigenvector: { axis1: 0.8, axis2: -0.5 },
+      };
+
+      const result = builder.generate(pca, [], [], []);
+
+      expect(result.length).toBe(1);
+      expect(result[0].priority).toBe('low');
+      expect(result[0].type).toBe('INVESTIGATE');
+      expect(result[0].description).toContain('diffuse');
+      expect(result[0].description).toContain('broken-stick');
+    });
+
+    it('should NOT generate diffuse_residual when pcaRequireCorroboration is false', () => {
+      const customBuilder = new AxisGapRecommendationBuilder({
+        pcaRequireCorroboration: false,
+      });
+
+      const pca = {
+        residualVarianceRatio: 0.25, // Above threshold
+        additionalSignificantComponents: 0,
+        topLoadingPrototypes: [{ prototypeId: 'p1', loading: 0.5 }],
+        reconstructionErrors: [{ prototypeId: 'worst1', error: 0.3 }],
+      };
+
+      const result = customBuilder.generate(pca, [], [], []);
+
+      // When corroboration not required, PCA alone triggers MEDIUM INVESTIGATE
+      // Should NOT generate the diffuse variance recommendation
+      expect(result.length).toBe(1);
+      expect(result[0].priority).toBe('medium');
+      expect(result[0].type).toBe('INVESTIGATE');
+      expect(result[0].description).not.toContain('diffuse');
+    });
+
+    it('should include worst-fitting prototypes in diffuse_residual recommendation', () => {
+      const pca = {
+        residualVarianceRatio: 0.2,
+        additionalSignificantComponents: 0,
+        topLoadingPrototypes: [],
+        reconstructionErrors: [
+          { prototypeId: 'worst1', error: 0.3 },
+          { prototypeId: 'worst2', error: 0.25 },
+          { prototypeId: 'worst3', error: 0.2 },
+        ],
+        residualEigenvector: { axis_a: 0.9, axis_b: -0.7, axis_c: 0.5 },
+      };
+
+      const result = builder.generate(pca, [], [], []);
+
+      expect(result.length).toBe(1);
+      expect(result[0].affectedPrototypes).toContain('worst1');
+      expect(result[0].affectedPrototypes).toContain('worst2');
+      expect(result[0].affectedPrototypes).toContain('worst3');
+      expect(result[0].evidence).toContainEqual(expect.stringContaining('Worst-fitting'));
+      expect(result[0].evidence).toContainEqual(expect.stringContaining('Residual eigenvector'));
+    });
+
+    it('should NOT generate diffuse_residual when other signals corroborate', () => {
+      const pca = {
+        residualVarianceRatio: 0.25,
+        additionalSignificantComponents: 0,
+        topLoadingPrototypes: [],
+        reconstructionErrors: [{ prototypeId: 'worst1', error: 0.3 }],
+      };
+
+      // Adding a hub signal = hasOtherSignals is true
+      const result = builder.generate(pca, [createHub()], [], []);
+
+      // Should NOT generate diffuse variance recommendation because hubs corroborate
+      const diffuseRec = result.find((r) => r.description.includes('diffuse'));
+      expect(diffuseRec).toBeUndefined();
+    });
+
+    it('should NOT generate diffuse_residual when significant components found', () => {
+      const pca = {
+        residualVarianceRatio: 0.25,
+        additionalSignificantComponents: 1, // Significant component found
+        topLoadingPrototypes: [{ prototypeId: 'p1', loading: 0.9 }],
+        reconstructionErrors: [{ prototypeId: 'worst1', error: 0.3 }],
+      };
+
+      const result = builder.generate(pca, [], [], []);
+
+      // Should generate normal PCA recommendation instead
+      expect(result.length).toBe(1);
+      expect(result[0].priority).toBe('medium');
+      expect(result[0].description).not.toContain('diffuse');
+    });
+
+    it('should NOT generate diffuse_residual when residual variance below threshold', () => {
+      const pca = {
+        residualVarianceRatio: 0.1, // Below 0.15 threshold
+        additionalSignificantComponents: 0,
+        topLoadingPrototypes: [],
+        reconstructionErrors: [{ prototypeId: 'worst1', error: 0.3 }],
+      };
+
+      const result = builder.generate(pca, [], [], []);
+
+      // No recommendation at all - residual variance not high enough
+      expect(result.length).toBe(0);
+    });
+
+    it('should handle empty reconstructionErrors gracefully', () => {
+      const pca = {
+        residualVarianceRatio: 0.2,
+        additionalSignificantComponents: 0,
+        topLoadingPrototypes: [],
+        reconstructionErrors: [],
+        residualEigenvector: {},
+      };
+
+      const result = builder.generate(pca, [], [], []);
+
+      expect(result.length).toBe(1);
+      expect(result[0].affectedPrototypes).toEqual([]);
+      expect(result[0].evidence).toContainEqual(expect.stringContaining('No worst-fitting'));
+      expect(result[0].evidence).toContainEqual(expect.stringContaining('No residual eigenvector'));
+    });
+
+    it('should handle undefined reconstructionErrors and residualEigenvector', () => {
+      const pca = {
+        residualVarianceRatio: 0.2,
+        additionalSignificantComponents: 0,
+        topLoadingPrototypes: [],
+        // reconstructionErrors and residualEigenvector are undefined
+      };
+
+      const result = builder.generate(pca, [], [], []);
+
+      expect(result.length).toBe(1);
+      expect(result[0].affectedPrototypes).toEqual([]);
+      expect(result[0].evidence).toContainEqual(expect.stringContaining('No worst-fitting'));
+    });
+
+    it('should include threshold value in evidence', () => {
+      const customBuilder = new AxisGapRecommendationBuilder({
+        pcaResidualVarianceThreshold: 0.12,
+      });
+
+      const pca = {
+        residualVarianceRatio: 0.15, // Above 0.12 threshold
+        additionalSignificantComponents: 0,
+        topLoadingPrototypes: [],
+      };
+
+      const result = customBuilder.generate(pca, [], [], []);
+
+      expect(result.length).toBe(1);
+      expect(result[0].evidence).toContainEqual(expect.stringContaining('Threshold: 12.0%'));
+    });
+  });
+
   describe('generate - PCA residual variance threshold', () => {
     it('should use custom threshold', () => {
       const customBuilder = new AxisGapRecommendationBuilder({

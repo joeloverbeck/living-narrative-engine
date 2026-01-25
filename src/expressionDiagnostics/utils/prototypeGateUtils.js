@@ -8,6 +8,7 @@
  */
 
 import GateConstraint from '../models/GateConstraint.js';
+import { getAxisCategory } from '../../constants/prototypeAxisConstants.js';
 
 /**
  * @typedef {object} PrototypeReference
@@ -145,8 +146,12 @@ export const convertGateToMoodConstraint = (gateConstraint) => {
   // This matches the format expected by moodRegimeUtils
   const threshold = value * 100;
 
+  // Determine the correct prefix based on axis category
+  const category = getAxisCategory(axis);
+  const prefix = category === 'sexual' ? 'sexualAxes' : 'moodAxes';
+
   return {
-    varPath: `moodAxes.${axis}`,
+    varPath: `${prefix}.${axis}`,
     operator,
     threshold,
   };
@@ -178,10 +183,9 @@ export const extractConstraintsFromPrototypeGates = (
     return [];
   }
 
-  const constraints = [];
-  const axisConstraintMap = new Map();
+  // Step 1: Collect ALL constraints first (no deduplication yet)
+  const allConstraints = [];
 
-  // Extract all prototype references from all prerequisites
   for (const prereq of prerequisites) {
     if (!prereq?.logic) continue;
 
@@ -194,54 +198,7 @@ export const extractConstraintsFromPrototypeGates = (
         try {
           const gateConstraint = GateConstraint.parse(gateStr);
           const moodConstraint = convertGateToMoodConstraint(gateConstraint);
-
-          if (deduplicateByAxis) {
-            // For deduplication, keep the most restrictive constraint per axis
-            const axis = gateConstraint.axis;
-            const existing = axisConstraintMap.get(axis);
-
-            if (!existing) {
-              axisConstraintMap.set(axis, moodConstraint);
-            } else {
-              // Merge: for >= operators, keep higher threshold
-              // for <= operators, keep lower threshold
-              if (
-                moodConstraint.operator === '>=' ||
-                moodConstraint.operator === '>'
-              ) {
-                if (
-                  existing.operator === '>=' ||
-                  existing.operator === '>'
-                ) {
-                  if (moodConstraint.threshold > existing.threshold) {
-                    axisConstraintMap.set(axis, moodConstraint);
-                  }
-                } else {
-                  // Different operators - keep both by not deduplicating
-                  constraints.push(moodConstraint);
-                }
-              } else if (
-                moodConstraint.operator === '<=' ||
-                moodConstraint.operator === '<'
-              ) {
-                if (
-                  existing.operator === '<=' ||
-                  existing.operator === '<'
-                ) {
-                  if (moodConstraint.threshold < existing.threshold) {
-                    axisConstraintMap.set(axis, moodConstraint);
-                  }
-                } else {
-                  constraints.push(moodConstraint);
-                }
-              } else {
-                // == operator - add as separate constraint
-                constraints.push(moodConstraint);
-              }
-            }
-          } else {
-            constraints.push(moodConstraint);
-          }
+          allConstraints.push(moodConstraint);
         } catch {
           // Skip unparseable gates
           continue;
@@ -250,14 +207,118 @@ export const extractConstraintsFromPrototypeGates = (
     }
   }
 
-  // Add deduplicated constraints
-  if (deduplicateByAxis) {
-    for (const constraint of axisConstraintMap.values()) {
-      constraints.push(constraint);
+  if (!deduplicateByAxis) {
+    // No deduplication - just sort and return all constraints
+    return allConstraints.sort((a, b) => {
+      const pathCompare = String(a.varPath).localeCompare(String(b.varPath));
+      if (pathCompare !== 0) return pathCompare;
+      const opCompare = String(a.operator).localeCompare(String(b.operator));
+      if (opCompare !== 0) return opCompare;
+      return Number(a.threshold) - Number(b.threshold);
+    });
+  }
+
+  // Step 2: Group constraints by axis
+  // Structure: Map<axis, { ge: constraint[], le: constraint[], eq: constraint[] }>
+  const axisBuckets = new Map();
+
+  for (const constraint of allConstraints) {
+    // Extract axis from varPath (e.g., 'moodAxes.arousal' -> 'arousal', 'sexualAxes.sex_excitation' -> 'sex_excitation')
+    const axis = constraint.varPath
+      .replace('moodAxes.', '')
+      .replace('sexualAxes.', '');
+
+    if (!axisBuckets.has(axis)) {
+      axisBuckets.set(axis, { ge: [], le: [], eq: [] });
+    }
+
+    const bucket = axisBuckets.get(axis);
+
+    if (constraint.operator === '>=' || constraint.operator === '>') {
+      bucket.ge.push(constraint);
+    } else if (constraint.operator === '<=' || constraint.operator === '<') {
+      bucket.le.push(constraint);
+    } else {
+      // == operator
+      bucket.eq.push(constraint);
     }
   }
 
-  return constraints;
+  // Step 3: For each axis, keep most restrictive constraint per operator type
+  const deduplicatedConstraints = [];
+
+  // Sort axis keys for deterministic iteration
+  const sortedAxes = [...axisBuckets.keys()].sort();
+
+  for (const axis of sortedAxes) {
+    const bucket = axisBuckets.get(axis);
+
+    // For >= constraints, keep the one with highest threshold (most restrictive)
+    if (bucket.ge.length > 0) {
+      const mostRestrictiveGe = bucket.ge.reduce((best, current) =>
+        current.threshold > best.threshold ? current : best
+      );
+      deduplicatedConstraints.push(mostRestrictiveGe);
+    }
+
+    // For <= constraints, keep the one with lowest threshold (most restrictive)
+    if (bucket.le.length > 0) {
+      const mostRestrictiveLe = bucket.le.reduce((best, current) =>
+        current.threshold < best.threshold ? current : best
+      );
+      deduplicatedConstraints.push(mostRestrictiveLe);
+    }
+
+    // Keep all == constraints (they're typically unique)
+    for (const eqConstraint of bucket.eq) {
+      deduplicatedConstraints.push(eqConstraint);
+    }
+  }
+
+  // Step 4: Sort constraints deterministically to ensure hash consistency
+  return deduplicatedConstraints.sort((a, b) => {
+    const pathCompare = String(a.varPath).localeCompare(String(b.varPath));
+    if (pathCompare !== 0) return pathCompare;
+    const opCompare = String(a.operator).localeCompare(String(b.operator));
+    if (opCompare !== 0) return opCompare;
+    return Number(a.threshold) - Number(b.threshold);
+  });
+};
+
+/**
+ * Extract all unique axis names referenced in gates across all prototypes.
+ *
+ * This is used to detect weight-gate mismatches: axes that are used in
+ * prototype weights but never referenced in any gates.
+ *
+ * @param {Array<{id: string, type: 'emotion'|'sexual'}>} prototypes - Array of prototype info
+ * @param {object} dataRegistry - Data registry for prototype lookups
+ * @returns {Set<string>} Set of unique axis names found in gates
+ */
+export const extractAllGateAxes = (prototypes, dataRegistry) => {
+  const gateAxes = new Set();
+
+  if (!Array.isArray(prototypes) || !dataRegistry) {
+    return gateAxes;
+  }
+
+  for (const proto of prototypes) {
+    if (!proto?.id || !proto?.type) continue;
+
+    const gates = getPrototypeGates(proto.id, proto.type, dataRegistry);
+
+    for (const gateStr of gates) {
+      try {
+        const gateConstraint = GateConstraint.parse(gateStr);
+        gateAxes.add(gateConstraint.axis);
+      } catch {
+        // Skip unparseable gates
+        continue;
+      }
+    }
+  }
+
+  return gateAxes;
 };
 
 /**

@@ -240,6 +240,70 @@ export class AxisGapRecommendationBuilder {
       );
     }
 
+    // LOW priority: High residual variance without corroboration
+    // When pcaRequireCorroboration is true, PCA triggers ONLY if corroborated.
+    // This case captures high residual that broken-stick found no concentrated dimensions for,
+    // and no other signals corroborate - suggesting diffuse noise rather than a hidden axis.
+    const hasHighResidualWithoutCorroboration =
+      this.#config.pcaRequireCorroboration &&
+      hasHighResidual &&
+      !hasSignificantComponents &&
+      !hasOtherSignals;
+
+    if (hasHighResidualWithoutCorroboration) {
+      // Use reconstructionErrors (actual property from PCAAnalysisService)
+      const reconstructionErrors = pcaResult.reconstructionErrors ?? [];
+      const worstFitting = reconstructionErrors
+        .map((e) => (typeof e === 'string' ? e : e.prototypeId ?? ''))
+        .filter((id) => id.length > 0);
+
+      // Extract top axes from residualEigenvector (sorted by absolute weight)
+      const residualEigenvector = pcaResult.residualEigenvector ?? {};
+      const residualTopAxes = Object.entries(residualEigenvector)
+        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+        .slice(0, 5)
+        .map(([axis]) => axis);
+
+      // Build evidence array
+      const evidence = [
+        `Residual variance: ${(pcaResult.residualVarianceRatio * 100).toFixed(1)}%`,
+        `Threshold: ${(this.#config.pcaResidualVarianceThreshold * 100).toFixed(1)}%`,
+        `Additional significant components (broken-stick): ${pcaResult.additionalSignificantComponents}`,
+        worstFitting.length > 0
+          ? `Worst-fitting prototypes: ${worstFitting.slice(0, 5).join(', ')}`
+          : 'No worst-fitting prototypes identified',
+        residualTopAxes.length > 0
+          ? `Residual eigenvector top axes: ${residualTopAxes.slice(0, 5).join(', ')}`
+          : 'No residual eigenvector data available',
+      ];
+
+      // Add excluded-axis reliance warnings for prototypes that rely heavily on sparse axes
+      const prototypesRelyingOnExcluded = reconstructionErrors.filter(
+        (e) => e && typeof e === 'object' && e.reliesOnExcludedAxes === true
+      );
+      for (const entry of prototypesRelyingOnExcluded) {
+        const reliancePct = ((entry.excludedAxisReliance ?? 0) * 100).toFixed(0);
+        evidence.push(
+          `⚠️ ${entry.prototypeId} relies ${reliancePct}% on excluded sparse axes (consider adjusting pcaMinAxisUsageRatio)`
+        );
+      }
+
+      evidence.push(
+        'Suggestion: Review worst-fitting prototypes for potential refinement. Consider whether these represent legitimate outliers or candidates for axis adjustment.'
+      );
+
+      recommendations.push(
+        this.buildRecommendation({
+          priority: 'low',
+          type: 'INVESTIGATE',
+          description:
+            'Residual variance exceeds threshold but broken-stick analysis found no concentrated unexplained dimensions. This suggests variance is diffuse (noise or idiosyncratic differences) rather than a discoverable hidden axis.',
+          affectedPrototypes: worstFitting.slice(0, 5),
+          evidence,
+        })
+      );
+    }
+
     // MEDIUM priority: Single signal - Hub alone
     if (hasHubs && !hasGaps && !pcaTriggered) {
       for (const hub of hubs) {

@@ -56,7 +56,35 @@
 
       <!-- Axis Gap Analysis Panel (hidden by default) -->
       <section id="axis-gap-panel" class="panel axis-gap-panel" hidden>
-        <h2>Axis Space Analysis</h2>
+        <h2>Axis Space Analysis <a href="reports/axis-space-analysis.md" class="technical-report-link" target="_blank">[Technical Report]</a></h2>
+
+        <!-- Model Integrity Status Panel -->
+        <div id="integrity-panel" class="integrity-panel">
+          <h4>Model Integrity Status</h4>
+          <div class="integrity-grid">
+            <div class="integrity-item">
+              <span id="integrity-axis-registry-status" class="integrity-status pending">⏳</span>
+              <span class="integrity-label">Axis Registry</span>
+              <span class="integrity-help" title="All weight keys exist in the centralized axis registry">(?)</span>
+            </div>
+            <div class="integrity-item">
+              <span id="integrity-schema-status" class="integrity-status pending">⏳</span>
+              <span class="integrity-label">Schema Validation</span>
+              <span class="integrity-help" title="All prototypes passed AJV schema validation">(?)</span>
+            </div>
+            <div class="integrity-item">
+              <span id="integrity-weight-range-status" class="integrity-status pending">⏳</span>
+              <span class="integrity-label">Weight Ranges</span>
+              <span class="integrity-help" title="All weights are within [-1, 1] range">(?)</span>
+            </div>
+            <div class="integrity-item">
+              <span id="integrity-no-duplicates-status" class="integrity-status pending">⏳</span>
+              <span class="integrity-label">No Duplicates</span>
+              <span class="integrity-help" title="No duplicate prototype IDs or aliases">(?)</span>
+            </div>
+          </div>
+          <p id="integrity-summary" class="integrity-summary">Waiting for analysis...</p>
+        </div>
 
         <div class="axis-gap-summary">
           <div class="summary-item">
@@ -189,6 +217,9 @@
             <span class="help-text" title="Number of principal components needed to explain 90% of total variance. Compare with current axis count to gauge dimensionality adequacy.">(?)</span>
           </div>
           <div id="pca-dimensions-list" class="dimensions-list"></div>
+          <div id="pca-excluded-axes-list" class="excluded-axes-section" style="display: none;"></div>
+          <div id="pca-unused-axes-list" class="unused-axes-section" style="display: none;"></div>
+          <div id="pca-unused-in-gates-list" class="unused-in-gates-section" style="display: none;"></div>
           <div id="pca-top-loading" class="top-loading-list"></div>
           <div id="poorly-fitting-prototypes" class="poorly-fitting-section">
             <h4>Poorly Fitting Prototypes</h4>
@@ -230,6 +261,24 @@
             Sign tensions do not contribute to confidence scoring or recommendations.
           </p>
           <ul id="sign-tension-list" class="sign-tension-list metadata-list"></ul>
+        </div>
+
+        <div class="polarity-analysis-section">
+          <h3>Axis Polarity Coverage</h3>
+          <p class="section-description">
+            Identifies axes with imbalanced positive/negative weight distributions.
+            An axis dominated by one polarity suggests missing prototype coverage for the opposite direction.
+          </p>
+          <ul id="polarity-analysis-list" class="polarity-analysis-list"></ul>
+        </div>
+
+        <div class="complexity-analysis-section">
+          <h3>Prototype Complexity Analysis</h3>
+          <p class="section-description">
+            Analyzes the distribution of active axes across prototypes and identifies
+            frequently co-occurring axis bundles that may suggest composite concepts.
+          </p>
+          <div id="complexity-analysis-container" class="complexity-analysis-container"></div>
         </div>
 
         <div class="axis-recommendations">

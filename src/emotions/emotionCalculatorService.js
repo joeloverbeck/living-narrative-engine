@@ -27,7 +27,7 @@ import { DEFAULT_AFFECT_TRAITS } from '../constants/moodAffectConstants.js';
  * @typedef {object} SexualState
  * @property {number} sex_excitation - Sexual excitation level [0..100]
  * @property {number} sex_inhibition - Sexual inhibition level [0..100]
- * @property {number} baseline_libido - Baseline libido [0..100]
+ * @property {number} baseline_libido - Baseline libido [-50..50]
  */
 
 /**

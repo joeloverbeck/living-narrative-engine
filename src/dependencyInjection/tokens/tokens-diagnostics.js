@@ -130,6 +130,10 @@ export const diagnosticsTokens = freeze({
   // Candidate Axis Validation Services
   ICandidateAxisExtractor: 'ICandidateAxisExtractor',
   ICandidateAxisValidator: 'ICandidateAxisValidator',
+
+  // Optional Axis Analysis Services (Phase 2/3 enhancements)
+  IAxisPolarityAnalyzer: 'IAxisPolarityAnalyzer',
+  IPrototypeComplexityAnalyzer: 'IPrototypeComplexityAnalyzer',
 });
 
 export default diagnosticsTokens;

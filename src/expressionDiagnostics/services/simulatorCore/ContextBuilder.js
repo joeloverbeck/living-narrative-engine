@@ -156,12 +156,14 @@ class ContextBuilder {
     const topLevel = new Set([
       'mood',
       'moodAxes',
+      'sexualAxes',
       'emotions',
       'sexualStates',
       'sexualArousal',
       'previousEmotions',
       'previousSexualStates',
       'previousMoodAxes',
+      'previousSexualAxes',
       'previousSexualArousal',
       'affectTraits',
     ]);
@@ -174,6 +176,8 @@ class ContextBuilder {
       mood: moodAxisSet,
       moodAxes: new Set(moodAxisSet),
       previousMoodAxes: new Set(moodAxisSet),
+      sexualAxes: new Set(SEXUAL_AXIS_NAMES),
+      previousSexualAxes: new Set(SEXUAL_AXIS_NAMES),
     };
 
     nestedKeys.affectTraits = new Set(AFFECT_TRAITS);

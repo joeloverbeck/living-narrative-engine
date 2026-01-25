@@ -435,6 +435,7 @@ export function registerRenderers(registrar, logger) {
     (c) =>
       new MonteCarloReportGenerator({
         logger: c.resolve(tokens.ILogger),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
         prototypeConstraintAnalyzer: c.resolve(
           diagnosticsTokens.IPrototypeConstraintAnalyzer
         ),

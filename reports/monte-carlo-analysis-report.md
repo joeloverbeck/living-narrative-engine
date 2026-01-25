@@ -1,9 +1,9 @@
 # Monte Carlo Analysis Report
 
-**Expression**: admiration_swell
-**Generated**: 2026-01-24T22:45:18.601Z
+**Expression**: comforted_vulnerability
+**Generated**: 2026-01-25T17:00:09.995Z
 **Distribution**: uniform
-**Sample Size**: 10000
+**Sample Size**: 100000
 **Sampling Mode**: static - Prototype-gated sampling (emotions derived from mood axes; not independent)
 **Gating model**: HARD (gate fail => final = 0)
 **Regime Note**: Report includes global vs in-regime (mood-pass) statistics
@@ -14,15 +14,17 @@
 
 ## Population Summary
 
-- **Total samples**: 10.000 (in-regime 10.000; 100.00%)
-- **Stored contexts**: 10.000 of 10.000 (in-regime 10.000; 100.00%; limit 10.000)
+- **Total samples**: 100.000 (in-regime 0; 0.00%)
+- **Stored contexts**: 10.000 of 100.000 (in-regime 0; 0.00%; limit 10.000)
 - **Mood regime**: Mood axis constraints derived from gates of emotion/sexual prototypes referenced in prerequisites.
+> **Note**: Stored contexts are capped at 10.000, so sections labeled "Population: stored-*" may not match full-sample counts.
+
 
 ---
 
 ## Integrity Summary
 
-- **Integrity warnings**: 20
+- **Integrity warnings**: 1
 - **Gate/final mismatches**: 0
 - **Gate-dependent metrics**: OK
 - **Affected prototypes**: None
@@ -45,10 +47,10 @@
 
 ## Executive Summary
 
-**Trigger Rate**: 1.03% (95% CI: 0.85% - 1.25%)
+**Trigger Rate**: 0.22% (95% CI: 0.20% - 0.25%)
 **Rarity**: normal
 
-Expression triggers occasionally (1.030%). Consider adjusting thresholds. Focus on "AND of 18 conditions" (99.0% last-mile failure).
+Expression triggers occasionally (0.223%). Consider adjusting thresholds. Focus on "AND of 22 conditions" (99.8% last-mile failure).
 
 ---
 
@@ -58,16 +60,21 @@ This section compares Monte Carlo results against naive probability estimates (a
 
 | Metric | Value |
 |--------|-------|
-| Naive probability (product of pass rates) | 0.05% |
-| Expected hits per 10.000 samples | 4.84 |
-| Actual hits | 103 |
-| P(0 hits \| expected=4.84) | 0.79% |
+| Naive probability (product of pass rates) | 2.28e-7 |
+| Expected hits per 100.000 samples | 0.02 |
+| Actual hits | 223 |
+| P(0 hits \| expected=0.02) | 97.75% |
 
 ### Interpretation
 
-✅ **Normal**: Actual hits (103) align with expected (4.8).
+✅ **Expected Rare**: Expression is inherently rare (expected 0.02 hits). Zero hits is mathematically expected.
 
-> **Note**: 18 clause factors omitted for brevity.
+### Overconstrained Conjunction Warnings
+
+> **Warning**: 3 emotion thresholds (trust, affection, release) each have <10% pass rate and are ANDed together. Joint probability: 0.0026%. Consider (2-of-3) rule or OR-softening.
+
+
+> **Note**: 22 clause factors omitted for brevity.
 
 ---
 
@@ -79,18 +86,18 @@ This section compares Monte Carlo results against naive probability estimates (a
 
 | Domain | Variables | Range Coverage | Bin Coverage | Tail Low | Tail High | Zero Rate Avg | Rating |
 |--------|-----------|----------------|--------------|----------|-----------|---------------|--------|
-| emotions | 20 | 73.28% | 76.00% | 88.23% | 0.0050% | 86.69% | partial |
-| previousEmotions | 5 | 77.57% | 84.00% | 85.83% | 0.01% | 84.43% | good |
+| emotions | 25 | 79.23% | 84.00% | 87.77% | 2.80e-4% | 85.89% | good |
+| previousEmotions | 8 | 83.40% | 88.75% | 81.82% | 6.25e-4% | 78.33% | good |
 
 ### Lowest Coverage Variables
 
 | Variable | Range Coverage | Bin Coverage | Tail Low | Tail High | Rating |
 |----------|----------------|--------------|----------|-----------|--------|
-| emotions.wrath | 58.87% | 60.00% | 98.52% | 0.00% | partial |
-| emotions.envy | 61.80% | 70.00% | 87.07% | 0.00% | partial |
-| emotions.resentment | 63.06% | 70.00% | 98.12% | 0.00% | partial |
-| previousEmotions.quiet_absorption | 63.66% | 70.00% | 98.28% | 0.00% | partial |
-| emotions.quiet_absorption | 64.04% | 70.00% | 98.16% | 0.00% | partial |
+| emotions.hatred | 46.23% | 50.00% | 99.67% | 0.00% | partial |
+| emotions.awkwardness | 63.73% | 70.00% | 98.08% | 0.00% | partial |
+| emotions.wrath | 67.00% | 70.00% | 98.59% | 0.00% | partial |
+| emotions.rage | 68.76% | 70.00% | 89.67% | 0.00% | partial |
+| emotions.contempt | 71.80% | 80.00% | 86.52% | 0.00% | partial |
 
 Notes:
 - Range coverage is observed span divided by domain span.
@@ -100,17 +107,16 @@ Notes:
 
 ### Coverage Conclusions
 
-- emotions: sampling looks skewed/zero-inflated zeroRateAvg=86.69%; zero-heavy or gated distributions can mask threshold behavior.
-- emotions: upper tail is effectively untested (top 10% has 0.0050% of samples). High-threshold feasibility results are not trustworthy here.
-- previousEmotions: sampling looks skewed/zero-inflated zeroRateAvg=84.43%; zero-heavy or gated distributions can mask threshold behavior.
-- previousEmotions: upper tail is effectively untested (top 10% has 0.0120% of samples). High-threshold feasibility results are not trustworthy here.
-- emotions: observed range spans only 73% of the domain. This suggests ceilings/floors or gating; feasibility conclusions involving missing ranges are low-confidence.
-- previousEmotions: observed range spans only 78% of the domain. This suggests ceilings/floors or gating; feasibility conclusions involving missing ranges are low-confidence.
-- Across variables: 25 show near-zero upper-tail coverage; 18 show truncated range. Those regions are effectively unvalidated by current sampling.
+- emotions: sampling looks skewed/zero-inflated zeroRateAvg=85.89%; zero-heavy or gated distributions can mask threshold behavior.
+- emotions: upper tail is effectively untested (top 10% has 0.0003% of samples). High-threshold feasibility results are not trustworthy here.
+- previousEmotions: sampling looks skewed/zero-inflated zeroRateAvg=78.33%; zero-heavy or gated distributions can mask threshold behavior.
+- previousEmotions: upper tail is effectively untested (top 10% has 0.0006% of samples). High-threshold feasibility results are not trustworthy here.
+- emotions: observed range spans only 79% of the domain. This suggests ceilings/floors or gating; feasibility conclusions involving missing ranges are low-confidence.
+- Across variables: 33 show near-zero upper-tail coverage; 13 show truncated range. Those regions are effectively unvalidated by current sampling.
 - Do not trust feasibility estimates for prerequisites that target the upper end of a domain; the sampler is not generating those states often enough to test them.
-- Worst range coverage: min=59%.
+- Worst range coverage: min=46%.
 - Worst upper-tail coverage: min tailHigh=0.0000%.
-- Worst lower-tail coverage: min tailLow=63.3200%.
+- Worst lower-tail coverage: min tailLow=62.5200%.
 
 ---
 
@@ -122,407 +128,457 @@ Each witness represents a valid combination of mood, sexual state, and affect tr
 ### Witness #1
 
 **Computed Emotions (Current)**:
-- admiration: 0.696
-- aesthetic_appreciation: 0.000
+- affection: 0.553
 - anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.569
 - contempt: 0.000
-- cynicism: 0.000
+- contentment: 0.527
 - disgust: 0.000
-- envy: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
 - fear: 0.000
-- humiliation: 0.000
+- freeze: 0.000
+- gratitude: 0.561
+- hatred: 0.000
 - hypervigilance: 0.000
-- inspiration: 0.452
-- interest: 0.799
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
+- release: 0.465
+- relief: 0.606
 - shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.588
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Computed Emotions (Previous)**:
-- admiration: 0.000
-- aesthetic_appreciation: 0.000
-- anxiety: 0.347
+- affection: 0.000
+- anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.000
 - contempt: 0.000
-- cynicism: 0.000
-- disgust: 0.000
-- envy: 0.000
-- fear: 0.317
-- humiliation: 0.000
+- contentment: 0.000
+- disgust: 0.353
+- dissociation: 0.000
+- embarrassment: 0.000
+- fear: 0.168
+- freeze: 0.000
+- gratitude: 0.000
+- hatred: 0.000
 - hypervigilance: 0.000
-- inspiration: 0.000
-- interest: 0.000
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
+- release: 0.000
+- relief: 0.000
 - shame: 0.000
+- suspicion: 0.197
+- terror: 0.000
+- trust: 0.000
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Mood State (Current)**:
-- valence: 84
-- arousal: 38
-- agency_control: -81
-- threat: 8
-- engagement: 98
-- future_expectancy: 18
-- self_evaluation: 85
-- affiliation: -1
+- valence: 51
+- arousal: -55
+- agency_control: -18
+- threat: -77
+- engagement: 85
+- future_expectancy: -92
+- self_evaluation: 89
+- affiliation: 93
 
 **Mood State (Previous)**:
-- valence: 43
-- arousal: 14
-- agency_control: -94
-- threat: 88
-- engagement: -74
-- future_expectancy: -79
-- self_evaluation: 19
-- affiliation: 79
+- valence: -46
+- arousal: -23
+- agency_control: 9
+- threat: 58
+- engagement: -14
+- future_expectancy: 92
+- self_evaluation: -52
+- affiliation: 77
 
 **Sexual State (Current)**:
-- sex_excitation: 97
-- sex_inhibition: 70
-- baseline_libido: 22
+- sex_excitation: 24
+- sex_inhibition: 63
+- baseline_libido: 38
 
 **Sexual State (Previous)**:
-- sex_excitation: 89
-- sex_inhibition: 93
-- baseline_libido: -7
+- sex_excitation: 93
+- sex_inhibition: 69
+- baseline_libido: 30
 
 **Affect Traits**:
-- affective_empathy: 55
-- cognitive_empathy: 22
-- harm_aversion: 88
+- affective_empathy: 70
+- cognitive_empathy: 93
+- harm_aversion: 0
 
 ### Witness #2
 
 **Computed Emotions (Current)**:
-- admiration: 0.656
-- aesthetic_appreciation: 0.000
+- affection: 0.535
 - anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.331
 - contempt: 0.000
-- cynicism: 0.000
+- contentment: 0.516
 - disgust: 0.000
-- envy: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
 - fear: 0.000
-- humiliation: 0.000
+- freeze: 0.000
+- gratitude: 0.560
+- hatred: 0.000
 - hypervigilance: 0.000
-- inspiration: 0.498
-- interest: 0.573
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
+- release: 0.573
+- relief: 0.633
 - shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.604
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Computed Emotions (Previous)**:
-- admiration: 0.000
-- aesthetic_appreciation: 0.000
-- anxiety: 0.245
+- affection: 0.378
+- anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.418
 - contempt: 0.000
-- cynicism: 0.000
+- contentment: 0.562
 - disgust: 0.000
-- envy: 0.000
-- fear: 0.214
-- humiliation: 0.000
-- hypervigilance: 0.320
-- inspiration: 0.000
-- interest: 0.000
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
-- rage: 0.145
-- resentment: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
+- fear: 0.000
+- freeze: 0.000
+- gratitude: 0.516
+- hatred: 0.000
+- hypervigilance: 0.000
+- numbness: 0.000
+- panic: 0.000
+- rage: 0.000
+- release: 0.000
+- relief: 0.462
 - shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.453
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Mood State (Current)**:
-- valence: 80
-- arousal: 57
-- agency_control: 8
-- threat: 27
-- engagement: 49
-- future_expectancy: 26
-- self_evaluation: 37
-- affiliation: 99
+- valence: 56
+- arousal: 13
+- agency_control: 81
+- threat: -84
+- engagement: 69
+- future_expectancy: -85
+- self_evaluation: -4
+- affiliation: 83
 
 **Mood State (Previous)**:
-- valence: -54
-- arousal: 35
-- agency_control: 14
-- threat: 37
-- engagement: -27
-- future_expectancy: 19
-- self_evaluation: 79
-- affiliation: 68
+- valence: 78
+- arousal: -64
+- agency_control: 68
+- threat: -23
+- engagement: -14
+- future_expectancy: -17
+- self_evaluation: 56
+- affiliation: 60
 
 **Sexual State (Current)**:
-- sex_excitation: 23
-- sex_inhibition: 26
-- baseline_libido: 24
+- sex_excitation: 80
+- sex_inhibition: 83
+- baseline_libido: -37
 
 **Sexual State (Previous)**:
-- sex_excitation: 59
-- sex_inhibition: 77
-- baseline_libido: 32
+- sex_excitation: 3
+- sex_inhibition: 50
+- baseline_libido: 10
 
 **Affect Traits**:
-- affective_empathy: 95
-- cognitive_empathy: 25
-- harm_aversion: 29
+- affective_empathy: 54
+- cognitive_empathy: 68
+- harm_aversion: 30
 
 ### Witness #3
 
 **Computed Emotions (Current)**:
-- admiration: 0.689
-- aesthetic_appreciation: 0.000
+- affection: 0.476
 - anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.342
 - contempt: 0.000
-- cynicism: 0.000
+- contentment: 0.461
 - disgust: 0.000
-- envy: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
 - fear: 0.000
-- humiliation: 0.000
+- freeze: 0.000
+- gratitude: 0.507
+- hatred: 0.000
 - hypervigilance: 0.000
-- inspiration: 0.538
-- interest: 0.720
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
+- release: 0.450
+- relief: 0.470
 - shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.585
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Computed Emotions (Previous)**:
-- admiration: 0.000
-- aesthetic_appreciation: 0.000
+- affection: 0.472
 - anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.202
 - contempt: 0.000
-- cynicism: 0.000
+- contentment: 0.000
 - disgust: 0.000
-- envy: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
 - fear: 0.000
-- humiliation: 0.000
+- freeze: 0.000
+- gratitude: 0.507
+- hatred: 0.000
 - hypervigilance: 0.000
-- inspiration: 0.000
-- interest: 0.000
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
-- shame: 0.557
+- release: 0.040
+- relief: 0.000
+- shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.415
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Mood State (Current)**:
-- valence: 81
-- arousal: 45
-- agency_control: 14
-- threat: 2
-- engagement: 79
-- future_expectancy: 26
-- self_evaluation: 85
+- valence: 57
+- arousal: 8
+- agency_control: 93
+- threat: -76
+- engagement: 55
+- future_expectancy: 28
+- self_evaluation: -34
 - affiliation: 28
 
 **Mood State (Previous)**:
-- valence: 10
-- arousal: 20
-- agency_control: -29
-- threat: 12
-- engagement: -17
-- future_expectancy: -70
-- self_evaluation: -87
-- affiliation: 58
+- valence: 58
+- arousal: -34
+- agency_control: 2
+- threat: -5
+- engagement: 11
+- future_expectancy: 43
+- self_evaluation: 60
+- affiliation: 91
 
 **Sexual State (Current)**:
-- sex_excitation: 39
-- sex_inhibition: 32
-- baseline_libido: 43
+- sex_excitation: 34
+- sex_inhibition: 43
+- baseline_libido: -42
 
 **Sexual State (Previous)**:
-- sex_excitation: 63
-- sex_inhibition: 12
-- baseline_libido: -28
+- sex_excitation: 50
+- sex_inhibition: 23
+- baseline_libido: 33
 
 **Affect Traits**:
-- affective_empathy: 47
-- cognitive_empathy: 71
-- harm_aversion: 29
+- affective_empathy: 86
+- cognitive_empathy: 80
+- harm_aversion: 1
 
 ### Witness #4
 
 **Computed Emotions (Current)**:
-- admiration: 0.651
-- aesthetic_appreciation: 0.000
+- affection: 0.528
 - anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.280
 - contempt: 0.000
-- cynicism: 0.000
+- contentment: 0.408
 - disgust: 0.000
-- envy: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
 - fear: 0.000
-- humiliation: 0.224
+- freeze: 0.000
+- gratitude: 0.482
+- hatred: 0.000
 - hypervigilance: 0.000
-- inspiration: 0.000
-- interest: 0.749
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
-- shame: 0.103
+- release: 0.543
+- relief: 0.535
+- shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.599
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Computed Emotions (Previous)**:
-- admiration: 0.000
-- aesthetic_appreciation: 0.000
-- anxiety: 0.340
+- affection: 0.000
+- anxiety: 0.451
+- awkwardness: 0.000
+- calm: 0.000
 - contempt: 0.000
-- cynicism: 0.272
-- disgust: 0.231
-- envy: 0.147
-- fear: 0.000
-- humiliation: 0.000
-- hypervigilance: 0.000
-- inspiration: 0.000
-- interest: 0.000
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- contentment: 0.000
+- disgust: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
+- fear: 0.334
+- freeze: 0.000
+- gratitude: 0.000
+- hatred: 0.000
+- hypervigilance: 0.576
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
-- shame: 0.434
+- release: 0.000
+- relief: 0.000
+- shame: 0.000
+- suspicion: 0.406
+- terror: 0.354
+- trust: 0.000
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Mood State (Current)**:
-- valence: 98
-- arousal: 53
-- agency_control: 24
-- threat: -29
-- engagement: 81
-- future_expectancy: -59
-- self_evaluation: -32
+- valence: 45
+- arousal: 32
+- agency_control: 80
+- threat: -77
+- engagement: 79
+- future_expectancy: 64
+- self_evaluation: 31
 - affiliation: 78
 
 **Mood State (Previous)**:
-- valence: -50
-- arousal: -25
-- agency_control: -39
-- threat: 22
-- engagement: -7
-- future_expectancy: -70
-- self_evaluation: -47
-- affiliation: -11
+- valence: 37
+- arousal: 59
+- agency_control: -21
+- threat: 97
+- engagement: 72
+- future_expectancy: -67
+- self_evaluation: 61
+- affiliation: 44
 
 **Sexual State (Current)**:
-- sex_excitation: 89
-- sex_inhibition: 34
-- baseline_libido: 32
+- sex_excitation: 54
+- sex_inhibition: 79
+- baseline_libido: 9
 
 **Sexual State (Previous)**:
-- sex_excitation: 56
-- sex_inhibition: 28
-- baseline_libido: 0
+- sex_excitation: 59
+- sex_inhibition: 9
+- baseline_libido: -4
 
 **Affect Traits**:
-- affective_empathy: 3
-- cognitive_empathy: 13
-- harm_aversion: 18
+- affective_empathy: 81
+- cognitive_empathy: 5
+- harm_aversion: 47
 
 ### Witness #5
 
 **Computed Emotions (Current)**:
-- admiration: 0.631
-- aesthetic_appreciation: 0.000
-- anxiety: 0.216
+- affection: 0.464
+- anxiety: 0.000
+- awkwardness: 0.000
+- calm: 0.692
 - contempt: 0.000
-- cynicism: 0.000
+- contentment: 0.506
 - disgust: 0.000
-- envy: 0.000
-- fear: 0.144
-- humiliation: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
+- fear: 0.000
+- freeze: 0.000
+- gratitude: 0.527
+- hatred: 0.000
 - hypervigilance: 0.000
-- inspiration: 0.495
-- interest: 0.572
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
+- numbness: 0.000
+- panic: 0.000
 - rage: 0.000
-- resentment: 0.000
+- release: 0.459
+- relief: 0.601
 - shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.569
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Computed Emotions (Previous)**:
-- admiration: 0.000
-- aesthetic_appreciation: 0.000
-- anxiety: 0.000
+- affection: 0.000
+- anxiety: 0.042
+- awkwardness: 0.000
+- calm: 0.000
 - contempt: 0.000
-- cynicism: 0.000
-- disgust: 0.500
-- envy: 0.288
-- fear: 0.432
-- humiliation: 0.000
-- hypervigilance: 0.527
-- inspiration: 0.000
-- interest: 0.000
-- jealousy: 0.000
-- moral_outrage: 0.000
-- protest_anger: 0.000
-- quiet_absorption: 0.000
-- rage: 0.049
-- resentment: 0.000
-- shame: 0.501
+- contentment: 0.000
+- disgust: 0.000
+- dissociation: 0.000
+- embarrassment: 0.000
+- fear: 0.020
+- freeze: 0.000
+- gratitude: 0.000
+- hatred: 0.000
+- hypervigilance: 0.000
+- numbness: 0.000
+- panic: 0.000
+- rage: 0.000
+- release: 0.000
+- relief: 0.000
+- shame: 0.000
+- suspicion: 0.000
+- terror: 0.000
+- trust: 0.000
+- trusting_surrender: 0.000
 - wrath: 0.000
 
 **Mood State (Current)**:
-- valence: 84
-- arousal: -4
-- agency_control: -90
-- threat: 47
-- engagement: 75
-- future_expectancy: 68
-- self_evaluation: 65
-- affiliation: 44
+- valence: 22
+- arousal: -71
+- agency_control: 7
+- threat: -77
+- engagement: 66
+- future_expectancy: 83
+- self_evaluation: -94
+- affiliation: 85
 
 **Mood State (Previous)**:
-- valence: -62
-- arousal: 79
-- agency_control: -38
-- threat: 79
+- valence: -9
+- arousal: -98
+- agency_control: -43
+- threat: 87
 - engagement: 10
-- future_expectancy: 21
-- self_evaluation: -86
-- affiliation: -12
+- future_expectancy: -39
+- self_evaluation: 64
+- affiliation: 33
 
 **Sexual State (Current)**:
-- sex_excitation: 19
-- sex_inhibition: 62
-- baseline_libido: 38
+- sex_excitation: 25
+- sex_inhibition: 15
+- baseline_libido: -31
 
 **Sexual State (Previous)**:
-- sex_excitation: 96
-- sex_inhibition: 9
-- baseline_libido: 2
+- sex_excitation: 8
+- sex_inhibition: 25
+- baseline_libido: 26
 
 **Affect Traits**:
-- affective_empathy: 93
-- cognitive_empathy: 43
-- harm_aversion: 19
+- affective_empathy: 23
+- cognitive_empathy: 82
+- harm_aversion: 1
 
 ---
 
@@ -532,23 +588,24 @@ Signal: final (gate-clamped intensity).
 > *Computed from ALL prerequisites using post-gate (final) values.*
 
 ### Probability Funnel
-- **Full sample**: 10.000
-- **Mood-regime pass**: 100.00% (10000 / 10000)
-- **Prototype gate pass (`admiration`)**: 20.46% (2046 / 10000)
-- **Threshold pass | gate (`emotions.admiration >= 0.6`)**: 6.79% (139 / 2046)
-- **Prototype gate pass (`hypervigilance`)**: 14.49% (1449 / 10000)
-- **Threshold pass | gate (`emotions.hypervigilance <= 0.25`)**: 25.81% (374 / 1449)
-- **OR union pass | mood-pass (OR Block #1)**: 24.64% (2464 / 10000)
-- **OR union pass | mood-pass (OR Block #2)**: 32.67% (3267 / 10000)
-- **Final trigger**: 1.03% (103 / 10000)
+- **Full sample**: 100.000
+- **Mood-regime pass**: 0.00% (0 / 100000)
+- **Prototype gate pass (`release`)**: N/A
+- **Threshold pass | gate (`emotions.release >= 0.4`)**: N/A
+- **Prototype gate pass (`trust`)**: N/A
+- **Threshold pass | gate (`emotions.trust >= 0.55`)**: N/A
+- **OR union pass | mood-pass (OR Block #1)**: 18.95% (18945 / 100000)
+- **OR union pass | mood-pass (OR Block #2)**: 22.75% (22753 / 100000)
+- **OR union pass | mood-pass (OR Block #3)**: 43.67% (43673 / 100000)
+- **Final trigger**: 0.22% (223 / 100000)
 
-### Blocker #1: `AND of 18 conditions`
+### Blocker #1: `AND of 22 conditions`
 
 
 **Condition**: Compound AND block
-**Fail% global**: 98.97% (9897 / 10000)
-**Fail% | mood-pass**: 98.97% (9897 / 10000)
-**Severity**: high
+**Fail% global**: 99.78% (99777 / 100000)
+**Fail% | mood-pass**: N/A
+**Severity**: critical
 **Redundant in regime**: N/A
 **Clamp-trivial in regime**: N/A
 
@@ -561,103 +618,129 @@ Signal: final (gate-clamped intensity).
 
 | # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Clamp-trivial (regime) | Sole-Blocker Rate | Headroom (10%) | Gate pass (mood) | Gate clamp (mood) | Pass \| gate (mood) | Pass \| mood (mood) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | `emotions.admiration >= 0.6` | 98.61% | 98.61% (9861 / 10000) | 10000 | 0.88 | 0.60 | -0.28 | low | no | N/A | 92.24% (N=1328) | ×7.2 | 20.46% (2046 / 10000) | 79.54% (7954 / 10000) | 6.79% (139 / 2046) | 1.39% (139 / 10000) |
-| 2 | `emotions.envy <= 0.3` | 3.24% | 3.24% (324 / 10000) | 10000 | 0.00 | 0.30 | -0.30 | moderate | no | no | 0.00% (N=103) | — | 22.69% (2269 / 10000) | 77.31% (7731 / 10000) | 85.72% (1945 / 2269) | 96.76% (9676 / 10000) |
-| 3 | `emotions.jealousy <= 0.25` | 2.00% | 2.00% (200 / 10000) | 10000 | 0.00 | 0.25 | -0.25 | low | no | no | 0.00% (N=103) | — | 3.76% (376 / 10000) | 96.24% (9624 / 10000) | 46.81% (176 / 376) | 98.00% (9800 / 10000) |
-| 4 | `emotions.resentment <= 0.3` | 1.48% | 1.48% (148 / 10000) | 10000 | 0.00 | 0.30 | -0.30 | low | no | no | 0.00% (N=103) | — | 1.88% (188 / 10000) | 98.12% (9812 / 10000) | 21.28% (40 / 188) | 98.52% (9852 / 10000) |
-| 5 | `emotions.cynicism <= 0.4` | 3.78% | 3.78% (378 / 10000) | 10000 | 0.00 | 0.40 | -0.40 | moderate | no | no | 0.00% (N=103) | — | 16.90% (1690 / 10000) | 83.10% (8310 / 10000) | 77.63% (1312 / 1690) | 96.22% (9622 / 10000) |
-| 6 | `emotions.contempt <= 0.2` | 9.69% | 9.69% (969 / 10000) | 10000 | 0.00 | 0.20 | -0.20 | moderate | no | no | 0.00% (N=103) | — | 18.62% (1862 / 10000) | 81.38% (8138 / 10000) | 47.96% (893 / 1862) | 90.31% (9031 / 10000) |
-| 7 | `emotions.disgust <= 0.2` | 12.81% | 12.81% (1281 / 10000) | 10000 | 0.00 | 0.20 | -0.20 | moderate | no | no | 0.00% (N=103) | — | 14.47% (1447 / 10000) | 85.53% (8553 / 10000) | 11.47% (166 / 1447) | 87.19% (8719 / 10000) |
-| 8 | `emotions.shame <= 0.5` | 6.24% | 6.24% (624 / 10000) | 10000 | 0.00 | 0.50 | -0.50 | moderate | no | no | 0.00% (N=103) | — | 37.87% (3787 / 10000) | 62.13% (6213 / 10000) | 83.52% (3163 / 3787) | 93.76% (9376 / 10000) |
-| 9 | `emotions.humiliation <= 0.25` | 10.25% | 10.25% (1025 / 10000) | 10000 | 0.00 | 0.25 | -0.25 | moderate | no | no | 1.90% (N=105) | — | 12.38% (1238 / 10000) | 87.62% (8762 / 10000) | 17.21% (213 / 1238) | 89.75% (8975 / 10000) |
-| 10 | `emotions.fear <= 0.25` | 10.04% | 10.04% (1004 / 10000) | 10000 | 0.00 | 0.25 | -0.25 | moderate | no | no | 0.96% (N=104) | — | 35.33% (3533 / 10000) | 64.67% (6467 / 10000) | 71.58% (2529 / 3533) | 89.96% (8996 / 10000) |
-| 11 | `emotions.anxiety <= 0.3` | 2.68% | 2.68% (268 / 10000) | 10000 | 0.00 | 0.30 | -0.30 | moderate | no | no | 0.96% (N=104) | — | 10.32% (1032 / 10000) | 89.68% (8968 / 10000) | 74.03% (764 / 1032) | 97.32% (9732 / 10000) |
-| 12 | `emotions.hypervigilance <= 0.25` | 10.75% | 10.75% (1075 / 10000) | 10000 | 0.00 | 0.25 | -0.25 | moderate | no | no | 18.25% (N=126) | — | 14.49% (1449 / 10000) | 85.51% (8551 / 10000) | 25.81% (374 / 1449) | 89.25% (8925 / 10000) |
-| 13 | `emotions.rage <= 0.25` | 4.99% | 4.99% (499 / 10000) | 10000 | 0.00 | 0.25 | -0.25 | moderate | no | no | 0.00% (N=103) | — | 16.25% (1625 / 10000) | 83.75% (8375 / 10000) | 69.29% (1126 / 1625) | 95.01% (9501 / 10000) |
-| 14 | `emotions.wrath <= 0.25` | 1.09% | 1.09% (109 / 10000) | 10000 | 0.00 | 0.25 | -0.25 | low | no | no | 0.00% (N=103) | — | 1.49% (149 / 10000) | 98.51% (9851 / 10000) | 26.85% (40 / 149) | 98.91% (9891 / 10000) |
-| 15 | `emotions.protest_anger <= 0.35` | 0.73% | 0.73% (73 / 10000) | 10000 | 0.00 | 0.35 | -0.35 | low | no | no | 0.00% (N=103) | — | 0.85% (85 / 10000) | 99.15% (9915 / 10000) | 14.12% (12 / 85) | 99.27% (9927 / 10000) |
-| 16 | `emotions.moral_outrage <= 0.35` | 0.42% | 0.42% (42 / 10000) | 10000 | 0.00 | 0.35 | -0.35 | low | no | no | 0.00% (N=103) | — | 0.45% (45 / 10000) | 99.55% (9955 / 10000) | 6.67% (3 / 45) | 99.58% (9958 / 10000) |
+| 1 | `emotions.trust >= 0.55` | 98.80% | N/A | 100000 | 0.87 | 0.55 | -0.32 | low | N/A | N/A | 48.50% (N=433) | N/A | N/A | N/A | N/A | N/A |
+| 2 | `emotions.affection >= 0.45` | 96.25% | N/A | 100000 | 0.82 | 0.45 | -0.37 | moderate | N/A | N/A | 12.89% (N=256) | N/A | N/A | N/A | N/A | N/A |
+| 3 | `emotions.release >= 0.4` | 94.30% | N/A | 100000 | 0.84 | 0.40 | -0.44 | moderate | N/A | N/A | 64.88% (N=635) | N/A | N/A | N/A | N/A | N/A |
+| 4 | `emotions.numbness <= 0.25` | 13.78% | N/A | 100000 | 0.00 | 0.25 | -0.25 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 5 | `emotions.dissociation <= 0.2` | 2.07% | N/A | 100000 | 0.00 | 0.20 | -0.20 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 6 | `emotions.panic <= 0.2` | 0.49% | N/A | 100000 | 0.00 | 0.20 | -0.20 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 7 | `emotions.terror <= 0.25` | 5.71% | N/A | 100000 | 0.00 | 0.25 | -0.25 | moderate | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 8 | `emotions.fear <= 0.35` | 5.42% | N/A | 100000 | 0.00 | 0.35 | -0.35 | moderate | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 9 | `emotions.hypervigilance <= 0.3` | 9.09% | N/A | 100000 | 0.00 | 0.30 | -0.30 | moderate | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 10 | `emotions.freeze <= 0.25` | 0.67% | N/A | 100000 | 0.00 | 0.25 | -0.25 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 11 | `emotions.suspicion <= 0.25` | 10.53% | N/A | 100000 | 0.00 | 0.25 | -0.25 | moderate | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 12 | `emotions.contempt <= 0.25` | 7.00% | N/A | 100000 | 0.00 | 0.25 | -0.25 | moderate | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 13 | `emotions.hatred <= 0.15` | 0.25% | N/A | 100000 | 0.00 | 0.15 | -0.15 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 14 | `emotions.disgust <= 0.25` | 10.75% | N/A | 100000 | 0.00 | 0.25 | -0.25 | moderate | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 15 | `emotions.rage <= 0.25` | 4.80% | N/A | 100000 | 0.00 | 0.25 | -0.25 | moderate | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 16 | `emotions.wrath <= 0.25` | 1.11% | N/A | 100000 | 0.00 | 0.25 | -0.25 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 17 | `emotions.shame <= 0.65` | 0.13% | N/A | 100000 | 0.00 | 0.65 | -0.65 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 18 | `emotions.embarrassment <= 0.65` | 0.31% | N/A | 100000 | 0.00 | 0.65 | -0.65 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
+| 19 | `emotions.awkwardness <= 0.6` | 0.0010% | N/A | 100000 | 0.00 | 0.60 | -0.60 | low | N/A | N/A | 0.00% (N=223) | N/A | N/A | N/A | N/A | N/A |
 
 **OR Block #1 (ANY ONE must pass)**
 
 | # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Clamp-trivial (regime) | Sole-Blocker Rate | Headroom (10%) | Gate pass (mood) | Gate clamp (mood) | Pass \| gate (mood) | Pass \| mood (mood) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 17 | `emotions.aesthetic_appreciation >= 0.25` | 97.16% | 97.16% (9716 / 10000) | 10000 | 0.79 | 0.25 | -0.54 | low | no | N/A | N/A (OR alt) | ×3.5 | 3.26% (326 / 10000) | 96.74% (9674 / 10000) | 87.12% (284 / 326) | 2.84% (284 / 10000) |
-| 18 | `emotions.quiet_absorption >= 0.25` | 98.50% | 98.50% (9850 / 10000) | 10000 | 0.64 | 0.25 | -0.39 | low | no | N/A | N/A (OR alt) | ×6.7 | 1.87% (187 / 10000) | 98.13% (9813 / 10000) | 80.21% (150 / 187) | 1.50% (150 / 10000) |
-| 19 | `emotions.interest >= 0.35` | 77.18% | 77.18% (7718 / 10000) | 10000 | 0.96 | 0.35 | -0.61 | moderate | no | N/A | N/A (OR alt) | — | 40.29% (4029 / 10000) | 59.71% (5971 / 10000) | 56.64% (2282 / 4029) | 22.82% (2282 / 10000) |
-| 20 | `emotions.inspiration >= 0.25` | 91.86% | 91.86% (9186 / 10000) | 10000 | 0.82 | 0.25 | -0.57 | moderate | no | N/A | N/A (OR alt) | ×1.2 | 18.35% (1835 / 10000) | 81.65% (8165 / 10000) | 44.36% (814 / 1835) | 8.14% (814 / 10000) |
+| 20 | `emotions.gratitude >= 0.4` | 88.88% | N/A | 100000 | 0.89 | 0.40 | -0.49 | moderate | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 21 | `emotions.relief >= 0.25` | 87.11% | N/A | 100000 | 0.93 | 0.25 | -0.68 | moderate | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
 
-**Combined OR Block**: 24.64% pass rate (Fail% global: 75.36% | Fail% \| mood-pass: 75.36%)
+**Combined OR Block**: 18.95% pass rate (Fail% global: 81.05% | Fail% \| mood-pass: N/A)
 
-**OR Block #1 OR Alternative Coverage** (2464 total successes):
+**OR Block #1 OR Alternative Coverage** (18945 total successes):
 
 | Alternative | P(alt passes \| OR pass) | P(alt exclusively passes \| OR pass) | First-pass share (order-dependent) |
 |------------|---------------------------|------------------------------------|------------------------------------|
-| `emotions.interest >= 0.35` | 92.61% (2282/2464) | 58.20% (1434/2464) | 81.62% (2011/2464) |
-| `emotions.inspiration >= 0.25` | 33.04% (814/2464) | 4.63% (114/2464) | 4.63% (114/2464) |
-| `emotions.aesthetic_appreciation >= 0.25` | 11.53% (284/2464) | 1.54% (38/2464) | 11.53% (284/2464) |
-| `emotions.quiet_absorption >= 0.25` | 6.09% (150/2464) | 0.32% (8/2464) | 2.23% (55/2464) |
+| `emotions.relief >= 0.25` | 68.03% (12889/18945) | 41.32% (7828/18945) | 41.32% (7828/18945) |
+| `emotions.gratitude >= 0.4` | 58.68% (11117/18945) | 31.97% (6056/18945) | 58.68% (11117/18945) |
 *First-pass share is order-dependent; use pass/exclusive rates for order-independent attribution.*
 
 **OR Block #1 OR Overlap (absolute rates)**:
 
 | Population | Union (any pass) | Exclusive (exactly one) | Overlap (2+ pass) | Top overlap pair |
 |------------|------------------|------------------------|-------------------|------------------|
-| Global | 24.64% (2464/10.000) | 15.94% (1594/10.000) | 8.70% (870/10.000) | `emotions.interest >= 0.35` + `emotions.inspiration >= 0.25` 6.87% (687/10.000) |
-| Mood regime | 24.64% (2464/10.000) | 15.94% (1594/10.000) | 8.70% (870/10.000) | `emotions.interest >= 0.35` + `emotions.inspiration >= 0.25` 6.87% (687/10.000) |
+| Global | 18.95% (18.945/100.000) | 13.88% (13.884/100.000) | 5.06% (5061/100.000) | `emotions.gratitude >= 0.4` + `emotions.relief >= 0.25` 5.06% (5061/100.000) |
 
 **OR Block #2 (ANY ONE must pass)**
 
-| # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Clamp-trivial (regime) | Sole-Blocker Rate | Headroom (10%) |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 21 | `(emotions.admiration - previousEmotions.admiration) >= 0.12` | 84.54% | 84.54% (8454 / 10000) | 10000 | - | - | - | low | N/A | N/A | N/A (OR alt) | — |
-| 22 | `(emotions.inspiration - previousEmotions.inspiration) >= 0.1` | 88.23% | 88.23% (8823 / 10000) | 10000 | - | - | - | low | N/A | N/A | N/A (OR alt) | — |
-| 23 | `(emotions.aesthetic_appreciation - previousEmotions.aesthetic_appreciation) >= 0.1` | 96.79% | 96.79% (9679 / 10000) | 10000 | - | - | - | low | N/A | N/A | N/A (OR alt) | ×3.1 |
-| 24 | `(emotions.quiet_absorption - previousEmotions.quiet_absorption) >= 0.1` | 98.16% | 98.16% (9816 / 10000) | 10000 | - | - | - | low | N/A | N/A | N/A (OR alt) | ×5.4 |
-| 25 | `(emotions.interest - previousEmotions.interest) >= 0.15` | 73.34% | 73.34% (7334 / 10000) | 10000 | - | - | - | low | N/A | N/A | N/A (OR alt) | — |
+| # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Clamp-trivial (regime) | Sole-Blocker Rate | Headroom (10%) | Gate pass (mood) | Gate clamp (mood) | Pass \| gate (mood) | Pass \| mood (mood) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 22 | `emotions.calm >= 0.2` | 81.45% | N/A | 100000 | 0.88 | 0.20 | -0.68 | moderate | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 23 | `emotions.contentment >= 0.2` | 88.85% | N/A | 100000 | 0.90 | 0.20 | -0.70 | moderate | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 24 | `emotions.trusting_surrender >= 0.25` | 98.14% | N/A | 100000 | 0.73 | 0.25 | -0.48 | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
 
-**Combined OR Block**: 32.67% pass rate (Fail% global: 67.33% | Fail% \| mood-pass: 67.33%)
+**Combined OR Block**: 22.75% pass rate (Fail% global: 77.25% | Fail% \| mood-pass: N/A)
 
-**OR Block #2 OR Alternative Coverage** (3267 total successes):
+**OR Block #2 OR Alternative Coverage** (22753 total successes):
 
 | Alternative | P(alt passes \| OR pass) | P(alt exclusively passes \| OR pass) | First-pass share (order-dependent) |
 |------------|---------------------------|------------------------------------|------------------------------------|
-| `(emotions.interest - previousEmotions.interest) >= 0.15` | 81.60% (2666/3267) | 32.29% (1055/3267) | 32.29% (1055/3267) |
-| `(emotions.admiration - previousEmotions.admiration) >= 0.12` | 47.32% (1546/3267) | 8.39% (274/3267) | 47.32% (1546/3267) |
-| `(emotions.inspiration - previousEmotions.inspiration) >= 0.1` | 36.03% (1177/3267) | 5.20% (170/3267) | 18.49% (604/3267) |
-| `(emotions.aesthetic_appreciation - previousEmotions.aesthetic_appreciation) >= 0.1` | 9.83% (321/3267) | 0.31% (10/3267) | 1.16% (38/3267) |
-| `(emotions.quiet_absorption - previousEmotions.quiet_absorption) >= 0.1` | 5.63% (184/3267) | 0.21% (7/3267) | 0.73% (24/3267) |
+| `emotions.calm >= 0.2` | 81.51% (18547/22753) | 46.56% (10594/22753) | 81.51% (18547/22753) |
+| `emotions.contentment >= 0.2` | 49.00% (11150/22753) | 13.37% (3041/22753) | 14.20% (3230/22753) |
+| `emotions.trusting_surrender >= 0.25` | 8.17% (1859/22753) | 4.29% (976/22753) | 4.29% (976/22753) |
 *First-pass share is order-dependent; use pass/exclusive rates for order-independent attribution.*
 
 **OR Block #2 OR Overlap (absolute rates)**:
 
 | Population | Union (any pass) | Exclusive (exactly one) | Overlap (2+ pass) | Top overlap pair |
 |------------|------------------|------------------------|-------------------|------------------|
-| Global | 32.67% (3267/10.000) | 15.16% (1516/10.000) | 17.51% (1751/10.000) | `(emotions.admiration - previousEmotions.admiration) >= 0.12` + `(emotions.interest - previousEmotions.interest) >= 0.15` 11.52% (1152/10.000) |
-| Mood regime | 32.67% (3267/10.000) | 15.16% (1516/10.000) | 17.51% (1751/10.000) | `(emotions.admiration - previousEmotions.admiration) >= 0.12` + `(emotions.interest - previousEmotions.interest) >= 0.15` 11.52% (1152/10.000) |
+| Global | 22.75% (22.753/100.000) | 14.61% (14.611/100.000) | 8.14% (8142/100.000) | `emotions.calm >= 0.2` + `emotions.contentment >= 0.2` 7.92% (7920/100.000) |
+
+**OR Block #3 (ANY ONE must pass)**
+
+| # | Condition | Fail% global | Fail% \| mood-pass | Support | Bound | Threshold | Gap | Tunable | Redundant (regime) | Clamp-trivial (regime) | Sole-Blocker Rate | Headroom (10%) | Gate pass (mood) | Gate clamp (mood) | Pass \| gate (mood) | Pass \| mood (mood) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+|  | **AND Group (2 conditions: 2 emotion thresholds)** |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 25 | `└─ previousEmotions.trust < 0.55` | 1.24% | N/A | 100000 | 0.00 | 0.55 | -0.55 | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 26 | `└─ emotions.trust >= 0.55` | 98.80% | N/A | 100000 | 0.87 | 0.55 | -0.32 | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+|  | **AND Group (2 conditions: 2 emotion thresholds)** |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 27 | `└─ previousEmotions.release < 0.4` | 5.66% | N/A | 100000 | 0.00 | 0.40 | -0.40 | moderate | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 28 | `└─ emotions.release >= 0.4` | 94.30% | N/A | 100000 | 0.84 | 0.40 | -0.44 | moderate | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 29 | `(emotions.relief - previousEmotions.relief) >= 0.1` | 85.45% | N/A | 100000 | - | - | - | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 30 | `(emotions.gratitude - previousEmotions.gratitude) >= 0.1` | 76.53% | N/A | 100000 | - | - | - | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 31 | `(previousEmotions.fear - emotions.fear) >= 0.15` | 86.09% | N/A | 100000 | - | - | - | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 32 | `(previousEmotions.anxiety - emotions.anxiety) >= 0.15` | 93.56% | N/A | 100000 | - | - | - | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 33 | `(previousEmotions.hypervigilance - emotions.hypervigilance) >= 0.15` | 88.50% | N/A | 100000 | - | - | - | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+| 34 | `(emotions.trusting_surrender - previousEmotions.trusting_surrender) >= 0.1` | 97.53% | N/A | 100000 | - | - | - | low | N/A | N/A | N/A (OR alt) | N/A | N/A | N/A | N/A | N/A |
+
+**Combined OR Block**: 43.67% pass rate (Fail% global: 56.33% | Fail% \| mood-pass: N/A)
+
+**OR Block #3 OR Alternative Coverage** (43673 total successes):
+
+| Alternative | P(alt passes \| OR pass) | P(alt exclusively passes \| OR pass) | First-pass share (order-dependent) |
+|------------|---------------------------|------------------------------------|------------------------------------|
+| `(emotions.gratitude - previousEmotions.gratitude) >= 0.1` | 53.74% (23471/43673) | 20.31% (8870/43673) | 28.53% (12461/43673) |
+| `(emotions.relief - previousEmotions.relief) >= 0.1` | 33.31% (14548/43673) | 7.51% (3281/43673) | 28.87% (12608/43673) |
+| `(previousEmotions.fear - emotions.fear) >= 0.15` | 31.85% (13910/43673) | 5.60% (2445/43673) | 18.52% (8088/43673) |
+| `(previousEmotions.hypervigilance - emotions.hypervigilance) >= 0.15` | 26.34% (11505/43673) | 5.20% (2272/43673) | 5.21% (2277/43673) |
+| `(previousEmotions.anxiety - emotions.anxiety) >= 0.15` | 14.76% (6444/43673) | 3.49% (1525/43673) | 3.99% (1742/43673) |
+| `(AND: previousEmotions.release < 0.4 & emotions.release >= 0.4)` | 12.36% (5396/43673) | 5.23% (2284/43673) | 11.45% (5002/43673) |
+| `(emotions.trusting_surrender - previousEmotions.trusting_surrender) >= 0.1` | 5.66% (2472/43673) | 0.70% (306/43673) | 0.70% (306/43673) |
+| `(AND: previousEmotions.trust < 0.55 & emotions.trust >= 0.55)` | 2.72% (1189/43673) | 0.09% (38/43673) | 2.72% (1189/43673) |
+*First-pass share is order-dependent; use pass/exclusive rates for order-independent attribution.*
+
+**OR Block #3 OR Overlap (absolute rates)**:
+
+| Population | Union (any pass) | Exclusive (exactly one) | Overlap (2+ pass) | Top overlap pair |
+|------------|------------------|------------------------|-------------------|------------------|
+| Global | 43.67% (43.673/100.000) | 21.02% (21.021/100.000) | 22.65% (22.652/100.000) | `(emotions.relief - previousEmotions.relief) >= 0.1` + `(emotions.gratitude - previousEmotions.gratitude) >= 0.1` 9.76% (9763/100.000) |
 
 #### Worst Offender Analysis
 
-**#1: `emotions.admiration >= 0.6`** (Fail% global: 98.61% | Fail% \| mood-pass: 98.61% (9861 / 10000), 92.24% last-mile)
+**#1: `emotions.trust >= 0.55`** (Fail% global: 98.80% | Fail% \| mood-pass: N/A, 48.50% last-mile)
 - Values are far from threshold (low near-miss rate)
 - Recommendation: **adjust_upstream** - Review prototypes/generation rules
 
-**#2: `(emotions.quiet_absorption - previousEmotions.quiet_absorption) >= 0.1`** ⚠️ OR-alternative (Fail% global: 98.16% | Fail% \| mood-pass: 98.16% (9816 / 10000), 70.41% last-mile)
+**#2: `emotions.affection >= 0.45`** (Fail% global: 96.25% | Fail% \| mood-pass: N/A, 12.89% last-mile)
+- Near-miss rate: 3.65% (moderate tunability)
+- Recommendation: **tune_threshold** or **adjust_upstream** - Consider both options
+
+**#3: `emotions.trusting_surrender >= 0.25`** ⚠️ OR-alternative (Fail% global: 98.14% | Fail% \| mood-pass: N/A, 91.65% last-mile)
 - ℹ️ This is an alternative within an OR block; other alternatives may cover this case
 - Values are far from threshold (low near-miss rate)
 - Recommendation: **adjust_upstream** - Review prototypes/generation rules
 
-**#3: `emotions.quiet_absorption >= 0.25`** ⚠️ OR-alternative (Fail% global: 98.50% | Fail% \| mood-pass: 98.50% (9850 / 10000), 69.15% last-mile)
-- ℹ️ This is an alternative within an OR block; other alternatives may cover this case
-- Values are far from threshold (low near-miss rate)
-- Recommendation: **adjust_upstream** - Review prototypes/generation rules
-
-**#4: `emotions.aesthetic_appreciation >= 0.25`** ⚠️ OR-alternative (Fail% global: 97.16% | Fail% \| mood-pass: 97.16% (9716 / 10000), 35.56% last-mile)
-- ℹ️ This is an alternative within an OR block; other alternatives may cover this case
-- Values are far from threshold (low near-miss rate)
-- Recommendation: **adjust_upstream** - Review prototypes/generation rules
-
-**#5: `(emotions.aesthetic_appreciation - previousEmotions.aesthetic_appreciation) >= 0.1`** ⚠️ OR-alternative (Fail% global: 96.79% | Fail% \| mood-pass: 96.79% (9679 / 10000), 21.62% last-mile)
+**#4: `(emotions.trusting_surrender - previousEmotions.trusting_surrender) >= 0.1`** ⚠️ OR-alternative (Fail% global: 97.53% | Fail% \| mood-pass: N/A, 83.33% last-mile)
 - ℹ️ This is an alternative within an OR block; other alternatives may cover this case
 - Values are far from threshold (low near-miss rate)
 - Recommendation: **adjust_upstream** - Review prototypes/generation rules
@@ -665,1052 +748,1224 @@ Signal: final (gate-clamped intensity).
 #### Prototype Math Analysis
 
 **Population**: full (N=10.000; predicate: all; hash: 1a309bea).
-##### 🧠 admiration >= 0.60 ❌ IMPOSSIBLE
+##### 🧠 trust >= 0.55 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.24]
-- **Threshold**: 0.60
-- **Status**: impossible
-- **Slack**: feasibility -0.363; always -0.600
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.75]
+- **Threshold**: 0.55
+- **Status**: sometimes
+- **Slack**: feasibility +0.198; always -0.550
 - **Tuning direction**: loosen -> threshold down, tighten -> threshold up
-**Sum|Weights|**: 1.90 | **Required Raw Sum**: 1.14
+**Sum|Weights|**: 2.10 | **Required Raw Sum**: 1.16
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.33 | 0.45 | 0.00 | 0.88 | 20.46% |
-| Global | raw | 0.00 | 0.37 | 0.46 | 0.00 | 0.88 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.33 | 0.45 | 0.00 | 0.88 | 20.46% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.37 | 0.46 | 0.00 | 0.88 | N/A |
-- **Observed max (global, final)**: 0.88
-- **Observed max (mood-regime, final)**: 0.88
+| Global | final | 0.00 | 0.35 | 0.42 | 0.00 | 0.80 | 69.34% |
+| Global | raw | 0.05 | 0.35 | 0.43 | 0.00 | 0.80 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.35 | 0.42 | 0.00 | 0.80 | 69.34% |
+| In mood regime (no mood constraints) | raw | 0.05 | 0.35 | 0.43 | 0.00 | 0.80 | N/A |
+- **Observed max (global, final)**: 0.80
+- **Observed max (mood-regime, final)**: 0.80
 
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "threat <= 0.40" conflicts with mood regime threat in [0.5, 0.2]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | +0.60 | [0.20, -0.25] | -0.25 | -0.150 | ⚠️ positive_weight_low_max |
-| engagement | +0.50 | [0.35, 1.00] | 1.00 | 0.500 | — |
-| self_evaluation | +0.30 | [-1.00, -0.25] | -0.25 | -0.075 | ⚠️ positive_weight_low_max |
-| arousal | +0.20 | [0.35, 0.35] | 0.35 | 0.070 | ⚠️ positive_weight_low_max |
-| affiliation | +0.30 | [0.10, 0.35] | 0.35 | 0.105 | ⚠️ positive_weight_low_max |
+| valence | +0.40 | [0.25, -0.25] | 1.00 | 0.400 | — |
+| threat | -0.50 | [0.50, 0.20] | -1.00 | 0.500 | — |
+| agency_control | +0.20 | [0.20, -0.30] | 1.00 | 0.200 | — |
+| engagement | +0.20 | [0.15, -0.20] | 1.00 | 0.200 | — |
+| affiliation | +0.40 | [-1.00, 0.05] | 0.05 | 0.020 | ⚠️ positive_weight_low_max |
+| self_control | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+| inhibitory_control | +0.20 | [0.05, 0.25] | 0.25 | 0.050 | ⚠️ positive_weight_low_max |
 
 **Gates** ❌:
-- ✅ `engagement >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.60%
-- ❌ `valence >= 0.10` - Constraint max (-0.25) < gate requirement (0.1) | **Observed Fail Rate**: 55.15%
+- ❌ `threat <= 0.40` - Constraint min (0.5) > gate requirement (0.4) | **Observed Fail Rate**: 30.66%
 
 **Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has positive weight (+0.60) but constraint limits max to -0.25
-- ⚠️ **self_evaluation**: Has positive weight (+0.30) but constraint limits max to -0.25
-- ⚠️ **arousal**: Has positive weight (+0.20) but constraint limits max to 0.35
-- ⚠️ **affiliation**: Has positive weight (+0.30) but constraint limits max to 0.35
+- ⚠️ **affiliation**: Has positive weight (+0.40) but constraint limits max to 0.05
+- ⚠️ **inhibitory_control**: Has positive weight (+0.20) but constraint limits max to 0.25
 
-**Analysis**: Threshold 0.6 is NOT achievable (max: 0.237). Binding conflicts: valence has positive weight (+0.60) but constraint limits it to max=-0.25; self_evaluation has positive weight (+0.30) but constraint limits it to max=-0.25; arousal has positive weight (+0.20) but constraint limits it to max=0.35; affiliation has positive weight (+0.30) but constraint limits it to max=0.35. Blocked gates: valence >= 0.10
+**Analysis**: Intensity 0.55 is achievable but gates are blocked. Binding conflicts: affiliation has positive weight (+0.40) but constraint limits it to max=0.05; inhibitory_control has positive weight (+0.20) but constraint limits it to max=0.25. Blocked gates: threat <= 0.40
 
 **Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
 
-##### 🧠 aesthetic_appreciation >= 0.25 ❌ IMPOSSIBLE
+##### 🧠 affection >= 0.45 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.15]
-- **Threshold**: 0.25
-- **Status**: impossible
-- **Slack**: feasibility -0.102; always -0.250
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.75]
+- **Threshold**: 0.45
+- **Status**: sometimes
+- **Slack**: feasibility +0.297; always -0.450
 - **Tuning direction**: loosen -> threshold down, tighten -> threshold up
-**Sum|Weights|**: 3.00 | **Required Raw Sum**: 0.75
+**Sum|Weights|**: 2.85 | **Required Raw Sum**: 1.28
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.79 | 3.26% |
-| Global | raw | 0.02 | 0.34 | 0.43 | 0.00 | 0.80 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.79 | 3.26% |
-| In mood regime (no mood constraints) | raw | 0.02 | 0.34 | 0.43 | 0.00 | 0.80 | N/A |
+| Global | final | 0.00 | 0.33 | 0.42 | 0.00 | 0.79 | 31.71% |
+| Global | raw | 0.06 | 0.36 | 0.43 | 0.00 | 0.79 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.33 | 0.42 | 0.00 | 0.79 | 31.71% |
+| In mood regime (no mood constraints) | raw | 0.06 | 0.36 | 0.43 | 0.00 | 0.79 | N/A |
 - **Observed max (global, final)**: 0.79
 - **Observed max (mood-regime, final)**: 0.79
 
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "valence >= 0.10" conflicts with mood regime valence in [0.25, -0.25]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | +0.75 | [0.20, -0.25] | -0.25 | -0.188 | ⚠️ positive_weight_low_max |
-| engagement | +0.85 | [0.35, 1.00] | 1.00 | 0.850 | — |
-| arousal | -0.35 | [0.35, 0.35] | 0.35 | -0.122 | ⚠️ negative_weight_high_min |
-| threat | -0.45 | [0.30, 0.35] | 0.30 | -0.135 | ⚠️ negative_weight_high_min |
-| agency_control | -0.15 | [0.20, 0.10] | 0.20 | -0.030 | ⚠️ negative_weight_high_min |
-| future_expectancy | +0.15 | [0.15, -0.20] | -0.20 | -0.030 | ⚠️ positive_weight_low_max |
-| self_evaluation | +0.10 | [-1.00, -0.25] | -0.25 | -0.025 | ⚠️ positive_weight_low_max |
-| inhibitory_control | +0.10 | [0.20, 0.25] | 0.25 | 0.025 | ⚠️ positive_weight_low_max |
-| self_control | +0.10 | [0.20, 1.00] | 1.00 | 0.100 | — |
+| valence | +0.70 | [0.25, -0.25] | 1.00 | 0.700 | — |
+| arousal | +0.20 | [0.55, -0.30] | 1.00 | 0.200 | — |
+| threat | -0.40 | [0.50, 0.20] | -1.00 | 0.400 | — |
+| engagement | +0.30 | [0.15, -0.20] | 1.00 | 0.300 | — |
+| sexual_arousal | +0.15 | [0.00, 1.00] | 1.00 | 0.150 | — |
+| affiliation | +0.60 | [-1.00, 0.05] | 0.05 | 0.030 | ⚠️ positive_weight_low_max |
+| self_control | +0.30 | [-1.00, 1.00] | 1.00 | 0.300 | — |
+| inhibitory_control | +0.20 | [0.05, 0.25] | 0.25 | 0.050 | ⚠️ positive_weight_low_max |
 
 **Gates** ❌:
-- ❌ `valence >= 0.20` - Constraint max (-0.25) < gate requirement (0.2) | **Observed Fail Rate**: 59.94%
-- ✅ `engagement >= 0.25` - Satisfiable | **Observed Fail Rate**: 62.23%
-- ✅ `threat <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.26%
-- ✅ `arousal <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.25%
-- ✅ `arousal >= -0.30` - Satisfiable | **Observed Fail Rate**: 34.98%
+- ❌ `valence >= 0.10` - Constraint max (-0.25) < gate requirement (0.1) | **Observed Fail Rate**: 53.88%
+- ❌ `threat <= 0.40` - Constraint min (0.5) > gate requirement (0.4) | **Observed Fail Rate**: 30.66%
 
 **Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has positive weight (+0.75) but constraint limits max to -0.25
-- ⚠️ **arousal**: Has negative weight (-0.35) but constraint requires min 0.35
-- ⚠️ **threat**: Has negative weight (-0.45) but constraint requires min 0.30
-- ⚠️ **agency_control**: Has negative weight (-0.15) but constraint requires min 0.20
-- ⚠️ **future_expectancy**: Has positive weight (+0.15) but constraint limits max to -0.20
-- ⚠️ **self_evaluation**: Has positive weight (+0.10) but constraint limits max to -0.25
+- ⚠️ **affiliation**: Has positive weight (+0.60) but constraint limits max to 0.05
+- ⚠️ **inhibitory_control**: Has positive weight (+0.20) but constraint limits max to 0.25
+
+**Analysis**: Intensity 0.45 is achievable but gates are blocked. Binding conflicts: affiliation has positive weight (+0.60) but constraint limits it to max=0.05; inhibitory_control has positive weight (+0.20) but constraint limits it to max=0.25. Blocked gates: valence >= 0.10, threat <= 0.40
+
+**Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
+
+##### 🧠 release >= 0.40 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.87]
+- **Threshold**: 0.40
+- **Status**: sometimes
+- **Slack**: feasibility +0.466; always -0.400
+- **Tuning direction**: loosen -> threshold down, tighten -> threshold up
+**Sum|Weights|**: 2.35 | **Required Raw Sum**: 0.94
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.28 | 0.41 | 0.00 | 0.84 | 23.32% |
+| Global | raw | 0.00 | 0.35 | 0.44 | 0.00 | 0.84 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.28 | 0.41 | 0.00 | 0.84 | 23.32% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.35 | 0.44 | 0.00 | 0.84 | N/A |
+- **Observed max (global, final)**: 0.84
+- **Observed max (mood-regime, final)**: 0.84
+
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "threat <= 0.30" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | -1.00 | [0.50, 0.20] | -1.00 | 1.000 | — |
+| arousal | -0.20 | [0.55, -0.30] | -1.00 | 0.200 | — |
+| engagement | +0.45 | [0.15, -0.20] | 1.00 | 0.450 | — |
+| agency_control | +0.15 | [0.20, -0.30] | 1.00 | 0.150 | — |
+| future_expectancy | +0.10 | [-1.00, 1.00] | 1.00 | 0.100 | — |
+| valence | +0.05 | [0.25, -0.25] | 1.00 | 0.050 | — |
+| inhibitory_control | -0.30 | [0.05, 0.25] | 0.05 | -0.015 | ⚠️ negative_weight_high_min |
+| self_control | -0.10 | [-1.00, 1.00] | -1.00 | 0.100 | — |
+
+**Gates** ❌:
+- ❌ `threat <= 0.30` - Constraint min (0.5) > gate requirement (0.3) | **Observed Fail Rate**: 35.56%
+- ❌ `engagement >= 0.10` - Constraint max (-0.2) < gate requirement (0.1) | **Observed Fail Rate**: 54.81%
+- ✅ `arousal <= 0.60` - Satisfiable | **Observed Fail Rate**: 18.81%
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.05
+
+**Analysis**: Intensity 0.4 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.30) but constraint requires min=0.05. Blocked gates: threat <= 0.30, engagement >= 0.10
+
+**Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
+
+##### 🧠 gratitude >= 0.40 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.73]
+- **Threshold**: 0.40
+- **Status**: sometimes
+- **Slack**: feasibility +0.330; always -0.400
+- **Tuning direction**: loosen -> threshold down, tighten -> threshold up
+**Sum|Weights|**: 2.10 | **Required Raw Sum**: 0.84
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.42 | 0.51 | 0.00 | 0.87 | 34.73% |
+| Global | raw | 0.05 | 0.43 | 0.52 | 0.00 | 0.87 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.42 | 0.51 | 0.00 | 0.87 | 34.73% |
+| In mood regime (no mood constraints) | raw | 0.05 | 0.43 | 0.52 | 0.00 | 0.87 | N/A |
+- **Observed max (global, final)**: 0.87
+- **Observed max (mood-regime, final)**: 0.87
+
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "valence >= 0.15" conflicts with mood regime valence in [0.25, -0.25]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| valence | +0.85 | [0.25, -0.25] | 1.00 | 0.850 | — |
+| affiliation | +0.45 | [-1.00, 0.05] | 0.05 | 0.023 | ⚠️ positive_weight_low_max |
+| threat | -0.35 | [0.50, 0.20] | -1.00 | 0.350 | — |
+| self_evaluation | -0.10 | [-0.35, -0.20] | -0.35 | 0.035 | ⚠️ negative_weight_high_min |
+| agency_control | -0.05 | [0.20, -0.30] | -1.00 | 0.050 | — |
+| self_control | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+| inhibitory_control | +0.10 | [0.05, 0.25] | 0.25 | 0.025 | ⚠️ positive_weight_low_max |
+
+**Gates** ❌:
+- ❌ `valence >= 0.15` - Constraint max (-0.25) < gate requirement (0.15) | **Observed Fail Rate**: 56.41%
+- ✅ `threat <= 0.60` - Satisfiable | **Observed Fail Rate**: 20.21%
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **affiliation**: Has positive weight (+0.45) but constraint limits max to 0.05
+- ⚠️ **self_evaluation**: Has negative weight (-0.10) but constraint requires min -0.35
 - ⚠️ **inhibitory_control**: Has positive weight (+0.10) but constraint limits max to 0.25
 
-**Analysis**: Threshold 0.25 is NOT achievable (max: 0.148). Binding conflicts: valence has positive weight (+0.75) but constraint limits it to max=-0.25; arousal has negative weight (-0.35) but constraint requires min=0.35; threat has negative weight (-0.45) but constraint requires min=0.30; agency_control has negative weight (-0.15) but constraint requires min=0.20; future_expectancy has positive weight (+0.15) but constraint limits it to max=-0.20; self_evaluation has positive weight (+0.10) but constraint limits it to max=-0.25; inhibitory_control has positive weight (+0.10) but constraint limits it to max=0.25. Blocked gates: valence >= 0.20
+**Analysis**: Intensity 0.4 is achievable but gates are blocked. Binding conflicts: affiliation has positive weight (+0.45) but constraint limits it to max=0.05; self_evaluation has negative weight (-0.10) but constraint requires min=-0.35; inhibitory_control has positive weight (+0.10) but constraint limits it to max=0.25. Blocked gates: valence >= 0.15
 
 **Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
 
-##### 🧠 quiet_absorption >= 0.25 ❌ IMPOSSIBLE
+##### 🧠 relief >= 0.25 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.23]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 1.00]
 - **Threshold**: 0.25
-- **Status**: impossible
-- **Slack**: feasibility -0.020; always -0.250
+- **Status**: sometimes
+- **Slack**: feasibility +0.750; always -0.250
 - **Tuning direction**: loosen -> threshold down, tighten -> threshold up
-**Sum|Weights|**: 3.50 | **Required Raw Sum**: 0.88
+**Sum|Weights|**: 2.60 | **Required Raw Sum**: 0.65
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.64 | 1.87% |
-| Global | raw | 0.03 | 0.33 | 0.40 | 0.00 | 0.82 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.64 | 1.87% |
-| In mood regime (no mood constraints) | raw | 0.03 | 0.33 | 0.40 | 0.00 | 0.82 | N/A |
-- **Observed max (global, final)**: 0.64
-- **Observed max (mood-regime, final)**: 0.64
+| Global | final | 0.00 | 0.33 | 0.48 | 0.00 | 0.87 | 17.76% |
+| Global | raw | 0.00 | 0.40 | 0.51 | 0.00 | 0.87 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.33 | 0.48 | 0.00 | 0.87 | 17.76% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.40 | 0.51 | 0.00 | 0.87 | N/A |
+- **Observed max (global, final)**: 0.87
+- **Observed max (mood-regime, final)**: 0.87
 
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "threat <= 0.20" conflicts with mood regime threat in [0.5, 0.2]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| engagement | +1.00 | [0.35, 1.00] | 1.00 | 1.000 | — |
-| arousal | -0.50 | [0.35, 0.35] | 0.35 | -0.175 | ⚠️ negative_weight_high_min |
-| agency_control | -0.40 | [0.20, 0.10] | 0.20 | -0.080 | ⚠️ negative_weight_high_min |
-| threat | -0.45 | [0.30, 0.35] | 0.30 | -0.135 | ⚠️ negative_weight_high_min |
-| valence | +0.20 | [0.20, -0.25] | -0.25 | -0.050 | ⚠️ positive_weight_low_max |
-| future_expectancy | +0.05 | [0.15, -0.20] | -0.20 | -0.010 | ⚠️ positive_weight_low_max |
-| inhibitory_control | +0.40 | [0.20, 0.25] | 0.25 | 0.100 | ⚠️ positive_weight_low_max |
-| self_control | +0.20 | [0.20, 1.00] | 1.00 | 0.200 | — |
-| uncertainty | -0.30 | [0.15, 0.25] | 0.15 | -0.045 | ⚠️ negative_weight_high_min |
+| valence | +0.80 | [0.25, -0.25] | 1.00 | 0.800 | — |
+| arousal | -0.40 | [0.55, -0.30] | -1.00 | 0.400 | — |
+| threat | -0.90 | [0.50, 0.20] | -1.00 | 0.900 | — |
+| uncertainty | -0.50 | [0.20, 0.10] | -1.00 | 0.500 | — |
 
 **Gates** ❌:
-- ✅ `engagement >= 0.35` - Satisfiable | **Observed Fail Rate**: 66.72%
-- ✅ `arousal <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.25%
-- ✅ `arousal >= -0.40` - Satisfiable | **Observed Fail Rate**: 30.56%
-- ✅ `threat <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.26%
-- ✅ `agency_control <= 0.25` - Satisfiable | **Observed Fail Rate**: 37.61%
-- ❌ `valence >= -0.10` - Constraint max (-0.25) < gate requirement (-0.1) | **Observed Fail Rate**: 44.88%
-- ✅ `uncertainty <= 0.25` - Satisfiable | **Observed Fail Rate**: 36.12%
+- ❌ `threat <= 0.20` - Constraint min (0.5) > gate requirement (0.2) | **Observed Fail Rate**: 40.48%
+- ❌ `valence >= -0.05` - Constraint max (-0.25) < gate requirement (-0.05) | **Observed Fail Rate**: 46.23%
+- ❌ `uncertainty <= 0.10` - Constraint min (0.2) > gate requirement (0.1) | **Observed Fail Rate**: 45.26%
 
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **arousal**: Has negative weight (-0.50) but constraint requires min 0.35
-- ⚠️ **agency_control**: Has negative weight (-0.40) but constraint requires min 0.20
-- ⚠️ **threat**: Has negative weight (-0.45) but constraint requires min 0.30
-- ⚠️ **valence**: Has positive weight (+0.20) but constraint limits max to -0.25
-- ⚠️ **future_expectancy**: Has positive weight (+0.05) but constraint limits max to -0.20
-- ⚠️ **inhibitory_control**: Has positive weight (+0.40) but constraint limits max to 0.25
-- ⚠️ **uncertainty**: Has negative weight (-0.30) but constraint requires min 0.15
+**Binding Axes**: None (all axes can reach optimal values)
 
-**Analysis**: Threshold 0.25 is NOT achievable (max: 0.230). Binding conflicts: arousal has negative weight (-0.50) but constraint requires min=0.35; agency_control has negative weight (-0.40) but constraint requires min=0.20; threat has negative weight (-0.45) but constraint requires min=0.30; valence has positive weight (+0.20) but constraint limits it to max=-0.25; future_expectancy has positive weight (+0.05) but constraint limits it to max=-0.20; inhibitory_control has positive weight (+0.40) but constraint limits it to max=0.25; uncertainty has negative weight (-0.30) but constraint requires min=0.15. Blocked gates: valence >= -0.10
+**Analysis**: Intensity 0.25 is achievable but gates are blocked. Blocked gates: threat <= 0.20, valence >= -0.05, uncertainty <= 0.10
 
 **Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
 
-##### 🧠 interest >= 0.35 ⚠️ SOMETIMES
+##### 🧠 calm >= 0.20 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.70]
-- **Threshold**: 0.35
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.92]
+- **Threshold**: 0.20
 - **Status**: sometimes
-- **Slack**: feasibility +0.350; always -0.350
+- **Slack**: feasibility +0.722; always -0.200
 - **Tuning direction**: loosen -> threshold down, tighten -> threshold up
-**Sum|Weights|**: 1.70 | **Required Raw Sum**: 0.59
+**Sum|Weights|**: 2.90 | **Required Raw Sum**: 0.58
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.53 | 0.63 | 0.00 | 0.96 | 40.29% |
-| Global | raw | 0.03 | 0.53 | 0.63 | 0.00 | 0.96 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.53 | 0.63 | 0.00 | 0.96 | 40.29% |
-| In mood regime (no mood constraints) | raw | 0.03 | 0.53 | 0.63 | 0.00 | 0.96 | N/A |
-- **Observed max (global, final)**: 0.96
-- **Observed max (mood-regime, final)**: 0.96
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| engagement | +1.00 | [0.35, 1.00] | 1.00 | 1.000 | — |
-| arousal | +0.40 | [0.35, 0.35] | 0.35 | 0.140 | ⚠️ positive_weight_low_max |
-| valence | +0.20 | [0.20, -0.25] | -0.25 | -0.050 | ⚠️ positive_weight_low_max |
-| self_control | +0.10 | [0.20, 1.00] | 1.00 | 0.100 | — |
-
-**Gates** ✅:
-- ✅ `engagement >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.71%
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **arousal**: Has positive weight (+0.40) but constraint limits max to 0.35
-- ⚠️ **valence**: Has positive weight (+0.20) but constraint limits max to -0.25
-
-**Analysis**: Threshold 0.35 is achievable (max: 0.700). Binding conflicts: arousal has positive weight (+0.40) but constraint limits it to max=0.35; valence has positive weight (+0.20) but constraint limits it to max=-0.25
-
-
-
-##### 🧠 inspiration >= 0.25 ⚠️ SOMETIMES
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.38]
-- **Threshold**: 0.25
-- **Status**: sometimes
-- **Slack**: feasibility +0.128; always -0.250
-- **Tuning direction**: loosen -> threshold down, tighten -> threshold up
-**Sum|Weights|**: 3.00 | **Required Raw Sum**: 0.75
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.20 | 0.35 | 0.00 | 0.82 | 18.35% |
-| Global | raw | 0.01 | 0.34 | 0.42 | 0.00 | 0.82 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.20 | 0.35 | 0.00 | 0.82 | 18.35% |
-| In mood regime (no mood constraints) | raw | 0.01 | 0.34 | 0.42 | 0.00 | 0.82 | N/A |
+| Global | final | 0.00 | 0.35 | 0.48 | 0.00 | 0.82 | 36.94% |
+| Global | raw | 0.02 | 0.40 | 0.51 | 0.00 | 0.82 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.35 | 0.48 | 0.00 | 0.82 | 36.94% |
+| In mood regime (no mood constraints) | raw | 0.02 | 0.40 | 0.51 | 0.00 | 0.82 | N/A |
 - **Observed max (global, final)**: 0.82
 - **Observed max (mood-regime, final)**: 0.82
 
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "threat <= 0.20" conflicts with mood regime threat in [0.5, 0.2]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | +0.60 | [0.20, -0.25] | -0.25 | -0.150 | ⚠️ positive_weight_low_max |
-| arousal | +0.70 | [0.35, 0.35] | 0.35 | 0.245 | ⚠️ positive_weight_low_max |
-| engagement | +0.60 | [0.35, 1.00] | 1.00 | 0.600 | — |
-| future_expectancy | +0.40 | [0.15, -0.20] | -0.20 | -0.080 | ⚠️ positive_weight_low_max |
-| temporal_orientation | +0.40 | [-1.00, 1.00] | 1.00 | 0.400 | — |
-| agency_control | +0.20 | [0.20, 0.10] | 0.10 | 0.020 | ⚠️ positive_weight_low_max |
-| self_control | +0.10 | [0.20, 1.00] | 1.00 | 0.100 | — |
-| inhibitory_control | +0.00 | [0.20, 0.25] | 0.20 | 0.000 | ⚠️ negative_weight_high_min |
+| valence | +0.20 | [0.25, -0.25] | 1.00 | 0.200 | — |
+| arousal | -1.00 | [0.55, -0.30] | -1.00 | 1.000 | — |
+| threat | -1.00 | [0.50, 0.20] | -1.00 | 1.000 | — |
+| inhibitory_control | +0.30 | [0.05, 0.25] | 0.25 | 0.075 | ⚠️ positive_weight_low_max |
+| self_control | +0.10 | [-1.00, 1.00] | 1.00 | 0.100 | — |
+| uncertainty | -0.30 | [0.20, 0.10] | -1.00 | 0.300 | — |
 
 **Gates** ❌:
-- ❌ `future_expectancy >= 0.15` - Constraint max (-0.2) < gate requirement (0.15) | **Observed Fail Rate**: 57.50%
-- ✅ `engagement >= 0.15` - Satisfiable | **Observed Fail Rate**: 57.20%
+- ❌ `threat <= 0.20` - Constraint min (0.5) > gate requirement (0.2) | **Observed Fail Rate**: 40.48%
+- ✅ `uncertainty <= 0.25` - Satisfiable | **Observed Fail Rate**: 37.46%
 
 **Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has positive weight (+0.60) but constraint limits max to -0.25
-- ⚠️ **arousal**: Has positive weight (+0.70) but constraint limits max to 0.35
-- ⚠️ **future_expectancy**: Has positive weight (+0.40) but constraint limits max to -0.20
-- ⚠️ **agency_control**: Has positive weight (+0.20) but constraint limits max to 0.10
-- ⚠️ **inhibitory_control**: Has negative weight (0.00) but constraint requires min 0.20
+- ⚠️ **inhibitory_control**: Has positive weight (+0.30) but constraint limits max to 0.25
 
-**Analysis**: Intensity 0.25 is achievable but gates are blocked. Binding conflicts: valence has positive weight (+0.60) but constraint limits it to max=-0.25; arousal has positive weight (+0.70) but constraint limits it to max=0.35; future_expectancy has positive weight (+0.40) but constraint limits it to max=-0.20; agency_control has positive weight (+0.20) but constraint limits it to max=0.10; inhibitory_control has negative weight (0.00) but constraint requires min=0.20. Blocked gates: future_expectancy >= 0.15
+**Analysis**: Intensity 0.2 is achievable but gates are blocked. Binding conflicts: inhibitory_control has positive weight (+0.30) but constraint limits it to max=0.25. Blocked gates: threat <= 0.20
 
 **Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
 
-##### 🧠 envy <= 0.30 ✅ ALWAYS
+##### 🧠 contentment >= 0.20 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.23]
-- **Threshold**: 0.30
-- **Status**: always
-- **Slack**: feasibility +0.300; always +0.068
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 2.50 | **Required Raw Sum**: 0.75
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.15 | 0.26 | 0.00 | 0.62 | 22.69% |
-| Global | raw | 0.00 | 0.21 | 0.28 | 0.00 | 0.62 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.15 | 0.26 | 0.00 | 0.62 | 22.69% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.21 | 0.28 | 0.00 | 0.62 | N/A |
-- **Observed max (global, final)**: 0.62
-- **Observed max (mood-regime, final)**: 0.62
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| valence | -0.50 | [0.20, -0.25] | 0.20 | -0.100 | ⚠️ negative_weight_high_min |
-| arousal | +0.40 | [0.35, 0.35] | 0.35 | 0.140 | ⚠️ positive_weight_low_max |
-| agency_control | -0.20 | [0.20, 0.10] | 0.20 | -0.040 | ⚠️ negative_weight_high_min |
-| self_evaluation | -0.40 | [-1.00, -0.25] | -1.00 | 0.400 | — |
-| engagement | +0.30 | [0.35, 1.00] | 1.00 | 0.300 | — |
-| affiliation | -0.20 | [0.10, 0.35] | 0.10 | -0.020 | ⚠️ negative_weight_high_min |
-| self_control | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| inhibitory_control | -0.20 | [0.20, 0.25] | 0.20 | -0.040 | ⚠️ negative_weight_high_min |
-
-**Gates** ❌:
-- ✅ `self_evaluation <= -0.05` - Satisfiable | **Observed Fail Rate**: 52.33%
-- ❌ `valence <= -0.05` - Constraint min (0.2) > gate requirement (-0.05) | **Observed Fail Rate**: 51.91%
-- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.50) but constraint requires min 0.20
-- ⚠️ **arousal**: Has positive weight (+0.40) but constraint limits max to 0.35
-- ⚠️ **agency_control**: Has negative weight (-0.20) but constraint requires min 0.20
-- ⚠️ **affiliation**: Has negative weight (-0.20) but constraint requires min 0.10
-- ⚠️ **self_control**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has negative weight (-0.20) but constraint requires min 0.20
-
-**Analysis**: Condition always satisfied by axis bounds but gates are blocked. Binding conflicts: valence has negative weight (-0.50) but constraint requires min=0.20; arousal has positive weight (+0.40) but constraint limits it to max=0.35; agency_control has negative weight (-0.20) but constraint requires min=0.20; affiliation has negative weight (-0.20) but constraint requires min=0.10; self_control has negative weight (-0.30) but constraint requires min=0.20; inhibitory_control has negative weight (-0.20) but constraint requires min=0.20. Blocked gates: valence <= -0.05
-
-**Recommendation**: Always satisfies threshold within constraints.
-
-##### 🧠 jealousy <= 0.25 ✅ ALWAYS
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.23]
-- **Threshold**: 0.25
-- **Status**: always
-- **Slack**: feasibility +0.250; always +0.021
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 3.95 | **Required Raw Sum**: 0.99
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.64 | 3.76% |
-| Global | raw | 0.00 | 0.21 | 0.28 | 0.00 | 0.64 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.64 | 3.76% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.21 | 0.28 | 0.00 | 0.64 | N/A |
-- **Observed max (global, final)**: 0.64
-- **Observed max (mood-regime, final)**: 0.64
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| threat | +0.60 | [0.30, 0.35] | 0.35 | 0.210 | ⚠️ positive_weight_low_max |
-| arousal | +0.60 | [0.35, 0.35] | 0.35 | 0.210 | ⚠️ positive_weight_low_max |
-| valence | -0.60 | [0.20, -0.25] | 0.20 | -0.120 | ⚠️ negative_weight_high_min |
-| agency_control | -0.20 | [0.20, 0.10] | 0.20 | -0.040 | ⚠️ negative_weight_high_min |
-| engagement | +0.40 | [0.35, 1.00] | 1.00 | 0.400 | — |
-| self_evaluation | -0.25 | [-1.00, -0.25] | -1.00 | 0.250 | — |
-| affiliation | -0.30 | [0.10, 0.35] | 0.10 | -0.030 | ⚠️ negative_weight_high_min |
-| self_control | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| inhibitory_control | -0.20 | [0.20, 0.25] | 0.20 | -0.040 | ⚠️ negative_weight_high_min |
-| uncertainty | +0.50 | [0.15, 0.25] | 0.25 | 0.125 | ⚠️ positive_weight_low_max |
-
-**Gates** ❌:
-- ✅ `threat >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.92%
-- ❌ `valence <= -0.05` - Constraint min (0.2) > gate requirement (-0.05) | **Observed Fail Rate**: 51.91%
-- ✅ `engagement >= 0.15` - Satisfiable | **Observed Fail Rate**: 57.20%
-- ✅ `uncertainty >= 0.10` - Satisfiable | **Observed Fail Rate**: 55.78%
-- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **threat**: Has positive weight (+0.60) but constraint limits max to 0.35
-- ⚠️ **arousal**: Has positive weight (+0.60) but constraint limits max to 0.35
-- ⚠️ **valence**: Has negative weight (-0.60) but constraint requires min 0.20
-- ⚠️ **agency_control**: Has negative weight (-0.20) but constraint requires min 0.20
-- ⚠️ **affiliation**: Has negative weight (-0.30) but constraint requires min 0.10
-- ⚠️ **self_control**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has negative weight (-0.20) but constraint requires min 0.20
-- ⚠️ **uncertainty**: Has positive weight (+0.50) but constraint limits max to 0.25
-
-**Analysis**: Condition always satisfied by axis bounds but gates are blocked. Binding conflicts: threat has positive weight (+0.60) but constraint limits it to max=0.35; arousal has positive weight (+0.60) but constraint limits it to max=0.35; valence has negative weight (-0.60) but constraint requires min=0.20; agency_control has negative weight (-0.20) but constraint requires min=0.20; affiliation has negative weight (-0.30) but constraint requires min=0.10; self_control has negative weight (-0.30) but constraint requires min=0.20; inhibitory_control has negative weight (-0.20) but constraint requires min=0.20; uncertainty has positive weight (+0.50) but constraint limits it to max=0.25. Blocked gates: valence <= -0.05
-
-**Recommendation**: Always satisfies threshold within constraints.
-
-##### 🧠 resentment <= 0.30 ⚠️ SOMETIMES
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.61]
-- **Threshold**: 0.30
-- **Status**: sometimes
-- **Slack**: feasibility +0.300; always -0.305
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 4.85 | **Required Raw Sum**: 1.46
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.63 | 1.88% |
-| Global | raw | 0.09 | 0.33 | 0.40 | 0.00 | 0.69 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.63 | 1.88% |
-| In mood regime (no mood constraints) | raw | 0.09 | 0.33 | 0.40 | 0.00 | 0.69 | N/A |
-- **Observed max (global, final)**: 0.63
-- **Observed max (mood-regime, final)**: 0.63
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| valence | -0.75 | [0.20, -0.25] | 0.20 | -0.150 | ⚠️ negative_weight_high_min |
-| arousal | +0.20 | [0.35, 0.35] | 0.35 | 0.070 | ⚠️ positive_weight_low_max |
-| agency_control | -0.55 | [0.20, 0.10] | 0.20 | -0.110 | ⚠️ negative_weight_high_min |
-| temporal_orientation | -0.60 | [-1.00, 1.00] | -1.00 | 0.600 | — |
-| self_evaluation | -0.20 | [-1.00, -0.25] | -1.00 | 0.200 | — |
-| engagement | +0.55 | [0.35, 1.00] | 1.00 | 0.550 | — |
-| rumination | +0.80 | [0.20, 1.00] | 1.00 | 0.800 | — |
-| ruminative_tendency | +0.50 | [-1.00, 1.00] | 1.00 | 0.500 | — |
-| inhibitory_control | +0.30 | [0.20, 0.25] | 0.25 | 0.075 | ⚠️ positive_weight_low_max |
-| self_control | +0.40 | [0.20, 1.00] | 1.00 | 0.400 | — |
-
-**Gates** ❌:
-- ❌ `valence <= -0.15` - Constraint min (0.2) > gate requirement (-0.15) | **Observed Fail Rate**: 57.27%
-- ❌ `agency_control <= 0.10` - Constraint min (0.2) > gate requirement (0.1) | **Observed Fail Rate**: 45.37%
-- ✅ `engagement >= 0.15` - Satisfiable | **Observed Fail Rate**: 57.20%
-- ✅ `arousal <= 0.60` - Satisfiable | **Observed Fail Rate**: 19.37%
-- ✅ `future_expectancy <= 0.20` - Satisfiable | **Observed Fail Rate**: 39.51%
-- ✅ `rumination >= 0.20` - Satisfiable | **Observed Fail Rate**: 60.16%
-- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.75) but constraint requires min 0.20
-- ⚠️ **arousal**: Has positive weight (+0.20) but constraint limits max to 0.35
-- ⚠️ **agency_control**: Has negative weight (-0.55) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has positive weight (+0.30) but constraint limits max to 0.25
-
-**Analysis**: Threshold 0.3 is achievable but gates are blocked. Binding conflicts: valence has negative weight (-0.75) but constraint requires min=0.20; arousal has positive weight (+0.20) but constraint limits it to max=0.35; agency_control has negative weight (-0.55) but constraint requires min=0.20; inhibitory_control has positive weight (+0.30) but constraint limits it to max=0.25. Blocked gates: valence <= -0.15, agency_control <= 0.10
-
-**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
-
-##### 🧠 cynicism <= 0.40 ✅ ALWAYS
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.00]
-- **Threshold**: 0.40
-- **Status**: always
-- **Slack**: feasibility +0.400; always +0.400
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 1.90 | **Required Raw Sum**: 0.76
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.26 | 0.37 | 0.00 | 0.72 | 16.90% |
-| Global | raw | 0.00 | 0.29 | 0.38 | 0.00 | 0.72 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.26 | 0.37 | 0.00 | 0.72 | 16.90% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.29 | 0.38 | 0.00 | 0.72 | N/A |
-- **Observed max (global, final)**: 0.72
-- **Observed max (mood-regime, final)**: 0.72
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| valence | -0.50 | [0.20, -0.25] | 0.20 | -0.100 | ⚠️ negative_weight_high_min |
-| future_expectancy | -0.70 | [0.15, -0.20] | 0.15 | -0.105 | ⚠️ negative_weight_high_min |
-| threat | -0.10 | [0.30, 0.35] | 0.30 | -0.030 | ⚠️ negative_weight_high_min |
-| engagement | -0.20 | [0.35, 1.00] | 0.35 | -0.070 | ⚠️ negative_weight_high_min |
-| self_evaluation | +0.10 | [-1.00, -0.25] | -0.25 | -0.025 | ⚠️ positive_weight_low_max |
-| self_control | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| inhibitory_control | +0.00 | [0.20, 0.25] | 0.20 | 0.000 | ⚠️ negative_weight_high_min |
-
-**Gates** ❌:
-- ❌ `future_expectancy <= -0.2` - Constraint min (0.15) > gate requirement (-0.2) | **Observed Fail Rate**: 59.37%
-- ❌ `valence <= -0.2` - Constraint min (0.2) > gate requirement (-0.2) | **Observed Fail Rate**: 59.88%
-- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.50) but constraint requires min 0.20
-- ⚠️ **future_expectancy**: Has negative weight (-0.70) but constraint requires min 0.15
-- ⚠️ **threat**: Has negative weight (-0.10) but constraint requires min 0.30
-- ⚠️ **engagement**: Has negative weight (-0.20) but constraint requires min 0.35
-- ⚠️ **self_evaluation**: Has positive weight (+0.10) but constraint limits max to -0.25
-- ⚠️ **self_control**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has negative weight (0.00) but constraint requires min 0.20
-
-**Analysis**: Condition always satisfied by axis bounds but gates are blocked. Binding conflicts: valence has negative weight (-0.50) but constraint requires min=0.20; future_expectancy has negative weight (-0.70) but constraint requires min=0.15; threat has negative weight (-0.10) but constraint requires min=0.30; engagement has negative weight (-0.20) but constraint requires min=0.35; self_evaluation has positive weight (+0.10) but constraint limits it to max=-0.25; self_control has negative weight (-0.30) but constraint requires min=0.20; inhibitory_control has negative weight (0.00) but constraint requires min=0.20. Blocked gates: future_expectancy <= -0.2, valence <= -0.2
-
-**Recommendation**: Always satisfies threshold within constraints.
-
-##### 🧠 contempt <= 0.20 ✅ ALWAYS
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.00]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 1.00]
 - **Threshold**: 0.20
-- **Status**: always
-- **Slack**: feasibility +0.200; always +0.200
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 3.00 | **Required Raw Sum**: 0.60
+- **Status**: sometimes
+- **Slack**: feasibility +0.800; always -0.200
+- **Tuning direction**: loosen -> threshold down, tighten -> threshold up
+**Sum|Weights|**: 2.50 | **Required Raw Sum**: 0.50
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.19 | 0.30 | 0.00 | 0.67 | 18.62% |
+| Global | final | 0.00 | 0.25 | 0.42 | 0.00 | 0.84 | 15.10% |
+| Global | raw | 0.00 | 0.38 | 0.49 | 0.00 | 0.84 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.25 | 0.42 | 0.00 | 0.84 | 15.10% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.38 | 0.49 | 0.00 | 0.84 | N/A |
+- **Observed max (global, final)**: 0.84
+- **Observed max (mood-regime, final)**: 0.84
+
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "valence >= 0.20" conflicts with mood regime valence in [0.25, -0.25]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| valence | +0.90 | [0.25, -0.25] | 1.00 | 0.900 | — |
+| arousal | -0.60 | [0.55, -0.30] | -1.00 | 0.600 | — |
+| threat | -0.60 | [0.50, 0.20] | -1.00 | 0.600 | — |
+| agency_control | +0.20 | [0.20, -0.30] | 1.00 | 0.200 | — |
+| uncertainty | -0.20 | [0.20, 0.10] | -1.00 | 0.200 | — |
+
+**Gates** ❌:
+- ❌ `valence >= 0.20` - Constraint max (-0.25) < gate requirement (0.2) | **Observed Fail Rate**: 58.95%
+- ❌ `threat <= 0.20` - Constraint min (0.5) > gate requirement (0.2) | **Observed Fail Rate**: 40.48%
+- ✅ `uncertainty <= 0.20` - Satisfiable | **Observed Fail Rate**: 39.88%
+
+**Binding Axes**: None (all axes can reach optimal values)
+
+**Analysis**: Intensity 0.2 is achievable but gates are blocked. Blocked gates: valence >= 0.20, threat <= 0.20
+
+**Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
+
+##### 🧠 trusting_surrender >= 0.25 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.86]
+- **Threshold**: 0.25
+- **Status**: sometimes
+- **Slack**: feasibility +0.606; always -0.250
+- **Tuning direction**: loosen -> threshold down, tighten -> threshold up
+**Sum|Weights|**: 4.05 | **Required Raw Sum**: 1.01
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.67 | 2.64% |
 | Global | raw | 0.00 | 0.24 | 0.32 | 0.00 | 0.67 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.19 | 0.30 | 0.00 | 0.67 | 18.62% |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.67 | 2.64% |
 | In mood regime (no mood constraints) | raw | 0.00 | 0.24 | 0.32 | 0.00 | 0.67 | N/A |
 - **Observed max (global, final)**: 0.67
 - **Observed max (mood-regime, final)**: 0.67
 
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "valence >= 0.25" conflicts with mood regime valence in [0.25, -0.25]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | -0.60 | [0.20, -0.25] | 0.20 | -0.120 | ⚠️ negative_weight_high_min |
-| agency_control | +0.80 | [0.20, 0.10] | 0.10 | 0.080 | ⚠️ positive_weight_low_max |
-| engagement | -0.20 | [0.35, 1.00] | 0.35 | -0.070 | ⚠️ negative_weight_high_min |
-| self_evaluation | +0.20 | [-1.00, -0.25] | -0.25 | -0.050 | ⚠️ positive_weight_low_max |
-| affiliation | -0.50 | [0.10, 0.35] | 0.10 | -0.050 | ⚠️ negative_weight_high_min |
-| inhibitory_control | -0.30 | [0.20, 0.25] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| self_control | -0.40 | [0.20, 1.00] | 0.20 | -0.080 | ⚠️ negative_weight_high_min |
+| valence | +0.70 | [0.25, -0.25] | 1.00 | 0.700 | — |
+| threat | -0.90 | [0.50, 0.20] | -1.00 | 0.900 | — |
+| agency_control | -0.75 | [0.20, -0.30] | -1.00 | 0.750 | — |
+| engagement | +0.45 | [0.15, -0.20] | 1.00 | 0.450 | — |
+| arousal | -0.10 | [0.55, -0.30] | -1.00 | 0.100 | — |
+| future_expectancy | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+| self_evaluation | +0.05 | [-0.35, -0.20] | -0.20 | -0.010 | ⚠️ positive_weight_low_max |
+| self_control | -0.40 | [-1.00, 1.00] | -1.00 | 0.400 | — |
+| inhibitory_control | -0.50 | [0.05, 0.25] | 0.05 | -0.025 | ⚠️ negative_weight_high_min |
 
 **Gates** ❌:
-- ❌ `valence <= -0.10` - Constraint min (0.2) > gate requirement (-0.1) | **Observed Fail Rate**: 54.55%
-- ❌ `agency_control >= 0.20` - Constraint max (0.1) < gate requirement (0.2) | **Observed Fail Rate**: 59.21%
-- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+- ❌ `valence >= 0.25` - Constraint max (-0.25) < gate requirement (0.25) | **Observed Fail Rate**: 61.49%
+- ❌ `threat <= 0.25` - Constraint min (0.5) > gate requirement (0.25) | **Observed Fail Rate**: 37.98%
+- ❌ `agency_control <= -0.25` - Constraint min (0.2) > gate requirement (-0.25) | **Observed Fail Rate**: 62.03%
+- ❌ `engagement >= 0.15` - Constraint max (-0.2) < gate requirement (0.15) | **Observed Fail Rate**: 57.45%
+- ✅ `self_evaluation >= -0.35` - Satisfiable | **Observed Fail Rate**: 32.62%
 
 **Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.60) but constraint requires min 0.20
-- ⚠️ **agency_control**: Has positive weight (+0.80) but constraint limits max to 0.10
-- ⚠️ **engagement**: Has negative weight (-0.20) but constraint requires min 0.35
-- ⚠️ **self_evaluation**: Has positive weight (+0.20) but constraint limits max to -0.25
-- ⚠️ **affiliation**: Has negative weight (-0.50) but constraint requires min 0.10
-- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **self_control**: Has negative weight (-0.40) but constraint requires min 0.20
+- ⚠️ **self_evaluation**: Has positive weight (+0.05) but constraint limits max to -0.20
+- ⚠️ **inhibitory_control**: Has negative weight (-0.50) but constraint requires min 0.05
 
-**Analysis**: Condition always satisfied by axis bounds but gates are blocked. Binding conflicts: valence has negative weight (-0.60) but constraint requires min=0.20; agency_control has positive weight (+0.80) but constraint limits it to max=0.10; engagement has negative weight (-0.20) but constraint requires min=0.35; self_evaluation has positive weight (+0.20) but constraint limits it to max=-0.25; affiliation has negative weight (-0.50) but constraint requires min=0.10; inhibitory_control has negative weight (-0.30) but constraint requires min=0.20; self_control has negative weight (-0.40) but constraint requires min=0.20. Blocked gates: valence <= -0.10, agency_control >= 0.20
+**Analysis**: Intensity 0.25 is achievable but gates are blocked. Binding conflicts: self_evaluation has positive weight (+0.05) but constraint limits it to max=-0.20; inhibitory_control has negative weight (-0.50) but constraint requires min=0.05. Blocked gates: valence >= 0.25, threat <= 0.25, agency_control <= -0.25, engagement >= 0.15
 
-**Recommendation**: Always satisfies threshold within constraints.
+**Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
 
-##### 🧠 disgust <= 0.20 ⚠️ SOMETIMES
+##### 🧠 numbness <= 0.25 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.35]
-- **Threshold**: 0.20
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.91]
+- **Threshold**: 0.25
 - **Status**: sometimes
-- **Slack**: feasibility +0.200; always -0.149
+- **Slack**: feasibility +0.250; always -0.660
 - **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 3.60 | **Required Raw Sum**: 0.72
+**Sum|Weights|**: 2.50 | **Required Raw Sum**: 0.63
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.29 | 0.41 | 0.00 | 0.73 | 14.47% |
-| Global | raw | 0.03 | 0.34 | 0.42 | 0.00 | 0.73 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.29 | 0.41 | 0.00 | 0.73 | 14.47% |
-| In mood regime (no mood constraints) | raw | 0.03 | 0.34 | 0.42 | 0.00 | 0.73 | N/A |
+| Global | final | 0.00 | 0.38 | 0.50 | 0.00 | 0.82 | 15.26% |
+| Global | raw | 0.04 | 0.42 | 0.51 | 0.00 | 0.82 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.38 | 0.50 | 0.00 | 0.82 | 15.26% |
+| In mood regime (no mood constraints) | raw | 0.04 | 0.42 | 0.51 | 0.00 | 0.82 | N/A |
+- **Observed max (global, final)**: 0.82
+- **Observed max (mood-regime, final)**: 0.82
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "arousal <= -0.30" conflicts with mood regime arousal in [0.55, -0.3]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| valence | -0.20 | [0.25, -0.25] | -1.00 | 0.200 | — |
+| arousal | -1.00 | [0.55, -0.30] | -1.00 | 1.000 | — |
+| engagement | -0.60 | [0.15, -0.20] | -1.00 | 0.600 | — |
+| future_expectancy | -0.20 | [-1.00, 1.00] | -1.00 | 0.200 | — |
+| inhibitory_control | +0.30 | [0.05, 0.25] | 0.25 | 0.075 | ⚠️ positive_weight_low_max |
+| self_control | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+
+**Gates** ❌:
+- ❌ `arousal <= -0.30` - Constraint min (0.55) > gate requirement (-0.3) | **Observed Fail Rate**: 64.48%
+- ❌ `engagement <= -0.15` - Constraint min (0.15) > gate requirement (-0.15) | **Observed Fail Rate**: 56.95%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has positive weight (+0.30) but constraint limits max to 0.25
+
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Binding conflicts: inhibitory_control has positive weight (+0.30) but constraint limits it to max=0.25. Blocked gates: arousal <= -0.30, engagement <= -0.15
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 dissociation <= 0.20 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.90]
+- **Threshold**: 0.20
+- **Status**: sometimes
+- **Slack**: feasibility +0.200; always -0.704
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 3.95 | **Required Raw Sum**: 0.79
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.75 | 2.25% |
+| Global | raw | 0.00 | 0.29 | 0.37 | 0.00 | 0.75 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.75 | 2.25% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.29 | 0.37 | 0.00 | 0.75 | N/A |
+- **Observed max (global, final)**: 0.75
+- **Observed max (mood-regime, final)**: 0.75
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "threat >= 0.35" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | +0.75 | [0.50, 0.20] | 1.00 | 0.750 | — |
+| agency_control | -0.85 | [0.20, -0.30] | -1.00 | 0.850 | — |
+| engagement | -1.00 | [0.15, -0.20] | -1.00 | 1.000 | — |
+| arousal | -0.35 | [0.55, -0.30] | -1.00 | 0.350 | — |
+| valence | -0.15 | [0.25, -0.25] | -1.00 | 0.150 | — |
+| future_expectancy | -0.25 | [-1.00, 1.00] | -1.00 | 0.250 | — |
+| self_evaluation | -0.10 | [-0.35, -0.20] | -0.35 | 0.035 | ⚠️ negative_weight_high_min |
+| inhibitory_control | -0.30 | [0.05, 0.25] | 0.05 | -0.015 | ⚠️ negative_weight_high_min |
+| self_control | -0.20 | [-1.00, 1.00] | -1.00 | 0.200 | — |
+
+**Gates** ❌:
+- ❌ `threat >= 0.35` - Constraint max (0.2) < gate requirement (0.35) | **Observed Fail Rate**: 66.57%
+- ❌ `agency_control <= -0.20` - Constraint min (0.2) > gate requirement (-0.2) | **Observed Fail Rate**: 59.65%
+- ❌ `engagement <= -0.20` - Constraint min (0.15) > gate requirement (-0.2) | **Observed Fail Rate**: 59.46%
+- ❌ `arousal <= 0.35` - Constraint min (0.55) > gate requirement (0.35) | **Observed Fail Rate**: 31.49%
+- ❌ `valence <= 0.10` - Constraint min (0.25) > gate requirement (0.1) | **Observed Fail Rate**: 45.59%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **self_evaluation**: Has negative weight (-0.10) but constraint requires min -0.35
+- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.05
+
+**Analysis**: Threshold 0.2 is achievable but gates are blocked. Binding conflicts: self_evaluation has negative weight (-0.10) but constraint requires min=-0.35; inhibitory_control has negative weight (-0.30) but constraint requires min=0.05. Blocked gates: threat >= 0.35, agency_control <= -0.20, engagement <= -0.20, arousal <= 0.35, valence <= 0.10
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 panic <= 0.20 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.92]
+- **Threshold**: 0.20
+- **Status**: sometimes
+- **Slack**: feasibility +0.200; always -0.722
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 5.40 | **Required Raw Sum**: 1.08
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.63 | 0.41% |
+| Global | raw | 0.00 | 0.24 | 0.32 | 0.00 | 0.64 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.63 | 0.41% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.24 | 0.32 | 0.00 | 0.64 | N/A |
+- **Observed max (global, final)**: 0.63
+- **Observed max (mood-regime, final)**: 0.63
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "threat >= 0.50" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | +1.00 | [0.50, 0.20] | 1.00 | 1.000 | — |
+| arousal | +1.00 | [0.55, -0.30] | 1.00 | 1.000 | — |
+| agency_control | -1.00 | [0.20, -0.30] | -1.00 | 1.000 | — |
+| valence | -0.70 | [0.25, -0.25] | -1.00 | 0.700 | — |
+| engagement | +0.55 | [0.15, -0.20] | 1.00 | 0.550 | — |
+| future_expectancy | -0.35 | [-1.00, 1.00] | -1.00 | 0.350 | — |
+| inhibitory_control | -0.40 | [0.05, 0.25] | 0.05 | -0.020 | ⚠️ negative_weight_high_min |
+| self_control | -0.40 | [-1.00, 1.00] | -1.00 | 0.400 | — |
+
+**Gates** ❌:
+- ❌ `threat >= 0.50` - Constraint max (0.2) < gate requirement (0.5) | **Observed Fail Rate**: 74.02%
+- ❌ `arousal >= 0.55` - Constraint max (-0.3) < gate requirement (0.55) | **Observed Fail Rate**: 77.92%
+- ❌ `agency_control <= -0.10` - Constraint min (0.2) > gate requirement (-0.1) | **Observed Fail Rate**: 54.84%
+- ❌ `valence <= -0.15` - Constraint min (0.25) > gate requirement (-0.15) | **Observed Fail Rate**: 58.29%
+- ❌ `engagement >= 0.10` - Constraint max (-0.2) < gate requirement (0.1) | **Observed Fail Rate**: 54.81%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has negative weight (-0.40) but constraint requires min 0.05
+
+**Analysis**: Threshold 0.2 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.40) but constraint requires min=0.05. Blocked gates: threat >= 0.50, arousal >= 0.55, agency_control <= -0.10, valence <= -0.15, engagement >= 0.10
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 terror <= 0.25 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.90]
+- **Threshold**: 0.25
+- **Status**: sometimes
+- **Slack**: feasibility +0.250; always -0.645
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 4.00 | **Required Raw Sum**: 1.00
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.27 | 0.00 | 0.67 | 8.91% |
+| Global | raw | 0.00 | 0.26 | 0.34 | 0.00 | 0.67 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.27 | 0.00 | 0.67 | 8.91% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.26 | 0.34 | 0.00 | 0.67 | N/A |
+- **Observed max (global, final)**: 0.67
+- **Observed max (mood-regime, final)**: 0.67
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "threat >= 0.50" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | +1.00 | [0.50, 0.20] | 1.00 | 1.000 | — |
+| arousal | +1.00 | [0.55, -0.30] | 1.00 | 1.000 | — |
+| valence | -0.60 | [0.25, -0.25] | -1.00 | 0.600 | — |
+| agency_control | -0.35 | [0.20, -0.30] | -1.00 | 0.350 | — |
+| engagement | +0.25 | [0.15, -0.20] | 1.00 | 0.250 | — |
+| inhibitory_control | -0.40 | [0.05, 0.25] | 0.05 | -0.020 | ⚠️ negative_weight_high_min |
+| self_control | -0.40 | [-1.00, 1.00] | -1.00 | 0.400 | — |
+
+**Gates** ❌:
+- ❌ `threat >= 0.50` - Constraint max (0.2) < gate requirement (0.5) | **Observed Fail Rate**: 74.02%
+- ❌ `arousal >= 0.30` - Constraint max (-0.3) < gate requirement (0.3) | **Observed Fail Rate**: 65.43%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has negative weight (-0.40) but constraint requires min 0.05
+
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.40) but constraint requires min=0.05. Blocked gates: threat >= 0.50, arousal >= 0.30
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 fear <= 0.35 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.91]
+- **Threshold**: 0.35
+- **Status**: sometimes
+- **Slack**: feasibility +0.350; always -0.565
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 3.70 | **Required Raw Sum**: 1.29
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.25 | 0.35 | 0.00 | 0.74 | 36.03% |
+| Global | raw | 0.00 | 0.28 | 0.37 | 0.00 | 0.74 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.25 | 0.35 | 0.00 | 0.74 | 36.03% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.28 | 0.37 | 0.00 | 0.74 | N/A |
+- **Observed max (global, final)**: 0.74
+- **Observed max (mood-regime, final)**: 0.74
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "threat >= 0.30" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | +1.00 | [0.50, 0.20] | 1.00 | 1.000 | — |
+| arousal | +0.80 | [0.55, -0.30] | 1.00 | 0.800 | — |
+| agency_control | -0.70 | [0.20, -0.30] | -1.00 | 0.700 | — |
+| valence | -0.60 | [0.25, -0.25] | -1.00 | 0.600 | — |
+| inhibitory_control | -0.30 | [0.05, 0.25] | 0.05 | -0.015 | ⚠️ negative_weight_high_min |
+| self_control | -0.30 | [-1.00, 1.00] | -1.00 | 0.300 | — |
+
+**Gates** ❌:
+- ❌ `threat >= 0.30` - Constraint max (0.2) < gate requirement (0.3) | **Observed Fail Rate**: 63.97%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.05
+
+**Analysis**: Threshold 0.35 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.30) but constraint requires min=0.05. Blocked gates: threat >= 0.30
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 hypervigilance <= 0.30 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.95]
+- **Threshold**: 0.30
+- **Status**: sometimes
+- **Slack**: feasibility +0.300; always -0.655
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 3.30 | **Required Raw Sum**: 0.99
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.27 | 0.41 | 0.00 | 0.78 | 14.46% |
+| Global | raw | 0.03 | 0.36 | 0.44 | 0.00 | 0.78 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.27 | 0.41 | 0.00 | 0.78 | 14.46% |
+| In mood regime (no mood constraints) | raw | 0.03 | 0.36 | 0.44 | 0.00 | 0.78 | N/A |
+- **Observed max (global, final)**: 0.78
+- **Observed max (mood-regime, final)**: 0.78
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "threat >= 0.30" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | +0.90 | [0.50, 0.20] | 1.00 | 0.900 | — |
+| arousal | +0.80 | [0.55, -0.30] | 1.00 | 0.800 | — |
+| engagement | +0.50 | [0.15, -0.20] | 1.00 | 0.500 | — |
+| valence | -0.30 | [0.25, -0.25] | -1.00 | 0.300 | — |
+| inhibitory_control | +0.20 | [0.05, 0.25] | 0.25 | 0.050 | ⚠️ positive_weight_low_max |
+| self_control | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+| uncertainty | +0.40 | [0.20, 0.10] | 1.00 | 0.400 | — |
+
+**Gates** ❌:
+- ❌ `threat >= 0.30` - Constraint max (0.2) < gate requirement (0.3) | **Observed Fail Rate**: 63.97%
+- ❌ `arousal >= 0.20` - Constraint max (-0.3) < gate requirement (0.2) | **Observed Fail Rate**: 60.09%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has positive weight (+0.20) but constraint limits max to 0.25
+
+**Analysis**: Threshold 0.3 is achievable but gates are blocked. Binding conflicts: inhibitory_control has positive weight (+0.20) but constraint limits it to max=0.25. Blocked gates: threat >= 0.30, arousal >= 0.20
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 freeze <= 0.25 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.91]
+- **Threshold**: 0.25
+- **Status**: sometimes
+- **Slack**: feasibility +0.250; always -0.663
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 3.45 | **Required Raw Sum**: 0.86
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.74 | 0.75% |
+| Global | raw | 0.05 | 0.39 | 0.46 | 0.00 | 0.78 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.74 | 0.75% |
+| In mood regime (no mood constraints) | raw | 0.05 | 0.39 | 0.46 | 0.00 | 0.78 | N/A |
+- **Observed max (global, final)**: 0.74
+- **Observed max (mood-regime, final)**: 0.74
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "threat >= 0.35" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | +1.00 | [0.50, 0.20] | 1.00 | 1.000 | — |
+| agency_control | -1.00 | [0.20, -0.30] | -1.00 | 1.000 | — |
+| valence | -0.35 | [0.25, -0.25] | -1.00 | 0.350 | — |
+| arousal | -0.15 | [0.55, -0.30] | -1.00 | 0.150 | — |
+| engagement | +0.25 | [0.15, -0.20] | 1.00 | 0.250 | — |
+| inhibitory_control | +0.40 | [0.05, 0.25] | 0.25 | 0.100 | ⚠️ positive_weight_low_max |
+| self_control | +0.30 | [-1.00, 1.00] | 1.00 | 0.300 | — |
+
+**Gates** ❌:
+- ❌ `threat >= 0.35` - Constraint max (0.2) < gate requirement (0.35) | **Observed Fail Rate**: 66.57%
+- ❌ `agency_control <= -0.30` - Constraint min (0.2) > gate requirement (-0.3) | **Observed Fail Rate**: 64.79%
+- ❌ `valence <= -0.05` - Constraint min (0.25) > gate requirement (-0.05) | **Observed Fail Rate**: 53.25%
+- ❌ `arousal >= -0.10` - Constraint max (-0.3) < gate requirement (-0.1) | **Observed Fail Rate**: 45.50%
+- ❌ `arousal <= 0.40` - Constraint min (0.55) > gate requirement (0.4) | **Observed Fail Rate**: 28.93%
+- ❌ `engagement >= 0.05` - Constraint max (-0.2) < gate requirement (0.05) | **Observed Fail Rate**: 52.37%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has positive weight (+0.40) but constraint limits max to 0.25
+
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Binding conflicts: inhibitory_control has positive weight (+0.40) but constraint limits it to max=0.25. Blocked gates: threat >= 0.35, agency_control <= -0.30, valence <= -0.05, arousal >= -0.10, arousal <= 0.40, engagement >= 0.05
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 suspicion <= 0.25 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 1.00]
+- **Threshold**: 0.25
+- **Status**: sometimes
+- **Slack**: feasibility +0.250; always -0.750
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 2.10 | **Required Raw Sum**: 0.53
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.27 | 0.42 | 0.00 | 0.81 | 17.36% |
+| Global | raw | 0.01 | 0.36 | 0.45 | 0.00 | 0.81 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.27 | 0.42 | 0.00 | 0.81 | 17.36% |
+| In mood regime (no mood constraints) | raw | 0.01 | 0.36 | 0.45 | 0.00 | 0.81 | N/A |
+- **Observed max (global, final)**: 0.81
+- **Observed max (mood-regime, final)**: 0.81
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "threat >= 0.15" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| uncertainty | +0.60 | [0.20, 0.10] | 1.00 | 0.600 | — |
+| threat | +0.50 | [0.50, 0.20] | 1.00 | 0.500 | — |
+| engagement | +0.40 | [0.15, -0.20] | 1.00 | 0.400 | — |
+| affiliation | -0.40 | [-1.00, 0.05] | -1.00 | 0.400 | — |
+| valence | -0.20 | [0.25, -0.25] | -1.00 | 0.200 | — |
+
+**Gates** ❌:
+- ✅ `threat >= 0.15` - Satisfiable | **Observed Fail Rate**: 56.45%
+- ❌ `uncertainty >= 0.20` - Constraint max (0.1) < gate requirement (0.2) | **Observed Fail Rate**: 59.60%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes**: None (all axes can reach optimal values)
+
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Blocked gates: uncertainty >= 0.20
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 contempt <= 0.25 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.81]
+- **Threshold**: 0.25
+- **Status**: sometimes
+- **Slack**: feasibility +0.250; always -0.565
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 3.00 | **Required Raw Sum**: 0.75
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.18 | 0.29 | 0.00 | 0.65 | 17.87% |
+| Global | raw | 0.00 | 0.24 | 0.32 | 0.00 | 0.65 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.18 | 0.29 | 0.00 | 0.65 | 17.87% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.24 | 0.32 | 0.00 | 0.65 | N/A |
+- **Observed max (global, final)**: 0.65
+- **Observed max (mood-regime, final)**: 0.65
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "valence <= -0.10" conflicts with mood regime valence in [0.25, -0.25]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| valence | -0.60 | [0.25, -0.25] | -1.00 | 0.600 | — |
+| agency_control | +0.80 | [0.20, -0.30] | 1.00 | 0.800 | — |
+| engagement | -0.20 | [0.15, -0.20] | -1.00 | 0.200 | — |
+| self_evaluation | +0.20 | [-0.35, -0.20] | -0.20 | -0.040 | ⚠️ positive_weight_low_max |
+| affiliation | -0.50 | [-1.00, 0.05] | -1.00 | 0.500 | — |
+| inhibitory_control | -0.30 | [0.05, 0.25] | 0.05 | -0.015 | ⚠️ negative_weight_high_min |
+| self_control | -0.40 | [-1.00, 1.00] | -1.00 | 0.400 | — |
+
+**Gates** ❌:
+- ❌ `valence <= -0.10` - Constraint min (0.25) > gate requirement (-0.1) | **Observed Fail Rate**: 55.82%
+- ❌ `agency_control >= 0.20` - Constraint max (-0.3) < gate requirement (0.2) | **Observed Fail Rate**: 59.52%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **self_evaluation**: Has positive weight (+0.20) but constraint limits max to -0.20
+- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.05
+
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Binding conflicts: self_evaluation has positive weight (+0.20) but constraint limits it to max=-0.20; inhibitory_control has negative weight (-0.30) but constraint requires min=0.05. Blocked gates: valence <= -0.10, agency_control >= 0.20
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 hatred <= 0.15 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.94]
+- **Threshold**: 0.15
+- **Status**: sometimes
+- **Slack**: feasibility +0.150; always -0.792
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 5.45 | **Required Raw Sum**: 0.82
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.37 | 0.44% |
+| Global | raw | 0.00 | 0.06 | 0.12 | 0.00 | 0.37 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.37 | 0.44% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.06 | 0.12 | 0.00 | 0.37 | N/A |
+- **Observed max (global, final)**: 0.37
+- **Observed max (mood-regime, final)**: 0.37
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "valence <= -0.25" conflicts with mood regime valence in [0.25, -0.25]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| valence | -0.95 | [0.25, -0.25] | -1.00 | 0.950 | — |
+| engagement | +0.55 | [0.15, -0.20] | 1.00 | 0.550 | — |
+| agency_control | +0.55 | [0.20, -0.30] | 1.00 | 0.550 | — |
+| threat | +0.25 | [0.50, 0.20] | 1.00 | 0.250 | — |
+| arousal | +0.20 | [0.55, -0.30] | 1.00 | 0.200 | — |
+| affiliation | -0.85 | [-1.00, 0.05] | -1.00 | 0.850 | — |
+| harm_aversion | -0.65 | [-1.00, 0.20] | -1.00 | 0.650 | — |
+| affective_empathy | -0.55 | [-1.00, 0.25] | -1.00 | 0.550 | — |
+| cognitive_empathy | -0.20 | [-1.00, 1.00] | -1.00 | 0.200 | — |
+| self_control | -0.40 | [-1.00, 1.00] | -1.00 | 0.400 | — |
+| inhibitory_control | -0.30 | [0.05, 0.25] | 0.05 | -0.015 | ⚠️ negative_weight_high_min |
+
+**Gates** ❌:
+- ❌ `valence <= -0.25` - Constraint min (0.25) > gate requirement (-0.25) | **Observed Fail Rate**: 63.34%
+- ❌ `engagement >= 0.10` - Constraint max (-0.2) < gate requirement (0.1) | **Observed Fail Rate**: 54.81%
+- ✅ `affiliation <= 0.05` - Satisfiable | **Observed Fail Rate**: 47.42%
+- ✅ `harm_aversion <= 0.20` - Satisfiable | **Observed Fail Rate**: 79.61%
+- ✅ `affective_empathy <= 0.25` - Satisfiable | **Observed Fail Rate**: 74.47%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.05
+
+**Analysis**: Threshold 0.15 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.30) but constraint requires min=0.05. Blocked gates: valence <= -0.25, engagement >= 0.10
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 disgust <= 0.25 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.94]
+- **Threshold**: 0.25
+- **Status**: sometimes
+- **Slack**: feasibility +0.250; always -0.692
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 3.60 | **Required Raw Sum**: 0.90
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.25 | 0.39 | 0.00 | 0.73 | 13.12% |
+| Global | raw | 0.02 | 0.34 | 0.41 | 0.00 | 0.73 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.25 | 0.39 | 0.00 | 0.73 | 13.12% |
+| In mood regime (no mood constraints) | raw | 0.02 | 0.34 | 0.41 | 0.00 | 0.73 | N/A |
 - **Observed max (global, final)**: 0.73
 - **Observed max (mood-regime, final)**: 0.73
 
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "valence <= -0.25" conflicts with mood regime valence in [0.25, -0.25]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | -0.90 | [0.20, -0.25] | 0.20 | -0.180 | ⚠️ negative_weight_high_min |
-| arousal | +0.40 | [0.35, 0.35] | 0.35 | 0.140 | ⚠️ positive_weight_low_max |
-| engagement | -0.30 | [0.35, 1.00] | 0.35 | -0.105 | ⚠️ negative_weight_high_min |
+| valence | -0.90 | [0.25, -0.25] | -1.00 | 0.900 | — |
+| arousal | +0.40 | [0.55, -0.30] | 1.00 | 0.400 | — |
+| engagement | -0.30 | [0.15, -0.20] | -1.00 | 0.300 | — |
 | contamination_salience | +1.00 | [0.20, 1.00] | 1.00 | 1.000 | — |
 | disgust_sensitivity | +0.50 | [0.10, 1.00] | 1.00 | 0.500 | — |
-| inhibitory_control | -0.20 | [0.20, 0.25] | 0.20 | -0.040 | ⚠️ negative_weight_high_min |
-| self_control | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
+| inhibitory_control | -0.20 | [0.05, 0.25] | 0.05 | -0.010 | ⚠️ negative_weight_high_min |
+| self_control | -0.30 | [-1.00, 1.00] | -1.00 | 0.300 | — |
 
 **Gates** ❌:
-- ❌ `valence <= -0.25` - Constraint min (0.2) > gate requirement (-0.25) | **Observed Fail Rate**: 62.12%
-- ✅ `contamination_salience >= 0.20` - Satisfiable | **Observed Fail Rate**: 58.94%
-- ✅ `disgust_sensitivity >= 0.10` - Satisfiable | **Observed Fail Rate**: 9.22%
+- ❌ `valence <= -0.25` - Constraint min (0.25) > gate requirement (-0.25) | **Observed Fail Rate**: 63.34%
+- ✅ `contamination_salience >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.77%
+- ✅ `disgust_sensitivity >= 0.10` - Satisfiable | **Observed Fail Rate**: 9.36%
 - ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
 
 **Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.90) but constraint requires min 0.20
-- ⚠️ **arousal**: Has positive weight (+0.40) but constraint limits max to 0.35
-- ⚠️ **engagement**: Has negative weight (-0.30) but constraint requires min 0.35
-- ⚠️ **inhibitory_control**: Has negative weight (-0.20) but constraint requires min 0.20
-- ⚠️ **self_control**: Has negative weight (-0.30) but constraint requires min 0.20
+- ⚠️ **inhibitory_control**: Has negative weight (-0.20) but constraint requires min 0.05
 
-**Analysis**: Threshold 0.2 is achievable but gates are blocked. Binding conflicts: valence has negative weight (-0.90) but constraint requires min=0.20; arousal has positive weight (+0.40) but constraint limits it to max=0.35; engagement has negative weight (-0.30) but constraint requires min=0.35; inhibitory_control has negative weight (-0.20) but constraint requires min=0.20; self_control has negative weight (-0.30) but constraint requires min=0.20. Blocked gates: valence <= -0.25
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.20) but constraint requires min=0.05. Blocked gates: valence <= -0.25
 
 **Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
 
-##### 🧠 shame <= 0.50 ⚠️ SOMETIMES
+##### 🧠 rage <= 0.25 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.63]
-- **Threshold**: 0.50
-- **Status**: sometimes
-- **Slack**: feasibility +0.500; always -0.128
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 2.90 | **Required Raw Sum**: 1.45
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.44 | 0.53 | 0.00 | 0.88 | 37.87% |
-| Global | raw | 0.12 | 0.45 | 0.53 | 0.00 | 0.88 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.44 | 0.53 | 0.00 | 0.88 | 37.87% |
-| In mood regime (no mood constraints) | raw | 0.12 | 0.45 | 0.53 | 0.00 | 0.88 | N/A |
-- **Observed max (global, final)**: 0.88
-- **Observed max (mood-regime, final)**: 0.88
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| self_evaluation | -1.00 | [-1.00, -0.25] | -1.00 | 1.000 | — |
-| agency_control | -0.50 | [0.20, 0.10] | 0.20 | -0.100 | ⚠️ negative_weight_high_min |
-| valence | -0.40 | [0.20, -0.25] | 0.20 | -0.080 | ⚠️ negative_weight_high_min |
-| evaluation_pressure | +0.30 | [0.30, 1.00] | 1.00 | 0.300 | — |
-| evaluation_sensitivity | +0.40 | [0.10, 1.00] | 1.00 | 0.400 | — |
-| self_control | +0.30 | [0.20, 1.00] | 1.00 | 0.300 | — |
-| inhibitory_control | +0.00 | [0.20, 0.25] | 0.20 | 0.000 | ⚠️ negative_weight_high_min |
-
-**Gates** ✅:
-- ✅ `self_evaluation <= -0.25` - Satisfiable | **Observed Fail Rate**: 62.13%
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **agency_control**: Has negative weight (-0.50) but constraint requires min 0.20
-- ⚠️ **valence**: Has negative weight (-0.40) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has negative weight (0.00) but constraint requires min 0.20
-
-**Analysis**: Threshold 0.5 is achievable (min: 0.000). Binding conflicts: agency_control has negative weight (-0.50) but constraint requires min=0.20; valence has negative weight (-0.40) but constraint requires min=0.20; inhibitory_control has negative weight (0.00) but constraint requires min=0.20
-
-**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
-
-##### 🧠 humiliation <= 0.25 ⚠️ SOMETIMES
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.66]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.83]
 - **Threshold**: 0.25
 - **Status**: sometimes
-- **Slack**: feasibility +0.250; always -0.409
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 4.50 | **Required Raw Sum**: 1.13
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.26 | 0.42 | 0.00 | 0.79 | 12.38% |
-| Global | raw | 0.10 | 0.40 | 0.47 | 0.00 | 0.79 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.26 | 0.42 | 0.00 | 0.79 | 12.38% |
-| In mood regime (no mood constraints) | raw | 0.10 | 0.40 | 0.47 | 0.00 | 0.79 | N/A |
-- **Observed max (global, final)**: 0.79
-- **Observed max (mood-regime, final)**: 0.79
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| self_evaluation | -1.00 | [-1.00, -0.25] | -1.00 | 1.000 | — |
-| arousal | +0.70 | [0.35, 0.35] | 0.35 | 0.245 | ⚠️ positive_weight_low_max |
-| valence | -0.50 | [0.20, -0.25] | 0.20 | -0.100 | ⚠️ negative_weight_high_min |
-| agency_control | -0.40 | [0.20, 0.10] | 0.20 | -0.080 | ⚠️ negative_weight_high_min |
-| evaluation_pressure | +1.00 | [0.30, 1.00] | 1.00 | 1.000 | — |
-| evaluation_sensitivity | +0.50 | [0.10, 1.00] | 1.00 | 0.500 | — |
-| self_control | +0.40 | [0.20, 1.00] | 1.00 | 0.400 | — |
-| inhibitory_control | +0.00 | [0.20, 0.25] | 0.20 | 0.000 | ⚠️ negative_weight_high_min |
-
-**Gates** ✅:
-- ✅ `self_evaluation <= -0.25` - Satisfiable | **Observed Fail Rate**: 62.13%
-- ✅ `evaluation_pressure >= 0.30` - Satisfiable | **Observed Fail Rate**: 63.63%
-- ✅ `evaluation_sensitivity >= 0.10` - Satisfiable | **Observed Fail Rate**: 10.04%
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **arousal**: Has positive weight (+0.70) but constraint limits max to 0.35
-- ⚠️ **valence**: Has negative weight (-0.50) but constraint requires min 0.20
-- ⚠️ **agency_control**: Has negative weight (-0.40) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has negative weight (0.00) but constraint requires min 0.20
-
-**Analysis**: Threshold 0.25 is achievable (min: 0.000). Binding conflicts: arousal has positive weight (+0.70) but constraint limits it to max=0.35; valence has negative weight (-0.50) but constraint requires min=0.20; agency_control has negative weight (-0.40) but constraint requires min=0.20; inhibitory_control has negative weight (0.00) but constraint requires min=0.20
-
-**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
-
-##### 🧠 fear <= 0.25 ✅ ALWAYS
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.07]
-- **Threshold**: 0.25
-- **Status**: always
-- **Slack**: feasibility +0.250; always +0.182
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 3.70 | **Required Raw Sum**: 0.92
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.25 | 0.35 | 0.00 | 0.84 | 35.33% |
-| Global | raw | 0.00 | 0.28 | 0.36 | 0.00 | 0.84 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.25 | 0.35 | 0.00 | 0.84 | 35.33% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.28 | 0.36 | 0.00 | 0.84 | N/A |
-- **Observed max (global, final)**: 0.84
-- **Observed max (mood-regime, final)**: 0.84
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| threat | +1.00 | [0.30, 0.35] | 0.35 | 0.350 | ⚠️ positive_weight_low_max |
-| arousal | +0.80 | [0.35, 0.35] | 0.35 | 0.280 | ⚠️ positive_weight_low_max |
-| agency_control | -0.70 | [0.20, 0.10] | 0.20 | -0.140 | ⚠️ negative_weight_high_min |
-| valence | -0.60 | [0.20, -0.25] | 0.20 | -0.120 | ⚠️ negative_weight_high_min |
-| inhibitory_control | -0.30 | [0.20, 0.25] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| self_control | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-
-**Gates** ✅:
-- ✅ `threat >= 0.30` - Satisfiable | **Observed Fail Rate**: 64.67%
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **threat**: Has positive weight (+1.00) but constraint limits max to 0.35
-- ⚠️ **arousal**: Has positive weight (+0.80) but constraint limits max to 0.35
-- ⚠️ **agency_control**: Has negative weight (-0.70) but constraint requires min 0.20
-- ⚠️ **valence**: Has negative weight (-0.60) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **self_control**: Has negative weight (-0.30) but constraint requires min 0.20
-
-**Analysis**: Condition always satisfied (max: 0.068 <= 0.250). Binding conflicts: threat has positive weight (+1.00) but constraint limits it to max=0.35; arousal has positive weight (+0.80) but constraint limits it to max=0.35; agency_control has negative weight (-0.70) but constraint requires min=0.20; valence has negative weight (-0.60) but constraint requires min=0.20; inhibitory_control has negative weight (-0.30) but constraint requires min=0.20; self_control has negative weight (-0.30) but constraint requires min=0.20
-
-**Recommendation**: Always satisfies threshold within constraints.
-
-##### 🧠 anxiety <= 0.30 ✅ ALWAYS
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.15]
-- **Threshold**: 0.30
-- **Status**: always
-- **Slack**: feasibility +0.300; always +0.149
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 4.70 | **Required Raw Sum**: 1.41
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.22 | 0.00 | 0.68 | 10.32% |
-| Global | raw | 0.00 | 0.22 | 0.29 | 0.00 | 0.68 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.22 | 0.00 | 0.68 | 10.32% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.22 | 0.29 | 0.00 | 0.68 | N/A |
-- **Observed max (global, final)**: 0.68
-- **Observed max (mood-regime, final)**: 0.68
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| threat | +0.80 | [0.30, 0.35] | 0.35 | 0.280 | ⚠️ positive_weight_low_max |
-| future_expectancy | -0.60 | [0.15, -0.20] | 0.15 | -0.090 | ⚠️ negative_weight_high_min |
-| temporal_orientation | +0.50 | [-1.00, 1.00] | 1.00 | 0.500 | — |
-| agency_control | -0.60 | [0.20, 0.10] | 0.20 | -0.120 | ⚠️ negative_weight_high_min |
-| arousal | +0.40 | [0.35, 0.35] | 0.35 | 0.140 | ⚠️ positive_weight_low_max |
-| valence | -0.40 | [0.20, -0.25] | 0.20 | -0.080 | ⚠️ negative_weight_high_min |
-| inhibitory_control | -0.30 | [0.20, 0.25] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| self_control | -0.30 | [0.20, 1.00] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| uncertainty | +0.80 | [0.15, 0.25] | 0.25 | 0.200 | ⚠️ positive_weight_low_max |
-
-**Gates** ✅:
-- ✅ `threat >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.92%
-- ✅ `agency_control <= 0.20` - Satisfiable | **Observed Fail Rate**: 40.30%
-- ✅ `uncertainty >= 0.15` - Satisfiable | **Observed Fail Rate**: 58.32%
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **threat**: Has positive weight (+0.80) but constraint limits max to 0.35
-- ⚠️ **future_expectancy**: Has negative weight (-0.60) but constraint requires min 0.15
-- ⚠️ **agency_control**: Has negative weight (-0.60) but constraint requires min 0.20
-- ⚠️ **arousal**: Has positive weight (+0.40) but constraint limits max to 0.35
-- ⚠️ **valence**: Has negative weight (-0.40) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **self_control**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **uncertainty**: Has positive weight (+0.80) but constraint limits max to 0.25
-
-**Analysis**: Condition always satisfied (max: 0.151 <= 0.300). Binding conflicts: threat has positive weight (+0.80) but constraint limits it to max=0.35; future_expectancy has negative weight (-0.60) but constraint requires min=0.15; agency_control has negative weight (-0.60) but constraint requires min=0.20; arousal has positive weight (+0.40) but constraint limits it to max=0.35; valence has negative weight (-0.40) but constraint requires min=0.20; inhibitory_control has negative weight (-0.30) but constraint requires min=0.20; self_control has negative weight (-0.30) but constraint requires min=0.20; uncertainty has positive weight (+0.80) but constraint limits it to max=0.25
-
-**Recommendation**: Always satisfies threshold within constraints.
-
-##### 🧠 hypervigilance <= 0.25 ⚠️ SOMETIMES
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.42]
-- **Threshold**: 0.25
-- **Status**: sometimes
-- **Slack**: feasibility +0.250; always -0.170
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 3.30 | **Required Raw Sum**: 0.83
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.28 | 0.41 | 0.00 | 0.76 | 14.49% |
-| Global | raw | 0.03 | 0.35 | 0.44 | 0.00 | 0.76 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.28 | 0.41 | 0.00 | 0.76 | 14.49% |
-| In mood regime (no mood constraints) | raw | 0.03 | 0.35 | 0.44 | 0.00 | 0.76 | N/A |
-- **Observed max (global, final)**: 0.76
-- **Observed max (mood-regime, final)**: 0.76
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| threat | +0.90 | [0.30, 0.35] | 0.35 | 0.315 | ⚠️ positive_weight_low_max |
-| arousal | +0.80 | [0.35, 0.35] | 0.35 | 0.280 | ⚠️ positive_weight_low_max |
-| engagement | +0.50 | [0.35, 1.00] | 1.00 | 0.500 | — |
-| valence | -0.30 | [0.20, -0.25] | 0.20 | -0.060 | ⚠️ negative_weight_high_min |
-| inhibitory_control | +0.20 | [0.20, 0.25] | 0.25 | 0.050 | ⚠️ positive_weight_low_max |
-| self_control | +0.20 | [0.20, 1.00] | 1.00 | 0.200 | — |
-| uncertainty | +0.40 | [0.15, 0.25] | 0.25 | 0.100 | ⚠️ positive_weight_low_max |
-
-**Gates** ✅:
-- ✅ `threat >= 0.30` - Satisfiable | **Observed Fail Rate**: 64.67%
-- ✅ `arousal >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.76%
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **threat**: Has positive weight (+0.90) but constraint limits max to 0.35
-- ⚠️ **arousal**: Has positive weight (+0.80) but constraint limits max to 0.35
-- ⚠️ **valence**: Has negative weight (-0.30) but constraint requires min 0.20
-- ⚠️ **inhibitory_control**: Has positive weight (+0.20) but constraint limits max to 0.25
-- ⚠️ **uncertainty**: Has positive weight (+0.40) but constraint limits max to 0.25
-
-**Analysis**: Threshold 0.25 is achievable (min: 0.000). Binding conflicts: threat has positive weight (+0.90) but constraint limits it to max=0.35; arousal has positive weight (+0.80) but constraint limits it to max=0.35; valence has negative weight (-0.30) but constraint requires min=0.20; inhibitory_control has positive weight (+0.20) but constraint limits it to max=0.25; uncertainty has positive weight (+0.40) but constraint limits it to max=0.25
-
-**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
-
-##### 🧠 rage <= 0.25 ✅ ALWAYS
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.01]
-- **Threshold**: 0.25
-- **Status**: always
-- **Slack**: feasibility +0.250; always +0.240
+- **Slack**: feasibility +0.250; always -0.581
 - **Tuning direction**: loosen -> threshold up, tighten -> threshold down
 **Sum|Weights|**: 4.65 | **Required Raw Sum**: 1.16
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.12 | 0.25 | 0.00 | 0.66 | 16.25% |
-| Global | raw | 0.00 | 0.22 | 0.29 | 0.00 | 0.66 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.12 | 0.25 | 0.00 | 0.66 | 16.25% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.22 | 0.29 | 0.00 | 0.66 | N/A |
-- **Observed max (global, final)**: 0.66
-- **Observed max (mood-regime, final)**: 0.66
+| Global | final | 0.00 | 0.09 | 0.23 | 0.00 | 0.62 | 15.29% |
+| Global | raw | 0.00 | 0.21 | 0.29 | 0.00 | 0.62 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.09 | 0.23 | 0.00 | 0.62 | 15.29% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.21 | 0.29 | 0.00 | 0.62 | N/A |
+- **Observed max (global, final)**: 0.62
+- **Observed max (mood-regime, final)**: 0.62
 
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "valence <= -0.20" conflicts with mood regime valence in [0.25, -0.25]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | -0.85 | [0.20, -0.25] | 0.20 | -0.170 | ⚠️ negative_weight_high_min |
-| arousal | +0.95 | [0.35, 0.35] | 0.35 | 0.332 | ⚠️ positive_weight_low_max |
-| agency_control | +0.75 | [0.20, 0.10] | 0.10 | 0.075 | ⚠️ positive_weight_low_max |
-| threat | +0.35 | [0.30, 0.35] | 0.35 | 0.122 | ⚠️ positive_weight_low_max |
-| affiliation | -0.35 | [0.10, 0.35] | 0.10 | -0.035 | ⚠️ negative_weight_high_min |
-| inhibitory_control | -0.75 | [0.20, 0.25] | 0.20 | -0.150 | ⚠️ negative_weight_high_min |
-| self_control | -0.65 | [0.20, 1.00] | 0.20 | -0.130 | ⚠️ negative_weight_high_min |
+| valence | -0.85 | [0.25, -0.25] | -1.00 | 0.850 | — |
+| arousal | +0.95 | [0.55, -0.30] | 1.00 | 0.950 | — |
+| agency_control | +0.75 | [0.20, -0.30] | 1.00 | 0.750 | — |
+| threat | +0.35 | [0.50, 0.20] | 1.00 | 0.350 | — |
+| affiliation | -0.35 | [-1.00, 0.05] | -1.00 | 0.350 | — |
+| inhibitory_control | -0.75 | [0.05, 0.25] | 0.05 | -0.038 | ⚠️ negative_weight_high_min |
+| self_control | -0.65 | [-1.00, 1.00] | -1.00 | 0.650 | — |
 
 **Gates** ❌:
-- ❌ `valence <= -0.20` - Constraint min (0.2) > gate requirement (-0.2) | **Observed Fail Rate**: 59.88%
-- ✅ `arousal >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.76%
+- ❌ `valence <= -0.20` - Constraint min (0.25) > gate requirement (-0.2) | **Observed Fail Rate**: 60.84%
+- ❌ `arousal >= 0.20` - Constraint max (-0.3) < gate requirement (0.2) | **Observed Fail Rate**: 60.09%
 - ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
 
 **Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.85) but constraint requires min 0.20
-- ⚠️ **arousal**: Has positive weight (+0.95) but constraint limits max to 0.35
-- ⚠️ **agency_control**: Has positive weight (+0.75) but constraint limits max to 0.10
-- ⚠️ **threat**: Has positive weight (+0.35) but constraint limits max to 0.35
-- ⚠️ **affiliation**: Has negative weight (-0.35) but constraint requires min 0.10
-- ⚠️ **inhibitory_control**: Has negative weight (-0.75) but constraint requires min 0.20
-- ⚠️ **self_control**: Has negative weight (-0.65) but constraint requires min 0.20
+- ⚠️ **inhibitory_control**: Has negative weight (-0.75) but constraint requires min 0.05
 
-**Analysis**: Condition always satisfied by axis bounds but gates are blocked. Binding conflicts: valence has negative weight (-0.85) but constraint requires min=0.20; arousal has positive weight (+0.95) but constraint limits it to max=0.35; agency_control has positive weight (+0.75) but constraint limits it to max=0.10; threat has positive weight (+0.35) but constraint limits it to max=0.35; affiliation has negative weight (-0.35) but constraint requires min=0.10; inhibitory_control has negative weight (-0.75) but constraint requires min=0.20; self_control has negative weight (-0.65) but constraint requires min=0.20. Blocked gates: valence <= -0.20
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.75) but constraint requires min=0.05. Blocked gates: valence <= -0.20, arousal >= 0.20
 
-**Recommendation**: Always satisfies threshold within constraints.
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
 
-##### 🧠 wrath <= 0.25 ✅ ALWAYS
+##### 🧠 wrath <= 0.25 ⚠️ SOMETIMES
 
 **Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.04]
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.75]
 - **Threshold**: 0.25
-- **Status**: always
-- **Slack**: feasibility +0.250; always +0.209
+- **Status**: sometimes
+- **Slack**: feasibility +0.250; always -0.499
 - **Tuning direction**: loosen -> threshold up, tighten -> threshold down
 **Sum|Weights|**: 4.25 | **Required Raw Sum**: 1.06
 
 **Regime Stats**:
 | Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
 |--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.59 | 1.49% |
-| Global | raw | 0.00 | 0.22 | 0.30 | 0.00 | 0.63 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.59 | 1.49% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.22 | 0.30 | 0.00 | 0.63 | N/A |
-- **Observed max (global, final)**: 0.59
-- **Observed max (mood-regime, final)**: 0.59
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.58 | 1.52% |
+| Global | raw | 0.00 | 0.22 | 0.30 | 0.00 | 0.60 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.58 | 1.52% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.22 | 0.30 | 0.00 | 0.60 | N/A |
+- **Observed max (global, final)**: 0.58
+- **Observed max (mood-regime, final)**: 0.58
 
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| valence | -0.75 | [0.20, -0.25] | 0.20 | -0.150 | ⚠️ negative_weight_high_min |
-| arousal | +1.00 | [0.35, 0.35] | 0.35 | 0.350 | ⚠️ positive_weight_low_max |
-| inhibitory_control | -0.90 | [0.20, 0.25] | 0.20 | -0.180 | ⚠️ negative_weight_high_min |
-| self_control | -0.60 | [0.20, 1.00] | 0.20 | -0.120 | ⚠️ negative_weight_high_min |
-| agency_control | +0.35 | [0.20, 0.10] | 0.10 | 0.035 | ⚠️ positive_weight_low_max |
-| threat | +0.10 | [0.30, 0.35] | 0.35 | 0.035 | ⚠️ positive_weight_low_max |
-| affiliation | -0.20 | [0.10, 0.35] | 0.10 | -0.020 | ⚠️ negative_weight_high_min |
-| engagement | +0.25 | [0.35, 1.00] | 1.00 | 0.250 | — |
-| self_evaluation | +0.10 | [-1.00, -0.25] | -0.25 | -0.025 | ⚠️ positive_weight_low_max |
-
-**Gates** ❌:
-- ❌ `valence <= -0.15` - Constraint min (0.2) > gate requirement (-0.15) | **Observed Fail Rate**: 57.27%
-- ✅ `arousal >= 0.35` - Satisfiable | **Observed Fail Rate**: 67.18%
-- ✅ `inhibitory_control <= 0.25` - Satisfiable | **Observed Fail Rate**: 37.11%
-- ✅ `threat <= 0.70` - Satisfiable | **Observed Fail Rate**: 14.20%
-- ✅ `agency_control >= -0.20` - Satisfiable | **Observed Fail Rate**: 38.82%
-- ✅ `engagement >= 0.05` - Satisfiable | **Observed Fail Rate**: 52.15%
-- ✅ `affiliation <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.04%
-- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.75) but constraint requires min 0.20
-- ⚠️ **arousal**: Has positive weight (+1.00) but constraint limits max to 0.35
-- ⚠️ **inhibitory_control**: Has negative weight (-0.90) but constraint requires min 0.20
-- ⚠️ **self_control**: Has negative weight (-0.60) but constraint requires min 0.20
-- ⚠️ **agency_control**: Has positive weight (+0.35) but constraint limits max to 0.10
-- ⚠️ **threat**: Has positive weight (+0.10) but constraint limits max to 0.35
-- ⚠️ **affiliation**: Has negative weight (-0.20) but constraint requires min 0.10
-- ⚠️ **self_evaluation**: Has positive weight (+0.10) but constraint limits max to -0.25
-
-**Analysis**: Condition always satisfied by axis bounds but gates are blocked. Binding conflicts: valence has negative weight (-0.75) but constraint requires min=0.20; arousal has positive weight (+1.00) but constraint limits it to max=0.35; inhibitory_control has negative weight (-0.90) but constraint requires min=0.20; self_control has negative weight (-0.60) but constraint requires min=0.20; agency_control has positive weight (+0.35) but constraint limits it to max=0.10; threat has positive weight (+0.10) but constraint limits it to max=0.35; affiliation has negative weight (-0.20) but constraint requires min=0.10; self_evaluation has positive weight (+0.10) but constraint limits it to max=-0.25. Blocked gates: valence <= -0.15
-
-**Recommendation**: Always satisfies threshold within constraints.
-
-##### 🧠 protest_anger <= 0.35 ✅ ALWAYS
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.32]
-- **Threshold**: 0.35
-- **Status**: always
-- **Slack**: feasibility +0.350; always +0.028
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 3.90 | **Required Raw Sum**: 1.36
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.68 | 0.85% |
-| Global | raw | 0.00 | 0.27 | 0.34 | 0.00 | 0.68 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.68 | 0.85% |
-| In mood regime (no mood constraints) | raw | 0.00 | 0.27 | 0.34 | 0.00 | 0.68 | N/A |
-- **Observed max (global, final)**: 0.68
-- **Observed max (mood-regime, final)**: 0.68
-
-**Gate Compatibility (mood regime)**: ✅ compatible
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "valence <= -0.15" conflicts with mood regime valence in [0.25, -0.25]
 
 **Prototype Weights**:
 | Axis | Weight | Constraint | Optimal | Contribution | Binding |
 |------|--------|------------|---------|--------------|---------|
-| valence | -0.60 | [0.20, -0.25] | 0.20 | -0.120 | ⚠️ negative_weight_high_min |
-| threat | +0.55 | [0.30, 0.35] | 0.35 | 0.193 | ⚠️ positive_weight_low_max |
-| engagement | +0.80 | [0.35, 1.00] | 1.00 | 0.800 | — |
-| affiliation | +0.70 | [0.10, 0.35] | 0.35 | 0.245 | ⚠️ positive_weight_low_max |
-| agency_control | +0.30 | [0.20, 0.10] | 0.10 | 0.030 | ⚠️ positive_weight_low_max |
-| arousal | +0.55 | [0.35, 0.35] | 0.35 | 0.193 | ⚠️ positive_weight_low_max |
-| self_evaluation | +0.05 | [-1.00, -0.25] | -0.25 | -0.013 | ⚠️ positive_weight_low_max |
-| future_expectancy | +0.05 | [0.15, -0.20] | -0.20 | -0.010 | ⚠️ positive_weight_low_max |
-| inhibitory_control | -0.15 | [0.20, 0.25] | 0.20 | -0.030 | ⚠️ negative_weight_high_min |
-| self_control | -0.15 | [0.20, 1.00] | 0.20 | -0.030 | ⚠️ negative_weight_high_min |
+| valence | -0.75 | [0.25, -0.25] | -1.00 | 0.750 | — |
+| arousal | +1.00 | [0.55, -0.30] | 1.00 | 1.000 | — |
+| inhibitory_control | -0.90 | [0.05, 0.25] | 0.05 | -0.045 | ⚠️ negative_weight_high_min |
+| self_control | -0.60 | [-1.00, 1.00] | -1.00 | 0.600 | — |
+| agency_control | +0.35 | [0.20, -0.30] | 1.00 | 0.350 | — |
+| threat | +0.10 | [0.50, 0.20] | 1.00 | 0.100 | — |
+| affiliation | -0.20 | [-1.00, 0.05] | -1.00 | 0.200 | — |
+| engagement | +0.25 | [0.15, -0.20] | 1.00 | 0.250 | — |
+| self_evaluation | +0.10 | [-0.35, -0.20] | -0.20 | -0.020 | ⚠️ positive_weight_low_max |
 
 **Gates** ❌:
-- ❌ `valence <= -0.10` - Constraint min (0.2) > gate requirement (-0.1) | **Observed Fail Rate**: 54.55%
-- ✅ `engagement >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.71%
-- ✅ `threat >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.90%
-- ✅ `affiliation >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.38%
-- ✅ `arousal >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.94%
-- ✅ `agency_control >= 0.05` - Satisfiable | **Observed Fail Rate**: 51.34%
+- ❌ `valence <= -0.15` - Constraint min (0.25) > gate requirement (-0.15) | **Observed Fail Rate**: 58.29%
+- ❌ `arousal >= 0.35` - Constraint max (-0.3) < gate requirement (0.35) | **Observed Fail Rate**: 68.06%
+- ✅ `inhibitory_control <= 0.25` - Satisfiable | **Observed Fail Rate**: 37.60%
+- ✅ `threat <= 0.70` - Satisfiable | **Observed Fail Rate**: 15.21%
+- ❌ `agency_control >= -0.20` - Constraint max (-0.3) < gate requirement (-0.2) | **Observed Fail Rate**: 39.90%
+- ❌ `engagement >= 0.05` - Constraint max (-0.2) < gate requirement (0.05) | **Observed Fail Rate**: 52.37%
+- ✅ `affiliation <= 0.35` - Satisfiable | **Observed Fail Rate**: 32.61%
 - ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
 
 **Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.60) but constraint requires min 0.20
-- ⚠️ **threat**: Has positive weight (+0.55) but constraint limits max to 0.35
-- ⚠️ **affiliation**: Has positive weight (+0.70) but constraint limits max to 0.35
-- ⚠️ **agency_control**: Has positive weight (+0.30) but constraint limits max to 0.10
-- ⚠️ **arousal**: Has positive weight (+0.55) but constraint limits max to 0.35
-- ⚠️ **self_evaluation**: Has positive weight (+0.05) but constraint limits max to -0.25
-- ⚠️ **future_expectancy**: Has positive weight (+0.05) but constraint limits max to -0.20
-- ⚠️ **inhibitory_control**: Has negative weight (-0.15) but constraint requires min 0.20
-- ⚠️ **self_control**: Has negative weight (-0.15) but constraint requires min 0.20
+- ⚠️ **inhibitory_control**: Has negative weight (-0.90) but constraint requires min 0.05
+- ⚠️ **self_evaluation**: Has positive weight (+0.10) but constraint limits max to -0.20
 
-**Analysis**: Condition always satisfied by axis bounds but gates are blocked. Binding conflicts: valence has negative weight (-0.60) but constraint requires min=0.20; threat has positive weight (+0.55) but constraint limits it to max=0.35; affiliation has positive weight (+0.70) but constraint limits it to max=0.35; agency_control has positive weight (+0.30) but constraint limits it to max=0.10; arousal has positive weight (+0.55) but constraint limits it to max=0.35; self_evaluation has positive weight (+0.05) but constraint limits it to max=-0.25; future_expectancy has positive weight (+0.05) but constraint limits it to max=-0.20; inhibitory_control has negative weight (-0.15) but constraint requires min=0.20; self_control has negative weight (-0.15) but constraint requires min=0.20. Blocked gates: valence <= -0.10
-
-**Recommendation**: Always satisfies threshold within constraints.
-
-##### 🧠 moral_outrage <= 0.35 ⚠️ SOMETIMES
-
-**Feasibility (gated)**
-- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.48]
-- **Threshold**: 0.35
-- **Status**: sometimes
-- **Slack**: feasibility +0.350; always -0.133
-- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
-**Sum|Weights|**: 4.75 | **Required Raw Sum**: 1.66
-
-**Regime Stats**:
-| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
-|--------|--------|-----|-----|-----|-----|-----|----------|
-| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.67 | 0.45% |
-| Global | raw | 0.11 | 0.34 | 0.40 | 0.00 | 0.67 | N/A |
-| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.67 | 0.45% |
-| In mood regime (no mood constraints) | raw | 0.11 | 0.34 | 0.40 | 0.00 | 0.67 | N/A |
-- **Observed max (global, final)**: 0.67
-- **Observed max (mood-regime, final)**: 0.67
-
-**Gate Compatibility (mood regime)**: ✅ compatible
-
-**Prototype Weights**:
-| Axis | Weight | Constraint | Optimal | Contribution | Binding |
-|------|--------|------------|---------|--------------|---------|
-| valence | -0.55 | [0.20, -0.25] | 0.20 | -0.110 | ⚠️ negative_weight_high_min |
-| threat | +0.35 | [0.30, 0.35] | 0.35 | 0.122 | ⚠️ positive_weight_low_max |
-| engagement | +0.85 | [0.35, 1.00] | 1.00 | 0.850 | — |
-| affiliation | +0.55 | [0.10, 0.35] | 0.35 | 0.193 | ⚠️ positive_weight_low_max |
-| agency_control | +0.45 | [0.20, 0.10] | 0.10 | 0.045 | ⚠️ positive_weight_low_max |
-| arousal | +0.25 | [0.35, 0.35] | 0.35 | 0.087 | ⚠️ positive_weight_low_max |
-| future_expectancy | +0.15 | [0.15, -0.20] | -0.20 | -0.030 | ⚠️ positive_weight_low_max |
-| self_evaluation | +0.10 | [-1.00, -0.25] | -0.25 | -0.025 | ⚠️ positive_weight_low_max |
-| harm_aversion | +0.30 | [0.10, 1.00] | 1.00 | 0.300 | — |
-| affective_empathy | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
-| cognitive_empathy | +0.10 | [-1.00, 1.00] | 1.00 | 0.100 | — |
-| inhibitory_control | +0.45 | [0.20, 0.25] | 0.25 | 0.113 | ⚠️ positive_weight_low_max |
-| self_control | +0.45 | [0.20, 1.00] | 1.00 | 0.450 | — |
-
-**Gates** ❌:
-- ❌ `valence <= -0.05` - Constraint min (0.2) > gate requirement (-0.05) | **Observed Fail Rate**: 51.91%
-- ✅ `engagement >= 0.25` - Satisfiable | **Observed Fail Rate**: 62.23%
-- ✅ `threat >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.90%
-- ✅ `affiliation >= 0.10` - Satisfiable | **Observed Fail Rate**: 54.38%
-- ❌ `agency_control >= 0.15` - Constraint max (0.1) < gate requirement (0.15) | **Observed Fail Rate**: 56.74%
-- ✅ `inhibitory_control >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.66%
-- ✅ `self_control >= 0.20` - Satisfiable | **Observed Fail Rate**: 19.55%
-- ✅ `harm_aversion >= 0.10` - Satisfiable | **Observed Fail Rate**: 10.10%
-- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
-
-**Binding Axes (Structural Conflicts)**:
-- ⚠️ **valence**: Has negative weight (-0.55) but constraint requires min 0.20
-- ⚠️ **threat**: Has positive weight (+0.35) but constraint limits max to 0.35
-- ⚠️ **affiliation**: Has positive weight (+0.55) but constraint limits max to 0.35
-- ⚠️ **agency_control**: Has positive weight (+0.45) but constraint limits max to 0.10
-- ⚠️ **arousal**: Has positive weight (+0.25) but constraint limits max to 0.35
-- ⚠️ **future_expectancy**: Has positive weight (+0.15) but constraint limits max to -0.20
-- ⚠️ **self_evaluation**: Has positive weight (+0.10) but constraint limits max to -0.25
-- ⚠️ **inhibitory_control**: Has positive weight (+0.45) but constraint limits max to 0.25
-
-**Analysis**: Threshold 0.35 is achievable but gates are blocked. Binding conflicts: valence has negative weight (-0.55) but constraint requires min=0.20; threat has positive weight (+0.35) but constraint limits it to max=0.35; affiliation has positive weight (+0.55) but constraint limits it to max=0.35; agency_control has positive weight (+0.45) but constraint limits it to max=0.10; arousal has positive weight (+0.25) but constraint limits it to max=0.35; future_expectancy has positive weight (+0.15) but constraint limits it to max=-0.20; self_evaluation has positive weight (+0.10) but constraint limits it to max=-0.25; inhibitory_control has positive weight (+0.45) but constraint limits it to max=0.25. Blocked gates: valence <= -0.05, agency_control >= 0.15
+**Analysis**: Threshold 0.25 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.90) but constraint requires min=0.05; self_evaluation has positive weight (+0.10) but constraint limits it to max=-0.20. Blocked gates: valence <= -0.15, arousal >= 0.35, agency_control >= -0.20, engagement >= 0.05
 
 **Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
 
+##### 🧠 shame <= 0.65 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.77]
+- **Threshold**: 0.65
+- **Status**: sometimes
+- **Slack**: feasibility +0.650; always -0.123
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 3.45 | **Required Raw Sum**: 2.24
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.36 | 0.00 | 0.74 | 8.48% |
+| Global | raw | 0.13 | 0.38 | 0.45 | 0.00 | 0.74 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.36 | 0.00 | 0.74 | 8.48% |
+| In mood regime (no mood constraints) | raw | 0.13 | 0.38 | 0.45 | 0.00 | 0.74 | N/A |
+- **Observed max (global, final)**: 0.74
+- **Observed max (mood-regime, final)**: 0.74
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "valence <= -0.10" conflicts with mood regime valence in [0.25, -0.25]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| self_evaluation | -0.80 | [-0.35, -0.20] | -0.35 | 0.280 | ⚠️ negative_weight_high_min |
+| valence | -0.45 | [0.25, -0.25] | -1.00 | 0.450 | — |
+| agency_control | -0.35 | [0.20, -0.30] | -1.00 | 0.350 | — |
+| evaluation_sensitivity | +0.45 | [0.10, 1.00] | 1.00 | 0.450 | — |
+| evaluation_pressure | +0.15 | [0.20, 1.00] | 1.00 | 0.150 | — |
+| inhibitory_control | +0.35 | [0.05, 0.25] | 0.25 | 0.087 | ⚠️ positive_weight_low_max |
+| self_control | +0.25 | [-1.00, 1.00] | 1.00 | 0.250 | — |
+| rumination | +0.35 | [-1.00, 1.00] | 1.00 | 0.350 | — |
+| ruminative_tendency | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+| arousal | +0.10 | [0.55, -0.30] | 1.00 | 0.100 | — |
+
+**Gates** ❌:
+- ✅ `self_evaluation <= -0.20` - Satisfiable | **Observed Fail Rate**: 59.17%
+- ❌ `valence <= -0.10` - Constraint min (0.25) > gate requirement (-0.1) | **Observed Fail Rate**: 55.82%
+- ✅ `inhibitory_control >= 0.05` - Satisfiable | **Observed Fail Rate**: 51.89%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **self_evaluation**: Has negative weight (-0.80) but constraint requires min -0.35
+- ⚠️ **inhibitory_control**: Has positive weight (+0.35) but constraint limits max to 0.25
+
+**Analysis**: Threshold 0.65 is achievable but gates are blocked. Binding conflicts: self_evaluation has negative weight (-0.80) but constraint requires min=-0.35; inhibitory_control has positive weight (+0.35) but constraint limits it to max=0.25. Blocked gates: valence <= -0.10
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 embarrassment <= 0.65 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.85]
+- **Threshold**: 0.65
+- **Status**: sometimes
+- **Slack**: feasibility +0.650; always -0.197
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 2.90 | **Required Raw Sum**: 1.89
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.41 | 0.00 | 0.77 | 8.48% |
+| Global | raw | 0.13 | 0.40 | 0.47 | 0.00 | 0.77 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.41 | 0.00 | 0.77 | 8.48% |
+| In mood regime (no mood constraints) | raw | 0.13 | 0.40 | 0.47 | 0.00 | 0.77 | N/A |
+- **Observed max (global, final)**: 0.77
+- **Observed max (mood-regime, final)**: 0.77
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "arousal >= 0.05" conflicts with mood regime arousal in [0.55, -0.3]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| evaluation_pressure | +0.75 | [0.20, 1.00] | 1.00 | 0.750 | — |
+| evaluation_sensitivity | +0.55 | [0.10, 1.00] | 1.00 | 0.550 | — |
+| self_evaluation | -0.45 | [-0.35, -0.20] | -0.35 | 0.158 | ⚠️ negative_weight_high_min |
+| valence | -0.25 | [0.25, -0.25] | -1.00 | 0.250 | — |
+| arousal | +0.35 | [0.55, -0.30] | 1.00 | 0.350 | — |
+| inhibitory_control | +0.20 | [0.05, 0.25] | 0.25 | 0.050 | ⚠️ positive_weight_low_max |
+| self_control | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+| agency_control | -0.10 | [0.20, -0.30] | -1.00 | 0.100 | — |
+| affiliation | -0.05 | [-1.00, 0.05] | -1.00 | 0.050 | — |
+
+**Gates** ❌:
+- ✅ `evaluation_pressure >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.73%
+- ✅ `evaluation_sensitivity >= 0.10` - Satisfiable | **Observed Fail Rate**: 9.63%
+- ✅ `self_evaluation <= -0.05` - Satisfiable | **Observed Fail Rate**: 51.81%
+- ❌ `arousal >= 0.05` - Constraint max (-0.3) < gate requirement (0.05) | **Observed Fail Rate**: 52.69%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **self_evaluation**: Has negative weight (-0.45) but constraint requires min -0.35
+- ⚠️ **inhibitory_control**: Has positive weight (+0.20) but constraint limits max to 0.25
+
+**Analysis**: Threshold 0.65 is achievable but gates are blocked. Binding conflicts: self_evaluation has negative weight (-0.45) but constraint requires min=-0.35; inhibitory_control has positive weight (+0.20) but constraint limits it to max=0.25. Blocked gates: arousal >= 0.05
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 awkwardness <= 0.60 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.97]
+- **Threshold**: 0.60
+- **Status**: sometimes
+- **Slack**: feasibility +0.600; always -0.371
+- **Tuning direction**: loosen -> threshold up, tighten -> threshold down
+**Sum|Weights|**: 2.25 | **Required Raw Sum**: 1.35
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.53 | 2.04% |
+| Global | raw | 0.06 | 0.32 | 0.39 | 0.00 | 0.67 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.00 | 0.00 | 0.00 | 0.53 | 2.04% |
+| In mood regime (no mood constraints) | raw | 0.06 | 0.32 | 0.39 | 0.00 | 0.67 | N/A |
+- **Observed max (global, final)**: 0.53
+- **Observed max (mood-regime, final)**: 0.53
+
+**Gate Compatibility (mood regime)**: ⚠️ incompatible (benign for <=/< clauses) - gate "arousal >= 0.05" conflicts with mood regime arousal in [0.55, -0.3]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| valence | -0.25 | [0.25, -0.25] | -1.00 | 0.250 | — |
+| arousal | +0.35 | [0.55, -0.30] | 1.00 | 0.350 | — |
+| evaluation_pressure | +0.50 | [0.20, 1.00] | 1.00 | 0.500 | — |
+| evaluation_sensitivity | +0.50 | [0.10, 1.00] | 1.00 | 0.500 | — |
+| agency_control | -0.25 | [0.20, -0.30] | -1.00 | 0.250 | — |
+| engagement | +0.10 | [0.15, -0.20] | 1.00 | 0.100 | — |
+| self_evaluation | -0.10 | [-0.35, -0.20] | -0.35 | 0.035 | ⚠️ negative_weight_high_min |
+| self_control | -0.20 | [-1.00, 1.00] | -1.00 | 0.200 | — |
+| inhibitory_control | +0.00 | [0.05, 0.25] | 0.05 | 0.000 | ⚠️ negative_weight_high_min |
+
+**Gates** ❌:
+- ✅ `evaluation_pressure >= 0.20` - Satisfiable | **Observed Fail Rate**: 59.73%
+- ❌ `arousal >= 0.05` - Constraint max (-0.3) < gate requirement (0.05) | **Observed Fail Rate**: 52.69%
+- ✅ `arousal <= 0.60` - Satisfiable | **Observed Fail Rate**: 18.81%
+- ✅ `self_evaluation >= -0.35` - Satisfiable | **Observed Fail Rate**: 32.62%
+- ✅ `valence >= -0.50` - Satisfiable | **Observed Fail Rate**: 24.32%
+- ❌ `valence <= 0.10` - Constraint min (0.25) > gate requirement (0.1) | **Observed Fail Rate**: 45.59%
+- ✅ `evaluation_sensitivity >= 0.10` - Satisfiable | **Observed Fail Rate**: 9.63%
+- ℹ️ Gate failure clamps intensity to 0, which helps <= conditions; gate conflicts do not block satisfaction.
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **self_evaluation**: Has negative weight (-0.10) but constraint requires min -0.35
+- ⚠️ **inhibitory_control**: Has negative weight (0.00) but constraint requires min 0.05
+
+**Analysis**: Threshold 0.6 is achievable but gates are blocked. Binding conflicts: self_evaluation has negative weight (-0.10) but constraint requires min=-0.35; inhibitory_control has negative weight (0.00) but constraint requires min=0.05. Blocked gates: arousal >= 0.05, valence <= 0.10
+
+**Recommendation**: Threshold can be violated; consider raising threshold or adjusting prototypes to reduce peaks.
+
+##### 🧠 trust >= 0.55 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.75]
+- **Threshold**: 0.55
+- **Status**: sometimes
+- **Slack**: feasibility +0.198; always -0.550
+- **Tuning direction**: loosen -> threshold down, tighten -> threshold up
+**Sum|Weights|**: 2.10 | **Required Raw Sum**: 1.16
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.35 | 0.42 | 0.00 | 0.80 | 69.34% |
+| Global | raw | 0.05 | 0.35 | 0.43 | 0.00 | 0.80 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.35 | 0.42 | 0.00 | 0.80 | 69.34% |
+| In mood regime (no mood constraints) | raw | 0.05 | 0.35 | 0.43 | 0.00 | 0.80 | N/A |
+- **Observed max (global, final)**: 0.80
+- **Observed max (mood-regime, final)**: 0.80
+
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "threat <= 0.40" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| valence | +0.40 | [0.25, -0.25] | 1.00 | 0.400 | — |
+| threat | -0.50 | [0.50, 0.20] | -1.00 | 0.500 | — |
+| agency_control | +0.20 | [0.20, -0.30] | 1.00 | 0.200 | — |
+| engagement | +0.20 | [0.15, -0.20] | 1.00 | 0.200 | — |
+| affiliation | +0.40 | [-1.00, 0.05] | 0.05 | 0.020 | ⚠️ positive_weight_low_max |
+| self_control | +0.20 | [-1.00, 1.00] | 1.00 | 0.200 | — |
+| inhibitory_control | +0.20 | [0.05, 0.25] | 0.25 | 0.050 | ⚠️ positive_weight_low_max |
+
+**Gates** ❌:
+- ❌ `threat <= 0.40` - Constraint min (0.5) > gate requirement (0.4) | **Observed Fail Rate**: 30.66%
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **affiliation**: Has positive weight (+0.40) but constraint limits max to 0.05
+- ⚠️ **inhibitory_control**: Has positive weight (+0.20) but constraint limits max to 0.25
+
+**Analysis**: Intensity 0.55 is achievable but gates are blocked. Binding conflicts: affiliation has positive weight (+0.40) but constraint limits it to max=0.05; inhibitory_control has positive weight (+0.20) but constraint limits it to max=0.25. Blocked gates: threat <= 0.40
+
+**Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
+
+##### 🧠 release >= 0.40 ⚠️ SOMETIMES
+
+**Feasibility (gated)**
+- **Theoretical range (mood constraints, AND-only)**: [0.00, 0.87]
+- **Threshold**: 0.40
+- **Status**: sometimes
+- **Slack**: feasibility +0.466; always -0.400
+- **Tuning direction**: loosen -> threshold down, tighten -> threshold up
+**Sum|Weights|**: 2.35 | **Required Raw Sum**: 0.94
+
+**Regime Stats**:
+| Regime | Signal | P50 | P90 | P95 | Min | Max | Gate Pass |
+|--------|--------|-----|-----|-----|-----|-----|----------|
+| Global | final | 0.00 | 0.28 | 0.41 | 0.00 | 0.84 | 23.32% |
+| Global | raw | 0.00 | 0.35 | 0.44 | 0.00 | 0.84 | N/A |
+| In mood regime (no mood constraints) | final | 0.00 | 0.28 | 0.41 | 0.00 | 0.84 | 23.32% |
+| In mood regime (no mood constraints) | raw | 0.00 | 0.35 | 0.44 | 0.00 | 0.84 | N/A |
+- **Observed max (global, final)**: 0.84
+- **Observed max (mood-regime, final)**: 0.84
+
+**Gate Compatibility (mood regime)**: ❌ incompatible - gate "threat <= 0.30" conflicts with mood regime threat in [0.5, 0.2]
+
+**Prototype Weights**:
+| Axis | Weight | Constraint | Optimal | Contribution | Binding |
+|------|--------|------------|---------|--------------|---------|
+| threat | -1.00 | [0.50, 0.20] | -1.00 | 1.000 | — |
+| arousal | -0.20 | [0.55, -0.30] | -1.00 | 0.200 | — |
+| engagement | +0.45 | [0.15, -0.20] | 1.00 | 0.450 | — |
+| agency_control | +0.15 | [0.20, -0.30] | 1.00 | 0.150 | — |
+| future_expectancy | +0.10 | [-1.00, 1.00] | 1.00 | 0.100 | — |
+| valence | +0.05 | [0.25, -0.25] | 1.00 | 0.050 | — |
+| inhibitory_control | -0.30 | [0.05, 0.25] | 0.05 | -0.015 | ⚠️ negative_weight_high_min |
+| self_control | -0.10 | [-1.00, 1.00] | -1.00 | 0.100 | — |
+
+**Gates** ❌:
+- ❌ `threat <= 0.30` - Constraint min (0.5) > gate requirement (0.3) | **Observed Fail Rate**: 35.56%
+- ❌ `engagement >= 0.10` - Constraint max (-0.2) < gate requirement (0.1) | **Observed Fail Rate**: 54.81%
+- ✅ `arousal <= 0.60` - Satisfiable | **Observed Fail Rate**: 18.81%
+
+**Binding Axes (Structural Conflicts)**:
+- ⚠️ **inhibitory_control**: Has negative weight (-0.30) but constraint requires min 0.05
+
+**Analysis**: Intensity 0.4 is achievable but gates are blocked. Binding conflicts: inhibitory_control has negative weight (-0.30) but constraint requires min=0.05. Blocked gates: threat <= 0.30, engagement >= 0.10
+
+**Recommendation**: Gates cannot be satisfied with current axis constraints. Consider relaxing the conflicting constraints or adjusting gate thresholds in the prototype.
+
 #### Distribution Analysis
-- **Compound Node**: Aggregated from 25 leaf conditions (18 top-level conditions; 25 when OR blocks expanded)
-- **Highest Avg Violation**: 0.54 (from `emotions.admiration >= 0.6`)
-- **Highest P90 Violation**: 0.65
-- **Highest P95 Violation**: 0.74
-- **Highest P99 Violation**: 0.90
-- **Interpretation**: Worst violator: emotions.admiration >= 0.6
+- **Compound Node**: Aggregated from 34 leaf conditions (22 top-level conditions; 34 when OR blocks expanded)
+- **Highest Avg Violation**: 0.45 (from `emotions.trust >= 0.55`)
+- **Highest P90 Violation**: 0.55
+- **Highest P95 Violation**: 0.60
+- **Highest P99 Violation**: 0.74
+- **Interpretation**: Worst violator: emotions.trust >= 0.55
 
 #### Ceiling Analysis
 - **Compound Node**: Contains multiple conditions
@@ -1718,9 +1973,9 @@ Signal: final (gate-clamped intensity).
 - **Insight**: All thresholds appear achievable based on observed values
 
 #### Near-Miss Analysis
-- **Compound Node**: Contains 25 leaf conditions
-- **Most Tunable Condition**: `emotions.inspiration >= 0.25`
-- **Near-Miss Rate**: 3.46% (epsilon: 0.05)
+- **Compound Node**: Contains 34 leaf conditions
+- **Most Tunable Condition**: `emotions.gratitude >= 0.4`
+- **Near-Miss Rate**: 6.38% (epsilon: 0.05)
 - **Tunability**: moderate
 - **Insight**: Adjusting threshold for this condition offers the best chance of improving trigger rate
 
@@ -1745,61 +2000,186 @@ Signal: final (gate-clamped intensity).
 
 - **Type**: axis_sign_conflict
 - **Severity**: high
-- **Confidence**: high
-- **Clause Pass-Rate Impact**: +12.25 pp
-- **Why**: Prototype-linked clause is a top-3 impact choke. Axis sign conflicts indicate regime constraints oppose prototype weights. Conflicts: valence (positive_weight_low_max), self_evaluation (positive_weight_low_max), arousal (positive_weight_low_max), affiliation (positive_weight_low_max).
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.41 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Axis sign conflicts indicate regime constraints oppose prototype weights. Conflicts: inhibitory_control (negative_weight_high_min). Low confidence due to limited mood samples (N=0).
 - **Evidence**:
-  - Axis conflict (positive_weight_low_max): valence weight +0.60, regime [0.20, -0.25], lostRawSum 0.75, lostIntensity 0.39: 0.75/1 (0.39) | Population: mood-regime (N=10.000)
-  - Axis conflict (positive_weight_low_max): self_evaluation weight +0.30, regime [-1.00, -0.25], lostRawSum 0.38, lostIntensity 0.20: 0.38/1 (0.20) | Population: mood-regime (N=10.000)
-  - Axis conflict (positive_weight_low_max): arousal weight +0.20, regime [0.35, 0.35], lostRawSum 0.13, lostIntensity 0.07: 0.13/1 (0.07) | Population: mood-regime (N=10.000)
-  - Pass | gate: 139/2046 (6.79%) | Population: gate-pass (mood-regime) (N=2046)
-  - Mean value | gate: 0.32/1 (0.32) | Population: gate-pass (mood-regime) (N=2046)
-  - Clause threshold: 0.60/1 (0.60) | Population: mood-regime (N=10.000)
+  - Axis conflict (negative_weight_high_min): inhibitory_control weight -0.30, regime [0.05, 0.25], lostRawSum 0.32, lostIntensity 0.13: 0.32/1 (0.13) | Population: mood-regime (N=0)
+  - Pass | gate: 0/0 (0.00%) | Population: gate-pass (mood-regime) (N=0)
+  - Mean value | gate: 0/1 (0.00) | Population: gate-pass (mood-regime) (N=0)
+  - Clause threshold: 0.40/1 (0.40) | Population: mood-regime (N=0)
 - **Actions**:
-  - CONFLICT: Expression requires low Valence (<= -5), but admiration weight opposes the constraint (weight: 0.60). Expression requires low Self Evaluation (<= -25), but admiration weight opposes the constraint (weight: 0.30).
+  - CONFLICT: Expression requires low Inhibitory Control (<= 25), but release treats it as a suppressor (weight: -0.30).
   - 
   - == OPTION A: Keep emotion, adjust regime ==
-  -   - Remove or relax: moodAxes.valence <= -5, moodAxes.valence <= -5, moodAxes.valence <= -15, moodAxes.valence <= -20, moodAxes.valence <= -10, moodAxes.valence <= -25, moodAxes.valence <= -20, moodAxes.valence <= -15, moodAxes.valence <= -10, moodAxes.valence <= -5, moodAxes.valence >= 20, moodAxes.self_evaluation <= -25, moodAxes.arousal >= -30, moodAxes.arousal >= -40, moodAxes.arousal >= 20, moodAxes.arousal >= 20, moodAxes.arousal >= 35, moodAxes.arousal >= 10, moodAxes.arousal <= 35, moodAxes.affiliation >= 10, moodAxes.affiliation >= 10, moodAxes.affiliation <= 35
+  -   - Remove or relax: moodAxes.inhibitory_control <= 25, moodAxes.inhibitory_control >= 5
   -   - Trade-off: Expression may trigger in wider range of mood states
   - 
   - == OPTION B: Keep regime, change emotion ==
-  -   - Or: Adjust admiration's Valence/Self Evaluation weight toward 0 or compatible sign
+  -   - Or: Adjust release's Inhibitory Control weight toward 0 or compatible sign
   -   - Trade-off: Expression will use different emotional signature
 - **Predicted Effect**: Choose Option A or B based on your design intent.
-- **Related Clauses**: [var:emotions.admiration:>=:0.6](#clause-var-emotions-admiration-0-6)
+- **Related Clauses**: [var:emotions.release:>=:0.4](#clause-var-emotions-release-0-4)
 
-### Recommendation 2: Threshold too high for observed distribution
+### Recommendation 2: Prototype axis sign conflict
 
-- **Type**: prototype_mismatch
-- **Severity**: medium
-- **Confidence**: high
-- **Clause Pass-Rate Impact**: +12.25 pp
-- **Why**: Prototype-linked clause is a top-3 impact choke. Pass|gate and mean value trail the clause threshold.
+- **Type**: axis_sign_conflict
+- **Severity**: high
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.21 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Axis sign conflicts indicate regime constraints oppose prototype weights. Conflicts: affiliation (positive_weight_low_max), inhibitory_control (positive_weight_low_max). Low confidence due to limited mood samples (N=0).
 - **Evidence**:
-  - Pass | gate: 139/2046 (6.79%) | Population: gate-pass (mood-regime) (N=2046)
-  - Mean value | gate: 0.32/1 (0.32) | Population: gate-pass (mood-regime) (N=2046)
-  - Clause threshold: 0.60/1 (0.60) | Population: mood-regime (N=10.000)
+  - Axis conflict (positive_weight_low_max): affiliation weight +0.40, regime [-1.00, 0.05], lostRawSum 0.38, lostIntensity 0.18: 0.38/1 (0.18) | Population: mood-regime (N=0)
+  - Axis conflict (positive_weight_low_max): inhibitory_control weight +0.20, regime [0.05, 0.25], lostRawSum 0.15, lostIntensity 0.07: 0.15/1 (0.07) | Population: mood-regime (N=0)
+  - Pass | gate: 0/0 (0.00%) | Population: gate-pass (mood-regime) (N=0)
+  - Mean value | gate: 0/1 (0.00) | Population: gate-pass (mood-regime) (N=0)
+  - Clause threshold: 0.55/1 (0.55) | Population: mood-regime (N=0)
 - **Actions**:
-  - Lower the prototype threshold or rebalance weights to raise values.
-- **Predicted Effect**: Reduce mismatch to improve trigger rate and stability.
-- **Related Clauses**: [var:emotions.admiration:>=:0.6](#clause-var-emotions-admiration-0-6)
+  - CONFLICT: Expression requires low Affiliation (<= 5), but trust weight opposes the constraint (weight: 0.40). Expression requires low Inhibitory Control (<= 25), but trust weight opposes the constraint (weight: 0.20).
+  - 
+  - == OPTION A: Keep emotion, adjust regime ==
+  -   - Remove or relax: moodAxes.affiliation <= 5, moodAxes.inhibitory_control <= 25, moodAxes.inhibitory_control >= 5
+  -   - Trade-off: Expression may trigger in wider range of mood states
+  - 
+  - == OPTION B: Keep regime, change emotion ==
+  -   - Or: Adjust trust's Affiliation/Inhibitory Control weight toward 0 or compatible sign
+  -   - Trade-off: Expression will use different emotional signature
+- **Predicted Effect**: Choose Option A or B based on your design intent.
+- **Related Clauses**: [var:emotions.trust:>=:0.55](#clause-var-emotions-trust-0-55)
 
-### Recommendation 3: Prototype gate suppresses emotion in this regime
+### Recommendation 3: Prototype axis sign conflict
+
+- **Type**: axis_sign_conflict
+- **Severity**: high
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.13 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Axis sign conflicts indicate regime constraints oppose prototype weights. Conflicts: inhibitory_control (positive_weight_low_max). Low confidence due to limited mood samples (N=0).
+- **Evidence**:
+  - Axis conflict (positive_weight_low_max): inhibitory_control weight +0.30, regime [0.05, 0.25], lostRawSum 0.22, lostIntensity 0.08: 0.22/1 (0.08) | Population: mood-regime (N=0)
+  - Pass | gate: 0/0 (0.00%) | Population: gate-pass (mood-regime) (N=0)
+  - Mean value | gate: 0/1 (0.00) | Population: gate-pass (mood-regime) (N=0)
+  - Clause threshold: 0.20/1 (0.20) | Population: mood-regime (N=0)
+- **Actions**:
+  - CONFLICT: Expression requires low Inhibitory Control (<= 25), but calm weight opposes the constraint (weight: 0.30).
+  - 
+  - == OPTION A: Keep emotion, adjust regime ==
+  -   - Remove or relax: moodAxes.inhibitory_control <= 25, moodAxes.inhibitory_control >= 5
+  -   - Trade-off: Expression may trigger in wider range of mood states
+  - 
+  - == OPTION B: Keep regime, change emotion ==
+  -   - Or: Adjust calm's Inhibitory Control weight toward 0 or compatible sign
+  -   - Trade-off: Expression will use different emotional signature
+- **Predicted Effect**: Choose Option A or B based on your design intent.
+- **Related Clauses**: [var:emotions.calm:>=:0.2](#clause-var-emotions-calm-0-2)
+
+### Recommendation 4: Overconstrained Conjunction Detected
+
+- **Type**: overconstrained_conjunction
+- **Severity**: high
+- **Confidence**: high
+- **Clause Pass-Rate Impact**: +0.21 pp
+- **Why**: 3 emotion thresholds are ANDed together, each with <10% pass rate. Joint probability: 0.0026%
+- **Evidence**:
+  - pass rate: 1.2%: ?/? (1.21%)
+  - pass rate: 3.8%: ?/? (3.75%)
+  - pass rate: 5.7%: ?/? (5.70%)
+- **Actions**:
+  - Consider a (2-of-3) rule: require any 2 of the 3 conditions instead of all 3.
+- **Predicted Effect**: Switching to (2-of-N) or OR-softening can dramatically improve trigger probability.
+- **Related Clauses**: [var:emotions.trust:>=:0.55](#clause-var-emotions-trust-0-55), [var:emotions.affection:>=:0.45](#clause-var-emotions-affection-0-45), [var:emotions.release:>=:0.4](#clause-var-emotions-release-0-4)
+
+### Recommendation 5: Prototype gate incompatible with regime
+
+- **Type**: gate_incompatibility
+- **Severity**: low
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.41 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Gate compatibility indicates the regime blocks this prototype. Prototype values are always clamped to 0 in the regime. Low confidence due to limited mood samples (N=0).
+- **Evidence**:
+  - Gate fail rate: 0/0 (0.00%) | Population: mood-regime (N=0)
+  - Gate compatibility: -1/1 (-1.00) | Population: mood-regime (N=0)
+- **Actions**:
+  - Regime makes the gate impossible; adjust gate inputs or swap prototype.
+- **Predicted Effect**: Align gate constraints to allow the prototype to activate.
+- **Related Clauses**: [var:emotions.release:>=:0.4](#clause-var-emotions-release-0-4)
+
+### Recommendation 6: Threshold too high for observed distribution
 
 - **Type**: prototype_mismatch
 - **Severity**: low
-- **Confidence**: high
-- **Clause Pass-Rate Impact**: +0.04 pp
-- **Why**: Prototype-linked clause is a top-3 impact choke. Lost-pass rate exceeds 25%.
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.41 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Pass|gate and mean value trail the clause threshold. Low confidence due to limited mood samples (N=0).
 - **Evidence**:
-  - Gate fail rate: 9674/10000 (96.74%) | Population: mood-regime (N=10.000)
-  - Lost passes | raw >= threshold: 1587/1871 (84.82%) | Population: mood-regime (N=1871)
-  - Most failed gate: engagement >= 0.25: 6223/9674 (64.33%) | Population: mood-regime (N=9674)
+  - Pass | gate: 0/0 (0.00%) | Population: gate-pass (mood-regime) (N=0)
+  - Mean value | gate: 0/1 (0.00) | Population: gate-pass (mood-regime) (N=0)
+  - Clause threshold: 0.40/1 (0.40) | Population: mood-regime (N=0)
 - **Actions**:
-  - Tighten mood-regime axis constraints that allow gate-clamped states.
-  - Loosen prototype gate thresholds or swap the prototype.
+  - Lower the prototype threshold or rebalance weights to raise values.
 - **Predicted Effect**: Reduce mismatch to improve trigger rate and stability.
-- **Related Clauses**: [var:emotions.aesthetic_appreciation:>=:0.25](#clause-var-emotions-aesthetic-appreciation-0-25)
+- **Related Clauses**: [var:emotions.release:>=:0.4](#clause-var-emotions-release-0-4)
+
+### Recommendation 7: Prototype gate incompatible with regime
+
+- **Type**: gate_incompatibility
+- **Severity**: low
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.21 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Gate compatibility indicates the regime blocks this prototype. Prototype values are always clamped to 0 in the regime. Low confidence due to limited mood samples (N=0).
+- **Evidence**:
+  - Gate fail rate: 0/0 (0.00%) | Population: mood-regime (N=0)
+  - Gate compatibility: -1/1 (-1.00) | Population: mood-regime (N=0)
+- **Actions**:
+  - Regime makes the gate impossible; adjust gate inputs or swap prototype.
+- **Predicted Effect**: Align gate constraints to allow the prototype to activate.
+- **Related Clauses**: [var:emotions.trust:>=:0.55](#clause-var-emotions-trust-0-55)
+
+### Recommendation 8: Threshold too high for observed distribution
+
+- **Type**: prototype_mismatch
+- **Severity**: low
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.21 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Pass|gate and mean value trail the clause threshold. Low confidence due to limited mood samples (N=0).
+- **Evidence**:
+  - Pass | gate: 0/0 (0.00%) | Population: gate-pass (mood-regime) (N=0)
+  - Mean value | gate: 0/1 (0.00) | Population: gate-pass (mood-regime) (N=0)
+  - Clause threshold: 0.55/1 (0.55) | Population: mood-regime (N=0)
+- **Actions**:
+  - Lower the prototype threshold or rebalance weights to raise values.
+- **Predicted Effect**: Reduce mismatch to improve trigger rate and stability.
+- **Related Clauses**: [var:emotions.trust:>=:0.55](#clause-var-emotions-trust-0-55)
+
+### Recommendation 9: Prototype gate incompatible with regime
+
+- **Type**: gate_incompatibility
+- **Severity**: low
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.13 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Gate compatibility indicates the regime blocks this prototype. Prototype values are always clamped to 0 in the regime. Low confidence due to limited mood samples (N=0).
+- **Evidence**:
+  - Gate fail rate: 0/0 (0.00%) | Population: mood-regime (N=0)
+  - Gate compatibility: -1/1 (-1.00) | Population: mood-regime (N=0)
+- **Actions**:
+  - Regime makes the gate impossible; adjust gate inputs or swap prototype.
+- **Predicted Effect**: Align gate constraints to allow the prototype to activate.
+- **Related Clauses**: [var:emotions.calm:>=:0.2](#clause-var-emotions-calm-0-2)
+
+### Recommendation 10: Threshold too high for observed distribution
+
+- **Type**: prototype_mismatch
+- **Severity**: low
+- **Confidence**: low
+- **Clause Pass-Rate Impact**: +0.13 pp
+- **Why**: Prototype-linked clause is a top-3 impact choke. Pass|gate and mean value trail the clause threshold. Low confidence due to limited mood samples (N=0).
+- **Evidence**:
+  - Pass | gate: 0/0 (0.00%) | Population: gate-pass (mood-regime) (N=0)
+  - Mean value | gate: 0/1 (0.00) | Population: gate-pass (mood-regime) (N=0)
+  - Clause threshold: 0.20/1 (0.20) | Population: mood-regime (N=0)
+- **Actions**:
+  - Lower the prototype threshold or rebalance weights to raise values.
+- **Predicted Effect**: Reduce mismatch to improve trigger rate and stability.
+- **Related Clauses**: [var:emotions.calm:>=:0.2](#clause-var-emotions-calm-0-2)
 
 
 ---
@@ -1808,421 +2188,459 @@ Signal: final (gate-clamped intensity).
 
 This section shows how adjusting thresholds affects the **entire expression trigger rate**, not just individual clause pass rates.
 This is the key metric for tuning—it answers "What actually happens to the expression if I change this?"
-**Baseline (full sample)**: 1.03% | **Baseline (stored contexts)**: 1.03%
+**Baseline (full sample)**: 0.22% | **Baseline (stored contexts)**: 0.18%
 **Population**: full (N=10.000; predicate: all; hash: 1a309bea).
-### 🎯 Global Expression Sensitivity: emotions.admiration >= [threshold]
+### 🎯 Global Expression Sensitivity: emotions.trust >= [threshold]
 
 
 > **Note**: This shows how the threshold change affects the WHOLE EXPRESSION trigger rate, not just the clause.
 
 | Threshold | Trigger Rate | Change | Samples |
 |-----------|--------------|--------|---------|
-| 0.40 | 4.62% | +3.59 pp (×4.5) | 10.000 |
-| 0.45 | 3.50% | +2.47 pp (×3.4) | 10.000 |
-| 0.50 | 2.46% | +1.43 pp (×2.4) | 10.000 |
-| 0.55 | 1.59% | +0.56 pp (×1.5) | 10.000 |
-| **0.60** | **1.03%** | **baseline (stored contexts)** | 10.000 |
-| 0.65 | 0.62% | -0.41 pp (×0.6) | 10.000 |
-| 0.70 | 0.27% | -0.76 pp (×0.3) | 10.000 |
-| 0.75 | 0.12% | -0.91 pp (×0.1) | 10.000 |
-| 0.80 | 0.05% | -0.98 pp (×0.0) | 10.000 |
+| 0.35 | 0.37% | +0.19 pp (×2.1) | 10.000 |
+| 0.40 | 0.35% | +0.17 pp (×1.9) | 10.000 |
+| 0.45 | 0.29% | +0.11 pp (×1.6) | 10.000 |
+| 0.50 | 0.22% | +0.04 pp | 10.000 |
+| **0.55** | **0.18%** | **baseline (stored contexts)** | 10.000 |
+| 0.60 | 0.11% | -0.07 pp (×0.6) | 10.000 |
+| 0.65 | 0.06% | -0.12 pp (×0.3) | 10.000 |
+| 0.70 | 0.03% | -0.15 pp (×0.2) | 10.000 |
+| 0.75 | 0.03% | -0.15 pp (×0.2) | 10.000 |
 
-#### Threshold Suggestions for Higher Trigger Rates
-
-| Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
-|-------------|---------------------|---------------|-------------|
-| 1.00% | 0.60 | 1.03% | +0.000 |
-
-**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.60.
-
-### 🎯 Global Expression Sensitivity: emotions.quiet_absorption >= [threshold]
+### 🎯 Global Expression Sensitivity: emotions.trusting_surrender >= [threshold]
 
 
 > **Note**: This shows how the threshold change affects the WHOLE EXPRESSION trigger rate, not just the clause.
 
 | Threshold | Trigger Rate | Change | Samples |
 |-----------|--------------|--------|---------|
-| 0.05 | 1.03% | +0.00 pp | 10.000 |
-| 0.10 | 1.03% | +0.00 pp | 10.000 |
-| 0.15 | 1.03% | +0.00 pp | 10.000 |
-| 0.20 | 1.03% | +0.00 pp | 10.000 |
-| **0.25** | **1.03%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 1.03% | +0.00 pp | 10.000 |
-| 0.35 | 1.03% | +0.00 pp | 10.000 |
-| 0.40 | 1.03% | +0.00 pp | 10.000 |
-| 0.45 | 1.03% | +0.00 pp | 10.000 |
+| 0.05 | 0.18% | +0.00 pp | 10.000 |
+| 0.10 | 0.18% | +0.00 pp | 10.000 |
+| 0.15 | 0.18% | +0.00 pp | 10.000 |
+| 0.20 | 0.18% | +0.00 pp | 10.000 |
+| **0.25** | **0.18%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 0.18% | +0.00 pp | 10.000 |
+| 0.35 | 0.18% | +0.00 pp | 10.000 |
+| 0.40 | 0.18% | +0.00 pp | 10.000 |
+| 0.45 | 0.17% | -0.01 pp | 10.000 |
 
-#### Threshold Suggestions for Higher Trigger Rates
-
-| Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
-|-------------|---------------------|---------------|-------------|
-| 1.00% | 0.25 | 1.03% | +0.000 |
-
-**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.25.
-
-### 🎯 Global Expression Sensitivity: emotions.aesthetic_appreciation >= [threshold]
+### 🎯 Global Expression Sensitivity: emotions.affection >= [threshold]
 
 
 > **Note**: This shows how the threshold change affects the WHOLE EXPRESSION trigger rate, not just the clause.
 
 | Threshold | Trigger Rate | Change | Samples |
 |-----------|--------------|--------|---------|
-| 0.05 | 1.03% | +0.00 pp | 10.000 |
-| 0.10 | 1.03% | +0.00 pp | 10.000 |
-| 0.15 | 1.03% | +0.00 pp | 10.000 |
-| 0.20 | 1.03% | +0.00 pp | 10.000 |
-| **0.25** | **1.03%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 1.03% | +0.00 pp | 10.000 |
-| 0.35 | 1.03% | +0.00 pp | 10.000 |
-| 0.40 | 1.03% | +0.00 pp | 10.000 |
-| 0.45 | 1.02% | -0.01 pp | 10.000 |
-
-#### Threshold Suggestions for Higher Trigger Rates
-
-| Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
-|-------------|---------------------|---------------|-------------|
-| 1.00% | 0.25 | 1.03% | +0.000 |
-
-**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.25.
+| 0.25 | 0.19% | +0.01 pp | 10.000 |
+| 0.30 | 0.19% | +0.01 pp | 10.000 |
+| 0.35 | 0.19% | +0.01 pp | 10.000 |
+| 0.40 | 0.19% | +0.01 pp | 10.000 |
+| **0.45** | **0.18%** | **baseline (stored contexts)** | 10.000 |
+| 0.50 | 0.12% | -0.06 pp (×0.7) | 10.000 |
+| 0.55 | 0.05% | -0.13 pp (×0.3) | 10.000 |
+| 0.60 | 0.03% | -0.15 pp (×0.2) | 10.000 |
+| 0.65 | 0.02% | -0.16 pp (×0.1) | 10.000 |
 ## Marginal Clause Pass-Rate Sweep
 
 This sweep shows how adjusting thresholds changes marginal clause pass rates across stored contexts.
 It does **not** estimate overall expression trigger rate.
 **Population**: full (N=10.000; predicate: all; hash: 1a309bea).
-### Marginal Clause Pass-Rate Sweep: emotions.admiration >= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.trust >= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.40 | 7.01% | +5.62 pp (×5.0) | 10.000 |
-| 0.45 | 5.09% | +3.70 pp (×3.7) | 10.000 |
-| 0.50 | 3.43% | +2.04 pp (×2.5) | 10.000 |
-| 0.55 | 2.24% | +0.85 pp (×1.6) | 10.000 |
-| **0.60** | **1.39%** | **baseline (stored contexts)** | 10.000 |
-| 0.65 | 0.85% | -0.54 pp (×0.6) | 10.000 |
-| 0.70 | 0.36% | -1.03 pp (×0.3) | 10.000 |
-| 0.75 | 0.16% | -1.23 pp (×0.1) | 10.000 |
-| 0.80 | 0.06% | -1.33 pp (×0.0) | 10.000 |
+| 0.35 | 9.70% | +8.45 pp (×7.8) | 10.000 |
+| 0.40 | 6.42% | +5.17 pp (×5.1) | 10.000 |
+| 0.45 | 3.76% | +2.51 pp (×3.0) | 10.000 |
+| 0.50 | 2.27% | +1.02 pp (×1.8) | 10.000 |
+| **0.55** | **1.25%** | **baseline (stored contexts)** | 10.000 |
+| 0.60 | 0.65% | -0.60 pp (×0.5) | 10.000 |
+| 0.65 | 0.36% | -0.89 pp (×0.3) | 10.000 |
+| 0.70 | 0.13% | -1.12 pp (×0.1) | 10.000 |
+| 0.75 | 0.05% | -1.20 pp (×0.0) | 10.000 |
 
 #### Threshold Suggestions for Higher Pass Rates
 
 | Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
 |-------------|---------------------|---------------|-------------|
-| 1.00% | 0.60 | 1.39% | +0.000 |
-| 5.00% | 0.45 | 5.09% | -0.150 |
+| 1.00% | 0.55 | 1.25% | +0.000 |
+| 5.00% | 0.40 | 6.42% | -0.150 |
 
-**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.60.
+**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.55.
 
-### Marginal Clause Pass-Rate Sweep: emotions.aesthetic_appreciation >= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.affection >= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 3.26% | +0.42 pp | 10.000 |
-| 0.10 | 3.25% | +0.41 pp | 10.000 |
-| 0.15 | 3.21% | +0.37 pp | 10.000 |
-| 0.20 | 3.11% | +0.27 pp | 10.000 |
-| **0.25** | **2.84%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 2.47% | -0.37 pp | 10.000 |
-| 0.35 | 2.02% | -0.82 pp | 10.000 |
-| 0.40 | 1.45% | -1.39 pp (×0.5) | 10.000 |
-| 0.45 | 0.96% | -1.88 pp (×0.3) | 10.000 |
+| 0.25 | 15.38% | +11.44 pp (×3.9) | 10.000 |
+| 0.30 | 12.17% | +8.23 pp (×3.1) | 10.000 |
+| 0.35 | 8.69% | +4.75 pp (×2.2) | 10.000 |
+| 0.40 | 5.88% | +1.94 pp | 10.000 |
+| **0.45** | **3.94%** | **baseline (stored contexts)** | 10.000 |
+| 0.50 | 2.18% | -1.76 pp (×0.6) | 10.000 |
+| 0.55 | 1.17% | -2.77 pp (×0.3) | 10.000 |
+| 0.60 | 0.54% | -3.40 pp (×0.1) | 10.000 |
+| 0.65 | 0.22% | -3.72 pp (×0.1) | 10.000 |
 
 #### Threshold Suggestions for Higher Pass Rates
 
 | Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
 |-------------|---------------------|---------------|-------------|
-| 1.00% | 0.25 | 2.84% | +0.000 |
+| 1.00% | 0.45 | 3.94% | +0.000 |
+| 5.00% | 0.40 | 5.88% | -0.050 |
+| 10.00% | 0.30 | 12.17% | -0.150 |
+
+**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.45.
+
+### Marginal Clause Pass-Rate Sweep: emotions.release >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.20 | 13.52% | +8.21 pp (×2.5) | 10.000 |
+| 0.25 | 11.30% | +5.99 pp (×2.1) | 10.000 |
+| 0.30 | 9.23% | +3.92 pp (×1.7) | 10.000 |
+| 0.35 | 7.36% | +2.05 pp | 10.000 |
+| **0.40** | **5.31%** | **baseline (stored contexts)** | 10.000 |
+| 0.45 | 3.61% | -1.70 pp | 10.000 |
+| 0.50 | 2.40% | -2.91 pp (×0.5) | 10.000 |
+| 0.55 | 1.34% | -3.97 pp (×0.3) | 10.000 |
+| 0.60 | 0.64% | -4.67 pp (×0.1) | 10.000 |
+
+#### Threshold Suggestions for Higher Pass Rates
+
+| Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
+|-------------|---------------------|---------------|-------------|
+| 1.00% | 0.40 | 5.31% | +0.000 |
+| 5.00% | 0.40 | 5.31% | +0.000 |
+| 10.00% | 0.25 | 11.30% | -0.150 |
+
+**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.40.
+
+### Marginal Clause Pass-Rate Sweep: emotions.gratitude >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.20 | 24.88% | +13.35 pp (×2.2) | 10.000 |
+| 0.25 | 21.49% | +9.96 pp (×1.9) | 10.000 |
+| 0.30 | 18.29% | +6.76 pp (×1.6) | 10.000 |
+| 0.35 | 14.78% | +3.25 pp | 10.000 |
+| **0.40** | **11.53%** | **baseline (stored contexts)** | 10.000 |
+| 0.45 | 8.23% | -3.30 pp | 10.000 |
+| 0.50 | 5.75% | -5.78 pp (×0.5) | 10.000 |
+| 0.55 | 3.53% | -8.00 pp (×0.3) | 10.000 |
+| 0.60 | 1.94% | -9.59 pp (×0.2) | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.relief >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.05 | 17.04% | +4.02 pp | 10.000 |
+| 0.10 | 16.46% | +3.44 pp | 10.000 |
+| 0.15 | 15.55% | +2.53 pp | 10.000 |
+| 0.20 | 14.44% | +1.42 pp | 10.000 |
+| **0.25** | **13.02%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 11.44% | -1.58 pp | 10.000 |
+| 0.35 | 9.30% | -3.72 pp | 10.000 |
+| 0.40 | 7.68% | -5.34 pp (×0.6) | 10.000 |
+| 0.45 | 5.94% | -7.08 pp (×0.5) | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.calm >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.00 | 100.00% | +82.15 pp (×5.6) | 10.000 |
+| 0.05 | 26.18% | +8.33 pp | 10.000 |
+| 0.10 | 23.39% | +5.54 pp | 10.000 |
+| 0.15 | 20.51% | +2.66 pp | 10.000 |
+| **0.20** | **17.85%** | **baseline (stored contexts)** | 10.000 |
+| 0.25 | 15.06% | -2.79 pp | 10.000 |
+| 0.30 | 12.67% | -5.18 pp | 10.000 |
+| 0.35 | 10.16% | -7.69 pp (×0.6) | 10.000 |
+| 0.40 | 7.67% | -10.18 pp (×0.4) | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.contentment >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.00 | 100.00% | +88.60 pp (×8.8) | 10.000 |
+| 0.05 | 14.20% | +2.80 pp | 10.000 |
+| 0.10 | 13.60% | +2.20 pp | 10.000 |
+| 0.15 | 12.61% | +1.21 pp | 10.000 |
+| **0.20** | **11.40%** | **baseline (stored contexts)** | 10.000 |
+| 0.25 | 10.08% | -1.32 pp | 10.000 |
+| 0.30 | 8.51% | -2.89 pp | 10.000 |
+| 0.35 | 7.06% | -4.34 pp (×0.6) | 10.000 |
+| 0.40 | 5.56% | -5.84 pp (×0.5) | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.trusting_surrender >= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.05 | 2.59% | +0.62 pp | 10.000 |
+| 0.10 | 2.53% | +0.56 pp | 10.000 |
+| 0.15 | 2.40% | +0.43 pp | 10.000 |
+| 0.20 | 2.24% | +0.27 pp | 10.000 |
+| **0.25** | **1.97%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 1.63% | -0.34 pp | 10.000 |
+| 0.35 | 1.18% | -0.79 pp (×0.6) | 10.000 |
+| 0.40 | 0.74% | -1.23 pp (×0.4) | 10.000 |
+| 0.45 | 0.47% | -1.50 pp (×0.2) | 10.000 |
+
+#### Threshold Suggestions for Higher Pass Rates
+
+| Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
+|-------------|---------------------|---------------|-------------|
+| 1.00% | 0.25 | 1.97% | +0.000 |
 
 **Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.25.
 
-### Marginal Clause Pass-Rate Sweep: emotions.quiet_absorption >= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.numbness <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 1.87% | +0.37 pp | 10.000 |
-| 0.10 | 1.84% | +0.34 pp | 10.000 |
-| 0.15 | 1.80% | +0.30 pp | 10.000 |
-| 0.20 | 1.68% | +0.18 pp | 10.000 |
-| **0.25** | **1.50%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 1.28% | -0.22 pp | 10.000 |
-| 0.35 | 0.93% | -0.57 pp (×0.6) | 10.000 |
-| 0.40 | 0.57% | -0.93 pp (×0.4) | 10.000 |
-| 0.45 | 0.36% | -1.14 pp (×0.2) | 10.000 |
+| 0.05 | 84.79% | -1.38 pp | 10.000 |
+| 0.10 | 84.85% | -1.32 pp | 10.000 |
+| 0.15 | 85.03% | -1.14 pp | 10.000 |
+| 0.20 | 85.40% | -0.77 pp | 10.000 |
+| **0.25** | **86.17%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 87.38% | +1.21 pp | 10.000 |
+| 0.35 | 89.03% | +2.86 pp | 10.000 |
+| 0.40 | 90.98% | +4.81 pp | 10.000 |
+| 0.45 | 93.01% | +6.84 pp | 10.000 |
 
-#### Threshold Suggestions for Higher Pass Rates
-
-| Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
-|-------------|---------------------|---------------|-------------|
-| 1.00% | 0.25 | 1.50% | +0.000 |
-
-**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.25.
-
-### Marginal Clause Pass-Rate Sweep: emotions.interest >= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.dissociation <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.15 | 34.92% | +12.10 pp (×1.5) | 10.000 |
-| 0.20 | 32.29% | +9.47 pp | 10.000 |
-| 0.25 | 29.61% | +6.79 pp | 10.000 |
-| 0.30 | 26.22% | +3.40 pp | 10.000 |
-| **0.35** | **22.82%** | **baseline (stored contexts)** | 10.000 |
-| 0.40 | 18.89% | -3.93 pp | 10.000 |
-| 0.45 | 15.07% | -7.75 pp (×0.7) | 10.000 |
-| 0.50 | 11.74% | -11.08 pp (×0.5) | 10.000 |
-| 0.55 | 8.88% | -13.94 pp (×0.4) | 10.000 |
+| 0.00 | 97.75% | -0.06 pp | 10.000 |
+| 0.05 | 97.75% | -0.06 pp | 10.000 |
+| 0.10 | 97.75% | -0.06 pp | 10.000 |
+| 0.15 | 97.77% | -0.04 pp | 10.000 |
+| **0.20** | **97.81%** | **baseline (stored contexts)** | 10.000 |
+| 0.25 | 97.90% | +0.09 pp | 10.000 |
+| 0.30 | 98.07% | +0.26 pp | 10.000 |
+| 0.35 | 98.33% | +0.52 pp | 10.000 |
+| 0.40 | 98.77% | +0.96 pp | 10.000 |
 
-### Marginal Clause Pass-Rate Sweep: emotions.inspiration >= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.05 | 14.09% | +5.95 pp (×1.7) | 10.000 |
-| 0.10 | 12.80% | +4.66 pp (×1.6) | 10.000 |
-| 0.15 | 11.32% | +3.18 pp | 10.000 |
-| 0.20 | 9.94% | +1.80 pp | 10.000 |
-| **0.25** | **8.14%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 6.49% | -1.65 pp | 10.000 |
-| 0.35 | 4.88% | -3.26 pp (×0.6) | 10.000 |
-| 0.40 | 3.64% | -4.50 pp (×0.4) | 10.000 |
-| 0.45 | 2.65% | -5.49 pp (×0.3) | 10.000 |
-
-#### Threshold Suggestions for Higher Pass Rates
-
-| Target Rate | Suggested Threshold | Achieved Rate | Δ Threshold |
-|-------------|---------------------|---------------|-------------|
-| 1.00% | 0.25 | 8.14% | +0.000 |
-| 5.00% | 0.25 | 8.14% | +0.000 |
-| 10.00% | 0.15 | 11.32% | -0.100 |
-
-**Interpretation**: To achieve ~1.00% pass rate, adjust threshold by +0.000 to 0.25.
-
-### Marginal Clause Pass-Rate Sweep: emotions.envy <= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.panic <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.10 | 87.06% | -9.70 pp | 10.000 |
-| 0.15 | 89.91% | -6.85 pp | 10.000 |
-| 0.20 | 92.16% | -4.60 pp | 10.000 |
-| 0.25 | 94.70% | -2.06 pp | 10.000 |
-| **0.30** | **96.76%** | **baseline (stored contexts)** | 10.000 |
-| 0.35 | 98.17% | +1.41 pp | 10.000 |
-| 0.40 | 99.08% | +2.32 pp | 10.000 |
-| 0.45 | 99.57% | +2.81 pp | 10.000 |
-| 0.50 | 99.84% | +3.08 pp | 10.000 |
+| 0.00 | 99.59% | +0.00 pp | 10.000 |
+| 0.05 | 99.59% | +0.00 pp | 10.000 |
+| 0.10 | 99.59% | +0.00 pp | 10.000 |
+| 0.15 | 99.59% | +0.00 pp | 10.000 |
+| **0.20** | **99.59%** | **baseline (stored contexts)** | 10.000 |
+| 0.25 | 99.59% | +0.00 pp | 10.000 |
+| 0.30 | 99.60% | +0.01 pp | 10.000 |
+| 0.35 | 99.62% | +0.03 pp | 10.000 |
+| 0.40 | 99.72% | +0.13 pp | 10.000 |
 
-### Marginal Clause Pass-Rate Sweep: emotions.jealousy <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.05 | 96.58% | -1.42 pp | 10.000 |
-| 0.10 | 96.87% | -1.13 pp | 10.000 |
-| 0.15 | 97.21% | -0.79 pp | 10.000 |
-| 0.20 | 97.62% | -0.38 pp | 10.000 |
-| **0.25** | **98.00%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 98.57% | +0.57 pp | 10.000 |
-| 0.35 | 99.07% | +1.07 pp | 10.000 |
-| 0.40 | 99.47% | +1.47 pp | 10.000 |
-| 0.45 | 99.68% | +1.68 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.resentment <= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.terror <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.10 | 98.12% | -0.40 pp | 10.000 |
-| 0.15 | 98.17% | -0.35 pp | 10.000 |
-| 0.20 | 98.25% | -0.27 pp | 10.000 |
-| 0.25 | 98.38% | -0.14 pp | 10.000 |
-| **0.30** | **98.52%** | **baseline (stored contexts)** | 10.000 |
-| 0.35 | 98.73% | +0.21 pp | 10.000 |
-| 0.40 | 98.99% | +0.47 pp | 10.000 |
-| 0.45 | 99.35% | +0.83 pp | 10.000 |
-| 0.50 | 99.68% | +1.16 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.cynicism <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.20 | 87.61% | -8.61 pp | 10.000 |
-| 0.25 | 89.39% | -6.83 pp | 10.000 |
-| 0.30 | 91.67% | -4.55 pp | 10.000 |
-| 0.35 | 94.02% | -2.20 pp | 10.000 |
-| **0.40** | **96.22%** | **baseline (stored contexts)** | 10.000 |
-| 0.45 | 97.85% | +1.63 pp | 10.000 |
-| 0.50 | 98.84% | +2.62 pp | 10.000 |
-| 0.55 | 99.49% | +3.27 pp | 10.000 |
-| 0.60 | 99.79% | +3.57 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.contempt <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.00 | 82.96% | -7.35 pp | 10.000 |
-| 0.05 | 84.53% | -5.78 pp | 10.000 |
-| 0.10 | 86.16% | -4.15 pp | 10.000 |
-| 0.15 | 88.08% | -2.23 pp | 10.000 |
-| **0.20** | **90.31%** | **baseline (stored contexts)** | 10.000 |
-| 0.25 | 92.60% | +2.29 pp | 10.000 |
-| 0.30 | 95.01% | +4.70 pp | 10.000 |
-| 0.35 | 96.76% | +6.45 pp | 10.000 |
-| 0.40 | 98.12% | +7.81 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.disgust <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.00 | 85.59% | -1.60 pp | 10.000 |
-| 0.05 | 85.63% | -1.56 pp | 10.000 |
-| 0.10 | 85.87% | -1.32 pp | 10.000 |
-| 0.15 | 86.31% | -0.88 pp | 10.000 |
-| **0.20** | **87.19%** | **baseline (stored contexts)** | 10.000 |
-| 0.25 | 88.52% | +1.33 pp | 10.000 |
-| 0.30 | 90.39% | +3.20 pp | 10.000 |
-| 0.35 | 92.41% | +5.22 pp | 10.000 |
-| 0.40 | 94.70% | +7.51 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.shame <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.30 | 78.67% | -15.09 pp | 10.000 |
-| 0.35 | 82.58% | -11.18 pp | 10.000 |
-| 0.40 | 86.41% | -7.35 pp | 10.000 |
-| 0.45 | 90.41% | -3.35 pp | 10.000 |
-| **0.50** | **93.76%** | **baseline (stored contexts)** | 10.000 |
-| 0.55 | 96.07% | +2.31 pp | 10.000 |
-| 0.60 | 97.69% | +3.93 pp | 10.000 |
-| 0.65 | 98.93% | +5.17 pp | 10.000 |
-| 0.70 | 99.55% | +5.79 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.humiliation <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.05 | 87.68% | -2.07 pp | 10.000 |
-| 0.10 | 87.76% | -1.99 pp | 10.000 |
-| 0.15 | 88.10% | -1.65 pp | 10.000 |
-| 0.20 | 88.78% | -0.97 pp | 10.000 |
-| **0.25** | **89.75%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 91.20% | +1.45 pp | 10.000 |
-| 0.35 | 92.77% | +3.02 pp | 10.000 |
-| 0.40 | 94.36% | +4.61 pp | 10.000 |
-| 0.45 | 96.06% | +6.31 pp | 10.000 |
+| 0.05 | 91.42% | -3.02 pp | 10.000 |
+| 0.10 | 91.98% | -2.46 pp | 10.000 |
+| 0.15 | 92.56% | -1.88 pp | 10.000 |
+| 0.20 | 93.44% | -1.00 pp | 10.000 |
+| **0.25** | **94.44%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 95.69% | +1.25 pp | 10.000 |
+| 0.35 | 97.08% | +2.64 pp | 10.000 |
+| 0.40 | 98.00% | +3.56 pp | 10.000 |
+| 0.45 | 98.74% | +4.30 pp | 10.000 |
 
 ### Marginal Clause Pass-Rate Sweep: emotions.fear <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 77.08% | -12.88 pp | 10.000 |
-| 0.10 | 80.43% | -9.53 pp | 10.000 |
-| 0.15 | 83.68% | -6.28 pp | 10.000 |
-| 0.20 | 87.03% | -2.93 pp | 10.000 |
-| **0.25** | **89.96%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 92.38% | +2.42 pp | 10.000 |
-| 0.35 | 94.83% | +4.87 pp | 10.000 |
-| 0.40 | 96.62% | +6.66 pp | 10.000 |
-| 0.45 | 97.94% | +7.98 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.anxiety <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.10 | 91.97% | -5.35 pp | 10.000 |
-| 0.15 | 93.12% | -4.20 pp | 10.000 |
-| 0.20 | 94.46% | -2.86 pp | 10.000 |
-| 0.25 | 95.97% | -1.35 pp | 10.000 |
-| **0.30** | **97.32%** | **baseline (stored contexts)** | 10.000 |
-| 0.35 | 98.34% | +1.02 pp | 10.000 |
-| 0.40 | 98.99% | +1.67 pp | 10.000 |
-| 0.45 | 99.48% | +2.16 pp | 10.000 |
-| 0.50 | 99.74% | +2.42 pp | 10.000 |
+| 0.15 | 83.49% | -11.38 pp | 10.000 |
+| 0.20 | 86.73% | -8.14 pp | 10.000 |
+| 0.25 | 89.85% | -5.02 pp | 10.000 |
+| 0.30 | 92.69% | -2.18 pp | 10.000 |
+| **0.35** | **94.87%** | **baseline (stored contexts)** | 10.000 |
+| 0.40 | 96.52% | +1.65 pp | 10.000 |
+| 0.45 | 97.76% | +2.89 pp | 10.000 |
+| 0.50 | 98.76% | +3.89 pp | 10.000 |
+| 0.55 | 99.46% | +4.59 pp | 10.000 |
 
 ### Marginal Clause Pass-Rate Sweep: emotions.hypervigilance <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 85.90% | -3.35 pp | 10.000 |
-| 0.10 | 86.34% | -2.91 pp | 10.000 |
-| 0.15 | 86.82% | -2.43 pp | 10.000 |
-| 0.20 | 87.93% | -1.32 pp | 10.000 |
-| **0.25** | **89.25%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 90.92% | +1.67 pp | 10.000 |
-| 0.35 | 92.79% | +3.54 pp | 10.000 |
-| 0.40 | 94.50% | +5.25 pp | 10.000 |
-| 0.45 | 96.14% | +6.89 pp | 10.000 |
+| 0.10 | 86.39% | -4.50 pp | 10.000 |
+| 0.15 | 86.98% | -3.91 pp | 10.000 |
+| 0.20 | 87.94% | -2.95 pp | 10.000 |
+| 0.25 | 89.44% | -1.45 pp | 10.000 |
+| **0.30** | **90.89%** | **baseline (stored contexts)** | 10.000 |
+| 0.35 | 92.72% | +1.83 pp | 10.000 |
+| 0.40 | 94.54% | +3.65 pp | 10.000 |
+| 0.45 | 96.19% | +5.30 pp | 10.000 |
+| 0.50 | 97.56% | +6.67 pp | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.freeze <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.05 | 99.25% | -0.01 pp | 10.000 |
+| 0.10 | 99.25% | -0.01 pp | 10.000 |
+| 0.15 | 99.25% | -0.01 pp | 10.000 |
+| 0.20 | 99.25% | -0.01 pp | 10.000 |
+| **0.25** | **99.26%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 99.29% | +0.03 pp | 10.000 |
+| 0.35 | 99.32% | +0.06 pp | 10.000 |
+| 0.40 | 99.37% | +0.11 pp | 10.000 |
+| 0.45 | 99.50% | +0.24 pp | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.suspicion <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.05 | 84.18% | -5.01 pp | 10.000 |
+| 0.10 | 85.11% | -4.08 pp | 10.000 |
+| 0.15 | 86.14% | -3.05 pp | 10.000 |
+| 0.20 | 87.62% | -1.57 pp | 10.000 |
+| **0.25** | **89.19%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 90.97% | +1.78 pp | 10.000 |
+| 0.35 | 92.76% | +3.57 pp | 10.000 |
+| 0.40 | 94.53% | +5.34 pp | 10.000 |
+| 0.45 | 96.04% | +6.85 pp | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.contempt <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.05 | 85.19% | -8.30 pp | 10.000 |
+| 0.10 | 87.01% | -6.48 pp | 10.000 |
+| 0.15 | 88.90% | -4.59 pp | 10.000 |
+| 0.20 | 91.23% | -2.26 pp | 10.000 |
+| **0.25** | **93.49%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 95.36% | +1.87 pp | 10.000 |
+| 0.35 | 97.04% | +3.55 pp | 10.000 |
+| 0.40 | 98.37% | +4.88 pp | 10.000 |
+| 0.45 | 99.21% | +5.72 pp | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.hatred <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| -0.05 | 0.00% | -99.78 pp (→ 0) | 10.000 |
+| -0.00 | 0.00% | -99.78 pp (→ 0) | 10.000 |
+| 0.05 | 99.60% | -0.18 pp | 10.000 |
+| 0.10 | 99.66% | -0.12 pp | 10.000 |
+| **0.15** | **99.78%** | **baseline (stored contexts)** | 10.000 |
+| 0.20 | 99.89% | +0.11 pp | 10.000 |
+| 0.25 | 99.92% | +0.14 pp | 10.000 |
+| 0.30 | 99.95% | +0.17 pp | 10.000 |
+| 0.35 | 99.99% | +0.21 pp | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.disgust <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.05 | 87.02% | -2.89 pp | 10.000 |
+| 0.10 | 87.28% | -2.63 pp | 10.000 |
+| 0.15 | 87.73% | -2.18 pp | 10.000 |
+| 0.20 | 88.58% | -1.33 pp | 10.000 |
+| **0.25** | **89.91%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 91.44% | +1.53 pp | 10.000 |
+| 0.35 | 93.34% | +3.43 pp | 10.000 |
+| 0.40 | 95.16% | +5.25 pp | 10.000 |
+| 0.45 | 96.89% | +6.98 pp | 10.000 |
 
 ### Marginal Clause Pass-Rate Sweep: emotions.rage <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 87.91% | -7.10 pp | 10.000 |
-| 0.10 | 89.35% | -5.66 pp | 10.000 |
-| 0.15 | 91.32% | -3.69 pp | 10.000 |
-| 0.20 | 93.22% | -1.79 pp | 10.000 |
-| **0.25** | **95.01%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 96.72% | +1.71 pp | 10.000 |
-| 0.35 | 97.90% | +2.89 pp | 10.000 |
-| 0.40 | 98.81% | +3.80 pp | 10.000 |
-| 0.45 | 99.47% | +4.46 pp | 10.000 |
+| 0.05 | 88.59% | -6.87 pp | 10.000 |
+| 0.10 | 90.25% | -5.21 pp | 10.000 |
+| 0.15 | 92.02% | -3.44 pp | 10.000 |
+| 0.20 | 93.84% | -1.62 pp | 10.000 |
+| **0.25** | **95.46%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 96.72% | +1.26 pp | 10.000 |
+| 0.35 | 97.85% | +2.39 pp | 10.000 |
+| 0.40 | 98.88% | +3.42 pp | 10.000 |
+| 0.45 | 99.45% | +3.99 pp | 10.000 |
 
 ### Marginal Clause Pass-Rate Sweep: emotions.wrath <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.05 | 98.51% | -0.40 pp | 10.000 |
-| 0.10 | 98.52% | -0.39 pp | 10.000 |
-| 0.15 | 98.57% | -0.34 pp | 10.000 |
-| 0.20 | 98.68% | -0.23 pp | 10.000 |
-| **0.25** | **98.91%** | **baseline (stored contexts)** | 10.000 |
-| 0.30 | 99.16% | +0.25 pp | 10.000 |
-| 0.35 | 99.40% | +0.49 pp | 10.000 |
-| 0.40 | 99.59% | +0.68 pp | 10.000 |
-| 0.45 | 99.76% | +0.85 pp | 10.000 |
+| 0.05 | 98.49% | -0.35 pp | 10.000 |
+| 0.10 | 98.52% | -0.32 pp | 10.000 |
+| 0.15 | 98.57% | -0.27 pp | 10.000 |
+| 0.20 | 98.65% | -0.19 pp | 10.000 |
+| **0.25** | **98.84%** | **baseline (stored contexts)** | 10.000 |
+| 0.30 | 99.04% | +0.20 pp | 10.000 |
+| 0.35 | 99.30% | +0.46 pp | 10.000 |
+| 0.40 | 99.55% | +0.71 pp | 10.000 |
+| 0.45 | 99.74% | +0.90 pp | 10.000 |
 
-### Marginal Clause Pass-Rate Sweep: emotions.protest_anger <= [threshold]
-
-
-| Threshold | Pass Rate | Change | Samples |
-|-----------|-----------|--------|---------|
-| 0.15 | 99.15% | -0.12 pp | 10.000 |
-| 0.20 | 99.15% | -0.12 pp | 10.000 |
-| 0.25 | 99.16% | -0.11 pp | 10.000 |
-| 0.30 | 99.21% | -0.06 pp | 10.000 |
-| **0.35** | **99.27%** | **baseline (stored contexts)** | 10.000 |
-| 0.40 | 99.35% | +0.08 pp | 10.000 |
-| 0.45 | 99.48% | +0.21 pp | 10.000 |
-| 0.50 | 99.66% | +0.39 pp | 10.000 |
-| 0.55 | 99.76% | +0.49 pp | 10.000 |
-
-### Marginal Clause Pass-Rate Sweep: emotions.moral_outrage <= [threshold]
+### Marginal Clause Pass-Rate Sweep: emotions.shame <= [threshold]
 
 
 | Threshold | Pass Rate | Change | Samples |
 |-----------|-----------|--------|---------|
-| 0.15 | 99.55% | -0.03 pp | 10.000 |
-| 0.20 | 99.55% | -0.03 pp | 10.000 |
-| 0.25 | 99.55% | -0.03 pp | 10.000 |
-| 0.30 | 99.55% | -0.03 pp | 10.000 |
-| **0.35** | **99.58%** | **baseline (stored contexts)** | 10.000 |
-| 0.40 | 99.63% | +0.05 pp | 10.000 |
-| 0.45 | 99.70% | +0.12 pp | 10.000 |
-| 0.50 | 99.78% | +0.20 pp | 10.000 |
-| 0.55 | 99.87% | +0.29 pp | 10.000 |
+| 0.45 | 97.26% | -2.61 pp | 10.000 |
+| 0.50 | 98.29% | -1.58 pp | 10.000 |
+| 0.55 | 99.14% | -0.73 pp | 10.000 |
+| 0.60 | 99.61% | -0.26 pp | 10.000 |
+| **0.65** | **99.87%** | **baseline (stored contexts)** | 10.000 |
+| 0.70 | 99.98% | +0.11 pp | 10.000 |
+| 0.75 | 100.00% | +0.13 pp | 10.000 |
+| 0.80 | 100.00% | +0.13 pp | 10.000 |
+| 0.85 | 100.00% | +0.13 pp | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.embarrassment <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.45 | 96.22% | -3.50 pp | 10.000 |
+| 0.50 | 97.58% | -2.14 pp | 10.000 |
+| 0.55 | 98.65% | -1.07 pp | 10.000 |
+| 0.60 | 99.29% | -0.43 pp | 10.000 |
+| **0.65** | **99.72%** | **baseline (stored contexts)** | 10.000 |
+| 0.70 | 99.88% | +0.16 pp | 10.000 |
+| 0.75 | 99.98% | +0.26 pp | 10.000 |
+| 0.80 | 100.00% | +0.28 pp | 10.000 |
+| 0.85 | 100.00% | +0.28 pp | 10.000 |
+
+### Marginal Clause Pass-Rate Sweep: emotions.awkwardness <= [threshold]
+
+
+| Threshold | Pass Rate | Change | Samples |
+|-----------|-----------|--------|---------|
+| 0.40 | 99.73% | -0.27 pp | 10.000 |
+| 0.45 | 99.91% | -0.09 pp | 10.000 |
+| 0.50 | 99.99% | -0.01 pp | 10.000 |
+| 0.55 | 100.00% | +0.00 pp | 10.000 |
+| **0.60** | **100.00%** | **baseline (stored contexts)** | 10.000 |
+| 0.65 | 100.00% | +0.00 pp | 10.000 |
+| 0.70 | 100.00% | +0.00 pp | 10.000 |
+| 0.75 | 100.00% | +0.00 pp | 10.000 |
+| 0.80 | 100.00% | +0.00 pp | 10.000 |
 
 ## 🎯 Prototype Fit Analysis
 
@@ -2234,33 +2652,35 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
 **Population**: full (N=10.000; predicate: all; hash: 1a309bea).
 | Rank | Prototype | Gate Pass | P(I≥t) | Conflict | Composite |
 |------|-----------|-----------|--------|----------|-----------|
-| 1 | **hypervigilance** | 0.00% | 0.00% | 0.00% | 0.35 |
-| 2 | **embarrassment** | 0.00% | 0.00% | 0.00% | 0.35 |
-| 3 | **guilt** | 0.00% | 0.00% | 0.00% | 0.35 |
-| 4 | **regret** | 0.00% | 0.00% | 0.00% | 0.35 |
-| 5 | **interest** | 0.00% | 0.00% | 5.88% | 0.34 |
-| 6 | **unease** | 0.00% | 0.00% | 5.88% | 0.34 |
-| 7 | **apprehension** | 0.00% | 0.00% | 5.88% | 0.34 |
-| 8 | **courage** | 0.00% | 0.00% | 5.88% | 0.34 |
-| 9 | **alarm** | 0.00% | 0.00% | 5.88% | 0.34 |
-| 10 | **suspicion** | 0.00% | 0.00% | 5.88% | 0.34 |
+| 1 | **optimism** | 0.00% | 0.00% | 0.00% | 0.35 |
+| 2 | **joy** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 3 | **interest** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 4 | **determination** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 5 | **anticipation** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 6 | **unease** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 7 | **thrill** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 8 | **courage** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 9 | **alarm** | 0.00% | 0.00% | 6.67% | 0.34 |
+| 10 | **shame** | 0.00% | 0.00% | 6.67% | 0.34 |
 
 ### Top 3 Prototype Details
 
-#### 1. hypervigilance
+#### 1. optimism
 
 - **Intensity Distribution**: P50=0.00, P90=0.00, P95=0.00
 - **Conflicting Axes**: None
 
-#### 2. embarrassment
+#### 2. joy
 
 - **Intensity Distribution**: P50=0.00, P90=0.00, P95=0.00
-- **Conflicting Axes**: None
+- **Conflicting Axes**: inhibitory_control (weight=-0.20, wants negative)
+- **Conflict Magnitude**: 0.20
 
-#### 3. guilt
+#### 3. interest
 
 - **Intensity Distribution**: P50=0.00, P90=0.00, P95=0.00
-- **Conflicting Axes**: None
+- **Conflicting Axes**: engagement (weight=1.00, wants positive)
+- **Conflict Magnitude**: 1.00
 
 ---
 
@@ -2269,35 +2689,44 @@ Ranking of emotion prototypes by how well they fit this expression's mood regime
 > **[NON-AXIS ONLY]** **[IN-REGIME]**
 > *Evaluates emotion/sexual/delta clauses within mood-regime using final values.*
 
-**Population**: 10.000 in-regime samples analyzed
+**Population**: 0 in-regime samples analyzed
 
 | Variable | Clause | Pass Rate | Max Value | Classification |
 |----------|--------|-----------|-----------|----------------|
-| `emotions.admiration` | >= 0.600 | 1.4% | 0.884 | ✅ OK |
-| `emotions.aesthetic_appreciation` | >= 0.250 | 2.8% | 0.786 | ✅ OK |
-| `emotions.quiet_absorption` | >= 0.250 | 1.5% | 0.640 | ✅ OK |
-| `emotions.interest` | >= 0.350 | 22.8% | 0.959 | ✅ OK |
-| `emotions.inspiration` | >= 0.250 | 8.1% | 0.817 | ✅ OK |
-| `emotions.envy` | <= 0.300 | 96.8% | 0.618 | ✅ OK |
-| `emotions.jealousy` | <= 0.250 | 98.0% | 0.644 | ✅ OK |
-| `emotions.resentment` | <= 0.300 | 98.5% | 0.631 | ✅ OK |
-| `emotions.cynicism` | <= 0.400 | 96.2% | 0.721 | ✅ OK |
-| `emotions.contempt` | <= 0.200 | 90.3% | 0.673 | ✅ OK |
-| `emotions.disgust` | <= 0.200 | 87.2% | 0.734 | ✅ OK |
-| `emotions.shame` | <= 0.500 | 93.8% | 0.880 | ✅ OK |
-| `emotions.humiliation` | <= 0.250 | 89.8% | 0.787 | ✅ OK |
-| `emotions.fear` | <= 0.250 | 90.0% | 0.840 | ✅ OK |
-| `emotions.anxiety` | <= 0.300 | 97.3% | 0.676 | ✅ OK |
-| `emotions.hypervigilance` | <= 0.250 | 89.3% | 0.762 | ✅ OK |
-| `emotions.rage` | <= 0.250 | 95.0% | 0.664 | ✅ OK |
-| `emotions.wrath` | <= 0.250 | 98.9% | 0.589 | ✅ OK |
-| `emotions.protest_anger` | <= 0.350 | 99.3% | 0.679 | ✅ OK |
-| `emotions.moral_outrage` | <= 0.350 | 99.6% | 0.670 | ✅ OK |
-| `emotions.admiration` | (emotions.admiration - previousEmotions.admiration) >= 0.120 | 15.5% | 0.884 | ✅ OK |
-| `emotions.inspiration` | (emotions.inspiration - previousEmotions.inspiration) >= 0.100 | 11.8% | 0.813 | ✅ OK |
-| `emotions.aesthetic_appreciation` | (emotions.aesthetic_appreciation - previousEmotions.aesthetic_appreciation) >= 0.100 | 3.2% | 0.786 | ✅ OK |
-| `emotions.quiet_absorption` | (emotions.quiet_absorption - previousEmotions.quiet_absorption) >= 0.100 | 1.8% | 0.640 | ✅ OK |
-| `emotions.interest` | (emotions.interest - previousEmotions.interest) >= 0.150 | 26.7% | 0.959 | ✅ OK |
+| `emotions.trust` | >= 0.550 | 1.3% | 0.802 | ✅ OK |
+| `emotions.affection` | >= 0.450 | 3.9% | 0.788 | ✅ OK |
+| `emotions.release` | >= 0.400 | 5.3% | 0.837 | ✅ OK |
+| `emotions.gratitude` | >= 0.400 | 11.5% | 0.870 | ✅ OK |
+| `emotions.relief` | >= 0.250 | 13.0% | 0.872 | ✅ OK |
+| `emotions.calm` | >= 0.200 | 17.8% | 0.818 | ✅ OK |
+| `emotions.contentment` | >= 0.200 | 11.4% | 0.838 | ✅ OK |
+| `emotions.trusting_surrender` | >= 0.250 | 2.0% | 0.674 | ✅ OK |
+| `emotions.numbness` | <= 0.250 | 86.2% | 0.824 | ✅ OK |
+| `emotions.dissociation` | <= 0.200 | 97.8% | 0.745 | ✅ OK |
+| `emotions.panic` | <= 0.200 | 99.6% | 0.625 | ✅ OK |
+| `emotions.terror` | <= 0.250 | 94.4% | 0.674 | ✅ OK |
+| `emotions.fear` | <= 0.350 | 94.9% | 0.737 | ✅ OK |
+| `emotions.hypervigilance` | <= 0.300 | 90.9% | 0.780 | ✅ OK |
+| `emotions.freeze` | <= 0.250 | 99.3% | 0.740 | ✅ OK |
+| `emotions.suspicion` | <= 0.250 | 89.2% | 0.813 | ✅ OK |
+| `emotions.contempt` | <= 0.250 | 93.5% | 0.653 | ✅ OK |
+| `emotions.hatred` | <= 0.150 | 99.8% | 0.367 | ✅ OK |
+| `emotions.disgust` | <= 0.250 | 89.9% | 0.734 | ✅ OK |
+| `emotions.rage` | <= 0.250 | 95.5% | 0.623 | ✅ OK |
+| `emotions.wrath` | <= 0.250 | 98.8% | 0.579 | ✅ OK |
+| `emotions.shame` | <= 0.650 | 99.9% | 0.736 | ✅ OK |
+| `emotions.embarrassment` | <= 0.650 | 99.7% | 0.772 | ✅ OK |
+| `emotions.awkwardness` | <= 0.600 | 100.0% | 0.534 | ✅ OK |
+| `previousEmotions.trust` | < 0.550 | 98.9% | 0.821 | ✅ OK |
+| `emotions.trust` | >= 0.550 | 1.3% | 0.802 | ✅ OK |
+| `previousEmotions.release` | < 0.400 | 94.4% | 0.800 | ✅ OK |
+| `emotions.release` | >= 0.400 | 5.3% | 0.837 | ✅ OK |
+| `emotions.relief` | (emotions.relief - previousEmotions.relief) >= 0.100 | 14.9% | 0.872 | ✅ OK |
+| `emotions.gratitude` | (emotions.gratitude - previousEmotions.gratitude) >= 0.100 | 24.0% | 0.850 | ✅ OK |
+| `previousEmotions.fear` | (previousEmotions.fear - previousPreviousEmotions.fear) >= 0.150 | N/A | N/A | ❓ UNKNOWN |
+| `previousEmotions.anxiety` | (previousEmotions.anxiety - previousPreviousEmotions.anxiety) >= 0.150 | N/A | N/A | ❓ UNKNOWN |
+| `previousEmotions.hypervigilance` | (previousEmotions.hypervigilance - previousPreviousEmotions.hypervigilance) >= 0.150 | N/A | N/A | ❓ UNKNOWN |
+| `emotions.trusting_surrender` | (emotions.trusting_surrender - previousEmotions.trusting_surrender) >= 0.100 | 2.5% | 0.674 | ✅ OK |
 
 ## 🧭 Implied Prototype from Prerequisites
 
@@ -2309,53 +2738,51 @@ Analysis of which prototypes best match the expression's constraint pattern.
 
 | Axis | Direction | Importance |
 |------|-----------|------------|
-| arousal | ↑ High | 0.75 |
-| valence | — Neutral | 0.86 |
-| threat | ↑ High | 0.74 |
-| uncertainty | ↑ High | 0.72 |
-| future_expectancy | — Neutral | 0.84 |
-| agency_control | ↑ High | 0.78 |
-| affiliation | ↑ High | 0.69 |
-| inhibitory_control | ↑ High | 0.74 |
-| engagement | ↑ High | 0.59 |
-| self_evaluation | ↓ Low | 0.56 |
-| rumination | ↑ High | 0.55 |
+| affective_empathy | ↓ Low | 0.44 |
+| affiliation | ↓ Low | 0.49 |
+| agency_control | — Neutral | 0.88 |
+| arousal | ↑ High | 0.96 |
 | contamination_salience | ↑ High | 0.55 |
 | disgust_sensitivity | ↑ High | 0.53 |
-| evaluation_pressure | ↑ High | 0.57 |
+| engagement | — Neutral | 0.84 |
+| evaluation_pressure | ↑ High | 0.55 |
 | evaluation_sensitivity | ↑ High | 0.53 |
-| self_control | ↑ High | 0.55 |
-| harm_aversion | ↑ High | 0.53 |
+| harm_aversion | ↓ Low | 0.45 |
+| inhibitory_control | ↑ High | 0.70 |
+| self_evaluation | ↓ Low | 0.71 |
+| threat | ↑ High | 0.82 |
+| uncertainty | ↑ High | 0.78 |
+| valence | — Neutral | 0.88 |
 
 ### Top 5 by Cosine Similarity
 
 | Rank | Prototype | Similarity | Gate Pass | Combined |
 |------|-----------|------------|-----------|----------|
-| 1 | **moral_outrage** | 0.64 | 0.00% | 0.38 |
-| 2 | **courage** | 0.63 | 0.00% | 0.38 |
-| 3 | **hypervigilance** | 0.60 | 0.00% | 0.36 |
-| 4 | **embarrassment** | 0.50 | 0.00% | 0.30 |
-| 5 | **protest_anger** | 0.49 | 0.00% | 0.29 |
+| 1 | **humiliation** | 0.67 | 0.00% | 0.40 |
+| 2 | **hypervigilance** | 0.62 | 0.00% | 0.37 |
+| 3 | **embarrassment** | 0.59 | 0.00% | 0.35 |
+| 4 | **alarm** | 0.55 | 0.00% | 0.33 |
+| 5 | **jealousy** | 0.55 | 0.00% | 0.33 |
 
 ### Top 5 by Gate Pass Rate
 
 | Rank | Prototype | Gate Pass | Similarity | Combined |
 |------|-----------|-----------|------------|----------|
-| 1 | **calm** | 0.00% | -0.39 | -0.23 |
-| 2 | **contentment** | 0.00% | -0.28 | -0.17 |
-| 3 | **relief** | 0.00% | -0.40 | -0.24 |
-| 4 | **release** | 0.00% | -0.27 | -0.16 |
-| 5 | **confidence** | 0.00% | -0.04 | -0.02 |
+| 1 | **calm** | 0.00% | -0.54 | -0.33 |
+| 2 | **contentment** | 0.00% | -0.43 | -0.26 |
+| 3 | **relief** | 0.00% | -0.50 | -0.30 |
+| 4 | **acceptance_settling** | 0.00% | -0.37 | -0.22 |
+| 5 | **release** | 0.00% | -0.47 | -0.28 |
 
 ### Top 5 by Combined Score
 
 | Rank | Prototype | Combined | Similarity | Gate Pass |
 |------|-----------|----------|------------|----------|
-| 1 | **moral_outrage** | 0.38 | 0.64 | 0.00% |
-| 2 | **courage** | 0.38 | 0.63 | 0.00% |
-| 3 | **hypervigilance** | 0.36 | 0.60 | 0.00% |
-| 4 | **embarrassment** | 0.30 | 0.50 | 0.00% |
-| 5 | **protest_anger** | 0.29 | 0.49 | 0.00% |
+| 1 | **humiliation** | 0.40 | 0.67 | 0.00% |
+| 2 | **hypervigilance** | 0.37 | 0.62 | 0.00% |
+| 3 | **embarrassment** | 0.35 | 0.59 | 0.00% |
+| 4 | **alarm** | 0.33 | 0.55 | 0.00% |
+| 5 | **jealousy** | 0.33 | 0.55 | 0.00% |
 
 ---
 
@@ -2367,43 +2794,24 @@ Analysis of prototype coverage in "prototype space".
 
 ### ✅ Good Coverage
 
-**Nearest Distance**: 0.33 - within acceptable range.
+**Nearest Distance**: 0.32 - within acceptable range.
 
-**Distance Context**: Distance 0.33 is farther than 100% of prototype nearest-neighbor distances (z=3.59).
+**Distance Context**: Distance 0.32 is farther than 100% of prototype nearest-neighbor distances (z=3.21).
 
 ### k-Nearest Prototypes
 
 | Rank | Prototype | Distance | Weight Dist | Gate Dist |
 |------|-----------|----------|-------------|----------|
-| 1 | **hypervigilance** | 0.33 | 0.47 | 0.00 |
-| 2 | **moral_outrage** | 0.34 | 0.43 | 0.12 |
-| 3 | **courage** | 0.34 | 0.46 | 0.06 |
-| 4 | **embarrassment** | 0.36 | 0.51 | 0.00 |
-| 5 | **apprehension** | 0.36 | 0.51 | 0.00 |
+| 1 | **humiliation** | 0.32 | 0.41 | 0.13 |
+| 2 | **embarrassment** | 0.34 | 0.45 | 0.07 |
+| 3 | **unease** | 0.34 | 0.49 | 0.00 |
+| 4 | **hypervigilance** | 0.35 | 0.44 | 0.13 |
+| 5 | **shame** | 0.35 | 0.48 | 0.07 |
 
 ---
 
 ## Report Integrity Warnings
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=admiration; signal=final] examples: index 7, 14, 16, 27, 32
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=aesthetic_appreciation; signal=final] examples: index 76, 79, 146, 151, 197
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=quiet_absorption; signal=final] examples: index 16, 146, 191, 275, 354
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=interest; signal=final] examples: index 11, 14, 52, 56, 70
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=inspiration; signal=final] examples: index 11, 14, 27, 30, 52
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=envy; signal=final] examples: index 17, 57, 77, 80, 161
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=jealousy; signal=final] examples: index 11, 91, 154, 166, 206
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=resentment; signal=final] examples: index 4284, 4954, 5381, 9503
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=cynicism; signal=final] examples: index 1, 18, 24, 28, 35
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=contempt; signal=final] examples: index 1, 11, 18, 28, 38
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=disgust; signal=final] examples: index 8, 17, 48, 50, 57
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=shame; signal=final] examples: index 34, 128, 135, 250, 278
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=humiliation; signal=final] examples: index 250, 660, 725, 1090, 1601
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=fear; signal=final] examples: index 0, 11, 12, 17, 20
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=anxiety; signal=final] examples: index 0, 24, 35, 45, 52
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=hypervigilance; signal=final] examples: index 5, 11, 35, 52, 73
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=rage; signal=final] examples: index 4, 8, 18, 20, 24
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=wrath; signal=final] examples: index 4, 111, 217, 422, 437
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=protest_anger; signal=final] examples: index 11, 12, 64, 234, 328
-- I4_OBSERVED_EXCEEDS_THEORETICAL: Observed max final exceeds theoretical max for mood-regime population. [population=1a309bea; prototype=moral_outrage; signal=final] examples: index 11, 28, 185, 739, 893
+- I5_MOOD_REGIME_HASH_MISMATCH: Mood-regime population hash differs between report and simulation metadata. [population=1a309bea]
 
 > **Impact (full sample)**: Gate/final mismatches can invalidate pass-rate and blocker metrics; treat threshold feasibility as provisional until resolved.
 

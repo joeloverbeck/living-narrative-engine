@@ -8,11 +8,10 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import {
   evaluateConstraint,
   extractMoodConstraints,
+  extractMergedMoodConstraints,
   filterContextsByConstraints,
   formatConstraints,
   hasOrMoodConstraints,
-  convertAxisConstraintsToMoodConstraints,
-  mergeConstraints,
 } from '../utils/moodRegimeUtils.js';
 import {
   REPORT_INTEGRITY_EPSILON,
@@ -67,6 +66,7 @@ class MonteCarloReportGenerator {
   #conflictWarningSectionGenerator;
   #actionabilitySectionGenerator;
   #emotionSimilarityService;
+  #dataRegistry;
 
   /**
    * @param {object} deps
@@ -92,9 +92,11 @@ class MonteCarloReportGenerator {
    * @param {import('./sectionGenerators/ConflictWarningSectionGenerator.js').default} [deps.conflictWarningSectionGenerator] - Optional conflict warning section generator (created via lazy init if not provided)
    * @param {import('./sectionGenerators/ActionabilitySectionGenerator.js').default} [deps.actionabilitySectionGenerator] - Optional actionability section generator
    * @param {import('./EmotionSimilarityService.js').default} [deps.emotionSimilarityService] - Optional emotion similarity service for overconstrained detection
+   * @param {object} [deps.dataRegistry] - Optional data registry for prototype lookups
    */
   constructor({
     logger,
+    dataRegistry = null,
     prototypeConstraintAnalyzer = null,
     prototypeFitRankingService = null,
     prototypeSynthesisService = null,
@@ -121,6 +123,7 @@ class MonteCarloReportGenerator {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     this.#logger = logger;
+    this.#dataRegistry = dataRegistry;
     this.#prototypeConstraintAnalyzer = prototypeConstraintAnalyzer;
     this.#prototypeFitRankingService = prototypeFitRankingService;
     this.#prototypeSynthesisService = prototypeSynthesisService;
@@ -229,15 +232,13 @@ class MonteCarloReportGenerator {
     const hasOrMoodConstraintsFlag = hasOrMoodConstraints(prerequisites, {
       includeMoodAlias: true,
     });
-    // Extract direct moodAxes.* constraints from prerequisites
-    const directMoodConstraints = extractMoodConstraints(prerequisites, {
-      includeMoodAlias: true,
-      andOnly: true,
-    });
-    // Convert prototype-derived axis constraints to mood constraint format
-    const gateBasedConstraints = convertAxisConstraintsToMoodConstraints(axisConstraints);
-    // Merge: direct constraints take precedence, prototype gates fill gaps
-    const moodConstraints = mergeConstraints(directMoodConstraints, gateBasedConstraints);
+    // Extract merged mood constraints (direct + prototype-gate derived)
+    // Uses extractMergedMoodConstraints for consistency with MonteCarloSimulator
+    const moodConstraints = extractMergedMoodConstraints(
+      prerequisites,
+      this.#dataRegistry,
+      { includeMoodAlias: true, andOnly: true }
+    );
     const storedPopulations = this.#coreSectionGenerator.buildStoredContextPopulations(
       simulationResult.storedContexts,
       moodConstraints
@@ -435,15 +436,13 @@ class MonteCarloReportGenerator {
       ? simulationResult.reportIntegrityWarnings
       : [];
     const axisConstraints = this.#extractAxisConstraints(prerequisites);
-    // Extract direct moodAxes.* constraints from prerequisites
-    const directMoodConstraints = extractMoodConstraints(prerequisites, {
-      includeMoodAlias: true,
-      andOnly: true,
-    });
-    // Convert prototype-derived axis constraints to mood constraint format
-    const gateBasedConstraints = convertAxisConstraintsToMoodConstraints(axisConstraints);
-    // Merge: direct constraints take precedence, prototype gates fill gaps
-    const moodConstraints = mergeConstraints(directMoodConstraints, gateBasedConstraints);
+    // Use unified extraction that merges direct moodAxes.* constraints with prototype gate-derived constraints
+    // This ensures hash consistency with MonteCarloSimulator
+    const moodConstraints = extractMergedMoodConstraints(
+      prerequisites,
+      this.#dataRegistry,
+      { includeMoodAlias: true, andOnly: true }
+    );
     const storedPopulations = this.#coreSectionGenerator.buildStoredContextPopulations(
       simulationResult.storedContexts,
       moodConstraints

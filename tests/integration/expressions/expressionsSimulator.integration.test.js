@@ -1,16 +1,11 @@
 /**
  * @file Integration tests for expressions simulator data flow.
+ * Uses mock expressions to validate system behavior without dependency on specific mod files.
  */
 
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import path from 'node:path';
-import { existsSync } from 'node:fs';
-import { readFile, readdir } from 'node:fs/promises';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
-import {
-  buildStateMap,
-  collectExpressionStateKeys,
-} from '../../common/expressionTestUtils.js';
+import { buildStateMap } from '../../common/expressionTestUtils.js';
 import { registerExpressionServices } from '../../../src/dependencyInjection/registrations/expressionsRegistrations.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
@@ -35,40 +30,47 @@ const MOOD_AXES_KEYS = [
   'evaluation_pressure',
 ];
 
-const SEXUAL_DESIRE_DIR = path.resolve(
-  process.cwd(),
-  'data',
-  'mods',
-  'emotions-sexual-desire',
-  'expressions'
-);
-const LEGACY_SEXUALITY_DIR = path.resolve(
-  process.cwd(),
-  'data',
-  'mods',
-  'emotions-sexuality',
-  'expressions'
-);
-const EXPRESSIONS_DIR = existsSync(SEXUAL_DESIRE_DIR)
-  ? SEXUAL_DESIRE_DIR
-  : LEGACY_SEXUALITY_DIR;
+/**
+ * Mock expressions for testing expression simulator system behavior.
+ * These validate the system's ability to load, evaluate, and dispatch expressions
+ * without depending on specific mod content.
+ *
+ * @returns {Array<object>} Array of mock expression objects
+ */
+const createMockExpressions = () => [
+  {
+    id: 'test:expression-with-actor-placeholder',
+    priority: 100,
+    prerequisites: [{ logic: { '>=': [{ var: 'moodAxes.valence' }, 0] } }],
+    description_text: '{actor} feels a wave of emotion.',
+    emotion_effects: { anticipation: 5 },
+  },
+  {
+    id: 'test:high-priority-expression',
+    priority: 200,
+    prerequisites: [{ logic: { '>=': [{ var: 'moodAxes.arousal' }, 0] } }],
+    description_text: 'An intense feeling surges through {actor}.',
+    emotion_effects: { excitement: 10 },
+  },
+  {
+    id: 'test:sexual-context-expression',
+    priority: 50,
+    prerequisites: [
+      { logic: { '>=': [{ var: 'sexualStates.sex_excitation' }, 0] } },
+    ],
+    description_text: '{actor} experiences heightened awareness.',
+    sexual_effects: { arousal: 5 },
+  },
+];
 
-const loadExpressions = async (dataRegistry) => {
-  const files = await readdir(EXPRESSIONS_DIR);
-  const expressions = [];
+const MOCK_EMOTION_KEYS = ['anticipation', 'excitement', 'calm'];
+const MOCK_SEXUAL_KEYS = ['arousal', 'desire', 'inhibition'];
 
-  for (const file of files) {
-    if (!file.endsWith('.expression.json')) {
-      continue;
-    }
-
-    const expression = JSON.parse(
-      await readFile(path.join(EXPRESSIONS_DIR, file), 'utf-8')
-    );
+const loadMockExpressions = (dataRegistry) => {
+  const expressions = createMockExpressions();
+  for (const expression of expressions) {
     dataRegistry.store('expressions', expression.id, expression);
-    expressions.push(expression);
   }
-
   return expressions;
 };
 
@@ -119,8 +121,6 @@ describe('Expressions Simulator - Integration', () => {
   let entityManager;
   let loadedExpressions;
   let emotionCalculator;
-  let emotionKeys;
-  let sexualKeys;
 
   beforeEach(async () => {
     testBed = new IntegrationTestBed();
@@ -133,15 +133,16 @@ describe('Expressions Simulator - Integration', () => {
     registerExpressionServices(container);
 
     dataRegistry = container.resolve(tokens.IDataRegistry);
-    loadedExpressions = await loadExpressions(dataRegistry);
+    loadedExpressions = loadMockExpressions(dataRegistry);
 
     emotionCalculator = container.resolve(tokens.IEmotionCalculatorService);
-    ({ emotionKeys, sexualKeys } = collectExpressionStateKeys(loadedExpressions));
-    emotionCalculator.getEmotionPrototypeKeys.mockReturnValue(emotionKeys);
-    emotionCalculator.getSexualPrototypeKeys.mockReturnValue(sexualKeys);
-    emotionCalculator.calculateEmotions.mockReturnValue(buildStateMap(emotionKeys));
+    emotionCalculator.getEmotionPrototypeKeys.mockReturnValue(MOCK_EMOTION_KEYS);
+    emotionCalculator.getSexualPrototypeKeys.mockReturnValue(MOCK_SEXUAL_KEYS);
+    emotionCalculator.calculateEmotions.mockReturnValue(
+      buildStateMap(MOCK_EMOTION_KEYS)
+    );
     emotionCalculator.calculateSexualStates.mockReturnValue(
-      buildStateMap(sexualKeys)
+      buildStateMap(MOCK_SEXUAL_KEYS)
     );
 
     expressionRegistry = container.resolve(tokens.IExpressionRegistry);
@@ -226,8 +227,8 @@ describe('Expressions Simulator - Integration', () => {
       null
     );
 
-    expectZeroedState(context.previousEmotions, emotionKeys);
-    expectZeroedState(context.previousSexualStates, sexualKeys);
+    expectZeroedState(context.previousEmotions, MOCK_EMOTION_KEYS);
+    expectZeroedState(context.previousSexualStates, MOCK_SEXUAL_KEYS);
     expectZeroedState(context.previousMoodAxes, MOOD_AXES_KEYS);
   });
 });

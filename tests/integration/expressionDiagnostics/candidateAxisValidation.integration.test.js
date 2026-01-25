@@ -305,8 +305,8 @@ describe('Candidate Axis Validation Integration', () => {
       result.axisGapAnalysis.recommendations.forEach((rec) => {
         expect(rec).toHaveProperty('priority');
         expect(rec).toHaveProperty('type');
-        expect(rec).toHaveProperty('message');
-        expect(['HIGH', 'MEDIUM', 'LOW']).toContain(rec.priority);
+        expect(rec).toHaveProperty('description');
+        expect(['high', 'medium', 'low']).toContain(rec.priority);
       });
     });
 

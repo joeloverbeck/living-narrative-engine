@@ -81,9 +81,12 @@ const capturePerceptibleEvents = (eventBus) => {
 };
 
 const setupExpressionEnv = async (extraExpressions = []) => {
+  // Use only core and one existing emotion mod for base environment.
+  // Tests inject their own deterministic expressions, so we only need
+  // expression infrastructure, not specific emotion mod expressions.
   const env = await createE2ETestEnvironment({
     loadMods: true,
-    mods: ['core', 'emotions-sexual-desire', 'emotions-curiosity-attention', 'emotions-absorption', 'emotions-disengagement', 'emotions-confusion'],
+    mods: ['core', 'emotions-absorption'],
     stubLLM: true,
   });
 

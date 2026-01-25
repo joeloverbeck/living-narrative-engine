@@ -52,6 +52,26 @@
                         ]
                     },
                     {
+                        "or": [
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.comforted"
+                                    },
+                                    0.8
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.admiration"
+                                    },
+                                    0.75
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "<=": [
                             {
                                 "var": "emotions.envy"
@@ -252,17 +272,17 @@
                     }
                 ]
             },
-            "failure_message": "Requires a clear admiration signal plus an appreciation/focus companion (interest, inspiration, aesthetic appreciation, or quiet absorption) so the beat reads as attentive uplift rather than flat appraisal. Suppresses competitive or devaluing blends (envy/jealousy/resentment/cynicism, contempt/disgust), prevents a self-collapsing humbling into shame/humiliation, and blocks high threat/hostility states (fear/anxiety/hypervigilance, rage/wrath/protest/moral outrage). Triggers only on a noticeable admiration/appreciation spike to avoid repeated firing during steady admiration."
+            "failure_message": "Requires a clear admiration signal plus an appreciation/focus companion (interest, inspiration, aesthetic appreciation, or quiet absorption) so the beat reads as attentive uplift rather than flat appraisal. If the actor is very comforted (deeply soothed/held), require *strong* admiration to avoid the beat misreading a comforted-vulnerability moment as admiration. Suppresses competitive or devaluing blends (envy/jealousy/resentment/cynicism, contempt/disgust), prevents a self-collapsing humbling into shame/humiliation, and blocks high threat/hostility states (fear/anxiety/hypervigilance, rage/wrath/protest/moral outrage). Triggers only on a noticeable admiration/appreciation spike to avoid repeated firing during steady admiration."
         }
     ],
-    "actor_description": "Respect hits me like a lift under the ribs—clean and surprising. My attention locks in, not hungry or competitive, just honestly impressed. I feel myself straighten without thinking, like my body wants to meet the moment halfway. There's a quiet warmth to it: a sense of 'yes, that matters.'",
-    "description_text": "{actor} stills and leans in with focused regard, their expression softening into open respect. Their posture firms subtly—more upright, more present—like they’ve been pulled into a better version of their attention.",
+    "actor_description": "Something swells in my chest—sudden and clean, like breath filling a space I didn't know was empty. My spine lengthens before I choose it; my shoulders pull back. Attention narrows to a point, sharp and generous at once. No hunger in it. No measuring myself against what I'm seeing. Just yes—recognition that lands warm and sure. My ribs expand around it. This matters. This is worth holding.",
+    "description_text": "{actor} goes quiet mid-breath, their gaze sharpening on a fixed point. Their chest rises—shoulders drawing back, spine lengthening—as if pulled upright by invisible thread. Their face opens: eyebrows lift slightly, jaw unclenches. The quality of their stillness shifts from passive to magnetic, attention condensed to a single bright line.",
     "alternate_descriptions": {
-        "auditory": "I hear a small, involuntary intake of breath—then a steadier tone, like someone choosing their words more carefully because they mean it.",
-        "tactile": "The air shifts with a subtle forward lean; there’s a quiet energy in stillness, like attention has weight and it just moved closer.",
-        "limited": "I sense a brief pause—then a clean, focused regard settling in."
+        "auditory": "I hear a quick inhale—air catching high in the chest—then silence that feels deliberate. When speech returns, the voice steadies, precision replacing casual rhythm. Each word carries weight now, like the speaker knows something matters.",
+        "tactile": "The air tightens as someone leans forward—a shift you feel before you see. Their stillness becomes denser, charged. The space between you shrinks without movement, as if focus itself has mass and just contracted the distance.",
+        "limited": "I sense a pause—sharp, deliberate—followed by attention locking into place. The quality of their presence changes: heavier, clearer, aimed."
     },
     "category": "affection",
     "diagnosticStatus": "normal",
-    "triggerRate": 0.0103
+    "triggerRate": 0.00888
 }

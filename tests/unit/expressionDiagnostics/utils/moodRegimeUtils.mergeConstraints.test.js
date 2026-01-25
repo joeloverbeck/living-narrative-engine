@@ -243,7 +243,7 @@ describe('moodRegimeUtils', () => {
       expect(result).toContainEqual(prototype[0]);
     });
 
-    it('should preserve order with direct constraints first', () => {
+    it('should sort constraints alphabetically by varPath for determinism', () => {
       const direct = [
         { varPath: 'moodAxes.arousal', operator: '>=', threshold: 0.3 },
         { varPath: 'moodAxes.valence', operator: '>=', threshold: 0.5 },
@@ -255,9 +255,10 @@ describe('moodRegimeUtils', () => {
       const result = mergeConstraints(direct, prototype);
 
       expect(result).toHaveLength(3);
-      expect(result[0]).toEqual(direct[0]);
-      expect(result[1]).toEqual(direct[1]);
-      expect(result[2]).toEqual(prototype[0]);
+      // Results are sorted alphabetically by varPath for deterministic hash computation
+      expect(result[0]).toEqual(direct[0]); // arousal
+      expect(result[1]).toEqual(prototype[0]); // dominance
+      expect(result[2]).toEqual(direct[1]); // valence
     });
 
     it('should handle complex merge scenario with multiple overlaps', () => {

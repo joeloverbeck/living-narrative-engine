@@ -37,6 +37,7 @@ export const moodRegimePrototypeExpression = {
   id: 'test:mood_regime_prototype',
   description: 'Expression with mood constraint and prototype reference',
   prerequisites: [
+    { logic: { '>=': [{ var: 'moodAxes.valence' }, -100] } },
     { logic: { '<=': [{ var: 'moodAxes.valence' }, 0] } },
     { logic: { '>=': [{ var: 'emotions.joy' }, 0.1] } },
   ],
@@ -92,3 +93,7 @@ export const prototypeEvaluationPrototypes = {
     },
   },
 };
+
+// Gate thresholds used by tests (for reference):
+// - joy gate: valence >= 0.25 (normalized), so raw valence >= 25
+// - aroused gate: sex_excitation >= 0.4 (normalized), so raw >= 40

@@ -202,8 +202,11 @@ describe('MonteCarloSimulator - Gate Evaluation Behavior', () => {
       sampleCount: 2,
     });
 
-    expect(result.clauseFailures).toHaveLength(1);
-    const [clause] = result.clauseFailures;
+    // Find the gated clause (emotions.joy) which has prototype gate data
+    const clause = result.clauseFailures.find(
+      (c) => c.gatePassInRegimeCount !== null
+    );
+    expect(clause).toBeDefined();
 
     expect(clause.gatePassInRegimeCount).toBe(1);
     expect(clause.gateFailInRegimeCount).toBe(1);

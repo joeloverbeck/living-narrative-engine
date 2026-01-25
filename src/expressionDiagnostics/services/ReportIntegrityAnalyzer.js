@@ -5,7 +5,7 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { evaluateConstraint } from '../utils/moodRegimeUtils.js';
+import { evaluateConstraint, getNestedValue } from '../utils/moodRegimeUtils.js';
 import GateConstraint from '../models/GateConstraint.js';
 import { resolveAxisValue } from '../utils/axisNormalizationUtils.js';
 import {
@@ -340,7 +340,9 @@ class ReportIntegrityAnalyzer {
     }
 
     return moodConstraints.every((constraint) => {
-      const value = this.#statisticalService.getNestedValue(context, constraint.varPath);
+      // Use the canonical getNestedValue from moodRegimeUtils for consistency
+      // with MonteCarloSimulator's population hash calculation
+      const value = getNestedValue(context, constraint.varPath);
       return evaluateConstraint(value, constraint.operator, constraint.threshold);
     });
   }
@@ -462,6 +464,7 @@ class ReportIntegrityAnalyzer {
         gates,
         threshold,
         maxAchievable,
+        hasImpossibleConstraints,
       } = analysis;
       const path = this.#dataExtractor.getPrototypeContextPath(type, prototypeId);
 
@@ -647,9 +650,12 @@ class ReportIntegrityAnalyzer {
           );
         }
 
+        // Skip I4 warning when axis constraints are impossible (min > max from conflicting prototype gates)
+        // In such cases, the theoretical max is unreliable due to merged conflicting constraints
         if (
           population.name === 'stored-mood-regime' &&
           typeof maxAchievable === 'number' &&
+          !hasImpossibleConstraints &&
           distribution &&
           distribution.max > maxAchievable + REPORT_INTEGRITY_EPSILON
         ) {

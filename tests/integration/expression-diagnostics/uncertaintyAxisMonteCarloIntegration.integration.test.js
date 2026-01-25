@@ -75,7 +75,10 @@ const uncertaintyTestPrototypes = {
 
 const highUncertaintyExpression = {
   id: 'test:high_uncertainty_req',
-  prerequisites: [{ logic: { '>=': [{ var: 'emotions.confusion' }, 0.5] } }],
+  prerequisites: [
+    { logic: { '>=': [{ var: 'moodAxes.uncertainty' }, -100] } },
+    { logic: { '>=': [{ var: 'emotions.confusion' }, 0.5] } },
+  ],
 };
 
 const lowUncertaintyExpression = {
