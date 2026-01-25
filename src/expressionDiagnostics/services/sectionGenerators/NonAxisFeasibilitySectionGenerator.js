@@ -37,6 +37,8 @@ class NonAxisFeasibilitySectionGenerator {
     switch (classification) {
       case 'IMPOSSIBLE':
         return '⛔';
+      case 'EMPIRICALLY_UNREACHABLE':
+        return '🚫';
       case 'RARE':
         return '⚠️';
       case 'OK':
@@ -235,15 +237,21 @@ class NonAxisFeasibilitySectionGenerator {
 
     lines.push('');
 
-    // Detailed breakdown sections for IMPOSSIBLE and RARE
+    // Detailed breakdown sections for IMPOSSIBLE, EMPIRICALLY_UNREACHABLE, and RARE
     const impossibleResults = feasibilityResults.filter(r => r.classification === 'IMPOSSIBLE');
+    const empiricallyUnreachableResults = feasibilityResults.filter(r => r.classification === 'EMPIRICALLY_UNREACHABLE');
     const rareResults = feasibilityResults.filter(r => r.classification === 'RARE');
 
     const impossibleSection = this.#generateBreakdownSection(impossibleResults, '⛔ IMPOSSIBLE');
+    const empiricallyUnreachableSection = this.#generateBreakdownSection(empiricallyUnreachableResults, '🚫 EMPIRICALLY_UNREACHABLE');
     const rareSection = this.#generateBreakdownSection(rareResults, '⚠️ RARE');
 
     if (impossibleSection) {
       lines.push(impossibleSection);
+    }
+
+    if (empiricallyUnreachableSection) {
+      lines.push(empiricallyUnreachableSection);
     }
 
     if (rareSection) {

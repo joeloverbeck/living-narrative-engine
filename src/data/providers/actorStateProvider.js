@@ -22,6 +22,7 @@ import {
   APPARENT_AGE_COMPONENT_ID,
   MOOD_COMPONENT_ID,
   SEXUAL_STATE_COMPONENT_ID,
+  AFFECT_TRAITS_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -115,6 +116,12 @@ export class ActorStateProvider extends IActorStateProvider {
     if (actor.hasComponent(SEXUAL_STATE_COMPONENT_ID)) {
       actorState[SEXUAL_STATE_COMPONENT_ID] = {
         ...actorState.components[SEXUAL_STATE_COMPONENT_ID],
+      };
+    }
+
+    if (actor.hasComponent(AFFECT_TRAITS_COMPONENT_ID)) {
+      actorState[AFFECT_TRAITS_COMPONENT_ID] = {
+        ...actorState.components[AFFECT_TRAITS_COMPONENT_ID],
       };
     }
 

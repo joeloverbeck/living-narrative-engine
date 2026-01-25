@@ -65,6 +65,15 @@ describe('Sensitivity analysis integration', () => {
         }
         return null;
       }),
+      getLookupData: jest.fn((lookupId) => {
+        if (lookupId === 'core:emotion_prototypes') {
+          return mockEmotionPrototypes;
+        }
+        if (lookupId === 'core:sexual_prototypes') {
+          return mockSexualPrototypes;
+        }
+        return null;
+      }),
     };
 
     const randomStateGenerator = new RandomStateGenerator({ logger });
@@ -89,6 +98,7 @@ describe('Sensitivity analysis integration', () => {
       logger,
       sensitivityAnalyzer,
       monteCarloReportGenerator: new MonteCarloReportGenerator({ logger }),
+      dataRegistry,
     });
   });
 

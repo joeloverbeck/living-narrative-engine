@@ -56,11 +56,11 @@ describe('moodUpdateOnlyInstructionText temporal_orientation axis', () => {
     );
   });
 
-  test('should include temporal_orientation heuristics in DEFAULT UPDATE HEURISTICS', () => {
+  test('should include temporal_orientation in EVENT ARCHETYPES', () => {
     const instructionText = corePromptText.moodUpdateOnlyInstructionText;
-    // At least some of the temporal orientation heuristics should be present
-    expect(instructionText).toMatch(/Reminiscing.*Temporal Orientation/i);
-    expect(instructionText).toMatch(/Planning.*Temporal Orientation/i);
+    // The flow/present-moment archetype should reference temporal_orientation
+    expect(instructionText).toMatch(/Flow.*present-moment/i);
+    expect(instructionText).toMatch(/temporal_orientation/i);
   });
 
   test('should document distinction from future_expectancy', () => {

@@ -55,6 +55,8 @@ class GameEngine {
   #llmAdapter;
   /** @type {EntityDisplayDataProvider} */
   #entityDisplayDataProvider;
+  /** @type {import('../interfaces/IPerceptionLogProvider.js').IPerceptionLogProvider} */
+  #perceptionLogProvider;
 
   /** @type {EngineState} */
   #engineState;
@@ -101,6 +103,9 @@ class GameEngine {
       );
       this.#entityDisplayDataProvider = container.resolve(
         tokens.EntityDisplayDataProvider
+      );
+      this.#perceptionLogProvider = container.resolve(
+        tokens.IPerceptionLogProvider
       );
     } catch (e) {
       this.#logger.error(
@@ -707,13 +712,21 @@ class GameEngine {
     let llmId = null;
 
     try {
-      const generatedMoodPrompt =
-        await this.#moodUpdatePromptPipeline.generateMoodUpdatePrompt(
-          actor,
-          turnContext
-        );
-      moodPrompt =
-        typeof generatedMoodPrompt === 'string' ? generatedMoodPrompt : null;
+      const isPerceptionLogEmpty = await this.#perceptionLogProvider.isEmpty(
+        actor,
+        this.#logger,
+        this.#safeEventDispatcher
+      );
+      if (!isPerceptionLogEmpty) {
+        const generatedMoodPrompt =
+          await this.#moodUpdatePromptPipeline.generateMoodUpdatePrompt(
+            actor,
+            turnContext
+          );
+        moodPrompt =
+          typeof generatedMoodPrompt === 'string' ? generatedMoodPrompt : null;
+      }
+      // If perception log is empty, moodPrompt stays null
     } catch (error) {
       const normalizedError = normalizeError(error);
       errors.push(normalizedError.message || String(normalizedError));

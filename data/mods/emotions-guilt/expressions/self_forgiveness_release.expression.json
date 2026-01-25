@@ -204,5 +204,5 @@
         "tactile": "The air feels less tight around them; their movements stop hitching, hands loosening as if they’d been gripping an invisible handle."
     },
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.001
+    "triggerRate": 0.0011
 }

@@ -20,10 +20,15 @@ describe('ReportOrchestrator', () => {
     const reportGenerator = {
       generate: jest.fn().mockReturnValue('# Report'),
     };
+    const dataRegistry = {
+      get: jest.fn(),
+      getLookupData: jest.fn().mockReturnValue(null),
+    };
     const orchestrator = new ReportOrchestrator({
       logger,
       sensitivityAnalyzer,
       monteCarloReportGenerator: reportGenerator,
+      dataRegistry,
     });
 
     const simulationResult = { storedContexts: ['context'] };
@@ -83,10 +88,15 @@ describe('ReportOrchestrator', () => {
     const reportGenerator = {
       generate: jest.fn(),
     };
+    const dataRegistry = {
+      get: jest.fn(),
+      getLookupData: jest.fn().mockReturnValue(null),
+    };
     const orchestrator = new ReportOrchestrator({
       logger,
       sensitivityAnalyzer,
       monteCarloReportGenerator: reportGenerator,
+      dataRegistry,
     });
 
     const report = orchestrator.generateReport({

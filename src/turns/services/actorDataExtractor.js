@@ -28,6 +28,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
 } from '../../constants/textDefaults.js';
+import { DEFAULT_AFFECT_TRAITS } from '../../constants/moodAffectConstants.js';
 import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor.js';
 // --- TICKET AIPF-REFACTOR-009 END ---
 
@@ -279,16 +280,19 @@ class ActorDataExtractor extends IActorDataExtractor {
 
     // 4. Extract affect traits (optional component)
     // These are stable personality traits affecting empathy and moral emotions.
-    // If absent, the calculator uses default values (all 50).
+    // If absent, the calculator uses default values (all 50) internally.
+    // For the DTO, we provide DEFAULT_AFFECT_TRAITS to ensure <affect_traits> appears in prompts.
     const affectTraitsComponent = actorState[AFFECT_TRAITS_COMPONENT_ID];
-    const affectTraits = affectTraitsComponent ?? null;
+    // Pass null to calculator (it handles defaults), but use DEFAULT_AFFECT_TRAITS for DTO
+    const affectTraitsForCalculator = affectTraitsComponent ?? null;
+    const affectTraitsForDto = affectTraitsComponent ?? DEFAULT_AFFECT_TRAITS;
 
     // 5. Calculate emotions with affect traits
     const emotions = this.#emotionCalculatorService.calculateEmotions(
       moodAxes,
       sexualArousal,
       sexualComponent,
-      affectTraits
+      affectTraitsForCalculator
     );
     const emotionalStateText =
       this.#emotionCalculatorService.formatEmotionsForPrompt(emotions);
@@ -313,6 +317,7 @@ class ActorDataExtractor extends IActorDataExtractor {
       sexualState,
       sexVariables,
       sexualStateText,
+      affectTraits: affectTraitsForDto,
     };
   }
 

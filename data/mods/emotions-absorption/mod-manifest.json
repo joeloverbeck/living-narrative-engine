@@ -5,7 +5,6 @@
   "dependencies": [],
   "content": {
     "expressions": [
-      "entranced_stillness.expression.json",
       "flow_absorption.expression.json"
     ]
   }

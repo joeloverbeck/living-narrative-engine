@@ -17,6 +17,8 @@ export class TwoPhaseDecisionOrchestrator {
   #aiPromptPipeline;
   #llmAdapter;
   #llmResponseProcessor;
+  #perceptionLogProvider;
+  #safeEventDispatcher;
   #logger;
 
   constructor({
@@ -26,6 +28,8 @@ export class TwoPhaseDecisionOrchestrator {
     aiPromptPipeline,
     llmAdapter,
     llmResponseProcessor,
+    perceptionLogProvider,
+    safeEventDispatcher,
     logger,
   }) {
     this.#validateDependencies({
@@ -35,6 +39,8 @@ export class TwoPhaseDecisionOrchestrator {
       aiPromptPipeline,
       llmAdapter,
       llmResponseProcessor,
+      perceptionLogProvider,
+      safeEventDispatcher,
       logger,
     });
 
@@ -44,6 +50,8 @@ export class TwoPhaseDecisionOrchestrator {
     this.#aiPromptPipeline = aiPromptPipeline;
     this.#llmAdapter = llmAdapter;
     this.#llmResponseProcessor = llmResponseProcessor;
+    this.#perceptionLogProvider = perceptionLogProvider;
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger = logger;
   }
 
@@ -72,6 +80,16 @@ export class TwoPhaseDecisionOrchestrator {
         'TwoPhaseDecisionOrchestrator: llmResponseProcessor required'
       );
     }
+    if (!deps.perceptionLogProvider?.isEmpty) {
+      throw new Error(
+        'TwoPhaseDecisionOrchestrator: perceptionLogProvider required'
+      );
+    }
+    if (!deps.safeEventDispatcher?.dispatch) {
+      throw new Error(
+        'TwoPhaseDecisionOrchestrator: safeEventDispatcher required'
+      );
+    }
     if (!deps.logger?.debug) {
       throw new Error('TwoPhaseDecisionOrchestrator: logger required');
     }
@@ -93,40 +111,58 @@ export class TwoPhaseDecisionOrchestrator {
     );
 
     // ========================================
-    // PHASE 1: Mood Update
+    // PHASE 1: Mood Update (skipped if perception log is empty)
     // ========================================
-    this.#logger.debug('TwoPhaseDecisionOrchestrator: Phase 1 - Mood Update');
+    let moodUpdate = null;
+    let sexualUpdate = null;
 
-    const moodPrompt = await this.#moodUpdatePipeline.generateMoodUpdatePrompt(
+    const isPerceptionLogEmpty = await this.#perceptionLogProvider.isEmpty(
       actor,
-      context
+      this.#logger,
+      this.#safeEventDispatcher
     );
 
-    const moodRawResponse = await this.#llmAdapter.getAIDecision(
-      moodPrompt,
-      abortSignal,
-      {
-        toolSchema: LLM_MOOD_UPDATE_RESPONSE_SCHEMA,
-        toolName: 'mood_update',
-        toolDescription:
-          'Update character mood and sexual state based on recent events',
-      }
-    );
+    if (isPerceptionLogEmpty) {
+      this.#logger.debug(
+        'TwoPhaseDecisionOrchestrator: Phase 1 skipped - perception log is empty'
+      );
+    } else {
+      this.#logger.debug('TwoPhaseDecisionOrchestrator: Phase 1 - Mood Update');
 
-    const moodParsed = await this.#moodResponseProcessor.processMoodResponse(
-      moodRawResponse,
-      actor.id
-    );
+      const moodPrompt = await this.#moodUpdatePipeline.generateMoodUpdatePrompt(
+        actor,
+        context
+      );
 
-    await this.#moodPersistenceService.persistMoodUpdate(
-      actor.id,
-      moodParsed.moodUpdate,
-      moodParsed.sexualUpdate
-    );
+      const moodRawResponse = await this.#llmAdapter.getAIDecision(
+        moodPrompt,
+        abortSignal,
+        {
+          toolSchema: LLM_MOOD_UPDATE_RESPONSE_SCHEMA,
+          toolName: 'mood_update',
+          toolDescription:
+            'Update character mood and sexual state based on recent events',
+        }
+      );
 
-    this.#logger.debug(
-      'TwoPhaseDecisionOrchestrator: Phase 1 complete, mood persisted'
-    );
+      const moodParsed = await this.#moodResponseProcessor.processMoodResponse(
+        moodRawResponse,
+        actor.id
+      );
+
+      await this.#moodPersistenceService.persistMoodUpdate(
+        actor.id,
+        moodParsed.moodUpdate,
+        moodParsed.sexualUpdate
+      );
+
+      moodUpdate = moodParsed.moodUpdate;
+      sexualUpdate = moodParsed.sexualUpdate;
+
+      this.#logger.debug(
+        'TwoPhaseDecisionOrchestrator: Phase 1 complete, mood persisted'
+      );
+    }
 
     // ========================================
     // PHASE 2: Action Decision
@@ -161,8 +197,9 @@ export class TwoPhaseDecisionOrchestrator {
       speech: actionResult.action.speech,
       thoughts: actionResult.extractedData?.thoughts ?? null,
       notes: actionResult.extractedData?.notes ?? null,
-      moodUpdate: moodParsed.moodUpdate,
-      sexualUpdate: moodParsed.sexualUpdate,
+      cognitiveLedger: actionResult.extractedData?.cognitiveLedger ?? null,
+      moodUpdate,
+      sexualUpdate,
     };
   }
 }

@@ -264,6 +264,7 @@ function buildReport(payload) {
     logger,
     sensitivityAnalyzer,
     monteCarloReportGenerator: reportGenerator,
+    dataRegistry,
   });
 
   return reportOrchestrator.generateReport(payload);

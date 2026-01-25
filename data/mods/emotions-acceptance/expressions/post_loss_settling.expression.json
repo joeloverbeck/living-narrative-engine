@@ -15,7 +15,7 @@
                                     {
                                         "var": "emotions.grief"
                                     },
-                                    0.4
+                                    0.42
                                 ]
                             },
                             {
@@ -23,7 +23,7 @@
                                     {
                                         "var": "emotions.sadness"
                                     },
-                                    0.5
+                                    0.52
                                 ]
                             }
                         ]
@@ -37,14 +37,6 @@
                         ]
                     },
                     {
-                        "<=": [
-                            {
-                                "var": "emotions.despair"
-                            },
-                            0.6
-                        ]
-                    },
-                    {
                         ">=": [
                             {
                                 "var": "emotions.release"
@@ -53,35 +45,39 @@
                         ]
                     },
                     {
-                        "<=": [
+                        "or": [
                             {
-                                "var": "moodAxes.threat"
+                                ">=": [
+                                    {
+                                        "var": "emotions.calm"
+                                    },
+                                    0.1
+                                ]
                             },
-                            20
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.relief"
+                                    },
+                                    0.08
+                                ]
+                            }
                         ]
                     },
                     {
                         "<=": [
                             {
-                                "var": "moodAxes.arousal"
+                                "var": "emotions.despair"
                             },
-                            20
+                            0.55
                         ]
                     },
                     {
-                        ">=": [
+                        "<=": [
                             {
-                                "var": "moodAxes.arousal"
+                                "var": "emotions.dissociation"
                             },
-                            -35
-                        ]
-                    },
-                    {
-                        ">=": [
-                            {
-                                "var": "moodAxes.engagement"
-                            },
-                            10
+                            0.4
                         ]
                     },
                     {
@@ -95,9 +91,73 @@
                     {
                         "<=": [
                             {
-                                "var": "emotions.dissociation"
+                                "var": "emotions.panic"
                             },
-                            0.45
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.stress_acute"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.resentment"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.regret"
+                            },
+                            0.55
                         ]
                     },
                     {
@@ -172,14 +232,14 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "previousMoodAxes.arousal"
+                                                "var": "emotions.calm"
                                             },
                                             {
-                                                "var": "moodAxes.arousal"
+                                                "var": "previousEmotions.calm"
                                             }
                                         ]
                                     },
-                                    12
+                                    0.08
                                 ]
                             },
                             {
@@ -187,21 +247,66 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "moodAxes.future_expectancy"
+                                                "var": "previousEmotions.despair"
                                             },
                                             {
-                                                "var": "previousMoodAxes.future_expectancy"
+                                                "var": "emotions.despair"
                                             }
                                         ]
                                     },
-                                    8
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.anxiety"
+                                            },
+                                            {
+                                                "var": "emotions.anxiety"
+                                            }
+                                        ]
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "previousEmotions.stress_acute"
+                                            },
+                                            {
+                                                "var": "emotions.stress_acute"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.hope"
+                                            },
+                                            {
+                                                "var": "previousEmotions.hope"
+                                            }
+                                        ]
+                                    },
+                                    0.07
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires active sadness/grief (but not peaking) in a safe, low-to-mid arousal state while still engaged, with release present as the bodily 'letting go' signal. Needs a settling shift: grief/sadness easing, release crossing/spiking, arousal dropping, or future expectancy lifting."
+            "failure_message": "Requires active grief/sadness (but not at peak) with a clear 'letting go' signal (release) plus at least a trace of calm/relief. Blocks activation if hopeless collapse (despair), high threat states (panic/terror/fear/anxiety/stress), high anger surge (rage/wrath), or shutdown defenses (dissociation/numbness) are dominating. Also requires a settling transition: grief/sadness easing, release/calm rising, or despair/anxiety/stress dropping (optionally with a small lift in hope)."
         }
     ],
     "actor_description": "It’s still there—heavy—but I stop pushing against it for a breath. The tightness in my chest gives a little, like a knot finally deciding to loosen. I feel sad, unmistakably, but the sadness isn’t a fight right now; it’s just real. A small exhale slips out of me and, for once, it doesn’t feel like surrender—it feels like settling.",
@@ -210,6 +315,6 @@
         "auditory": "A slow, controlled exhale leaves {actor}, followed by a brief silence where their voice, if it comes, sounds lower and steadier—less strained, more settled.",
         "tactile": "{actor}'s tension shifts: not gone, but redistributed—hands unclench slightly, shoulders drop a fraction, and the air around them feels less braced."
     },
-    "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0043
+    "diagnosticStatus": "unknown",
+    "triggerRate": 0.0047
 }

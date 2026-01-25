@@ -147,5 +147,5 @@
     },
     "category": "threat",
     "diagnosticStatus": "frequent",
-    "triggerRate": 0.0283
+    "triggerRate": 0.0289
 }

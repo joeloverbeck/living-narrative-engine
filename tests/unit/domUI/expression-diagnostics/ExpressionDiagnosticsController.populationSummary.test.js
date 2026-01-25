@@ -249,6 +249,7 @@ describe('ExpressionDiagnosticsController population summary', () => {
     };
 
     mockDataRegistry = {
+      get: jest.fn().mockReturnValue(null),
       getLookupData: jest.fn().mockReturnValue(null),
     };
 

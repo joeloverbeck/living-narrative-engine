@@ -556,6 +556,8 @@ export class ActionDecisionWorkflow {
         speech: submission?.speech ?? baseMeta.speech ?? null,
         thoughts: submission?.thoughts ?? baseMeta.thoughts ?? null,
         notes: submission?.notes ?? baseMeta.notes ?? null,
+        cognitiveLedger:
+          submission?.cognitiveLedger ?? baseMeta.cognitiveLedger ?? null,
         moodUpdate: submission?.moodUpdate ?? baseMeta.moodUpdate ?? null,
         sexualUpdate: submission?.sexualUpdate ?? baseMeta.sexualUpdate ?? null,
         suggestedIndex: clampedIndex,

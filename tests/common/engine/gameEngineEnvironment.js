@@ -19,6 +19,7 @@ import {
   createMockMoodUpdatePromptPipeline,
   createMockLLMAdapter,
   createMockEntityDisplayDataProvider,
+  createMockPerceptionLogProvider,
 } from '../mockFactories';
 import { buildServiceEnvironment } from '../mockEnvironment.js';
 
@@ -35,6 +36,7 @@ const factoryMap = {
   moodUpdatePromptPipeline: createMockMoodUpdatePromptPipeline,
   llmAdapter: createMockLLMAdapter,
   entityDisplayDataProvider: createMockEntityDisplayDataProvider,
+  perceptionLogProvider: createMockPerceptionLogProvider,
 };
 
 const tokenMap = {
@@ -50,6 +52,7 @@ const tokenMap = {
   [tokens.MoodUpdatePromptPipeline]: 'moodUpdatePromptPipeline',
   [tokens.LLMAdapter]: 'llmAdapter',
   [tokens.EntityDisplayDataProvider]: 'entityDisplayDataProvider',
+  [tokens.IPerceptionLogProvider]: 'perceptionLogProvider',
 };
 
 /**

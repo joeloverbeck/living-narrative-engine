@@ -21,15 +21,15 @@ export function computeMedian(sortedValues) {
 }
 
 /**
- * Compute median and interquartile range (IQR) from an array of counts.
+ * Compute median, interquartile range (IQR), and quartiles from an array of counts.
  * Filters out non-finite values before computation.
  *
  * @param {number[]} counts - Array of numeric values.
- * @returns {{median: number, iqr: number}} Object with median and IQR values.
+ * @returns {{median: number, iqr: number, q1: number, q3: number}} Object with median, IQR, Q1 and Q3 values.
  */
 export function computeMedianAndIQR(counts) {
   if (!Array.isArray(counts) || counts.length === 0) {
-    return { median: 0, iqr: 0 };
+    return { median: 0, iqr: 0, q1: 0, q3: 0 };
   }
 
   const sorted = counts
@@ -38,7 +38,7 @@ export function computeMedianAndIQR(counts) {
     .sort((a, b) => a - b);
 
   if (sorted.length === 0) {
-    return { median: 0, iqr: 0 };
+    return { median: 0, iqr: 0, q1: 0, q3: 0 };
   }
 
   const median = computeMedian(sorted);
@@ -50,7 +50,7 @@ export function computeMedianAndIQR(counts) {
   const q3 = computeMedian(upper);
   const iqr = Math.max(0, q3 - q1);
 
-  return { median, iqr };
+  return { median, iqr, q1, q3 };
 }
 
 /**

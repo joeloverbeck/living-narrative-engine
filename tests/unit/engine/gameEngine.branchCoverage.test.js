@@ -41,6 +41,10 @@ function createContainer(resolutionMap, options = {}) {
       getAIDecision: jest.fn(),
     },
     [tokens.EntityDisplayDataProvider]: { getEntityName: jest.fn() },
+    [tokens.IPerceptionLogProvider]: {
+      get: jest.fn().mockResolvedValue([]),
+      isEmpty: jest.fn().mockResolvedValue(true),
+    },
   };
   const map = { ...defaults, ...resolutionMap };
   const resolve = jest.fn((token) => {

@@ -184,3 +184,158 @@ export function computeNearestAxisDistance(vector, axisUnitVectors) {
   }
   return Number.isFinite(minDistance) ? minDistance : 1;
 }
+
+/**
+ * Generate all k-combinations from an array.
+ *
+ * @param {string[]} arr - Array of elements to combine.
+ * @param {number} k - Size of each combination.
+ * @returns {string[][]} Array of k-element combinations.
+ */
+export function generateCombinations(arr, k) {
+  if (k < 0 || k > arr.length) {
+    return [];
+  }
+  if (k === 0) {
+    return [[]];
+  }
+  if (k === arr.length) {
+    return [arr.slice()];
+  }
+
+  const result = [];
+
+  /**
+   * Recursive helper for generating combinations.
+   *
+   * @param {number} start - Start index in array.
+   * @param {string[]} current - Current combination being built.
+   */
+  function combine(start, current) {
+    if (current.length === k) {
+      result.push(current.slice());
+      return;
+    }
+    for (let i = start; i < arr.length; i++) {
+      current.push(arr[i]);
+      combine(i + 1, current);
+      current.pop();
+    }
+  }
+
+  combine(0, []);
+  return result;
+}
+
+/**
+ * Project a vector onto a subspace defined by a set of axes.
+ * The projection keeps only the components along the specified axes.
+ *
+ * @param {Record<string, number>} vector - Vector to project.
+ * @param {string[]} subspaceAxes - Axes defining the subspace.
+ * @returns {Record<string, number>|null} Projected vector (normalized) or null if zero.
+ */
+export function projectOntoSubspace(vector, subspaceAxes) {
+  if (!vector || !Array.isArray(subspaceAxes) || subspaceAxes.length === 0) {
+    return null;
+  }
+
+  const subspaceSet = new Set(subspaceAxes);
+  const projected = {};
+
+  // Keep only components in the subspace
+  for (const axis of Object.keys(vector)) {
+    projected[axis] = subspaceSet.has(axis)
+      ? (Number.isFinite(vector[axis]) ? vector[axis] : 0)
+      : 0;
+  }
+
+  // Normalize the projection
+  return normalizeVector(projected);
+}
+
+/**
+ * Compute distance from a vector to a k-axis subspace.
+ * Returns the cosine distance between the vector and its projection onto the subspace.
+ *
+ * @param {Record<string, number>} vector - Normalized vector.
+ * @param {string[]} subspaceAxes - Axes defining the subspace.
+ * @returns {number} Cosine distance to subspace in [0, 1].
+ */
+export function computeSubspaceDistance(vector, subspaceAxes) {
+  const projection = projectOntoSubspace(vector, subspaceAxes);
+  if (!projection) {
+    return 1;
+  }
+  return computeCosineDistance(vector, projection, { useAbsolute: true });
+}
+
+/**
+ * Compute the nearest distance to any k-axis subspace.
+ * Tests all C(n,k) combinations of axes and returns the minimum distance.
+ *
+ * For k=1, this is equivalent to computeNearestAxisDistance().
+ * For k>1, it tests all k-axis subspace combinations.
+ *
+ * Computational complexity: O(C(n,k) * n) where n = number of axes.
+ * For k=3 with 20 axes: C(20,3) = 1140 combinations.
+ *
+ * @param {Record<string, number>} vector - Normalized vector.
+ * @param {string[]} axes - All available axis names.
+ * @param {number} k - Subspace dimension (1, 2, or 3 typically).
+ * @returns {{distance: number, subspaceAxes: string[]}} Minimum distance and the axes of the nearest subspace.
+ */
+export function computeNearestSubspaceDistance(vector, axes, k) {
+  if (!vector || !Array.isArray(axes) || axes.length === 0) {
+    return { distance: 1, subspaceAxes: [] };
+  }
+
+  const clampedK = Math.max(1, Math.min(k, axes.length));
+
+  // Generate all k-combinations
+  const combinations = generateCombinations(axes, clampedK);
+
+  let minDistance = Number.POSITIVE_INFINITY;
+  let nearestSubspace = [];
+
+  for (const subspaceAxes of combinations) {
+    const distance = computeSubspaceDistance(vector, subspaceAxes);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestSubspace = subspaceAxes;
+    }
+  }
+
+  return {
+    distance: Number.isFinite(minDistance) ? minDistance : 1,
+    subspaceAxes: nearestSubspace,
+  };
+}
+
+/**
+ * Check if a vector is distant from all subspaces up to dimension maxK.
+ * A vector is considered "in a gap" if it's distant from 1, 2, ..., maxK axis subspaces.
+ *
+ * @param {Record<string, number>} vector - Normalized vector.
+ * @param {string[]} axes - All available axis names.
+ * @param {Record<number, number>} thresholds - Map of k -> distance threshold.
+ * @param {number} maxK - Maximum subspace dimension to test.
+ * @returns {{isGap: boolean, distances: Record<number, {distance: number, subspaceAxes: string[]}>}} Gap status and distances.
+ */
+export function checkSubspaceGap(vector, axes, thresholds, maxK) {
+  const distances = {};
+  let isGap = true;
+
+  for (let k = 1; k <= maxK; k++) {
+    const result = computeNearestSubspaceDistance(vector, axes, k);
+    distances[k] = result;
+
+    const threshold = thresholds[k] ?? 0.5;
+    if (result.distance < threshold) {
+      // Vector is close to at least one k-subspace, not a gap
+      isGap = false;
+    }
+  }
+
+  return { isGap, distances };
+}

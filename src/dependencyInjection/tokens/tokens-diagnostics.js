@@ -126,6 +126,10 @@ export const diagnosticsTokens = freeze({
   IMultiAxisConflictDetector: 'IMultiAxisConflictDetector',
   IAxisGapRecommendationBuilder: 'IAxisGapRecommendationBuilder',
   IAxisGapReportSynthesizer: 'IAxisGapReportSynthesizer',
+
+  // Candidate Axis Validation Services
+  ICandidateAxisExtractor: 'ICandidateAxisExtractor',
+  ICandidateAxisValidator: 'ICandidateAxisValidator',
 });
 
 export default diagnosticsTokens;

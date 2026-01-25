@@ -40,7 +40,7 @@ const createPCAAnalysisService = (result = null) => ({
 });
 
 const createHubPrototypeDetector = (result = null) => ({
-  detect: jest.fn().mockReturnValue(result ?? []),
+  detect: jest.fn().mockReturnValue({ hubs: result ?? [], diagnostics: null }),
 });
 
 const createCoverageGapDetector = (result = null) => ({
@@ -335,7 +335,8 @@ describe('AxisGapAnalyzer', () => {
           conflicts,
           prototypes.length,
           prototypes,
-          { highAxisLoadings, signTensions }
+          { highAxisLoadings, signTensions, hubDiagnostics: null },
+          null // candidateAxisValidation is null when validation services not provided
         );
       });
     });

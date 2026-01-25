@@ -54,6 +54,12 @@ const createDeps = (overrides = {}) => {
         },
       }),
     },
+    perceptionLogProvider: {
+      isEmpty: jest.fn().mockResolvedValue(false),
+    },
+    safeEventDispatcher: {
+      dispatch: jest.fn().mockResolvedValue(true),
+    },
     logger: { debug: jest.fn() },
   };
 

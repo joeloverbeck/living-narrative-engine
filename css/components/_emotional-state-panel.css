@@ -68,7 +68,7 @@
    ============================================ */
 
 .emotional-state-panel__label {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   color: var(--secondary-text-color, #576574);
   white-space: nowrap;
   overflow: hidden;

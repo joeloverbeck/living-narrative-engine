@@ -281,7 +281,7 @@ class CandidatePairFilter {
    * @returns {Promise<object>} Route A results with candidates and rejection counts
    */
   async #filterByWeightSimilarity(validPrototypes, totalPossiblePairs, onProgress) {
-    const CHUNK_SIZE = 100;
+    const CHUNK_SIZE = 10;
     const candidates = [];
     const passedPairKeys = new Set();
     const {
@@ -335,8 +335,9 @@ class CandidatePairFilter {
       }
     }
 
-    // Final progress update
+    // Final progress update with yield to allow UI repaint
     if (onProgress && pairsProcessed > 0) {
+      await this.#yieldToEventLoop();
       onProgress({ pairsProcessed, totalPairs: totalPossiblePairs });
     }
 

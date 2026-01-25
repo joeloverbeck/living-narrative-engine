@@ -133,33 +133,35 @@ function createPrototypeDataRegistry(logger) {
 
 /**
  * Create stored contexts for prototype fit analysis.
+ * Includes both moodAxes (for prototype gate evaluation) and emotions data.
+ * Contexts must pass the 'joy' prototype gate (valence >= 0.3) to be in-regime.
  *
  * @returns {Array<object>} Stored contexts
  */
 function createPrototypeStoredContexts() {
   return [
-    { moodAxes: { valence: 0.65, arousal: 0.5, threat: 0.1 } },
-    { moodAxes: { valence: 0.7, arousal: 0.6, threat: 0.25 } },
-    { moodAxes: { valence: 0.8, arousal: 0.7, threat: 0.4 } },
-    { moodAxes: { valence: -0.5, arousal: 0.6, threat: 0.6 } },
+    // In-regime: valence >= 0.3 (passes joy gate)
+    { moodAxes: { valence: 0.65, arousal: 0.5, threat: 0.1 }, emotions: { joy: 0.4 } },
+    { moodAxes: { valence: 0.7, arousal: 0.6, threat: 0.25 }, emotions: { joy: 0.5 } },
+    { moodAxes: { valence: 0.8, arousal: 0.7, threat: 0.4 }, emotions: { joy: 0.6 } },
+    // Out of regime: valence < 0.3 (fails joy gate)
+    { moodAxes: { valence: -0.5, arousal: 0.6, threat: 0.6 }, emotions: { joy: 0.1 } },
   ];
 }
 
 /**
- * Create prerequisites that constrain mood axes for prototype analysis.
+ * Create prerequisites that reference emotion/sexual prototypes.
+ * Under the new architecture, mood regime is derived from prototype gates,
+ * not from explicit moodAxes.* prerequisites.
  *
  * @returns {Array<object>} Prerequisites array
  */
 function createPrototypePrerequisites() {
   return [
     {
-      logic: {
-        and: [
-          { '>=': [{ var: 'moodAxes.valence' }, 0.4] },
-          { '>=': [{ var: 'moodAxes.arousal' }, 0.3] },
-          { '<=': [{ var: 'moodAxes.threat' }, 0.6] },
-        ],
-      },
+      // Emotion prerequisites - mood regime derived from 'joy' prototype gates
+      // The 'joy' prototype has gate: 'valence >= 0.3'
+      logic: { '>=': [{ var: 'emotions.joy' }, 0.3] },
     },
   ];
 }

@@ -38,10 +38,14 @@ class PrototypeAnalysisController {
   #axisGapRecommendations;
   #axisGapConfidence;
   #residualVariance;
-  #additionalComponents;
+  #significantComponentCount;
+  #expectedComponentCount;
+  #significantBeyondExpected;
   #pcaTopLoading;
-  #pcaDimensionsUsed;
   #pcaDimensionsList;
+  #pcaDimensionsUsed;
+  #pcaExcludedAxesList;
+  #pcaMethodologyNote;
   #componentsFor80;
   #componentsFor90;
   #poorlyFittingList;
@@ -50,6 +54,7 @@ class PrototypeAnalysisController {
   #conflictList;
   #signTensionList;
   #axisRecommendationsList;
+  #candidateAxisList;
 
   // Signal breakdown elements
   #signalPca;
@@ -65,11 +70,14 @@ class PrototypeAnalysisController {
 
   // Signal threshold elements (for dynamic OR logic display)
   #signalPcaThreshold;
+  #signalCoverageGapsThreshold;
 
   // Decision panel elements
   #decisionVerdict;
   #decisionRationale;
   #varianceTop4;
+  #varianceAxisCount;
+  #varianceTopK;
 
   // Prototype weight cards container
   #prototypeCardsContainer;
@@ -139,12 +147,20 @@ class PrototypeAnalysisController {
     );
     this.#axisGapConfidence = document.getElementById('axis-gap-confidence');
     this.#residualVariance = document.getElementById('residual-variance');
-    this.#additionalComponents = document.getElementById(
-      'additional-components'
+    this.#significantComponentCount = document.getElementById(
+      'significant-component-count'
+    );
+    this.#expectedComponentCount = document.getElementById(
+      'expected-component-count'
+    );
+    this.#significantBeyondExpected = document.getElementById(
+      'significant-beyond-expected'
     );
     this.#pcaTopLoading = document.getElementById('pca-top-loading');
-    this.#pcaDimensionsUsed = document.getElementById('pca-dimensions-used');
     this.#pcaDimensionsList = document.getElementById('pca-dimensions-list');
+    this.#pcaDimensionsUsed = document.getElementById('pca-dimensions-used');
+    this.#pcaExcludedAxesList = document.getElementById('pca-excluded-axes-list');
+    this.#pcaMethodologyNote = document.getElementById('pca-methodology-note');
     this.#componentsFor80 = document.getElementById('components-for-80');
     this.#componentsFor90 = document.getElementById('components-for-90');
     this.#poorlyFittingList = document.getElementById('poorly-fitting-list');
@@ -155,6 +171,7 @@ class PrototypeAnalysisController {
     this.#axisRecommendationsList = document.getElementById(
       'axis-recommendations-list'
     );
+    this.#candidateAxisList = document.getElementById('candidate-axis-list');
 
     // Signal breakdown elements
     this.#signalPca = document.getElementById('signal-pca');
@@ -174,11 +191,16 @@ class PrototypeAnalysisController {
 
     // Signal threshold elements (for dynamic OR logic display)
     this.#signalPcaThreshold = document.getElementById('signal-pca-threshold');
+    this.#signalCoverageGapsThreshold = document.getElementById(
+      'signal-coverage-gaps-threshold'
+    );
 
     // Decision panel elements
     this.#decisionVerdict = document.getElementById('decision-verdict');
     this.#decisionRationale = document.getElementById('decision-rationale');
     this.#varianceTop4 = document.getElementById('variance-top4');
+    this.#varianceAxisCount = document.getElementById('variance-axis-count');
+    this.#varianceTopK = document.getElementById('variance-topk');
 
     // Prototype weight cards container
     this.#prototypeCardsContainer = document.getElementById(
@@ -1094,6 +1116,10 @@ class PrototypeAnalysisController {
     // Update PCA threshold display to show OR logic
     this.#updatePcaThresholdDisplay(axisGapAnalysis.pcaAnalysis);
 
+    // Update coverage gap threshold display
+    // Adaptive thresholds are enabled by default, so display that
+    this.#updateCoverageGapThresholdDisplay();
+
     // Render decision summary panel (YES/MAYBE/NO verdict)
     this.#renderDecisionSummary(axisGapAnalysis);
 
@@ -1114,6 +1140,9 @@ class PrototypeAnalysisController {
 
     // Render axis recommendations
     this.#renderAxisRecommendations(axisGapAnalysis.recommendations);
+
+    // Render candidate axis validation results
+    this.#renderCandidateAxisValidation(axisGapAnalysis.candidateAxes);
 
     // Render prototype weight cards
     this.#renderPrototypeWeightCards(axisGapAnalysis.prototypeWeightSummaries);
@@ -1217,19 +1246,36 @@ class PrototypeAnalysisController {
     const additionalComponents = pcaAnalysis?.additionalSignificantComponents ?? 0;
     const threshold = 0.15; // 15% threshold
 
-    const highResidual = residualVariance > threshold;
+    const highResidual = residualVariance >= threshold;
     const hasComponents = additionalComponents > 0;
 
     // Determine which conditions triggered (OR logic)
     if (highResidual && hasComponents) {
-      this.#signalPcaThreshold.textContent = `(residual >${(threshold * 100).toFixed(0)}% OR components >0)`;
+      this.#signalPcaThreshold.textContent = `(residual ≥${(threshold * 100).toFixed(0)}% OR components >0)`;
     } else if (highResidual) {
-      this.#signalPcaThreshold.textContent = `(residual >${(threshold * 100).toFixed(0)}% triggered)`;
+      this.#signalPcaThreshold.textContent = `(residual ≥${(threshold * 100).toFixed(0)}% triggered)`;
     } else if (hasComponents) {
       this.#signalPcaThreshold.textContent = '(components >0 triggered)';
     } else {
-      this.#signalPcaThreshold.textContent = `(residual ≤${(threshold * 100).toFixed(0)}% AND no extra components)`;
+      this.#signalPcaThreshold.textContent = `(residual <${(threshold * 100).toFixed(0)}% AND no extra components)`;
     }
+  }
+
+  /**
+   * Update the coverage gap threshold display.
+   *
+   * Shows whether adaptive thresholds are in use. Since adaptive thresholds
+   * are enabled by default (using 95th percentile of null distribution),
+   * this display helps users understand the threshold behavior.
+   *
+   * @private
+   */
+  #updateCoverageGapThresholdDisplay() {
+    if (!this.#signalCoverageGapsThreshold) return;
+
+    // Adaptive thresholds are enabled by default in config
+    // The actual threshold is computed dynamically based on data
+    this.#signalCoverageGapsThreshold.textContent = '(adaptive threshold)';
   }
 
   /**
@@ -1259,7 +1305,7 @@ class PrototypeAnalysisController {
 
     // Thresholds
     const highResidualThreshold = 0.15; // 15%
-    const highResidual = residualVariance > highResidualThreshold;
+    const highResidual = residualVariance >= highResidualThreshold;
     const hasCoverageGaps = coverageGapSignals > 0;
     const hasHubs = hubSignals > 0;
     const hasMultiAxisConflicts = multiAxisConflictSignals > 0;
@@ -1318,8 +1364,10 @@ class PrototypeAnalysisController {
     this.#decisionRationale.textContent = rationale;
 
     // Update variance summary
+    const explainedVariance = pcaAnalysis?.explainedVariance ?? [];
+    const axisCount = pcaAnalysis?.axisCount ?? 0;
+
     if (this.#varianceTop4) {
-      const explainedVariance = pcaAnalysis?.explainedVariance ?? [];
       // Sum of top 4 components
       const top4Variance = explainedVariance
         .slice(0, 4)
@@ -1327,6 +1375,21 @@ class PrototypeAnalysisController {
       this.#varianceTop4.textContent =
         explainedVariance.length > 0
           ? `${(top4Variance * 100).toFixed(1)}%`
+          : '--';
+    }
+
+    if (this.#varianceAxisCount) {
+      this.#varianceAxisCount.textContent = axisCount > 0 ? String(axisCount) : '--';
+    }
+
+    if (this.#varianceTopK) {
+      // Sum of top K components (where K is the dynamic axis count)
+      const topKVariance = explainedVariance
+        .slice(0, axisCount)
+        .reduce((sum, v) => sum + v, 0);
+      this.#varianceTopK.textContent =
+        explainedVariance.length > 0 && axisCount > 0
+          ? `${(topKVariance * 100).toFixed(1)}%`
           : '--';
     }
   }
@@ -1502,9 +1565,14 @@ class PrototypeAnalysisController {
     parts.push(`Uses ${axisCount} ax${axisCount !== 1 ? 'es' : 'is'}`);
 
     if (signBalance !== null && signBalance !== undefined) {
-      parts.push(`${Math.round(signBalance * 100)}% sign balance - complex blend pattern`);
-    } else {
-      parts.push('conflicting sign pattern');
+      const sameSignPercent = Math.round(signBalance * 100);
+      if (sameSignPercent > 70) {
+        parts.push(`${sameSignPercent}% same-sign weighted`);
+      } else if (sameSignPercent < 30) {
+        parts.push(`evenly mixed signs`);
+      } else {
+        parts.push(`${sameSignPercent}% sign skew`);
+      }
     }
 
     return parts.join(' with ');
@@ -1582,9 +1650,12 @@ class PrototypeAnalysisController {
 
     const {
       residualVarianceRatio,
-      additionalSignificantComponents,
+      significantComponentCount,
+      expectedComponentCount,
+      significantBeyondExpected,
       topLoadingPrototypes,
       dimensionsUsed,
+      excludedSparseAxes,
       componentsFor80Pct,
       componentsFor90Pct,
       reconstructionErrors,
@@ -1607,25 +1678,34 @@ class PrototypeAnalysisController {
       }
     }
 
-    // Render additional components
-    if (this.#additionalComponents) {
-      this.#additionalComponents.textContent =
-        additionalSignificantComponents?.toString() ?? '--';
+    // Render significant component count (broken-stick)
+    if (this.#significantComponentCount) {
+      this.#significantComponentCount.textContent =
+        significantComponentCount?.toString() ?? '--';
     }
 
-    // Render dimensions used count
-    if (this.#pcaDimensionsUsed) {
-      const dimensions = dimensionsUsed;
-      if (Array.isArray(dimensions) && dimensions.length > 0) {
-        this.#pcaDimensionsUsed.textContent = dimensions.length.toString();
-      } else {
-        this.#pcaDimensionsUsed.textContent = '--';
+    // Render expected component count (K)
+    if (this.#expectedComponentCount) {
+      this.#expectedComponentCount.textContent =
+        expectedComponentCount?.toString() ?? '--';
+    }
+
+    // Render significant beyond expected with visual indicator
+    if (this.#significantBeyondExpected) {
+      const beyondValue = significantBeyondExpected ?? 0;
+      this.#significantBeyondExpected.textContent = beyondValue.toString();
+      this.#significantBeyondExpected.className = 'metric-value';
+
+      // Add visual indicator when 0 but residual variance is high
+      if (beyondValue === 0 && residualVarianceRatio > 0.15) {
+        this.#significantBeyondExpected.classList.add('zero-with-residual');
+        this.#significantBeyondExpected.textContent = '0 *';
       }
     }
 
-    // Render dimensions list with tags
+    // Render dimensions list with tags and count
+    const dimensions = dimensionsUsed;
     if (this.#pcaDimensionsList) {
-      const dimensions = dimensionsUsed;
       if (Array.isArray(dimensions) && dimensions.length > 0) {
         this.#pcaDimensionsList.innerHTML = dimensions
           .map((dim) => `<span class="dimension-tag">${this.#escapeHtml(dim)}</span>`)
@@ -1634,6 +1714,20 @@ class PrototypeAnalysisController {
         this.#pcaDimensionsList.innerHTML = '';
       }
     }
+
+    // Render dimensions count
+    if (this.#pcaDimensionsUsed) {
+      this.#pcaDimensionsUsed.textContent =
+        Array.isArray(dimensions) && dimensions.length > 0
+          ? dimensions.length.toString()
+          : '--';
+    }
+
+    // Render excluded sparse axes (if any were filtered out)
+    this.#renderExcludedSparseAxes(excludedSparseAxes);
+
+    // Render methodology note explaining broken-stick null hypothesis testing
+    this.#renderMethodologyNote(significantBeyondExpected, residualVarianceRatio);
 
     // Render components for 80% variance
     if (this.#componentsFor80) {
@@ -1706,6 +1800,138 @@ class PrototypeAnalysisController {
       this.#pcaTopLoading.appendChild(subtitle);
       this.#pcaTopLoading.appendChild(list);
     }
+  }
+
+  /**
+   * Render excluded sparse axes that were filtered before PCA.
+   *
+   * Sparse axes are excluded to prevent z-score inflation: when an axis is used
+   * by few prototypes, z-scoring causes non-zero values to become extreme outliers,
+   * giving sparse axes disproportionate influence in PCA.
+   *
+   * @param {string[]|undefined} excludedSparseAxes - Axes excluded due to low usage
+   * @private
+   */
+  #renderExcludedSparseAxes(excludedSparseAxes) {
+    // Try to find the container, or create it dynamically near dimensions list
+    let container = this.#pcaExcludedAxesList;
+
+    if (!container && this.#pcaDimensionsList) {
+      // Create container dynamically after dimensions list
+      container = document.createElement('div');
+      container.id = 'pca-excluded-axes-list';
+      container.className = 'excluded-axes-section';
+      this.#pcaDimensionsList.parentNode?.insertBefore(
+        container,
+        this.#pcaDimensionsList.nextSibling
+      );
+      this.#pcaExcludedAxesList = container;
+    }
+
+    if (!container) return;
+
+    // Clear previous content
+    container.innerHTML = '';
+
+    // Only display if there are excluded axes
+    if (!Array.isArray(excludedSparseAxes) || excludedSparseAxes.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
+
+    const header = document.createElement('h5');
+    header.className = 'excluded-axes-header';
+    header.textContent = `Excluded Sparse Axes (${excludedSparseAxes.length})`;
+
+    const helpText = document.createElement('p');
+    helpText.className = 'pca-subtitle excluded-axes-help';
+    helpText.textContent =
+      'Axes used by <10% of prototypes are excluded to prevent z-score inflation ' +
+      'where sparse axes would dominate PCA due to extreme standardized values.';
+
+    const tagContainer = document.createElement('div');
+    tagContainer.className = 'excluded-axes-tags';
+    excludedSparseAxes.forEach((axis) => {
+      const tag = document.createElement('span');
+      tag.className = 'dimension-tag excluded';
+      tag.textContent = this.#escapeHtml(axis);
+      tagContainer.appendChild(tag);
+    });
+
+    container.appendChild(header);
+    container.appendChild(helpText);
+    container.appendChild(tagContainer);
+  }
+
+  /**
+   * Render methodology note explaining the broken-stick null hypothesis test.
+   *
+   * The broken-stick rule provides statistical context for interpreting PCA results:
+   * - It compares actual eigenvalue distribution to random expectation
+   * - "0 additional components" means variance is diffuse, not concentrated in hidden dimensions
+   * - High residual variance with 0 extra components suggests noise, not missing axes
+   *
+   * @param {number|undefined} significantBeyondExpected - Components beyond expected
+   * @param {number|undefined} residualVarianceRatio - Residual variance ratio
+   * @private
+   */
+  #renderMethodologyNote(significantBeyondExpected, residualVarianceRatio) {
+    // Try to find the container, or create it dynamically
+    let container = this.#pcaMethodologyNote;
+
+    if (!container && this.#significantBeyondExpected) {
+      // Create container dynamically after significant beyond expected metric
+      container = document.createElement('div');
+      container.id = 'pca-methodology-note';
+      container.className = 'methodology-note';
+      const parentRow = this.#significantBeyondExpected.closest('.metric-row');
+      parentRow?.parentNode?.insertBefore(container, parentRow.nextSibling);
+      this.#pcaMethodologyNote = container;
+    }
+
+    if (!container) return;
+
+    // Clear previous content
+    container.innerHTML = '';
+
+    const beyondValue = significantBeyondExpected ?? 0;
+    const residual = residualVarianceRatio ?? 0;
+    const highResidual = residual >= 0.15;
+
+    // Only show note when it's contextually useful
+    if (beyondValue === 0 && highResidual) {
+      // Special case: high residual but no extra components - explain why
+      const note = document.createElement('div');
+      note.className = 'methodology-explanation warning';
+      note.innerHTML = `
+        <strong>Methodology Note:</strong> The broken-stick null hypothesis test
+        found 0 additional significant components. This means the eigenvalue distribution
+        matches random expectation—variance is diffuse across many small components rather
+        than concentrated in discoverable hidden dimensions. High residual variance
+        (${(residual * 100).toFixed(1)}%) with 0 extra components suggests the unexplained
+        variance may be noise or idiosyncratic prototype differences, not a missing axis.
+      `;
+      container.appendChild(note);
+    } else if (beyondValue > 0) {
+      // Has extra components - explain what that means
+      const note = document.createElement('div');
+      note.className = 'methodology-explanation alert';
+      note.innerHTML = `
+        <strong>Methodology Note:</strong> The broken-stick test found ${beyondValue}
+        component${beyondValue > 1 ? 's' : ''} with variance exceeding random expectation.
+        This suggests ${beyondValue > 1 ? 'multiple missing dimensions' : 'a potential missing axis'}
+        in the current weight space.
+      `;
+      container.appendChild(note);
+    } else {
+      // No special case - hide the container
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
   }
 
   /**
@@ -1875,7 +2101,7 @@ class PrototypeAnalysisController {
 
       // Format sign balance display
       const balanceDisplay = signBalance !== null
-        ? `${Math.round(signBalance * 100)}% balance`
+        ? `${100 - Math.round(signBalance * 100)}% sign diversity`
         : 'mixed signs';
 
       li.innerHTML = `
@@ -1937,6 +2163,176 @@ class PrototypeAnalysisController {
       `;
       this.#axisRecommendationsList.appendChild(li);
     });
+  }
+
+  /**
+   * Render candidate axis validation results.
+   *
+   * @param {Array<object>|null} candidateAxes - Candidate axis validation results.
+   */
+  #renderCandidateAxisValidation(candidateAxes) {
+    if (!this.#candidateAxisList) return;
+
+    this.#candidateAxisList.innerHTML = '';
+
+    if (!Array.isArray(candidateAxes) || candidateAxes.length === 0) {
+      const emptyMsg = document.createElement('li');
+      emptyMsg.className = 'empty-list-message';
+      emptyMsg.textContent =
+        'No candidate axes analyzed (validation may be disabled).';
+      this.#candidateAxisList.appendChild(emptyMsg);
+      return;
+    }
+
+    // Separate recommended from not-recommended
+    const recommended = candidateAxes.filter((c) => c.isRecommended);
+    const notRecommended = candidateAxes.filter((c) => !c.isRecommended);
+
+    // Render recommended candidates first
+    if (recommended.length > 0) {
+      const recHeader = document.createElement('li');
+      recHeader.className = 'candidate-section-header recommended';
+      recHeader.textContent = `Recommended (${recommended.length})`;
+      this.#candidateAxisList.appendChild(recHeader);
+
+      recommended.forEach((candidate) => {
+        this.#candidateAxisList.appendChild(
+          this.#createCandidateElement(candidate, true)
+        );
+      });
+    }
+
+    // Render not-recommended candidates
+    if (notRecommended.length > 0) {
+      const notRecHeader = document.createElement('li');
+      notRecHeader.className = 'candidate-section-header not-recommended';
+      notRecHeader.textContent = `Not Recommended (${notRecommended.length})`;
+      this.#candidateAxisList.appendChild(notRecHeader);
+
+      notRecommended.forEach((candidate) => {
+        this.#candidateAxisList.appendChild(
+          this.#createCandidateElement(candidate, false)
+        );
+      });
+    }
+  }
+
+  /**
+   * Create a DOM element for a candidate axis.
+   *
+   * @param {object} candidate - Candidate axis validation result.
+   * @param {boolean} isRecommended - Whether this candidate is recommended.
+   * @returns {HTMLElement} The candidate element.
+   */
+  #createCandidateElement(candidate, isRecommended) {
+    const li = document.createElement('li');
+
+    // Check for validation error - add special styling
+    const hasValidationError = candidate.validationError !== null && candidate.validationError !== undefined;
+    li.className = `candidate-axis ${isRecommended ? 'recommended' : 'not-recommended'}${hasValidationError ? ' validation-error' : ''}`;
+
+    const improvement = candidate.improvement ?? {};
+    const rmseReduction = ((improvement.rmseReduction ?? 0) * 100).toFixed(1);
+    const strongAxisReduction = improvement.strongAxisReduction ?? 0;
+    const coUsageReduction = (
+      (improvement.coUsageReduction ?? 0) * 100
+    ).toFixed(1);
+
+    // Format the direction as axis weights
+    const direction = candidate.direction ?? {};
+    const directionEntries = Object.entries(direction);
+    let topAxes = 'N/A';
+    let directionStatus = '';
+
+    if (hasValidationError) {
+      topAxes = 'Invalid';
+      directionStatus = ` <span class="direction-error">(${this.#getValidationErrorMessage(candidate.validationError)})</span>`;
+    } else if (directionEntries.length > 0) {
+      // Sort by absolute weight and take top 5 axes
+      const sortedEntries = directionEntries.sort(
+        ([, a], [, b]) => Math.abs(b) - Math.abs(a)
+      );
+      const topEntries = sortedEntries.slice(0, 5);
+
+      // Check if direction is diffuse (all displayed weights < 0.1)
+      const maxDisplayedWeight = Math.max(
+        ...topEntries.map(([, w]) => Math.abs(w))
+      );
+      const isDiffuse = maxDisplayedWeight < 0.1;
+
+      topAxes = topEntries
+        .map(([axis, weight]) => `${axis}: ${weight.toFixed(2)}`)
+        .join(', ');
+
+      if (isDiffuse) {
+        directionStatus =
+          ' <span class="direction-diffuse">(diffuse - spread across all axes)</span>';
+      }
+    }
+
+    const recommendation = candidate.recommendation ?? 'unknown';
+    let recommendationLabel;
+    let recommendationClass = recommendation;
+
+    if (hasValidationError) {
+      recommendationLabel = 'Validation Error';
+      recommendationClass = 'validation_error';
+    } else if (recommendation === 'add_axis') {
+      recommendationLabel = 'Add New Axis';
+    } else if (recommendation === 'refine_prototypes') {
+      recommendationLabel = 'Refine Prototypes Instead';
+    } else {
+      recommendationLabel = 'Insufficient Data';
+    }
+
+    const affectedCount = candidate.affectedPrototypes?.length ?? 0;
+
+    li.innerHTML = `
+      <div class="candidate-header">
+        <span class="candidate-source">${this.#escapeHtml(candidate.source ?? 'unknown')}</span>
+        <span class="candidate-recommendation ${recommendationClass}">${this.#escapeHtml(recommendationLabel)}</span>
+      </div>
+      <div class="candidate-direction">
+        <strong>Direction:</strong> ${this.#escapeHtml(topAxes)}${directionStatus}
+      </div>
+      <div class="candidate-metrics">
+        <div class="metric">
+          <span class="metric-label">RMSE Reduction:</span>
+          <span class="metric-value ${parseFloat(rmseReduction) >= 10 ? 'good' : ''}">${rmseReduction}%</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Strong Axis Reduction:</span>
+          <span class="metric-value ${strongAxisReduction >= 1 ? 'good' : ''}">${strongAxisReduction}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Co-usage Reduction:</span>
+          <span class="metric-value ${parseFloat(coUsageReduction) >= 5 ? 'good' : ''}">${coUsageReduction}%</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Affected Prototypes:</span>
+          <span class="metric-value">${affectedCount}</span>
+        </div>
+      </div>
+    `;
+
+    return li;
+  }
+
+  /**
+   * Get user-friendly message for a validation error code.
+   *
+   * @param {string} errorCode - The validation error code.
+   * @returns {string} User-friendly error message.
+   */
+  #getValidationErrorMessage(errorCode) {
+    const messages = {
+      direction_null_or_invalid: 'Direction vector could not be computed',
+      direction_near_zero_magnitude:
+        'Direction has near-zero magnitude, indicating insufficient signal',
+      direction_diffuse:
+        'Direction is spread across all axes with no dominant pattern',
+    };
+    return messages[errorCode] ?? `Unknown validation error: ${errorCode}`;
   }
 }
 

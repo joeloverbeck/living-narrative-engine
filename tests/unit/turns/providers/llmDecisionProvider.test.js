@@ -40,6 +40,7 @@ describe('LLMDecisionProvider', () => {
     });
     expect(decision).toEqual({
       chosenIndex: 2,
+      cognitiveLedger: null,
       moodUpdate: null,
       sexualUpdate: null,
       speech: 'hi',

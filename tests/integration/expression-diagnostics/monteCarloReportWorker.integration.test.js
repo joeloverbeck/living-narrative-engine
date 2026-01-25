@@ -186,6 +186,7 @@ function buildReportWorkerStyle(payload) {
     logger,
     sensitivityAnalyzer,
     monteCarloReportGenerator: reportGenerator,
+    dataRegistry,
   });
 
   return reportOrchestrator.generateReport(payload);
@@ -552,6 +553,7 @@ describe('MonteCarloReportWorker Integration Tests', () => {
         logger,
         sensitivityAnalyzer,
         monteCarloReportGenerator: reportGenerator,
+        dataRegistry,
       });
 
       // Verify all services were created

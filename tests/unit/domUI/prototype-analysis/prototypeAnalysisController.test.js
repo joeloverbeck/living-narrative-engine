@@ -77,9 +77,19 @@ describe('PrototypeAnalysisController', () => {
             <span id="decision-verdict" class="decision-badge verdict-no">NO</span>
           </div>
           <p id="decision-rationale" class="decision-rationale">Analysis not yet run.</p>
-          <div class="variance-summary">
-            <span class="variance-label">Explained by top 4 PCs:</span>
-            <span id="variance-top4" class="variance-value">--</span>
+          <div class="variance-summary-container">
+            <div class="variance-summary">
+              <span class="variance-label">Explained by top 4 PCs:</span>
+              <span id="variance-top4" class="variance-value">--</span>
+            </div>
+            <div class="variance-summary variance-dynamic">
+              <span class="variance-label">Expected axis count (K):</span>
+              <span id="variance-axis-count" class="variance-value">--</span>
+            </div>
+            <div class="variance-summary variance-dynamic">
+              <span class="variance-label">Explained by top K PCs:</span>
+              <span id="variance-topk" class="variance-value">--</span>
+            </div>
           </div>
         </div>
         <div class="signal-breakdown">
@@ -107,7 +117,7 @@ describe('PrototypeAnalysisController', () => {
               <span id="signal-multi-axis-conflicts-status" class="signal-status pass">✓ PASS</span>
               <span class="signal-label">Multi-Axis Conflicts:</span>
               <span id="signal-multi-axis-conflicts" class="signal-value">0</span>
-              <span id="signal-multi-axis-conflicts-threshold" class="signal-threshold">(balanced usage)</span>
+              <span id="signal-multi-axis-conflicts-threshold" class="signal-threshold">(high axis count)</span>
             </div>
           </div>
         </div>
@@ -118,8 +128,16 @@ describe('PrototypeAnalysisController', () => {
             <span id="residual-variance" class="metric-value">--</span>
           </div>
           <div class="metric-row">
-            <span class="metric-label">Additional Components Suggested:</span>
-            <span id="additional-components" class="metric-value">--</span>
+            <span class="metric-label">Significant Components (Broken-Stick):</span>
+            <span id="significant-component-count" class="metric-value">--</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Expected Components (K):</span>
+            <span id="expected-component-count" class="metric-value">--</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Significant Beyond K:</span>
+            <span id="significant-beyond-expected" class="metric-value">--</span>
           </div>
           <div class="metric-row">
             <span class="metric-label">Dimensions Used:</span>
@@ -2148,7 +2166,9 @@ describe('PrototypeAnalysisController', () => {
       expect(document.getElementById('axis-gap-recommendations')).not.toBeNull();
       expect(document.getElementById('axis-gap-confidence')).not.toBeNull();
       expect(document.getElementById('residual-variance')).not.toBeNull();
-      expect(document.getElementById('additional-components')).not.toBeNull();
+      expect(document.getElementById('significant-component-count')).not.toBeNull();
+      expect(document.getElementById('expected-component-count')).not.toBeNull();
+      expect(document.getElementById('significant-beyond-expected')).not.toBeNull();
       expect(document.getElementById('pca-dimensions-used')).not.toBeNull();
       expect(document.getElementById('pca-dimensions-list')).not.toBeNull();
       expect(document.getElementById('pca-top-loading')).not.toBeNull();
@@ -2826,6 +2846,7 @@ describe('PrototypeAnalysisController', () => {
       pcaAnalysis: {
         residualVarianceRatio: 0.08,
         additionalSignificantComponents: 0,
+        axisCount: 0,
         topLoadingPrototypes: [],
         explainedVarianceTop4: 0.85,
         ...overrides.pcaAnalysis,
@@ -2979,6 +3000,105 @@ describe('PrototypeAnalysisController', () => {
 
       const varianceTop4 = document.getElementById('variance-top4');
       expect(varianceTop4.textContent).toBe('66.0%');
+    });
+
+    it('should render axis count (K) from pcaAnalysis', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 10,
+          candidatePairsFound: 0,
+          candidatePairsEvaluated: 0,
+          redundantPairsFound: 0,
+          sampleCountPerPair: 8000,
+        },
+        axisGapAnalysis: createAxisGapAnalysis({
+          pcaAnalysis: {
+            explainedVariance: [0.30, 0.20, 0.15, 0.10, 0.08, 0.05],
+            axisCount: 5,
+          },
+        }),
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const varianceAxisCount = document.getElementById('variance-axis-count');
+      expect(varianceAxisCount.textContent).toBe('5');
+    });
+
+    it('should render variance explained by top K PCs', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 10,
+          candidatePairsFound: 0,
+          candidatePairsEvaluated: 0,
+          redundantPairsFound: 0,
+          sampleCountPerPair: 8000,
+        },
+        axisGapAnalysis: createAxisGapAnalysis({
+          pcaAnalysis: {
+            // Sum of top 3 = 0.30 + 0.25 + 0.15 = 0.70 = 70%
+            explainedVariance: [0.30, 0.25, 0.15, 0.10, 0.08],
+            axisCount: 3,
+          },
+        }),
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const varianceTopK = document.getElementById('variance-topk');
+      expect(varianceTopK.textContent).toBe('70.0%');
+    });
+
+    it('should show -- for axis count and top K when axisCount is 0', async () => {
+      mockAnalyzer.analyze.mockResolvedValue({
+        recommendations: [],
+        metadata: {
+          prototypeFamily: 'emotion',
+          totalPrototypes: 10,
+          candidatePairsFound: 0,
+          candidatePairsEvaluated: 0,
+          redundantPairsFound: 0,
+          sampleCountPerPair: 8000,
+        },
+        axisGapAnalysis: createAxisGapAnalysis({
+          pcaAnalysis: {
+            explainedVariance: [],
+            axisCount: 0,
+          },
+        }),
+      });
+
+      const controller = new PrototypeAnalysisController({
+        logger: mockLogger,
+        prototypeOverlapAnalyzer: mockAnalyzer,
+      });
+
+      await controller.initialize();
+      document.getElementById('run-analysis-btn').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const varianceAxisCount = document.getElementById('variance-axis-count');
+      const varianceTopK = document.getElementById('variance-topk');
+      expect(varianceAxisCount.textContent).toBe('--');
+      expect(varianceTopK.textContent).toBe('--');
     });
 
     it('should render rationale text matching verdict', async () => {
@@ -3611,7 +3731,7 @@ describe('PrototypeAnalysisController', () => {
 
       const conflictList = document.getElementById('conflict-list');
       expect(conflictList.textContent).toContain('Uses');
-      expect(conflictList.textContent).toContain('sign balance');
+      expect(conflictList.textContent).toContain('same-sign');
     });
   });
 });

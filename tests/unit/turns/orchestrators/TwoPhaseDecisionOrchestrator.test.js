@@ -34,8 +34,18 @@ const createDeps = (overrides = {}) => {
         extractedData: {
           thoughts: 'Thinking...',
           notes: [{ text: 'Note', subject: 'Test' }],
+          cognitiveLedger: {
+            settled_conclusions: ['Conclusion 1'],
+            open_questions: ['Question 1'],
+          },
         },
       }),
+    },
+    perceptionLogProvider: {
+      isEmpty: jest.fn().mockResolvedValue(false),
+    },
+    safeEventDispatcher: {
+      dispatch: jest.fn().mockResolvedValue(true),
     },
     logger: { debug: jest.fn() },
   };
@@ -108,6 +118,26 @@ describe('TwoPhaseDecisionOrchestrator', () => {
     ).toThrow('TwoPhaseDecisionOrchestrator: llmResponseProcessor required');
   });
 
+  it('throws when perceptionLogProvider is missing', () => {
+    expect(
+      () =>
+        new TwoPhaseDecisionOrchestrator({
+          ...createDeps(),
+          perceptionLogProvider: null,
+        })
+    ).toThrow('TwoPhaseDecisionOrchestrator: perceptionLogProvider required');
+  });
+
+  it('throws when safeEventDispatcher is missing', () => {
+    expect(
+      () =>
+        new TwoPhaseDecisionOrchestrator({
+          ...createDeps(),
+          safeEventDispatcher: null,
+        })
+    ).toThrow('TwoPhaseDecisionOrchestrator: safeEventDispatcher required');
+  });
+
   it('throws when logger is missing', () => {
     expect(
       () =>
@@ -177,9 +207,61 @@ describe('TwoPhaseDecisionOrchestrator', () => {
       speech: 'Hi.',
       thoughts: 'Thinking...',
       notes: [{ text: 'Note', subject: 'Test' }],
+      cognitiveLedger: {
+        settled_conclusions: ['Conclusion 1'],
+        open_questions: ['Question 1'],
+      },
       moodUpdate: { valence: 1 },
       sexualUpdate: { sex_excitation: 2 },
     });
+  });
+
+  it('includes cognitiveLedger from extractedData in return', async () => {
+    const deps = createDeps({
+      llmResponseProcessor: {
+        processResponse: jest.fn().mockResolvedValue({
+          action: { chosenIndex: 1, speech: null },
+          extractedData: {
+            thoughts: 'test',
+            cognitiveLedger: {
+              settled_conclusions: ['A', 'B'],
+              open_questions: ['C'],
+            },
+          },
+        }),
+      },
+    });
+    const orchestrator = new TwoPhaseDecisionOrchestrator(deps);
+    const result = await orchestrator.orchestrate({
+      actor: { id: 'actor-1' },
+      context: {},
+      actions: [{}],
+    });
+    expect(result.cognitiveLedger).toEqual({
+      settled_conclusions: ['A', 'B'],
+      open_questions: ['C'],
+    });
+  });
+
+  it('returns null cognitiveLedger when extractedData does not have it', async () => {
+    const deps = createDeps({
+      llmResponseProcessor: {
+        processResponse: jest.fn().mockResolvedValue({
+          action: { chosenIndex: 0, speech: 'Hello' },
+          extractedData: {
+            thoughts: 'thinking',
+            notes: [],
+          },
+        }),
+      },
+    });
+    const orchestrator = new TwoPhaseDecisionOrchestrator(deps);
+    const result = await orchestrator.orchestrate({
+      actor: { id: 'actor-2' },
+      context: {},
+      actions: [{}],
+    });
+    expect(result.cognitiveLedger).toBeNull();
   });
 
   it('persists mood before generating the action prompt', async () => {
@@ -281,6 +363,103 @@ describe('TwoPhaseDecisionOrchestrator', () => {
         toolName: 'turn_action',
         toolDescription: 'Select action, speech, and thoughts for character turn',
       }
+    );
+  });
+
+  it('skips Phase 1 when perception log is empty', async () => {
+    const deps = createDeps({
+      perceptionLogProvider: {
+        isEmpty: jest.fn().mockResolvedValue(true),
+      },
+      llmAdapter: {
+        getAIDecision: jest.fn().mockResolvedValue('action-raw'),
+      },
+    });
+    const orchestrator = new TwoPhaseDecisionOrchestrator(deps);
+    const actor = { id: 'actor-empty' };
+
+    const result = await orchestrator.orchestrate({
+      actor,
+      context: {},
+      actions: [],
+    });
+
+    // Verify mood pipeline was not called
+    expect(deps.moodUpdatePipeline.generateMoodUpdatePrompt).not.toHaveBeenCalled();
+    expect(deps.moodResponseProcessor.processMoodResponse).not.toHaveBeenCalled();
+    expect(deps.moodPersistenceService.persistMoodUpdate).not.toHaveBeenCalled();
+
+    // Verify llmAdapter was only called once (Phase 2)
+    expect(deps.llmAdapter.getAIDecision).toHaveBeenCalledTimes(1);
+    expect(deps.llmAdapter.getAIDecision).toHaveBeenCalledWith(
+      'action-prompt',
+      undefined,
+      {
+        toolSchema: LLM_TURN_ACTION_RESPONSE_SCHEMA_V5,
+        toolName: 'turn_action',
+        toolDescription: 'Select action, speech, and thoughts for character turn',
+      }
+    );
+
+    // Verify result has null mood updates
+    expect(result.moodUpdate).toBeNull();
+    expect(result.sexualUpdate).toBeNull();
+
+    // Verify action result is still returned
+    expect(result.index).toBe(2);
+    expect(result.speech).toBe('Hi.');
+  });
+
+  it('runs Phase 1 when perception log is not empty', async () => {
+    const deps = createDeps({
+      perceptionLogProvider: {
+        isEmpty: jest.fn().mockResolvedValue(false),
+      },
+    });
+    const orchestrator = new TwoPhaseDecisionOrchestrator(deps);
+    const actor = { id: 'actor-with-events' };
+
+    const result = await orchestrator.orchestrate({
+      actor,
+      context: {},
+      actions: [],
+    });
+
+    // Verify mood pipeline was called
+    expect(deps.moodUpdatePipeline.generateMoodUpdatePrompt).toHaveBeenCalledWith(
+      actor,
+      {}
+    );
+    expect(deps.moodResponseProcessor.processMoodResponse).toHaveBeenCalled();
+    expect(deps.moodPersistenceService.persistMoodUpdate).toHaveBeenCalled();
+
+    // Verify llmAdapter was called twice (Phase 1 + Phase 2)
+    expect(deps.llmAdapter.getAIDecision).toHaveBeenCalledTimes(2);
+
+    // Verify result has mood updates
+    expect(result.moodUpdate).toEqual({ valence: 1 });
+    expect(result.sexualUpdate).toEqual({ sex_excitation: 2 });
+  });
+
+  it('logs that Phase 1 was skipped when perception log is empty', async () => {
+    const deps = createDeps({
+      perceptionLogProvider: {
+        isEmpty: jest.fn().mockResolvedValue(true),
+      },
+      llmAdapter: {
+        getAIDecision: jest.fn().mockResolvedValue('action-raw'),
+      },
+    });
+    const orchestrator = new TwoPhaseDecisionOrchestrator(deps);
+
+    await orchestrator.orchestrate({
+      actor: { id: 'actor-log-test' },
+      context: {},
+      actions: [],
+    });
+
+    expect(deps.logger.debug).toHaveBeenCalledWith(
+      'TwoPhaseDecisionOrchestrator: Phase 1 skipped - perception log is empty'
     );
   });
 });

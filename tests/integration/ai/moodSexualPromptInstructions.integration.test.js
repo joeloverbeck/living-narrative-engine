@@ -164,6 +164,26 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
     it('should mention appraisal rules', () => {
       expect(promptText).toContain('appraisal rules');
     });
+
+    it('should reference affect_traits', () => {
+      expect(promptText).toContain('affect_traits');
+    });
+
+    it('should mention ruminative_tendency trait', () => {
+      expect(promptText).toContain('ruminative_tendency');
+    });
+
+    it('should mention disgust_sensitivity trait', () => {
+      expect(promptText).toContain('disgust_sensitivity');
+    });
+
+    it('should mention evaluation_sensitivity trait', () => {
+      expect(promptText).toContain('evaluation_sensitivity');
+    });
+
+    it('should mention self_control trait', () => {
+      expect(promptText).toContain('self_control');
+    });
   });
 
   describe('SEX VARIABLES Section', () => {
@@ -182,35 +202,78 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
     });
   });
 
-  describe('DEFAULT UPDATE HEURISTICS Section', () => {
-    it('should contain DEFAULT UPDATE HEURISTICS section', () => {
-      expect(promptText).toContain('DEFAULT UPDATE HEURISTICS');
+  describe('BLENDING RULE Section', () => {
+    it('should contain BLENDING RULE section', () => {
+      expect(promptText).toContain('BLENDING RULE');
     });
 
-    it('should provide heuristic for being attacked/threatened', () => {
-      expect(promptText).toContain('Being attacked/threatened');
-      expect(promptText).toContain('Threat up, Arousal up, Valence down');
+    it('should provide primary/secondary magnitude guidance', () => {
+      expect(promptText).toMatch(/primary trigger/i);
+      expect(promptText).toMatch(/full magnitude/i);
     });
 
-    it('should provide heuristic for succeeding/gaining leverage', () => {
-      expect(promptText).toContain('Succeeding/gaining leverage');
-      expect(promptText).toContain('Agency/Control up, Valence up, Threat down');
+    it('should specify secondary trigger magnitude', () => {
+      expect(promptText).toMatch(/secondary.*40-60%/i);
     });
 
-    it('should provide heuristic for loss/grief', () => {
-      expect(promptText).toContain('Loss/grief');
-      expect(promptText).toContain('Valence down');
-      expect(promptText).toContain('Arousal often down');
+    it('should explain handling of opposing axis effects', () => {
+      expect(promptText).toContain('opposite directions');
+      expect(promptText).toContain('persona determines winner');
+    });
+  });
+
+  describe('EVENT ARCHETYPES Section', () => {
+    it('should contain EVENT ARCHETYPES section', () => {
+      expect(promptText).toContain('EVENT ARCHETYPES');
     });
 
-    it('should provide heuristic for public humiliation', () => {
-      expect(promptText).toContain('Public humiliation');
-      expect(promptText).toContain('Self-evaluation down, Valence down, Threat up');
+    it('should have acute threat archetype with primary and common', () => {
+      expect(promptText).toMatch(/Acute threat/i);
+      expect(promptText).toMatch(/primary:.*threat/i);
     });
 
-    it('should provide heuristic for boredom/waiting', () => {
-      expect(promptText).toContain('Boredom/waiting');
-      expect(promptText).toContain('Engagement down, Arousal down');
+    it('should have competence win archetype', () => {
+      expect(promptText).toMatch(/Competence win/i);
+      expect(promptText).toMatch(/agency_control/i);
+    });
+
+    it('should have loss/grief archetype', () => {
+      expect(promptText).toMatch(/Loss.*grief/i);
+      expect(promptText).toMatch(/valence/i);
+    });
+
+    it('should have social-evaluative exposure archetype', () => {
+      expect(promptText).toMatch(/Social-evaluative exposure/i);
+      expect(promptText).toMatch(/evaluation_pressure/i);
+    });
+
+    it('should have disgust/contamination archetype', () => {
+      expect(promptText).toMatch(/Disgust.*contamination/i);
+      expect(promptText).toMatch(/contamination_salience/i);
+    });
+
+    it('should have ambiguity/cognitive mismatch archetype', () => {
+      expect(promptText).toMatch(/Ambiguity.*cognitive mismatch/i);
+      expect(promptText).toMatch(/uncertainty/i);
+    });
+
+    it('should have flow/present-moment archetype', () => {
+      expect(promptText).toMatch(/Flow.*present-moment/i);
+      expect(promptText).toMatch(/engagement/i);
+    });
+
+    it('should have warm connection archetype', () => {
+      expect(promptText).toMatch(/Warm connection/i);
+      expect(promptText).toMatch(/affiliation/i);
+    });
+
+    it('should have rejection/betrayal archetype', () => {
+      expect(promptText).toMatch(/Rejection.*betrayal/i);
+    });
+
+    it('should provide fallback for unmatched events', () => {
+      expect(promptText).toContain('no archetype fits');
+      expect(promptText).toContain('affect_traits');
     });
   });
 
@@ -276,7 +339,7 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
   });
 
   describe('Token Efficiency', () => {
-    it('should keep the mood/sexual update section under 2250 tokens (approximately 9000 characters)', () => {
+    it('should keep the mood/sexual update section under 2625 tokens (approximately 10500 characters)', () => {
       // The moodUpdateOnlyInstructionText is dedicated to mood/sexual updates
       // Verify start marker exists
       const startMarker = 'EMOTIONAL + SEXUAL STATE UPDATE';
@@ -285,8 +348,8 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
 
       // Measure the entire dedicated mood update text
       // Rough estimate: 4 characters per token on average
-      // 2250 tokens * 4 = 9000 characters max (adjusted for 14 mood axes)
-      expect(promptText.length).toBeLessThan(9000);
+      // 2625 tokens * 4 = 10500 characters max (adjusted for archetype system + BLENDING RULE)
+      expect(promptText.length).toBeLessThan(10500);
     });
   });
 
@@ -295,9 +358,8 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       const rangesIndex = promptText.indexOf('RANGES');
       const axisDefIndex = promptText.indexOf('AXIS DEFINITIONS');
       const characterLensIndex = promptText.indexOf('CHARACTER LENS');
-      const defaultHeuristicsIndex = promptText.indexOf(
-        'DEFAULT UPDATE HEURISTICS'
-      );
+      const blendingRuleIndex = promptText.indexOf('BLENDING RULE');
+      const eventArchetypesIndex = promptText.indexOf('EVENT ARCHETYPES');
       const sexVarsIndex = promptText.indexOf('SEX VARIABLES');
       const sexUpdateRuleIndex = promptText.indexOf('SEX UPDATE RULE');
       const magnitudesIndex = promptText.indexOf('TYPICAL CHANGE MAGNITUDES');
@@ -307,7 +369,8 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       expect(rangesIndex).toBeGreaterThan(-1);
       expect(axisDefIndex).toBeGreaterThan(-1);
       expect(characterLensIndex).toBeGreaterThan(-1);
-      expect(defaultHeuristicsIndex).toBeGreaterThan(-1);
+      expect(blendingRuleIndex).toBeGreaterThan(-1);
+      expect(eventArchetypesIndex).toBeGreaterThan(-1);
       expect(sexVarsIndex).toBeGreaterThan(-1);
       expect(sexUpdateRuleIndex).toBeGreaterThan(-1);
       expect(magnitudesIndex).toBeGreaterThan(-1);
@@ -316,8 +379,9 @@ describe('Mood and Sexual State Update Prompt Instructions', () => {
       // Sections should appear in logical order
       expect(rangesIndex).toBeLessThan(axisDefIndex);
       expect(axisDefIndex).toBeLessThan(characterLensIndex);
-      expect(characterLensIndex).toBeLessThan(defaultHeuristicsIndex);
-      expect(defaultHeuristicsIndex).toBeLessThan(sexVarsIndex);
+      expect(characterLensIndex).toBeLessThan(blendingRuleIndex);
+      expect(blendingRuleIndex).toBeLessThan(eventArchetypesIndex);
+      expect(eventArchetypesIndex).toBeLessThan(sexVarsIndex);
       expect(sexVarsIndex).toBeLessThan(sexUpdateRuleIndex);
       expect(sexUpdateRuleIndex).toBeLessThan(magnitudesIndex);
       expect(magnitudesIndex).toBeLessThan(outputIndex);

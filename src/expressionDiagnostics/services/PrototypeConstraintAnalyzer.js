@@ -9,7 +9,7 @@
 
 import GateConstraint from '../models/GateConstraint.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { extractMoodConstraints } from '../utils/moodRegimeUtils.js';
+import { extractConstraintsFromPrototypeGates } from '../utils/prototypeGateUtils.js';
 
 /**
  * @typedef {object} PrototypeAnalysisResult
@@ -199,7 +199,11 @@ class PrototypeConstraintAnalyzer {
   }
 
   /**
-   * Extract axis constraints from expression prerequisites
+   * Extract axis constraints from expression prerequisites.
+   *
+   * Derives constraints from the gates of emotion/sexual prototypes
+   * referenced in the prerequisites, rather than from direct moodAxes.*
+   * patterns in the prerequisites themselves.
    *
    * @param {Array} prerequisites - Expression prerequisites array
    * @returns {Map<string, AxisConstraint>} Axis name -> constraint
@@ -211,12 +215,14 @@ class PrototypeConstraintAnalyzer {
       return constraints;
     }
 
-    const moodConstraints = extractMoodConstraints(prerequisites, {
-      includeMoodAlias: true,
-      andOnly: true,
-    });
+    // Extract constraints from prototype gates rather than direct moodAxes.* patterns
+    const gateConstraints = extractConstraintsFromPrototypeGates(
+      prerequisites,
+      this.#dataRegistry,
+      { deduplicateByAxis: true }
+    );
 
-    for (const constraint of moodConstraints) {
+    for (const constraint of gateConstraints) {
       const axis = this.#getAxisFromVarPath(constraint.varPath);
       if (!axis) {
         continue;

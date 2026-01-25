@@ -166,5 +166,5 @@
         "limited": "{actor} looks dazed and distant for a beat, as if processing something too big to take in all at once."
     },
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0042
+    "triggerRate": 0.0027
 }

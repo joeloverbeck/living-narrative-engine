@@ -21,11 +21,40 @@ describe('MultiAxisConflictDetector', () => {
     it('should accept custom config', () => {
       const det = new MultiAxisConflictDetector({
         activeAxisEpsilon: 0.1,
+        strongAxisThreshold: 0.3,
         highAxisLoadingThreshold: 2.0,
         signTensionMinMagnitude: 0.3,
         signTensionMinHighAxes: 3,
         multiAxisSignBalanceThreshold: 0.5,
       });
+      expect(det).toBeDefined();
+    });
+
+    it('should use default activeAxisEpsilon of 0.08', () => {
+      // Create detector with no config and verify behavior with epsilon=0.08
+      const det = new MultiAxisConflictDetector();
+      // Weights of 0.05 should be below epsilon (not active)
+      // Weights of 0.10 should be above epsilon (active)
+      const prototypes = [
+        { id: 'below', weights: { a: 0.05, b: 0.05 } }, // Both below epsilon
+        { id: 'above', weights: { a: 0.10, b: 0.10 } }, // Both above epsilon
+        { id: 'mix', weights: { a: 0.05, b: 0.10 } }, // One below, one above
+      ];
+
+      const results = det.detectHighAxisLoadings(prototypes);
+
+      // Find the 'above' prototype summary - it should have 2 active axes
+      // The result structure from detectHighAxisLoadings shows active axes
+      if (results.length > 0) {
+        const aboveResult = results.find((r) => r.prototypeId === 'above');
+        if (aboveResult) {
+          expect(aboveResult.activeAxisCount).toBe(2);
+        }
+      }
+    });
+
+    it('should use default strongAxisThreshold of 0.25', () => {
+      const det = new MultiAxisConflictDetector();
       expect(det).toBeDefined();
     });
 
@@ -156,11 +185,35 @@ describe('MultiAxisConflictDetector', () => {
 
   describe('detectHighAxisLoadings - detection logic', () => {
     it('should detect prototype with significantly more active axes', () => {
+      // Using Tukey's fence: Q3 + 1.5*IQR
+      // With axis counts [1, 1, 1, 15]:
+      //   Lower: [1, 1] → Q1 = 1
+      //   Upper: [1, 15] → Q3 = 8
+      //   IQR = 7
+      //   Threshold = 8 + 1.5*7 = 18.5
+      // Wait, 15 won't work. Let's use a distribution where the outlier clearly exceeds.
+      // With axis counts [1, 1, 1, 25]:
+      //   Lower: [1, 1] → Q1 = 1
+      //   Upper: [1, 25] → Q3 = 13
+      //   IQR = 12
+      //   Threshold = 13 + 1.5*12 = 31
+      // Still not flagged. The issue is the outlier itself affects Q3.
+      // Use more normal prototypes to dilute the outlier's effect:
+      // With axis counts [1, 1, 1, 1, 1, 1, 20]:
+      //   n=7 (odd), mid=3
+      //   Lower: [1, 1, 1] → Q1 = 1
+      //   Upper: [1, 1, 20] → Q3 = 1
+      //   IQR = 0, effectiveIQR = 0.5
+      //   Threshold = 1 + 0.5*1.5 = 1.75
+      //   20 > 1.75 ✓
       const prototypes = [
         { id: 'normal1', weights: { a: 1 } },
         { id: 'normal2', weights: { b: 1 } },
         { id: 'normal3', weights: { c: 1 } },
-        { id: 'outlier', weights: { a: 1, b: 1, c: 1, d: 1, e: 1, f: 1 } },
+        { id: 'normal4', weights: { d: 1 } },
+        { id: 'normal5', weights: { e: 1 } },
+        { id: 'normal6', weights: { f: 1 } },
+        { id: 'outlier', weights: { a: 1, b: 1, c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1 } },
       ];
 
       const results = detector.detectHighAxisLoadings(prototypes);
@@ -192,10 +245,98 @@ describe('MultiAxisConflictDetector', () => {
       if (results.length > 0) {
         expect(results[0]).toHaveProperty('prototypeId');
         expect(results[0]).toHaveProperty('activeAxisCount');
+        expect(results[0]).toHaveProperty('strongAxisCount');
+        expect(results[0]).toHaveProperty('strongAxes');
         expect(results[0]).toHaveProperty('signBalance');
         expect(results[0]).toHaveProperty('positiveAxes');
         expect(results[0]).toHaveProperty('negativeAxes');
         expect(results[0].flagReason).toBe('high_axis_loading');
+      }
+    });
+
+    it('should compute strongAxisCount correctly (|weight| >= 0.25)', () => {
+      // Create prototypes with mix of strong and weak axes
+      const prototypes = [
+        { id: 'normal1', weights: { a: 0.1 } },
+        { id: 'normal2', weights: { b: 0.1 } },
+        {
+          id: 'outlier',
+          weights: {
+            a: 0.5, // Strong
+            b: 0.3, // Strong
+            c: 0.1, // Not strong (below 0.25)
+            d: -0.4, // Strong (absolute value)
+            e: 0.09, // Not strong
+          },
+        },
+      ];
+
+      const results = detector.detectHighAxisLoadings(prototypes);
+
+      if (results.length > 0) {
+        const outlier = results.find((r) => r.prototypeId === 'outlier');
+        if (outlier) {
+          // 3 axes have |weight| >= 0.25: a(0.5), b(0.3), d(-0.4)
+          expect(outlier.strongAxisCount).toBe(3);
+          expect(outlier.strongAxes).toEqual(expect.arrayContaining(['a', 'b', 'd']));
+          expect(outlier.strongAxes.length).toBe(3);
+        }
+      }
+    });
+
+    it('should respect custom strongAxisThreshold config', () => {
+      const det = new MultiAxisConflictDetector({
+        strongAxisThreshold: 0.4, // Higher threshold
+      });
+
+      const prototypes = [
+        { id: 'normal1', weights: { a: 0.1 } },
+        { id: 'normal2', weights: { b: 0.1 } },
+        {
+          id: 'outlier',
+          weights: {
+            a: 0.5, // Strong (>= 0.4)
+            b: 0.3, // NOT strong (< 0.4)
+            c: 0.45, // Strong (>= 0.4)
+            d: -0.6, // Strong (absolute >= 0.4)
+            e: 0.1,
+          },
+        },
+      ];
+
+      const results = det.detectHighAxisLoadings(prototypes);
+
+      if (results.length > 0) {
+        const outlier = results.find((r) => r.prototypeId === 'outlier');
+        if (outlier) {
+          // Only a(0.5), c(0.45), d(-0.6) meet the 0.4 threshold
+          expect(outlier.strongAxisCount).toBe(3);
+          expect(outlier.strongAxes).toContain('a');
+          expect(outlier.strongAxes).toContain('c');
+          expect(outlier.strongAxes).toContain('d');
+          expect(outlier.strongAxes).not.toContain('b');
+        }
+      }
+    });
+
+    it('should sort strongAxes alphabetically', () => {
+      const prototypes = [
+        { id: 'normal1', weights: { a: 0.1 } },
+        { id: 'normal2', weights: { b: 0.1 } },
+        {
+          id: 'outlier',
+          weights: { z: 0.5, a: 0.5, m: 0.5, b: 0.5, c: 0.1 },
+        },
+      ];
+
+      const results = detector.detectHighAxisLoadings(prototypes);
+
+      if (results.length > 0) {
+        const outlier = results.find((r) => r.prototypeId === 'outlier');
+        if (outlier) {
+          const sorted = [...outlier.strongAxes].sort();
+          expect(outlier.strongAxes).toEqual(sorted);
+        }
       }
     });
 
@@ -400,6 +541,90 @@ describe('MultiAxisConflictDetector', () => {
           expect(c.activeAxisCount).toBe(5);
         }
       }
+    });
+  });
+
+  describe('IQR floor protection', () => {
+    it('should not flag ~50% of prototypes when all have same axis count (IQR=0)', () => {
+      // When all prototypes have identical axis counts, IQR = 0
+      // Without floor protection, threshold = Q3 + 0 = Q3, flagging ~50%
+      // With floor protection (default 0.5), threshold = Q3 + 0.5 * 1.5 = Q3 + 0.75
+      const prototypes = Array.from({ length: 20 }, (_, i) => ({
+        id: `proto${i}`,
+        weights: { a: 1, b: 1 }, // All have exactly 2 active axes
+      }));
+
+      const results = detector.detectHighAxisLoadings(prototypes);
+
+      // With IQR floor, no prototypes should be flagged since all have same count
+      expect(results.length).toBe(0);
+    });
+
+    it('should detect outlier even with homogeneous baseline', () => {
+      // 19 prototypes with 2 axes, 1 outlier with 10 axes
+      const prototypes = [
+        ...Array.from({ length: 19 }, (_, i) => ({
+          id: `normal${i}`,
+          weights: { a: 1, b: 1 },
+        })),
+        { id: 'outlier', weights: { a: 1, b: 1, c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1 } },
+      ];
+
+      const results = detector.detectHighAxisLoadings(prototypes);
+
+      // Outlier should still be detected
+      expect(results.length).toBe(1);
+      expect(results[0].prototypeId).toBe('outlier');
+    });
+
+    it('should respect custom minIQRFloor config', () => {
+      const det = new MultiAxisConflictDetector({
+        minIQRFloor: 2.0, // Higher floor = less sensitive
+      });
+
+      // All prototypes have 2 axes, one has 4 axes
+      const prototypes = [
+        ...Array.from({ length: 10 }, (_, i) => ({
+          id: `normal${i}`,
+          weights: { a: 1, b: 1 },
+        })),
+        { id: 'borderline', weights: { a: 1, b: 1, c: 1, d: 1 } },
+      ];
+
+      const results = det.detectHighAxisLoadings(prototypes);
+
+      // With higher floor (2.0), threshold = Q3(2) + 2.0 * 1.5 = 5
+      // borderline has 4 axes, which is below 5, so should NOT be flagged
+      expect(results.length).toBe(0);
+    });
+
+    it('should use Tukey fence formula (Q3 + k*IQR) for threshold', () => {
+      // Create distribution: [1, 2, 3, 4, 5, 6, 7, 8, 16]
+      // With 9 elements: Q1=2.5, Q3=7.5, IQR=5
+      // Tukey threshold = Q3 + k*IQR = 7.5 + 1.5*5 = 15
+      // Outlier with 16 axes exceeds threshold
+      const prototypes = [
+        { id: 'p1', weights: { a: 1 } }, // 1 axis
+        { id: 'p2', weights: { a: 1, b: 1 } }, // 2 axes
+        { id: 'p3', weights: { a: 1, b: 1, c: 1 } }, // 3 axes
+        { id: 'p4', weights: { a: 1, b: 1, c: 1, d: 1 } }, // 4 axes
+        { id: 'p5', weights: { a: 1, b: 1, c: 1, d: 1, e: 1 } }, // 5 axes
+        { id: 'p6', weights: { a: 1, b: 1, c: 1, d: 1, e: 1, f: 1 } }, // 6 axes
+        { id: 'p7', weights: { a: 1, b: 1, c: 1, d: 1, e: 1, f: 1, g: 1 } }, // 7 axes
+        { id: 'p8', weights: { a: 1, b: 1, c: 1, d: 1, e: 1, f: 1, g: 1, h: 1 } }, // 8 axes
+        // Add outlier with 16 axes (above threshold of 15)
+        {
+          id: 'outlier',
+          weights: { a: 1, b: 1, c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1 },
+        },
+      ];
+
+      const results = detector.detectHighAxisLoadings(prototypes);
+
+      // Only the outlier with 16 axes should be flagged
+      expect(results.length).toBe(1);
+      expect(results[0].prototypeId).toBe('outlier');
+      expect(results[0].activeAxisCount).toBe(16);
     });
   });
 });

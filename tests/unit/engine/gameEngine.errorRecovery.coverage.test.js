@@ -30,6 +30,10 @@ function createContainer(resolutionMap, { isRegistered = () => false } = {}) {
     },
     [tokens.LLMAdapter]: { getCurrentActiveLlmId: jest.fn() },
     [tokens.EntityDisplayDataProvider]: { getEntityName: jest.fn() },
+    [tokens.IPerceptionLogProvider]: {
+      get: jest.fn().mockResolvedValue([]),
+      isEmpty: jest.fn().mockResolvedValue(true),
+    },
   };
   const map = { ...defaults, ...resolutionMap };
   return {

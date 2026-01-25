@@ -96,9 +96,22 @@
               alone is sufficient for MAYBE verdict, regardless of "Additional Components" count.
             </p>
           </details>
-          <div class="variance-summary">
-            <span class="variance-label">Explained by top 4 PCs:</span>
-            <span id="variance-top4" class="variance-value">--</span>
+          <div class="variance-summary-container">
+            <div class="variance-summary">
+              <span class="variance-label">Explained by top 4 PCs:</span>
+              <span id="variance-top4" class="variance-value">--</span>
+              <span class="help-icon" title="Quick reference: variance from first 4 principal components.">(?)</span>
+            </div>
+            <div class="variance-summary variance-dynamic">
+              <span class="variance-label">Expected axis count (K):</span>
+              <span id="variance-axis-count" class="variance-value">--</span>
+              <span class="help-icon" title="Median active axes per prototype. Used for residual calculation.">(?)</span>
+            </div>
+            <div class="variance-summary variance-dynamic">
+              <span class="variance-label">Explained by top K PCs:</span>
+              <span id="variance-topk" class="variance-value">--</span>
+              <span class="help-icon" title="Variance explained by first K components. Residual = 100% - this value.">(?)</span>
+            </div>
           </div>
         </div>
 
@@ -121,13 +134,13 @@
               <span id="signal-coverage-gaps-status" class="signal-status pass">✓ PASS</span>
               <span class="signal-label">Coverage Gaps:</span>
               <span id="signal-coverage-gaps" class="signal-value">0</span>
-              <span id="signal-coverage-gaps-threshold" class="signal-threshold">(distance ≤0.6)</span>
+              <span id="signal-coverage-gaps-threshold" class="signal-threshold"></span>
             </div>
             <div class="signal-item" id="signal-multi-axis-conflicts-item">
               <span id="signal-multi-axis-conflicts-status" class="signal-status pass">✓ PASS</span>
               <span class="signal-label">Multi-Axis Conflicts:</span>
               <span id="signal-multi-axis-conflicts" class="signal-value">0</span>
-              <span id="signal-multi-axis-conflicts-threshold" class="signal-threshold">(balanced usage)</span>
+              <span id="signal-multi-axis-conflicts-threshold" class="signal-threshold">(high axis count)</span>
             </div>
           </div>
           <div class="signal-logic-explanation">
@@ -151,13 +164,19 @@
             <span class="help-text" title="Variance not explained by current axes. >15% (alert): likely missing important dimensions. 10-15% (warning): consider adding axes. <10% (good): current axes adequate.">(?)</span>
           </div>
           <div class="metric-row">
-            <span class="metric-label">Additional Components Suggested:</span>
-            <span id="additional-components" class="metric-value">--</span>
-            <span class="help-text" title="Kaiser criterion (eigenvalue ≥1.0) count. Note: With normalized prototype vectors, this may show 0 even with high residual variance. The system uses OR logic - high residual alone still triggers investigation.">(?)</span>
+            <span class="metric-label">Significant Components (Broken-Stick):</span>
+            <span id="significant-component-count" class="metric-value">--</span>
+            <span class="help-text" title="Total components with variance exceeding broken-stick random expectation.">(?)</span>
           </div>
           <div class="metric-row">
-            <span class="metric-label">Dimensions Used:</span>
-            <span id="pca-dimensions-used" class="metric-value">--</span>
+            <span class="metric-label">Expected Components (K):</span>
+            <span id="expected-component-count" class="metric-value">--</span>
+            <span class="help-text" title="Median active axes per prototype (expected dimensionality).">(?)</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Significant Beyond K:</span>
+            <span id="significant-beyond-expected" class="metric-value">--</span>
+            <span class="help-text" title="Significant minus Expected. If 0, significant count matches expected - check residual variance for the full picture.">(?)</span>
           </div>
           <div class="metric-row">
             <span class="metric-label">Components for 80% Variance:</span>
@@ -189,7 +208,8 @@
         <div class="coverage-gaps">
           <h3>Coverage Gaps</h3>
           <p class="section-description">
-            Prototype clusters distant from all existing axes.
+            Behaviorally-similar prototype clusters (grouped by k-means, not dominant axis)
+            whose weight centroids don't align well with any existing axis.
           </p>
           <ul id="coverage-gap-list" class="gap-list"></ul>
         </div>
@@ -197,7 +217,7 @@
         <div class="multi-axis-conflicts">
           <h3>Multi-Axis Conflicts</h3>
           <p class="section-description">
-            Prototypes using many axes with conflicting signs.
+            Prototypes with unusually high axis counts (statistical outliers via Tukey's fence).
           </p>
           <ul id="conflict-list" class="conflict-list"></ul>
         </div>
@@ -215,6 +235,14 @@
         <div class="axis-recommendations">
           <h3>Axis Recommendations</h3>
           <ul id="axis-recommendations-list" class="axis-recommendations-list"></ul>
+        </div>
+
+        <div class="candidate-axis-section">
+          <h3>Candidate Axis Validation</h3>
+          <p class="section-description">
+            Would adding a new axis help? Tests potential axis directions against improvement metrics.
+          </p>
+          <ul id="candidate-axis-list"></ul>
         </div>
 
         <div class="prototype-weight-cards">

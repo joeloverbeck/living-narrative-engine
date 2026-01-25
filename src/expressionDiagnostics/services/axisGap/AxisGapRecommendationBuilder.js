@@ -7,17 +7,46 @@
  * Flag reasons that are metadata-only and should not trigger recommendations.
  * Sign tension is excluded because mixed positive/negative weights are NORMAL
  * for emotional prototypes (64% were incorrectly flagged before this fix).
+ *
  * @type {Set<string>}
  */
 const METADATA_ONLY_FLAG_REASONS = new Set(['sign_tension']);
 
 /**
+ * Configuration for relationship detection between recommendations.
+ *
+ * @type {Readonly<{HIGH_OVERLAP_THRESHOLD: number, MODERATE_OVERLAP_THRESHOLD: number}>}
+ */
+const RELATIONSHIP_CONFIG = Object.freeze({
+  /** Jaccard similarity threshold for high overlap (potentially redundant) */
+  HIGH_OVERLAP_THRESHOLD: 0.7,
+  /** Jaccard similarity threshold for moderate overlap (related/complementary) */
+  MODERATE_OVERLAP_THRESHOLD: 0.3,
+});
+
+/**
+ * @typedef {object} RecommendationRelationshipEntry
+ * @property {string} id - Related recommendation ID.
+ * @property {number} similarity - Jaccard similarity score (0-1).
+ * @property {string[]} sharedPrototypes - Prototypes shared between recommendations.
+ */
+
+/**
+ * @typedef {object} RecommendationRelationships
+ * @property {RecommendationRelationshipEntry[]} [overlapping] - Same type, moderate overlap (30-70%).
+ * @property {RecommendationRelationshipEntry[]} [complementary] - Different types, moderate overlap (≥30%).
+ * @property {RecommendationRelationshipEntry[]} [potentiallyRedundant] - Same type, high overlap (≥70%).
+ */
+
+/**
  * @typedef {object} Recommendation
+ * @property {string} id - Unique deterministic identifier.
  * @property {'high'|'medium'|'low'} priority - Priority level.
  * @property {'NEW_AXIS'|'INVESTIGATE'|'REFINE_EXISTING'} type - Recommendation type.
  * @property {string} description - Human-readable description.
  * @property {string[]} affectedPrototypes - List of affected prototype IDs.
  * @property {string[]} evidence - Supporting evidence items.
+ * @property {RecommendationRelationships} [relationships] - Relationships to other recommendations.
  */
 
 /**
@@ -54,6 +83,21 @@ const METADATA_ONLY_FLAG_REASONS = new Set(['sign_tension']);
  */
 
 /**
+ * @typedef {object} CandidateAxisValidationResult
+ * @property {string} candidateId - Unique identifier for this candidate.
+ * @property {'pca_residual'|'coverage_gap'|'hub_derived'} source - Origin of candidate.
+ * @property {Record<string, number>} direction - Normalized direction vector.
+ * @property {object} improvement - Improvement metrics.
+ * @property {number} improvement.rmseReduction - RMSE reduction ratio.
+ * @property {number} improvement.strongAxisReduction - Strong axis count reduction.
+ * @property {number} improvement.coUsageReduction - Co-usage reduction ratio.
+ * @property {boolean} isRecommended - Whether the candidate is recommended.
+ * @property {'add_axis'|'refine_prototypes'|'insufficient_data'} recommendation - Recommendation type.
+ * @property {string[]} affectedPrototypes - IDs of affected prototypes.
+ * @property {object} [metadata] - Source-specific metadata.
+ */
+
+/**
  * Service for generating recommendations from axis gap analysis results.
  */
 export class AxisGapRecommendationBuilder {
@@ -68,6 +112,7 @@ export class AxisGapRecommendationBuilder {
   constructor(config = {}) {
     this.#config = {
       pcaResidualVarianceThreshold: config.pcaResidualVarianceThreshold ?? 0.15,
+      pcaRequireCorroboration: config.pcaRequireCorroboration ?? true,
     };
   }
 
@@ -78,13 +123,22 @@ export class AxisGapRecommendationBuilder {
    * @param {HubResult[]} hubs - Hub prototype results.
    * @param {CoverageGapResult[]} gaps - Coverage gap results.
    * @param {ConflictResult[]} conflicts - Multi-axis conflict results.
+   * @param {CandidateAxisValidationResult[]|null} [candidateAxisValidation] - Optional candidate axis validation results.
    * @returns {Recommendation[]} Array of recommendations.
    */
-  generate(pcaResult, hubs, gaps, conflicts) {
+  generate(pcaResult, hubs, gaps, conflicts, candidateAxisValidation = null) {
     const recommendations = [];
     const pcaThreshold = Number.isFinite(this.#config.pcaResidualVarianceThreshold)
       ? this.#config.pcaResidualVarianceThreshold
       : 0.15;
+
+    // Generate recommendations from validated candidate axes first (highest priority)
+    if (Array.isArray(candidateAxisValidation) && candidateAxisValidation.length > 0) {
+      const validatedRecommendations = this.#generateFromCandidateValidation(
+        candidateAxisValidation
+      );
+      recommendations.push(...validatedRecommendations);
+    }
 
     // Filter out metadata-only conflicts (e.g., sign_tension) - these should not trigger recommendations
     const actionableConflicts = Array.isArray(conflicts)
@@ -93,12 +147,24 @@ export class AxisGapRecommendationBuilder {
         )
       : [];
 
-    const pcaTriggered =
-      pcaResult.residualVarianceRatio >= pcaThreshold ||
-      pcaResult.additionalSignificantComponents > 0;
+    // Compute signal flags
+    const hasSignificantComponents = pcaResult.additionalSignificantComponents > 0;
+    const hasHighResidual = pcaResult.residualVarianceRatio >= pcaThreshold;
     const hasHubs = Array.isArray(hubs) && hubs.length > 0;
     const hasGaps = Array.isArray(gaps) && gaps.length > 0;
     const hasConflicts = actionableConflicts.length > 0;
+    const hasOtherSignals = hasHubs || hasGaps || hasConflicts;
+
+    // Apply corroboration logic when enabled
+    // When true, PCA triggers ONLY if:
+    // 1. additionalSignificantComponents > 0, OR
+    // 2. residualVariance is high AND at least one other signal is present
+    let pcaTriggered;
+    if (this.#config.pcaRequireCorroboration) {
+      pcaTriggered = hasSignificantComponents || (hasHighResidual && hasOtherSignals);
+    } else {
+      pcaTriggered = hasHighResidual || hasSignificantComponents;
+    }
 
     // HIGH priority: PCA + coverage gap indicates strong evidence for new axis
     if (pcaTriggered && hasGaps) {
@@ -254,6 +320,9 @@ export class AxisGapRecommendationBuilder {
       }
     }
 
+    // Detect and annotate relationships between recommendations
+    this.#detectRelationships(recommendations);
+
     return recommendations;
   }
 
@@ -269,11 +338,13 @@ export class AxisGapRecommendationBuilder {
    * @returns {Recommendation} Built recommendation.
    */
   buildRecommendation({ priority, type, description, affectedPrototypes, evidence }) {
+    const sortedPrototypes = [...new Set(affectedPrototypes)].sort();
     return {
+      id: this.#generateRecommendationId(type, sortedPrototypes),
       priority,
       type,
       description,
-      affectedPrototypes: [...new Set(affectedPrototypes)].sort(),
+      affectedPrototypes: sortedPrototypes,
       evidence: evidence.length > 0 ? evidence : ['Signal detected'],
     };
   }
@@ -332,5 +403,269 @@ export class AxisGapRecommendationBuilder {
       }
     }
     return Array.from(merged).sort();
+  }
+
+  /**
+   * Generate recommendations from candidate axis validation results.
+   *
+   * @param {CandidateAxisValidationResult[]} validationResults - Validation results.
+   * @returns {Recommendation[]} Generated recommendations.
+   */
+  #generateFromCandidateValidation(validationResults) {
+    const recommendations = [];
+
+    for (const result of validationResults) {
+      if (result.isRecommended && result.recommendation === 'add_axis') {
+        // HIGH priority: Validated candidate axis worth adding
+        recommendations.push(
+          this.buildRecommendation({
+            priority: 'high',
+            type: 'NEW_AXIS',
+            description: this.#buildValidatedAxisDescription(result),
+            affectedPrototypes: result.affectedPrototypes ?? [],
+            evidence: this.#buildValidatedAxisEvidence(result),
+          })
+        );
+      } else if (result.recommendation === 'refine_prototypes') {
+        // LOW priority: Candidate indicates prototype refinement needed
+        recommendations.push(
+          this.buildRecommendation({
+            priority: 'low',
+            type: 'REFINE_EXISTING',
+            description: `Candidate "${result.candidateId}" (from ${result.source}) shows improvement, but refining existing prototypes is preferred over adding a new axis.`,
+            affectedPrototypes: result.affectedPrototypes ?? [],
+            evidence: this.#buildRefinementEvidence(result),
+          })
+        );
+      }
+      // Skip 'insufficient_data' recommendations - no action needed
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Build description for a validated axis recommendation.
+   *
+   * @param {CandidateAxisValidationResult} result - Validation result.
+   * @returns {string} Human-readable description.
+   */
+  #buildValidatedAxisDescription(result) {
+    const sourceDescriptions = {
+      pca_residual: 'PCA residual variance',
+      coverage_gap: 'coverage gap analysis',
+      hub_derived: 'hub prototype neighborhood',
+    };
+
+    const sourceDesc = sourceDescriptions[result.source] ?? result.source;
+    const rmseImprovement = (result.improvement?.rmseReduction ?? 0) * 100;
+
+    return `Validated candidate axis from ${sourceDesc} would reduce RMSE by ${rmseImprovement.toFixed(1)}%. Adding this axis is recommended.`;
+  }
+
+  /**
+   * Build evidence array for a validated axis recommendation.
+   *
+   * @param {CandidateAxisValidationResult} result - Validation result.
+   * @returns {string[]} Evidence items.
+   */
+  #buildValidatedAxisEvidence(result) {
+    const evidence = [];
+    const improvement = result.improvement ?? {};
+
+    if (improvement.rmseReduction !== undefined) {
+      evidence.push(`RMSE reduction: ${(improvement.rmseReduction * 100).toFixed(1)}%`);
+    }
+    if (improvement.strongAxisReduction !== undefined) {
+      evidence.push(`Strong axis count reduced by: ${improvement.strongAxisReduction}`);
+    }
+    if (improvement.coUsageReduction !== undefined) {
+      evidence.push(`Co-usage reduction: ${(improvement.coUsageReduction * 100).toFixed(1)}%`);
+    }
+    if (result.affectedPrototypes?.length) {
+      evidence.push(`Affects ${result.affectedPrototypes.length} prototypes`);
+    }
+
+    return evidence.length > 0 ? evidence : ['Validated through metric improvement analysis'];
+  }
+
+  /**
+   * Build evidence array for a refinement recommendation.
+   *
+   * @param {CandidateAxisValidationResult} result - Validation result.
+   * @returns {string[]} Evidence items.
+   */
+  #buildRefinementEvidence(result) {
+    const evidence = [];
+    const improvement = result.improvement ?? {};
+
+    evidence.push(`Source: ${result.source}`);
+
+    if (improvement.rmseReduction !== undefined) {
+      evidence.push(`RMSE improvement: ${(improvement.rmseReduction * 100).toFixed(1)}%`);
+    }
+    if (result.affectedPrototypes?.length) {
+      evidence.push(`Would affect ${result.affectedPrototypes.length} prototypes`);
+    }
+
+    evidence.push('Improvement below threshold for new axis recommendation');
+
+    return evidence;
+  }
+
+  /**
+   * Generate a deterministic ID for a recommendation based on type and affected prototypes.
+   *
+   * @param {'NEW_AXIS'|'INVESTIGATE'|'REFINE_EXISTING'} type - Recommendation type.
+   * @param {string[]} affectedPrototypes - Sorted array of affected prototype IDs.
+   * @returns {string} Deterministic recommendation ID.
+   */
+  #generateRecommendationId(type, affectedPrototypes) {
+    // Create a simple hash from the concatenated string
+    const content = `${type}:${affectedPrototypes.join(',')}`;
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash + char) | 0; // Convert to 32-bit integer
+    }
+    // Convert to base36 for compact representation and take absolute value
+    const hashStr = Math.abs(hash).toString(36);
+    return `rec_${type.toLowerCase()}_${hashStr}`;
+  }
+
+  /**
+   * Calculate Jaccard similarity between two sets of prototype IDs.
+   *
+   * @param {string[]} setA - First array of prototype IDs.
+   * @param {string[]} setB - Second array of prototype IDs.
+   * @returns {number} Jaccard similarity (0-1).
+   */
+  #calculateJaccardSimilarity(setA, setB) {
+    if (setA.length === 0 && setB.length === 0) {
+      return 0;
+    }
+
+    const a = new Set(setA);
+    const b = new Set(setB);
+
+    let intersectionSize = 0;
+    for (const item of a) {
+      if (b.has(item)) {
+        intersectionSize++;
+      }
+    }
+
+    const unionSize = a.size + b.size - intersectionSize;
+    return unionSize === 0 ? 0 : intersectionSize / unionSize;
+  }
+
+  /**
+   * Classify the relationship between two recommendations based on similarity.
+   *
+   * @param {Recommendation} recA - First recommendation.
+   * @param {Recommendation} recB - Second recommendation.
+   * @param {number} similarity - Jaccard similarity between recommendations.
+   * @returns {'potentiallyRedundant'|'complementary'|'overlapping'|null} Relationship type or null.
+   */
+  #classifyRelationship(recA, recB, similarity) {
+    const { HIGH_OVERLAP_THRESHOLD, MODERATE_OVERLAP_THRESHOLD } = RELATIONSHIP_CONFIG;
+
+    if (similarity < MODERATE_OVERLAP_THRESHOLD) {
+      return null; // Independent recommendations
+    }
+
+    const sameType = recA.type === recB.type;
+
+    if (similarity >= HIGH_OVERLAP_THRESHOLD && sameType) {
+      return 'potentiallyRedundant';
+    }
+
+    if (!sameType) {
+      return 'complementary';
+    }
+
+    // Same type with moderate overlap (30-70%)
+    return 'overlapping';
+  }
+
+  /**
+   * Detect and annotate relationships between recommendations.
+   * Mutates recommendations in-place to add relationships field when applicable.
+   *
+   * @param {Recommendation[]} recommendations - Array of recommendations to analyze.
+   */
+  #detectRelationships(recommendations) {
+    if (recommendations.length < 2) {
+      return;
+    }
+
+    // Build relationship map for each recommendation
+    /** @type {Map<string, RecommendationRelationships>} */
+    const relationshipMap = new Map();
+
+    // Compare all pairs
+    for (let i = 0; i < recommendations.length; i++) {
+      for (let j = i + 1; j < recommendations.length; j++) {
+        const recA = recommendations[i];
+        const recB = recommendations[j];
+
+        const similarity = this.#calculateJaccardSimilarity(
+          recA.affectedPrototypes,
+          recB.affectedPrototypes
+        );
+
+        const relationshipType = this.#classifyRelationship(recA, recB, similarity);
+
+        if (relationshipType) {
+          // Calculate shared prototypes
+          const sharedPrototypes = recA.affectedPrototypes.filter((p) =>
+            recB.affectedPrototypes.includes(p)
+          );
+
+          // Add relationship from A to B
+          this.#addRelationship(relationshipMap, recA.id, relationshipType, {
+            id: recB.id,
+            similarity,
+            sharedPrototypes,
+          });
+
+          // Add relationship from B to A
+          this.#addRelationship(relationshipMap, recB.id, relationshipType, {
+            id: recA.id,
+            similarity,
+            sharedPrototypes,
+          });
+        }
+      }
+    }
+
+    // Apply relationships to recommendations
+    for (const rec of recommendations) {
+      const relationships = relationshipMap.get(rec.id);
+      if (relationships && Object.keys(relationships).length > 0) {
+        rec.relationships = relationships;
+      }
+    }
+  }
+
+  /**
+   * Add a relationship entry to the relationship map.
+   *
+   * @param {Map<string, RecommendationRelationships>} relationshipMap - Map to update.
+   * @param {string} recId - Recommendation ID to add relationship to.
+   * @param {'potentiallyRedundant'|'complementary'|'overlapping'} relationshipType - Type of relationship.
+   * @param {RecommendationRelationshipEntry} entry - Relationship entry to add.
+   */
+  #addRelationship(relationshipMap, recId, relationshipType, entry) {
+    if (!relationshipMap.has(recId)) {
+      relationshipMap.set(recId, {});
+    }
+
+    const relationships = relationshipMap.get(recId);
+    if (!relationships[relationshipType]) {
+      relationships[relationshipType] = [];
+    }
+
+    relationships[relationshipType].push(entry);
   }
 }

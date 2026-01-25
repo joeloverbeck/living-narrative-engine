@@ -8,6 +8,7 @@ import {
   SEXUAL_STATE_COMPONENT_ID,
   AFFECT_TRAITS_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
+import { DEFAULT_AFFECT_TRAITS } from '../../../../src/constants/moodAffectConstants.js';
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
 describe('ActorDataExtractor - Emotional State Extraction', () => {
@@ -656,6 +657,44 @@ describe('ActorDataExtractor - Emotional State Extraction', () => {
         expect.any(Object),
         maxTraits
       );
+    });
+
+    test('should return DEFAULT_AFFECT_TRAITS in emotionalState when component absent', () => {
+      const actorState = createValidActorState({
+        // No AFFECT_TRAITS_COMPONENT_ID
+      });
+
+      const result = extractor.extractPromptData(actorState, 'actor-no-traits');
+
+      expect(result.emotionalState.affectTraits).toEqual(DEFAULT_AFFECT_TRAITS);
+    });
+
+    test('should return component values in emotionalState when component present', () => {
+      const customTraits = {
+        affective_empathy: 80,
+        cognitive_empathy: 70,
+        harm_aversion: 60,
+        self_control: 55,
+        disgust_sensitivity: 40,
+        ruminative_tendency: 30,
+        evaluation_sensitivity: 25,
+      };
+      const actorState = createValidActorState({
+        [AFFECT_TRAITS_COMPONENT_ID]: customTraits,
+      });
+
+      const result = extractor.extractPromptData(actorState, 'actor-with-traits');
+
+      expect(result.emotionalState.affectTraits).toEqual(customTraits);
+    });
+
+    test('should include affectTraits property in emotionalState even when component absent', () => {
+      const actorState = createValidActorState();
+
+      const result = extractor.extractPromptData(actorState, 'actor-test');
+
+      expect(result.emotionalState).toHaveProperty('affectTraits');
+      expect(result.emotionalState.affectTraits).not.toBeNull();
     });
   });
 });

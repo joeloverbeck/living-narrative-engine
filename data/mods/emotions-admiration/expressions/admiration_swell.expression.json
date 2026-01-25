@@ -16,35 +16,39 @@
                         ]
                     },
                     {
-                        ">=": [
+                        "or": [
                             {
-                                "var": "moodAxes.valence"
+                                ">=": [
+                                    {
+                                        "var": "emotions.aesthetic_appreciation"
+                                    },
+                                    0.25
+                                ]
                             },
-                            15
-                        ]
-                    },
-                    {
-                        ">=": [
                             {
-                                "var": "moodAxes.engagement"
+                                ">=": [
+                                    {
+                                        "var": "emotions.quiet_absorption"
+                                    },
+                                    0.25
+                                ]
                             },
-                            20
-                        ]
-                    },
-                    {
-                        ">=": [
                             {
-                                "var": "moodAxes.threat"
+                                ">=": [
+                                    {
+                                        "var": "emotions.interest"
+                                    },
+                                    0.35
+                                ]
                             },
-                            -15
-                        ]
-                    },
-                    {
-                        "<=": [
                             {
-                                "var": "moodAxes.threat"
-                            },
-                            35
+                                ">=": [
+                                    {
+                                        "var": "emotions.inspiration"
+                                    },
+                                    0.25
+                                ]
+                            }
                         ]
                     },
                     {
@@ -52,7 +56,31 @@
                             {
                                 "var": "emotions.envy"
                             },
-                            0.35
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.resentment"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.cynicism"
+                            },
+                            0.4
                         ]
                     },
                     {
@@ -60,7 +88,7 @@
                             {
                                 "var": "emotions.contempt"
                             },
-                            0.25
+                            0.2
                         ]
                     },
                     {
@@ -68,7 +96,7 @@
                             {
                                 "var": "emotions.disgust"
                             },
-                            0.25
+                            0.2
                         ]
                     },
                     {
@@ -76,7 +104,71 @@
                             {
                                 "var": "emotions.shame"
                             },
-                            0.55
+                            0.5
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.humiliation"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.fear"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.anxiety"
+                            },
+                            0.3
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.hypervigilance"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.protest_anger"
+                            },
+                            0.35
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.moral_outrage"
+                            },
+                            0.35
                         ]
                     },
                     {
@@ -101,14 +193,14 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "moodAxes.engagement"
+                                                "var": "emotions.inspiration"
                                             },
                                             {
-                                                "var": "previousMoodAxes.engagement"
+                                                "var": "previousEmotions.inspiration"
                                             }
                                         ]
                                     },
-                                    12
+                                    0.1
                                 ]
                             },
                             {
@@ -116,21 +208,51 @@
                                     {
                                         "-": [
                                             {
-                                                "var": "moodAxes.valence"
+                                                "var": "emotions.aesthetic_appreciation"
                                             },
                                             {
-                                                "var": "previousMoodAxes.valence"
+                                                "var": "previousEmotions.aesthetic_appreciation"
                                             }
                                         ]
                                     },
-                                    12
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.quiet_absorption"
+                                            },
+                                            {
+                                                "var": "previousEmotions.quiet_absorption"
+                                            }
+                                        ]
+                                    },
+                                    0.1
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "-": [
+                                            {
+                                                "var": "emotions.interest"
+                                            },
+                                            {
+                                                "var": "previousEmotions.interest"
+                                            }
+                                        ]
+                                    },
+                                    0.15
                                 ]
                             }
                         ]
                     }
                 ]
             },
-            "failure_message": "Requires a clear admiration signal with positive valence and strong engagement. Caps envy/contempt/disgust so the beat stays respectful rather than sour. Keeps threat moderate so it reads as uplifted regard, not wary appraisal. Triggers only on an admiration spike or a noticeable engagement/valence jump to avoid repeated firing during steady admiration."
+            "failure_message": "Requires a clear admiration signal plus an appreciation/focus companion (interest, inspiration, aesthetic appreciation, or quiet absorption) so the beat reads as attentive uplift rather than flat appraisal. Suppresses competitive or devaluing blends (envy/jealousy/resentment/cynicism, contempt/disgust), prevents a self-collapsing humbling into shame/humiliation, and blocks high threat/hostility states (fear/anxiety/hypervigilance, rage/wrath/protest/moral outrage). Triggers only on a noticeable admiration/appreciation spike to avoid repeated firing during steady admiration."
         }
     ],
     "actor_description": "Respect hits me like a lift under the ribs—clean and surprising. My attention locks in, not hungry or competitive, just honestly impressed. I feel myself straighten without thinking, like my body wants to meet the moment halfway. There's a quiet warmth to it: a sense of 'yes, that matters.'",
@@ -141,6 +263,6 @@
         "limited": "I sense a brief pause—then a clean, focused regard settling in."
     },
     "category": "affection",
-    "diagnosticStatus": "uncommon",
-    "triggerRate": 0.0026
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0103
 }

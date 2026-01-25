@@ -7,6 +7,7 @@
 /**
  * @typedef {object} PrototypeOverlapConfig
  * @property {number} activeAxisEpsilon - Minimum |weight| to consider axis "active"
+ * @property {number} strongAxisThreshold - Minimum |weight| to consider axis "strongly used"
  * @property {number} candidateMinActiveAxisOverlap - Jaccard threshold for active axis sets
  * @property {number} candidateMinSignAgreement - Sign agreement threshold for shared axes
  * @property {number} candidateMinCosineSimilarity - Cosine similarity threshold for weight vectors
@@ -86,13 +87,20 @@
  * @property {number} pcaResidualVarianceThreshold - PCA residual variance threshold
  * @property {number} pcaKaiserThreshold - Kaiser criterion eigenvalue threshold
  * @property {'broken-stick'|'kaiser'} pcaComponentSignificanceMethod - Method for determining significant PCA components
+ * @property {number} pcaMinAxisUsageRatio - Minimum fraction of prototypes that must use an axis for PCA inclusion (addresses sparse axis z-score inflation)
  * @property {number} hubMinDegree - Minimum overlap connections for hub detection
+ * @property {number} hubMinDegreeRatio - Minimum degree as ratio of total nodes
  * @property {number} hubMaxEdgeWeight - Maximum edge weight (exclude near-duplicates)
  * @property {number} hubMinNeighborhoodDiversity - Minimum clusters in neighborhood
+ * @property {number} hubBetweennessWeight - Weight for betweenness centrality in hub score
  * @property {number} coverageGapAxisDistanceThreshold - Min distance from any axis
  * @property {number} coverageGapMinClusterSize - Min prototypes in cluster
+ * @property {number} coverageGapMaxSubspaceDimension - Max k for k-axis subspace distance testing (1, 2, or 3)
+ * @property {Record<number, number>} coverageGapSubspaceThresholds - Distance thresholds per subspace dimension k
  * @property {number} multiAxisUsageThreshold - IQR multiplier for many axes
  * @property {number} multiAxisSignBalanceThreshold - Max sign balance for conflicting
+ * @property {number} jacobiConvergenceTolerance - Jacobi eigendecomposition convergence tolerance
+ * @property {number|null} jacobiMaxIterationsOverride - Override for Jacobi max iterations (null = use default formula)
  */
 
 /**
@@ -106,6 +114,15 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
    * Minimum absolute weight to consider an axis "active" in a prototype.
    */
   activeAxisEpsilon: 0.08,
+
+  /**
+   * Minimum absolute weight for an axis to be considered "strongly used".
+   * Distinguishes core axes from marginal contributions.
+   * Values at or above this threshold indicate significant axis involvement,
+   * while values between activeAxisEpsilon and strongAxisThreshold indicate
+   * marginal/supporting axis usage.
+   */
+  strongAxisThreshold: 0.25,
 
   /**
    * Minimum Jaccard overlap of active axis sets to consider as candidate pair.
@@ -602,9 +619,69 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
   pcaComponentSignificanceMethod: 'broken-stick',
 
   /**
+   * Normalization method for PCA analysis.
+   * - 'center-only': Subtracts mean only; preserves original scale. Recommended for prototype weights
+   *   which are already on a comparable scale [-1, 1]. Prevents rare axes from dominating.
+   * - 'z-score': Subtracts mean and divides by standard deviation. Forces all axes to unit variance,
+   *   which can cause rare axes to dominate. Use for backward compatibility only.
+   */
+  pcaNormalizationMethod: 'center-only',
+
+  /**
+   * Method for computing expected dimensionality K in PCA analysis.
+   * - 'variance-80': Number of components needed to explain 80% of variance. Statistically grounded.
+   * - 'variance-90': Number of components needed to explain 90% of variance. More conservative.
+   * - 'broken-stick': Number of components exceeding broken-stick threshold. Data-driven.
+   * - 'median-active': Median active axes per prototype. Original design-based method.
+   */
+  pcaExpectedDimensionMethod: 'variance-80',
+
+  /**
+   * Whether PCA signals require corroboration from other detection methods.
+   * When true, high residual variance alone does NOT trigger a PCA signal unless:
+   * - additionalSignificantComponents > 0, OR
+   * - at least one other signal is present (hubs, gaps, conflicts)
+   * This prevents false positives from residual variance in well-structured data.
+   */
+  pcaRequireCorroboration: true,
+
+  /**
+   * Minimum fraction of prototypes that must use an axis for PCA inclusion.
+   * Addresses sparse axis z-score inflation: when an axis is used by few prototypes,
+   * z-scoring causes non-zero values to become extreme outliers (3+ standard deviations),
+   * giving sparse axes disproportionate influence in PCA.
+   * Range: 0.0-1.0. Default: 0.1 (10% of prototypes).
+   * Set to 0 to disable filtering (backward compatibility).
+   */
+  pcaMinAxisUsageRatio: 0.1,
+
+  /**
+   * Jacobi eigendecomposition convergence tolerance.
+   * Controls when the iterative algorithm considers the matrix sufficiently diagonalized.
+   * Smaller values yield more precise eigenvalues but may cause non-convergence
+   * for matrices with very small off-diagonal elements.
+   * Default: 1e-10 (suitable for most well-conditioned matrices)
+   */
+  jacobiConvergenceTolerance: 1e-10,
+
+  /**
+   * Maximum iterations for Jacobi eigendecomposition.
+   * Default: null (uses formula: 50 * n^2 where n is matrix size).
+   * Set to a positive integer to override the default formula.
+   */
+  jacobiMaxIterationsOverride: null,
+
+  /**
    * Minimum overlap connections for hub prototype detection.
    */
   hubMinDegree: 4,
+
+  /**
+   * Minimum degree as ratio of total nodes for hub detection.
+   * Effective min = max(hubMinDegree, floor(numNodes * hubMinDegreeRatio))
+   * This makes hub detection adaptive to graph size.
+   */
+  hubMinDegreeRatio: 0.1,
 
   /**
    * Maximum edge weight for hub detection (exclude near-duplicates).
@@ -617,6 +694,14 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
   hubMinNeighborhoodDiversity: 2,
 
   /**
+   * Weight for betweenness centrality in hub score calculation.
+   * Range: 0-1. Higher values give more weight to "bridge" detection.
+   * Betweenness centrality identifies nodes that lie on shortest paths
+   * between other nodes, revealing true graph bridges.
+   */
+  hubBetweennessWeight: 0.3,
+
+  /**
    * Minimum cosine distance from any axis for coverage gap detection.
    */
   coverageGapAxisDistanceThreshold: 0.6,
@@ -627,12 +712,31 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
   coverageGapMinClusterSize: 3,
 
   /**
+   * Maximum subspace dimension k to test for coverage gap detection.
+   * Tests k=1 (single axis), k=2 (2-axis planes), k=3 (3-axis subspaces).
+   * Higher values increase computation: C(n,k) combinations tested.
+   * Range: 1-3. Default: 3.
+   */
+  coverageGapMaxSubspaceDimension: 3,
+
+  /**
+   * Distance thresholds per subspace dimension for coverage gap detection.
+   * Gap flagged only if distant from ALL subspace dimensions 1..maxK.
+   * Lower thresholds for higher k since vectors are naturally closer
+   * to higher-dimensional subspaces.
+   */
+  coverageGapSubspaceThresholds: { 1: 0.6, 2: 0.5, 3: 0.4 },
+
+  /**
    * IQR multiplier threshold for multi-axis usage detection.
    */
   multiAxisUsageThreshold: 1.5,
 
   /**
-   * Maximum sign balance ratio for multi-axis conflict detection.
+   * Sign balance threshold for sign tension detection (informational only).
+   * Prototypes with signBalance < this value are flagged as having
+   * mixed positive/negative axes. Note: signBalance = |pos - neg| / total,
+   * where 0 = equal mix, 1 = all same sign.
    */
   multiAxisSignBalanceThreshold: 0.4,
 
@@ -665,7 +769,7 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
    * Enable adaptive distance thresholds based on null distribution.
    * When true, computes data-driven threshold instead of static 0.6.
    */
-  enableAdaptiveThresholds: false,
+  enableAdaptiveThresholds: true,
 
   /**
    * Percentile of null distribution to use as adaptive threshold (0-100).
@@ -710,6 +814,66 @@ export const PROTOTYPE_OVERLAP_CONFIG = Object.freeze({
    * Threshold for residual variance ratio (missing dimensions indicator).
    */
   residualVarianceThreshold: 0.15,
+
+  // === Candidate Axis Validation ===
+
+  /**
+   * Whether to enable candidate axis validation phase.
+   * When enabled, extracted candidates are validated by measuring improvement metrics.
+   */
+  enableCandidateAxisValidation: true,
+
+  /**
+   * Minimum RMSE reduction required to recommend adding an axis.
+   * Value is a ratio (0.10 = 10% reduction).
+   */
+  candidateAxisMinRMSEReduction: 0.1,
+
+  /**
+   * Minimum strong axis count reduction required.
+   */
+  candidateAxisMinStrongAxisReduction: 1,
+
+  /**
+   * Minimum co-usage reduction required.
+   * Value is a ratio (0.05 = 5% reduction).
+   */
+  candidateAxisMinCoUsageReduction: 0.05,
+
+  /**
+   * Minimum number of affected prototypes for a candidate to be considered.
+   */
+  candidateAxisMinAffectedPrototypes: 5,
+
+  /**
+   * Weight for RMSE improvement in combined score calculation.
+   */
+  candidateAxisRMSEWeight: 0.5,
+
+  /**
+   * Weight for strong axis reduction in combined score calculation.
+   */
+  candidateAxisStrongAxisWeight: 0.3,
+
+  /**
+   * Weight for co-usage reduction in combined score calculation.
+   */
+  candidateAxisCoUsageWeight: 0.2,
+
+  /**
+   * Minimum combined score for recommending an axis addition.
+   */
+  candidateAxisMinCombinedScore: 0.15,
+
+  /**
+   * Maximum number of candidates to extract and validate.
+   */
+  candidateAxisMaxCandidates: 10,
+
+  /**
+   * Minimum confidence threshold for candidate extraction.
+   */
+  candidateAxisMinExtractionConfidence: 0.3,
 });
 
 export default PROTOTYPE_OVERLAP_CONFIG;

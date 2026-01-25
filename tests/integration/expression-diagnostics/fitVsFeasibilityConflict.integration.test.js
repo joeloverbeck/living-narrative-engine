@@ -118,6 +118,13 @@ const createSimulationResult = (overrides = {}) => ({
 /**
  * Create mock in-regime contexts where mood constraints pass.
  *
+ * MoodAxes values are in the [-1, 1] normalized range to match the
+ * gate threshold format after normalization by PrototypeConstraintAnalyzer.
+ *
+ * For the 'confusion' prototype with gate 'arousal >= 0.4':
+ * - Gate threshold 0.4 stays as 0.4 (already in [-1, 1] range)
+ * - So arousal needs to be >= 0.4 to pass the mood regime filter
+ *
  * @param {number} count
  * @param {object} [emotionOverrides]
  * @returns {Array<object>}
@@ -127,8 +134,9 @@ const createMockContexts = (count, emotionOverrides = {}) => {
     .fill(null)
     .map((_, i) => ({
       moodAxes: {
-        valence: 0.4 + (i % 30) * 0.01,
-        arousal: 0.3 + (i % 20) * 0.005,
+        // Values in [-1, 1] normalized range to match gate thresholds
+        valence: 0.4 + (i % 30) * 0.01, // 0.40-0.69, passes valence >= 0.3 gates
+        arousal: 0.4 + (i % 20) * 0.01, // 0.40-0.59, passes arousal >= 0.4 gates
         dominance: 0.5,
         agency_control: 0.5,
       },
@@ -164,11 +172,13 @@ const extractSection = (report, sectionName) => {
 // Test Fixture: Expression with Impossible Clause
 // ============================================================================
 
+// Updated to new architecture: mood regime is now derived from prototype gates,
+// not from explicit moodAxes.* prerequisites. Expressions should only reference
+// emotions and sexual states.
 const FIXTURE_IMPOSSIBLE_CONFUSION = {
   id: 'test:flow_with_impossible_confusion',
   prerequisites: [
-    { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } },
-    { logic: { '<=': [{ var: 'moodAxes.arousal' }, 0.6] } },
+    // Emotion prerequisites only - mood regime derived from 'confusion' prototype gates
     { logic: { '>=': [{ var: 'emotions.confusion' }, 0.25] } },
   ],
 };
@@ -180,7 +190,7 @@ const FIXTURE_IMPOSSIBLE_CONFUSION = {
 const FIXTURE_ACHIEVABLE = {
   id: 'test:achievable_joy',
   prerequisites: [
-    { logic: { '>=': [{ var: 'moodAxes.valence' }, 0.3] } },
+    // Emotion prerequisites only - mood regime derived from 'joy' prototype gates
     { logic: { '>=': [{ var: 'emotions.joy' }, 0.1] } }, // Easily achievable
   ],
 };

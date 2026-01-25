@@ -107,5 +107,5 @@
     },
     "category": "joy",
     "diagnosticStatus": "uncommon",
-    "triggerRate": 0.004
+    "triggerRate": 0.0027
 }

@@ -417,6 +417,182 @@ describe('AxisGapRecommendationBuilder', () => {
     });
   });
 
+  describe('generate - candidate axis validation', () => {
+    const createValidatedCandidate = (overrides = {}) => ({
+      candidateId: 'test_candidate_0',
+      source: 'pca_residual',
+      isRecommended: true,
+      recommendation: 'add_axis',
+      affectedPrototypes: ['p1', 'p2'],
+      confidence: 0.85,
+      direction: { valence: 0.8, arousal: 0.2 },
+      improvement: {
+        rmseReduction: 0.25,
+        strongAxisReduction: 2,
+        coUsageReduction: 0.15,
+      },
+      ...overrides,
+    });
+
+    it('should generate HIGH priority NEW_AXIS for validated add_axis recommendations', () => {
+      const candidateAxisValidation = [createValidatedCandidate()];
+
+      const result = builder.generate(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        candidateAxisValidation
+      );
+
+      expect(result.length).toBe(1);
+      expect(result[0].priority).toBe('high');
+      expect(result[0].type).toBe('NEW_AXIS');
+      expect(result[0].affectedPrototypes).toEqual(['p1', 'p2']);
+    });
+
+    it('should generate LOW priority REFINE_EXISTING for refine_prototypes recommendations', () => {
+      const candidateAxisValidation = [
+        createValidatedCandidate({
+          candidateId: 'refine_candidate',
+          isRecommended: false,
+          recommendation: 'refine_prototypes',
+        }),
+      ];
+
+      const result = builder.generate(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        candidateAxisValidation
+      );
+
+      expect(result.length).toBe(1);
+      expect(result[0].priority).toBe('low');
+      expect(result[0].type).toBe('REFINE_EXISTING');
+      expect(result[0].description).toContain('refine_candidate');
+      expect(result[0].description).toContain('refining existing prototypes');
+    });
+
+    it('should skip insufficient_data recommendations', () => {
+      const candidateAxisValidation = [
+        createValidatedCandidate({
+          isRecommended: false,
+          recommendation: 'insufficient_data',
+        }),
+      ];
+
+      const result = builder.generate(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        candidateAxisValidation
+      );
+
+      expect(result.length).toBe(0);
+    });
+
+    it('should handle multiple candidates with mixed recommendations', () => {
+      const candidateAxisValidation = [
+        createValidatedCandidate({ candidateId: 'add_1' }),
+        createValidatedCandidate({
+          candidateId: 'refine_1',
+          isRecommended: false,
+          recommendation: 'refine_prototypes',
+        }),
+        createValidatedCandidate({
+          candidateId: 'skip_1',
+          isRecommended: false,
+          recommendation: 'insufficient_data',
+        }),
+        createValidatedCandidate({ candidateId: 'add_2', source: 'coverage_gap' }),
+      ];
+
+      const result = builder.generate(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        candidateAxisValidation
+      );
+
+      // 2 add_axis (HIGH) + 1 refine_prototypes (LOW) = 3 recommendations
+      expect(result.length).toBe(3);
+      const highPriority = result.filter((r) => r.priority === 'high');
+      const lowPriority = result.filter((r) => r.priority === 'low');
+      expect(highPriority.length).toBe(2);
+      expect(lowPriority.length).toBe(1);
+    });
+
+    it('should include source in description for validated candidates', () => {
+      const candidateAxisValidation = [
+        createValidatedCandidate({
+          candidateId: 'hub_candidate',
+          source: 'hub_derived',
+          isRecommended: false,
+          recommendation: 'refine_prototypes',
+        }),
+      ];
+
+      const result = builder.generate(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        candidateAxisValidation
+      );
+
+      expect(result[0].description).toContain('hub_derived');
+    });
+
+    it('should handle null candidateAxisValidation gracefully', () => {
+      const result = builder.generate(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        null
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle empty candidateAxisValidation array', () => {
+      const result = builder.generate(
+        createEmptyPCAResult(),
+        [],
+        [],
+        [],
+        []
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('should generate candidate recommendations before other signal recommendations', () => {
+      const candidateAxisValidation = [createValidatedCandidate()];
+
+      const result = builder.generate(
+        createTriggeredPCAResult(), // Also triggers PCA signal
+        [],
+        [],
+        [],
+        candidateAxisValidation
+      );
+
+      // First recommendation should be from candidate validation
+      expect(result.length).toBeGreaterThan(1);
+      // The validated candidate recommendation should be present
+      const candidateRec = result.find(
+        (r) => r.affectedPrototypes.includes('p1') && r.affectedPrototypes.includes('p2')
+      );
+      expect(candidateRec).toBeDefined();
+      expect(candidateRec.type).toBe('NEW_AXIS');
+    });
+  });
+
   describe('complex scenarios', () => {
     it('should handle all signal types together', () => {
       const hub = createHub();
@@ -455,6 +631,312 @@ describe('AxisGapRecommendationBuilder', () => {
       expect(high.length).toBe(1);
       expect(high[0].affectedPrototypes).toContain('hub1');
       expect(result.length).toBe(1); // Only one recommendation
+    });
+  });
+
+  describe('recommendation IDs', () => {
+    it('should generate deterministic IDs based on type and prototypes', () => {
+      const rec1 = builder.buildRecommendation({
+        priority: 'high',
+        type: 'NEW_AXIS',
+        description: 'Test',
+        affectedPrototypes: ['p1', 'p2'],
+        evidence: ['e1'],
+      });
+
+      const rec2 = builder.buildRecommendation({
+        priority: 'high',
+        type: 'NEW_AXIS',
+        description: 'Different description',
+        affectedPrototypes: ['p1', 'p2'],
+        evidence: ['e2'],
+      });
+
+      // Same type and prototypes = same ID (description doesn't affect ID)
+      expect(rec1.id).toBe(rec2.id);
+      expect(rec1.id).toMatch(/^rec_new_axis_[a-z0-9]+$/);
+    });
+
+    it('should generate different IDs for different types', () => {
+      const rec1 = builder.buildRecommendation({
+        priority: 'high',
+        type: 'NEW_AXIS',
+        description: 'Test',
+        affectedPrototypes: ['p1', 'p2'],
+        evidence: ['e1'],
+      });
+
+      const rec2 = builder.buildRecommendation({
+        priority: 'medium',
+        type: 'INVESTIGATE',
+        description: 'Test',
+        affectedPrototypes: ['p1', 'p2'],
+        evidence: ['e1'],
+      });
+
+      expect(rec1.id).not.toBe(rec2.id);
+    });
+
+    it('should generate different IDs for different prototypes', () => {
+      const rec1 = builder.buildRecommendation({
+        priority: 'high',
+        type: 'NEW_AXIS',
+        description: 'Test',
+        affectedPrototypes: ['p1', 'p2'],
+        evidence: ['e1'],
+      });
+
+      const rec2 = builder.buildRecommendation({
+        priority: 'high',
+        type: 'NEW_AXIS',
+        description: 'Test',
+        affectedPrototypes: ['p1', 'p3'],
+        evidence: ['e1'],
+      });
+
+      expect(rec1.id).not.toBe(rec2.id);
+    });
+
+    it('should handle empty prototypes array', () => {
+      const rec = builder.buildRecommendation({
+        priority: 'low',
+        type: 'REFINE_EXISTING',
+        description: 'Test',
+        affectedPrototypes: [],
+        evidence: [],
+      });
+
+      expect(rec.id).toMatch(/^rec_refine_existing_[a-z0-9]+$/);
+    });
+  });
+
+  describe('relationship detection', () => {
+    describe('potentiallyRedundant detection (≥70% overlap, same type)', () => {
+      it('should detect potentially redundant when same type has high overlap', () => {
+        // Create two gaps with 75% overlap - same type INVESTIGATE
+        const gap1 = {
+          ...createGap('cluster1'),
+          centroidPrototypes: ['p1', 'shared1', 'shared2', 'shared3'],
+        };
+        const gap2 = {
+          ...createGap('cluster2'),
+          centroidPrototypes: ['shared1', 'shared2', 'shared3', 'shared4'],
+        };
+        // 3 shared / 5 total = 60% - need more overlap
+        // Let's use 3 shared / 4 total = 75%
+        gap2.centroidPrototypes = ['shared1', 'shared2', 'shared3'];
+
+        const result = builder.generate(createEmptyPCAResult(), [], [gap1, gap2], []);
+
+        expect(result.length).toBe(2);
+
+        // Both are INVESTIGATE type with 75% overlap = potentiallyRedundant
+        const rec1 = result.find((r) => r.affectedPrototypes.includes('p1'));
+        const rec2 = result.find((r) => !r.affectedPrototypes.includes('p1'));
+
+        expect(rec1).toBeDefined();
+        expect(rec2).toBeDefined();
+
+        // Should have potentiallyRedundant relationship
+        expect(rec1.relationships).toBeDefined();
+        expect(rec1.relationships.potentiallyRedundant).toBeDefined();
+        expect(rec1.relationships.potentiallyRedundant.length).toBe(1);
+        expect(rec1.relationships.potentiallyRedundant[0].id).toBe(rec2.id);
+      });
+    });
+
+    describe('complementary detection (≥30% overlap, different types)', () => {
+      it('should detect complementary relationships between different types', () => {
+        // Create INVESTIGATE (PCA alone) and REFINE_EXISTING (conflict) with high overlap
+        // PCA triggers with: shared1, shared2, pca1
+        // Conflict: shared1
+        // Union: 3 prototypes (shared1, shared2, pca1)
+        // Intersection: 1 prototype (shared1)
+        // Jaccard: 1/3 = 33% - just above threshold
+        const pca = createTriggeredPCAResult();
+        pca.topLoadingPrototypes = [
+          { prototypeId: 'shared1', loading: 0.9 },
+          { prototypeId: 'shared2', loading: 0.8 },
+          { prototypeId: 'pca1', loading: 0.7 },
+        ];
+
+        const conflict = createConflict('shared1');
+
+        const result = builder.generate(pca, [], [], [conflict]);
+
+        // Should have INVESTIGATE (medium) and REFINE_EXISTING (low)
+        const investigateRec = result.find((r) => r.type === 'INVESTIGATE');
+        const refineRec = result.find((r) => r.type === 'REFINE_EXISTING');
+
+        expect(investigateRec).toBeDefined();
+        expect(refineRec).toBeDefined();
+
+        // 'shared1' is in both recommendations
+        expect(investigateRec.affectedPrototypes).toContain('shared1');
+        expect(refineRec.affectedPrototypes).toContain('shared1');
+
+        // Check complementary relationship exists (different types with shared prototypes)
+        expect(investigateRec.relationships).toBeDefined();
+        expect(investigateRec.relationships.complementary).toBeDefined();
+        expect(investigateRec.relationships.complementary.length).toBeGreaterThan(0);
+        expect(investigateRec.relationships.complementary[0].sharedPrototypes).toContain('shared1');
+      });
+    });
+
+    describe('no relationships for independent recommendations', () => {
+      it('should not add relationships field when similarity < 30%', () => {
+        // Create two recommendations with no overlapping prototypes
+        const gap1 = { ...createGap('cluster1'), centroidPrototypes: ['p1', 'p2', 'p3'] };
+        const gap2 = { ...createGap('cluster2'), centroidPrototypes: ['p4', 'p5', 'p6'] };
+
+        const result = builder.generate(createEmptyPCAResult(), [], [gap1, gap2], []);
+
+        expect(result.length).toBe(2);
+        // No overlapping prototypes = 0% similarity = no relationships
+        expect(result[0].relationships).toBeUndefined();
+        expect(result[1].relationships).toBeUndefined();
+      });
+    });
+
+    describe('single recommendation', () => {
+      it('should not have relationships for single recommendation', () => {
+        const result = builder.generate(createTriggeredPCAResult(), [], [], []);
+
+        expect(result.length).toBe(1);
+        expect(result[0].relationships).toBeUndefined();
+      });
+    });
+
+    describe('empty recommendations', () => {
+      it('should return empty array without errors', () => {
+        const result = builder.generate(createEmptyPCAResult(), [], [], []);
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('relationship symmetry', () => {
+      it('should create bidirectional relationships', () => {
+        // Create scenario with overlapping recommendations
+        const pca = createTriggeredPCAResult();
+        pca.topLoadingPrototypes = [
+          { prototypeId: 'shared1', loading: 0.9 },
+          { prototypeId: 'shared2', loading: 0.8 },
+          { prototypeId: 'shared3', loading: 0.7 },
+        ];
+
+        const conflict = createConflict('shared1');
+
+        const result = builder.generate(pca, [], [], [conflict]);
+
+        // Should have INVESTIGATE and REFINE_EXISTING
+        expect(result.length).toBe(2);
+
+        const investigate = result.find((r) => r.type === 'INVESTIGATE');
+        const refine = result.find((r) => r.type === 'REFINE_EXISTING');
+
+        expect(investigate).toBeDefined();
+        expect(refine).toBeDefined();
+
+        // Relationships should be bidirectional (both should reference each other)
+        expect(investigate.relationships).toBeDefined();
+        expect(investigate.relationships.complementary).toBeDefined();
+        expect(refine.relationships).toBeDefined();
+        expect(refine.relationships.complementary).toBeDefined();
+        expect(investigate.relationships.complementary[0].id).toBe(refine.id);
+        expect(refine.relationships.complementary[0].id).toBe(investigate.id);
+      });
+    });
+
+    describe('overlapping detection (same type, 30-70% overlap)', () => {
+      it('should detect overlapping recommendations of same type', () => {
+        // Create two gaps with moderate overlap (60%)
+        // gap1: p1, shared1, shared2, shared3 (4 total)
+        // gap2: p2, shared1, shared2, shared3 (4 total)
+        // Intersection: 3, Union: 5, Jaccard: 3/5 = 60%
+        const gap1 = {
+          ...createGap('cluster1'),
+          centroidPrototypes: ['p1', 'shared1', 'shared2', 'shared3'],
+        };
+        const gap2 = {
+          ...createGap('cluster2'),
+          centroidPrototypes: ['p2', 'shared1', 'shared2', 'shared3'],
+        };
+
+        const result = builder.generate(createEmptyPCAResult(), [], [gap1, gap2], []);
+
+        expect(result.length).toBe(2);
+
+        // Both are INVESTIGATE type with 60% overlap = overlapping relationship
+        const rec1 = result.find((r) => r.affectedPrototypes.includes('p1'));
+        const rec2 = result.find((r) => r.affectedPrototypes.includes('p2'));
+
+        expect(rec1).toBeDefined();
+        expect(rec2).toBeDefined();
+
+        // Should have overlapping relationship
+        expect(rec1.relationships).toBeDefined();
+        expect(rec1.relationships.overlapping).toBeDefined();
+        expect(rec1.relationships.overlapping.length).toBe(1);
+        expect(rec1.relationships.overlapping[0].id).toBe(rec2.id);
+        expect(rec1.relationships.overlapping[0].sharedPrototypes).toContain('shared1');
+      });
+    });
+
+    describe('relationship entry structure', () => {
+      it('should include similarity and sharedPrototypes in relationships', () => {
+        const pca = createTriggeredPCAResult();
+        pca.topLoadingPrototypes = [
+          { prototypeId: 'shared', loading: 0.9 },
+          { prototypeId: 'pca1', loading: 0.8 },
+        ];
+
+        const conflict = createConflict('shared');
+
+        const result = builder.generate(pca, [], [], [conflict]);
+
+        const investigate = result.find((r) => r.type === 'INVESTIGATE');
+
+        expect(investigate).toBeDefined();
+        expect(investigate.relationships).toBeDefined();
+        expect(investigate.relationships.complementary).toBeDefined();
+
+        const rel = investigate.relationships.complementary[0];
+        expect(rel).toHaveProperty('id');
+        expect(rel).toHaveProperty('similarity');
+        expect(rel).toHaveProperty('sharedPrototypes');
+        expect(typeof rel.similarity).toBe('number');
+        expect(rel.similarity).toBeGreaterThanOrEqual(0);
+        expect(rel.similarity).toBeLessThanOrEqual(1);
+        expect(Array.isArray(rel.sharedPrototypes)).toBe(true);
+      });
+    });
+  });
+
+  describe('backward compatibility', () => {
+    it('should include id field in all recommendations', () => {
+      const result = builder.generate(
+        createTriggeredPCAResult(),
+        [createHub()],
+        [createGap()],
+        [createConflict()]
+      );
+
+      for (const rec of result) {
+        expect(rec).toHaveProperty('id');
+        expect(typeof rec.id).toBe('string');
+        expect(rec.id.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should maintain all existing properties', () => {
+      const result = builder.generate(createTriggeredPCAResult(), [], [], []);
+
+      expect(result[0]).toHaveProperty('id');
+      expect(result[0]).toHaveProperty('priority');
+      expect(result[0]).toHaveProperty('type');
+      expect(result[0]).toHaveProperty('description');
+      expect(result[0]).toHaveProperty('affectedPrototypes');
+      expect(result[0]).toHaveProperty('evidence');
     });
   });
 });

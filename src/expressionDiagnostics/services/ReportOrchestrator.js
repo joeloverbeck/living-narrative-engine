@@ -3,14 +3,20 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { extractMoodConstraints } from '../utils/moodRegimeUtils.js';
+import { extractConstraintsFromPrototypeGates } from '../utils/prototypeGateUtils.js';
 
 class ReportOrchestrator {
   #logger;
   #sensitivityAnalyzer;
   #monteCarloReportGenerator;
+  #dataRegistry;
 
-  constructor({ logger, sensitivityAnalyzer, monteCarloReportGenerator }) {
+  constructor({
+    logger,
+    sensitivityAnalyzer,
+    monteCarloReportGenerator,
+    dataRegistry,
+  }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
@@ -25,10 +31,14 @@ class ReportOrchestrator {
         requiredMethods: ['generate'],
       }
     );
+    validateDependency(dataRegistry, 'IDataRegistry', logger, {
+      requiredMethods: ['get', 'getLookupData'],
+    });
 
     this.#logger = logger;
     this.#sensitivityAnalyzer = sensitivityAnalyzer;
     this.#monteCarloReportGenerator = monteCarloReportGenerator;
+    this.#dataRegistry = dataRegistry;
   }
 
   /**
@@ -58,11 +68,12 @@ class ReportOrchestrator {
     const storedContexts = simulationResult.storedContexts ?? [];
     const baselineTriggerRate = simulationResult.triggerRate ?? null;
 
-    // Extract mood constraints for near-miss pool filtering
-    const moodConstraints = extractMoodConstraints(prerequisites, {
-      includeMoodAlias: true,
-      andOnly: true,
-    });
+    // Extract mood constraints derived from prototype gates for near-miss pool filtering
+    const moodConstraints = extractConstraintsFromPrototypeGates(
+      prerequisites,
+      this.#dataRegistry,
+      { deduplicateByAxis: true }
+    );
 
     const sensitivityOptions = {
       baselineTriggerRate,
