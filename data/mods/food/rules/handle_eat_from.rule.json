@@ -1,0 +1,90 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_eat_from",
+  "comment": "Handles eat_from action with perspective-aware perception (actor gets first-person with flavor, observers get third-person)",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "food:event-is-action-eat-from"
+  },
+  "actions": [
+    {
+      "type": "EAT_FROM",
+      "comment": "Consume one serving from food item",
+      "parameters": {
+        "actorEntity": "{event.payload.actorId}",
+        "foodEntity": "{event.payload.targetId}",
+        "result_variable": "eatResult"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position for logging",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get food name",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "foodName"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Prepare observer message (third-person, no flavor)",
+      "parameters": {
+        "variable_name": "observerMessage",
+        "value": "{context.actorName} takes a bite from {context.foodName}."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Eat action with perspective-aware descriptions - actor gets first-person with flavor",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.observerMessage}",
+        "actor_description": "I take a bite from {context.foodName}. {context.eatResult.flavorText}",
+        "perception_type": "consumption.consume",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear chewing sounds nearby."
+        },
+        "contextual_data": {
+          "servingsConsumed": "{context.eatResult.servingsConsumed}",
+          "flavorText": "{context.eatResult.flavorText}"
+        }
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message in UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.observerMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after successful eating",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

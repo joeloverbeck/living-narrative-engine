@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "food:eat_from",
+  "name": "Eat From",
+  "description": "Take a bite from a food item with multiple servings remaining.",
+  "targets": {
+    "primary": {
+      "scope": "food:multi_serving_food",
+      "placeholder": "primary",
+      "description": "Food item with multiple servings to eat from"
+    }
+  },
+  "required_components": {
+    "primary": ["eating-states:edible", "food:food_container"]
+  },
+  "forbidden_components": {
+    "actor": ["physical-control-states:being_restrained", "physical-control-states:restraining"],
+    "primary": ["eating-states:consumed"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to eat."
+    }
+  ],
+  "template": "eat from {primary}",
+  "visual": {
+    "backgroundColor": "#8B4513",
+    "textColor": "#FFF8DC",
+    "hoverBackgroundColor": "#A0522D",
+    "hoverTextColor": "#ffffff"
+  }
+}

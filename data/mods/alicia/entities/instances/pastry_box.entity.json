@@ -1,0 +1,16 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "alicia:pastry_box_instance",
+  "definitionId": "alicia:pastry_box",
+  "componentOverrides": {
+    "containers-core:container": {
+      "contents": [],
+      "isOpen": true,
+      "capacity": {
+        "maxWeight": 5.0,
+        "maxItems": 6
+      },
+      "requiresKey": false
+    }
+  }
+}

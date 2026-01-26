@@ -10,7 +10,12 @@
             "items": [
                 "alicia:yellowed_goodbye_letter_instance",
                 "alicia:bobby_western_photo_1_instance",
-                "alicia:bobby_western_photo_2_instance"
+                "alicia:bobby_western_photo_2_instance",
+                "alicia:pastry_box_instance",
+                "alicia:croissant_instance",
+                "alicia:apple_tart_instance",
+                "alicia:cinnamon_roll_instance",
+                "alicia:cheese_pastry_instance"
             ],
             "capacity": {
                 "maxWeight": 50.0,

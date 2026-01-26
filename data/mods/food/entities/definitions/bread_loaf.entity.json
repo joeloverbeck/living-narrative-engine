@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "food:bread_loaf",
+  "components": {
+    "core:name": {
+      "text": "crusty bread loaf"
+    },
+    "core:description": {
+      "text": "A rustic loaf of bread with a deeply browned, cracked crust. The shape suggests artisan baking, and squeezing it reveals a springy interior beneath the hard shell."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.45
+    },
+    "eating-states:edible": {},
+    "food:consumable_disappears": {},
+    "food:food_container": {
+      "currentServings": 6,
+      "maxServings": 6,
+      "flavorText": "The crust crunches loudly, giving way to a soft, airy crumb still warm from the oven. The wheaty flavor is honest and comforting.",
+      "tags": ["bread", "staple", "crusty"]
+    }
+  }
+}

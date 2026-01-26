@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/removeEntity.schema.json",
+  "title": "REMOVE_ENTITY Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "REMOVE_ENTITY"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Removes an entity from the game world, cleaning up inventory references first.",
+      "properties": {
+        "entity_ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity ID to remove. Can be a template reference like {event.payload.targetId}."
+        },
+        "cleanup_inventory": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, automatically removes the entity from any inventory containing it."
+        },
+        "result_variable": {
+          "type": "string",
+          "description": "Optional variable name to store operation result."
+        }
+      },
+      "required": ["entity_ref"],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "emotions-love-attachment",
+  "version": "1.0.0",
+  "name": "Emotions - Love Attachment",
+  "description": "Expressions for deep love, attachment bonds, reverent affection, and tender devotion.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "content": {
+    "expressions": [
+      "adoring_tenderness.expression.json"
+    ]
+  }
+}

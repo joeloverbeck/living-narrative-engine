@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "food:cinnamon_roll",
+  "components": {
+    "core:name": {
+      "text": "cinnamon roll"
+    },
+    "core:description": {
+      "text": "A plump spiral of sweet dough, its layers swirled with cinnamon and brown sugar. A generous drizzle of cream cheese frosting crowns the top, pooling in the coils."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.12
+    },
+    "eating-states:edible": {},
+    "food:consumable_disappears": {},
+    "food:food_container": {
+      "currentServings": 1,
+      "maxServings": 1,
+      "flavorText": "Sweet, gooey cinnamon filling stretches between soft layers of dough. The cream cheese frosting adds a tangy counterpoint to the warm spice.",
+      "tags": ["pastry", "sweet", "breakfast", "spiced"]
+    }
+  }
+}

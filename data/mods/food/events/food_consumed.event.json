@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "food:food_consumed",
+  "description": "Fired when an actor consumes a serving from a food item.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The entity ID of the actor who ate."
+      },
+      "foodId": {
+        "type": "string",
+        "description": "The entity ID of the food item consumed from."
+      },
+      "servingsConsumed": {
+        "type": "integer",
+        "description": "The number of servings consumed."
+      },
+      "servingsRemaining": {
+        "type": "integer",
+        "description": "The number of servings remaining in the food item."
+      }
+    },
+    "required": ["actorId", "foodId", "servingsConsumed", "servingsRemaining"]
+  }
+}

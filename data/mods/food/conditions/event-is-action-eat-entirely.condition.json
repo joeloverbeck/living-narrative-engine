@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "food:event-is-action-eat-entirely",
+  "description": "Checks if the current event is an eat_entirely action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "food:eat_entirely"
+    ]
+  }
+}

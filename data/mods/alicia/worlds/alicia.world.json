@@ -14,6 +14,21 @@
             "instanceId": "alicia:metal_framed_patient_bed_instance"
         },
         {
+            "instanceId": "alicia:apple_tart_instance"
+        },
+        {
+            "instanceId": "alicia:cheese_pastry_instance"
+        },
+        {
+            "instanceId": "alicia:cinnamon_roll_instance"
+        },
+        {
+            "instanceId": "alicia:croissant_instance"
+        },
+        {
+            "instanceId": "alicia:pastry_box_instance"
+        },
+        {
             "instanceId": "alicia:alicia_western_desk_instance"
         },
         {

@@ -21,6 +21,8 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   ATTEMPT_ACTION_ID: 'core:attempt_action',
   ENTITY_SPOKE_ID: 'core:entity_spoke',
   ENTITY_THOUGHT_ID: 'core:entity_thought',
+  FOOD_CONSUMED_EVENT_ID: 'food:food_consumed',
+  FOOD_CONSUMED_ENTIRELY_EVENT_ID: 'food:food_consumed_entirely',
   LIQUID_CONSUMED_EVENT_ID: 'drinking:liquid_consumed',
   LIQUID_CONSUMED_ENTIRELY_EVENT_ID: 'drinking:liquid_consumed_entirely',
   ITEM_DROPPED_EVENT_ID: 'inventory:item_dropped',

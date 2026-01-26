@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "food:cheese_pastry",
+  "components": {
+    "core:name": {
+      "text": "cheese pastry"
+    },
+    "core:description": {
+      "text": "A savory pastry pocket with a flaky exterior dusted in herbs. The shape bulges with its cheese filling, and the golden surface shows where the rich interior has bubbled through."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.1
+    },
+    "eating-states:edible": {},
+    "food:consumable_disappears": {},
+    "food:food_container": {
+      "currentServings": 1,
+      "maxServings": 1,
+      "flavorText": "Molten cheese stretches from the flaky pastry, sharp and creamy in equal measure. Herbs complement the rich filling perfectly.",
+      "tags": ["pastry", "savory", "cheese"]
+    }
+  }
+}

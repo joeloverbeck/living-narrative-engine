@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "food:food_consumed_entirely",
+  "description": "Fired when an actor finishes eating a food item completely.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorId": {
+        "type": "string",
+        "description": "The entity ID of the actor who ate."
+      },
+      "foodId": {
+        "type": "string",
+        "description": "The entity ID of the food item that was consumed entirely."
+      },
+      "servingsConsumed": {
+        "type": "integer",
+        "description": "The total number of servings consumed."
+      }
+    },
+    "required": ["actorId", "foodId", "servingsConsumed"]
+  }
+}

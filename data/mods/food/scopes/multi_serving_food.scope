@@ -1,0 +1,5 @@
+food:multi_serving_food := items-core:examinable_items[{"and": [
+  {"!!": {"var": "entity.components.food:food_container"}},
+  {"!!": {"var": "entity.components.eating-states:edible"}},
+  {">": [{"var": "entity.components.food:food_container.currentServings"}, 1]}
+]}]

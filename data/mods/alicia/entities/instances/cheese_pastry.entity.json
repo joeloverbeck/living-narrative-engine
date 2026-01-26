@@ -1,0 +1,6 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "alicia:cheese_pastry_instance",
+    "definitionId": "food:cheese_pastry",
+    "componentOverrides": {}
+}

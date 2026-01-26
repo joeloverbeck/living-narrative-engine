@@ -36,6 +36,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "food",
+      "version": "^1.0.0"
+    },
+    {
       "id": "movement",
       "version": "^1.0.0"
     },
@@ -88,6 +92,7 @@
         "bobby_western_photo_2.entity.json",
         "jon_urena_daydream.character.json",
         "metal_framed_patient_bed.entity.json",
+        "pastry_box.entity.json",
         "patient_room.location.json",
         "sanatorium_corridor.location.json",
         "unfinished_goodbye_letter.json",
@@ -96,10 +101,15 @@
       "instances": [
         "alicia_western.character.json",
         "alicia_western_desk.entity.json",
+        "apple_tart.entity.json",
         "bobby_western_photo_1.entity.json",
         "bobby_western_photo_2.entity.json",
+        "cheese_pastry.entity.json",
+        "cinnamon_roll.entity.json",
+        "croissant.entity.json",
         "jon_urena_daydream.character.json",
         "metal_framed_patient_bed.entity.json",
+        "pastry_box.entity.json",
         "patient_room.location.json",
         "sanatorium_corridor.location.json",
         "unfinished_goodbye_letter.json",

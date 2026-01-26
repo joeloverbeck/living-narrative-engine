@@ -25,6 +25,10 @@ export const LIQUID_CONSUMED_EVENT_ID = 'drinking:liquid_consumed';
 export const LIQUID_CONSUMED_ENTIRELY_EVENT_ID =
   'drinking:liquid_consumed_entirely';
 
+// Eating system event IDs
+export const FOOD_CONSUMED_EVENT_ID = 'food:food_consumed';
+export const FOOD_CONSUMED_ENTIRELY_EVENT_ID = 'food:food_consumed_entirely';
+
 // Inventory/Container system event IDs
 export const ITEM_DROPPED_EVENT_ID = 'inventory:item_dropped';
 export const ITEM_PICKED_UP_EVENT_ID = 'inventory:item_picked_up';
