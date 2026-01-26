@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/eatEntirely.schema.json",
+  "title": "EAT_ENTIRELY Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "EAT_ENTIRELY"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the EAT_ENTIRELY operation. Consumes all remaining servings from a food item, always resulting in a consumed state.",
+      "properties": {
+        "actorEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the actor eating the food item"
+        },
+        "foodEntity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^\\S(.*\\S)?$",
+          "description": "Entity ID of the food item being consumed entirely"
+        },
+        "result_variable": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "description": "Optional variable name to store the operation result. Result includes {success: boolean, error?: string, servingsConsumed: number, flavorText?: string}"
+        }
+      },
+      "required": ["actorEntity", "foodEntity"],
+      "additionalProperties": false
+    }
+  }
+}

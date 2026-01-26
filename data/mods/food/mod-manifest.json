@@ -1,0 +1,63 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "food",
+  "version": "1.0.0",
+  "name": "Food System",
+  "description": "Actions and rules for eating food items. Provides eat_from for multi-serving items and eat_entirely for single-serving items.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "items-core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "1.0.0"
+    },
+    {
+      "id": "physical-control-states",
+      "version": "1.0.0"
+    },
+    {
+      "id": "eating-states",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "consumable_disappears.component.json",
+      "food_container.component.json"
+    ],
+    "actions": [
+      "eat_entirely.action.json",
+      "eat_from.action.json"
+    ],
+    "rules": [
+      "handle_eat_entirely.rule.json",
+      "handle_eat_from.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-eat-entirely.condition.json",
+      "event-is-action-eat-from.condition.json"
+    ],
+    "events": [
+      "food_consumed.event.json",
+      "food_consumed_entirely.event.json"
+    ],
+    "scopes": [
+      "multi_serving_food.scope",
+      "single_serving_food.scope"
+    ],
+    "entities": {
+      "definitions": [
+        "apple_tart.entity.json",
+        "bread_loaf.entity.json",
+        "cheese_pastry.entity.json",
+        "cinnamon_roll.entity.json",
+        "croissant.entity.json",
+        "meat_pie.entity.json"
+      ]
+    }
+  }
+}

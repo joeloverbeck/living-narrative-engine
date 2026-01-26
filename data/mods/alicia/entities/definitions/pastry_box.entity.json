@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "alicia:pastry_box",
+  "description": "A cardboard pastry box containing baked goods",
+  "components": {
+    "core:name": {
+      "text": "pastry box"
+    },
+    "core:description": {
+      "text": "A white cardboard pastry box with a clear plastic window on top, the kind used by bakeries. The corners are slightly soft from the warmth of the pastries inside, and a faint sweetness escapes through the seams. A thin red string keeps it closed, tied in a simple bow."
+    },
+    "items-core:item": {},
+    "items-core:openable": {},
+    "core:conspicuous": {},
+    "containers-core:container": {
+      "contents": [],
+      "capacity": {
+        "maxWeight": 5.0,
+        "maxItems": 6
+      },
+      "isOpen": false,
+      "requiresKey": false
+    },
+    "core:weight": {
+      "weight": 0.5
+    }
+  }
+}

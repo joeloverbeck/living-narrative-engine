@@ -60,6 +60,11 @@ export const OPENABLE_COMPONENT_ID = 'items-core:openable';
 export const DRINKABLE_COMPONENT_ID = 'drinking-states:drinkable';
 export const EMPTY_COMPONENT_ID = 'drinking-states:empty';
 
+// Eating system components
+export const EDIBLE_COMPONENT_ID = 'eating-states:edible';
+export const CONSUMED_COMPONENT_ID = 'eating-states:consumed';
+export const FOOD_CONTAINER_COMPONENT_ID = 'food:food_container';
+
 // Inventory components
 export const INVENTORY_COMPONENT_ID = 'inventory:inventory';
 export const WEIGHT_COMPONENT_ID = 'core:weight';

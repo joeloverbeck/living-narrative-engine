@@ -57,6 +57,9 @@
           "$ref": "./operations/removeComponent.schema.json"
         },
         {
+          "$ref": "./operations/removeEntity.schema.json"
+        },
+        {
           "$ref": "./operations/depleteOxygen.schema.json"
         },
         {
@@ -79,6 +82,12 @@
         },
         {
           "$ref": "./operations/drinkFrom.schema.json"
+        },
+        {
+          "$ref": "./operations/eatEntirely.schema.json"
+        },
+        {
+          "$ref": "./operations/eatFrom.schema.json"
         },
         {
           "$ref": "./operations/endTurn.schema.json"

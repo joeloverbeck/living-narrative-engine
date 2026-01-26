@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "food:consumable_disappears",
+  "description": "Marker indicating this food item should be removed from the game when fully consumed. Items without this marker remain as consumed remnants (e.g., bones, husks).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

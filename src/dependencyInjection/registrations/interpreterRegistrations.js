@@ -266,8 +266,11 @@ export function registerInterpreters(container) {
     );
     registry.register('DRINK_FROM', bind(tokens.DrinkFromHandler));
     registry.register('DRINK_ENTIRELY', bind(tokens.DrinkEntirelyHandler));
+    registry.register('EAT_FROM', bind(tokens.EatFromHandler));
+    registry.register('EAT_ENTIRELY', bind(tokens.EatEntirelyHandler));
     registry.register('DEPLETE_OXYGEN', bind(tokens.DepleteOxygenHandler));
     registry.register('RESTORE_OXYGEN', bind(tokens.RestoreOxygenHandler));
+    registry.register('REMOVE_ENTITY', bind(tokens.RemoveEntityHandler));
 
     return registry;
   });

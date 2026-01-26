@@ -17,10 +17,10 @@ When prerequisites for multiple expressions are satisfied simultaneously, the ex
 | Range | Count | Category |
 |-------|-------|----------|
 | 68-69 | 1 | Moderate emotional states |
-| 70-72 | 2 | Active emotional responses |
+| 70-72 | 3 | Active emotional responses |
 | 76 | 1 | Elevated engagement states |
 
-**Total: 4 expressions across 4 mods**
+**Total: 5 expressions across 5 mods**
 
 ## Expressions by Mod
 
@@ -61,6 +61,16 @@ Warmth, care, and compassion directed toward others.
 | Priority | ID | Description |
 |----------|----|----|
 | 72 | `emotions-affection-care:comforted_vulnerability` | Comforted vulnerability: being cared for finally lands, and the body stops fighting it. Trust and affection open a soft seam where guardedness loosens into relief without collapsing into shutdown. |
+
+**Category**: affection
+
+### emotions-love-attachment (1 expression)
+
+Deep love, attachment bonds, reverent affection, and tender devotion.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 72 | `emotions-love-attachment:adoring_tenderness` | A soft, reverent warmth—attention settles into quiet appreciation, protective fondness, and the feeling that simply being near is enough. |
 
 **Category**: affection
 

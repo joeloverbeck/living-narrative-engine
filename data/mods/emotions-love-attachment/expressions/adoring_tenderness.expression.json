@@ -1,0 +1,436 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-love-attachment:adoring_tenderness",
+    "description": "A soft, reverent warmth—attention settles into quiet appreciation, protective fondness, and the feeling that simply being near is enough.",
+    "priority": 72,
+    "category": "affection",
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.love_attachment"
+                            },
+                            0.38
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.affection"
+                            },
+                            0.28
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.adoration"
+                                    },
+                                    0.3
+                                ]
+                            },
+                            {
+                                "and": [
+                                    {
+                                        ">=": [
+                                            {
+                                                "var": "emotions.admiration"
+                                            },
+                                            0.22
+                                        ]
+                                    },
+                                    {
+                                        "or": [
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "var": "emotions.aesthetic_appreciation"
+                                                    },
+                                                    0.22
+                                                ]
+                                            },
+                                            {
+                                                ">=": [
+                                                    {
+                                                        "var": "emotions.gratitude"
+                                                    },
+                                                    0.18
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.calm"
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.contentment"
+                                    },
+                                    0.08
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.quiet_absorption"
+                                    },
+                                    0.15
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.trust"
+                            },
+                            0.15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.jealousy"
+                            },
+                            0.15
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.craving"
+                            },
+                            0.25
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.romantic_yearning"
+                            },
+                            0.28
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_lust"
+                            },
+                            0.22
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.passion"
+                            },
+                            0.2
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "sexualStates.sexual_playfulness"
+                            },
+                            0.28
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires: love_attachment + affection, shaped into reverent/adoring appreciation (adoration OR admiration + appreciation/gratitude), with a soft/settled tone (calm/contentment/quiet_absorption) and basic trust. Blocked by need/possessiveness (craving, jealousy) and by strong desire/flirtation signals (romantic_yearning, sexual_lust, passion, sexual_playfulness)."
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.love_attachment"
+                                    },
+                                    0.38
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    0.38
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.affection"
+                                    },
+                                    0.28
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    0.28
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.adoration"
+                                    },
+                                    0.3
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.adoration"
+                                    },
+                                    0.3
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.admiration"
+                                    },
+                                    0.22
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.admiration"
+                                    },
+                                    0.22
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.aesthetic_appreciation"
+                                    },
+                                    0.22
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.aesthetic_appreciation"
+                                    },
+                                    0.22
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.gratitude"
+                                    },
+                                    0.18
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.gratitude"
+                                    },
+                                    0.18
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.love_attachment"
+                                    },
+                                    {
+                                        "var": "previousEmotions.love_attachment"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.affection"
+                                    },
+                                    {
+                                        "var": "previousEmotions.affection"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.adoration"
+                                    },
+                                    {
+                                        "var": "previousEmotions.adoration"
+                                    }
+                                ]
+                            },
+                            0.07
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.trust"
+                                    },
+                                    {
+                                        "var": "previousEmotions.trust"
+                                    }
+                                ]
+                            },
+                            0.08
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousSexualStates.romantic_yearning"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "sexualStates.romantic_yearning"
+                                    },
+                                    0.28
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousSexualStates.sexual_lust"
+                                    },
+                                    0.3
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "sexualStates.sexual_lust"
+                                    },
+                                    0.22
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.jealousy"
+                                    },
+                                    0.22
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.jealousy"
+                                    },
+                                    0.15
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "previousEmotions.craving"
+                                    },
+                                    0.32
+                                ]
+                            },
+                            {
+                                "<=": [
+                                    {
+                                        "var": "emotions.craving"
+                                    },
+                                    0.25
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a detectable onset/shift: crossing key tenderness thresholds, a meaningful rise in love/affection/adoration/trust, or a clear settling-out of need/possessiveness or desire-driven longing."
+        }
+    ],
+    "actor_description": "My chest aches, but it's the good kind—warm and full and almost too much, like my ribs can barely hold it. I don't want anything to change. Just this: watching them, breathing the same air, letting this tender heaviness pool behind my sternum until it spills into my throat, my face, my hands. I could stay here forever and it would be enough.",
+    "description_text": "{actor} goes still in a way that suggests deep attention rather than restraint. Their expression opens—warm-eyed, undefended—and they seem to forget themselves, caught in quiet observation. Every gesture becomes gentler, more deliberate, as if they're aware they're holding something breakable in their chest.",
+    "alternate_descriptions": {
+        "auditory": "Someone's voice drops into something tender and unhurried—words spacing out, tone warming from the inside. They sound like they're speaking to something precious, careful not to break the moment with volume or rush.",
+        "tactile": "The air around someone grows noticeably softer, their presence less defined by movement and more by this radiating gentleness. Touch, if it comes, would be reverent—slow hands, careful pressure, like they know exactly how delicate this feeling is.",
+        "limited": "{actor} looks quietly undone by tenderness—eyes soft and bright, expression open like a hand uncurling."
+    },
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.01566
+}

@@ -5,6 +5,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve as resolvePath } from 'node:path';
+import jsonLogic from 'json-logic-js';
 
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
@@ -19,6 +20,7 @@ import MathHandler from '../../../src/logic/operationHandlers/mathHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
+import RemoveEntityHandler from '../../../src/logic/operationHandlers/removeEntityHandler.js';
 import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMovementHandler.js';
 import LockMovementHandler from '../../../src/logic/operationHandlers/lockMovementHandler.js';
 import LogHandler from '../../../src/logic/operationHandlers/logHandler.js';
@@ -35,6 +37,8 @@ import PutInContainerHandler from '../../../src/logic/operationHandlers/putInCon
 import ValidateContainerCapacityHandler from '../../../src/logic/operationHandlers/validateContainerCapacityHandler.js';
 import DrinkFromHandler from '../../../src/logic/operationHandlers/drinkFromHandler.js';
 import DrinkEntirelyHandler from '../../../src/logic/operationHandlers/drinkEntirelyHandler.js';
+import EatFromHandler from '../../../src/logic/operationHandlers/eatFromHandler.js';
+import EatEntirelyHandler from '../../../src/logic/operationHandlers/eatEntirelyHandler.js';
 import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import LockMouthEngagementHandler from '../../../src/logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMouthEngagementHandler from '../../../src/logic/operationHandlers/unlockMouthEngagementHandler.js';
@@ -90,10 +94,13 @@ const ITEM_OPERATION_TYPES = new Set([
   'PUT_IN_CONTAINER',
   'DRINK_FROM',
   'DRINK_ENTIRELY',
+  'EAT_FROM',
+  'EAT_ENTIRELY',
   'MODIFY_ARRAY_FIELD',
   'UNWIELD_ITEM',
   'LOCK_GRABBING',
   'UNLOCK_GRABBING',
+  'REMOVE_ENTITY',
 ]);
 
 const MOUTH_OPERATION_TYPES = new Set([
@@ -473,6 +480,7 @@ export class ModTestHandlerFactory {
       }),
     });
 
+    // Create handlers object first (without IF/FOR_EACH that need operationInterpreter)
     const handlers = {
       QUERY_COMPONENT: new QueryComponentHandler({
         entityManager,
@@ -528,16 +536,6 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         equipmentOrchestrator,
       }),
-      FOR_EACH: new ForEachHandler({
-        operationInterpreter: () => ({ execute: jest.fn() }),
-        jsonLogic: { evaluate: jest.fn((rule, data) => data) },
-        logger,
-      }),
-      IF: new IfHandler({
-        operationInterpreter: () => ({ execute: jest.fn() }),
-        jsonLogic: { evaluate: jest.fn((rule, data) => data) },
-        logger,
-      }),
       // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
       REGENERATE_DESCRIPTION: {
         execute: jest.fn().mockResolvedValue(undefined),
@@ -547,6 +545,37 @@ export class ModTestHandlerFactory {
         execute: jest.fn().mockResolvedValue(undefined),
       },
     };
+
+    // Create operationInterpreter that dispatches to handlers
+    // Uses closure over handlers so it can see handlers added later
+    const createOperationInterpreter = () => ({
+      execute: async (op, context) => {
+        const handler = handlers[op.type];
+        if (!handler) {
+          logger.warn(`No handler registered for operation type: ${op.type}`);
+          return { success: false, error: `No handler for ${op.type}` };
+        }
+        return handler.execute(op.parameters, context);
+      },
+    });
+
+    // Create JSON Logic service wrapper using real json-logic-js
+    const jsonLogicService = {
+      evaluate: (rule, data) => jsonLogic.apply(rule, data),
+    };
+
+    // Add IF and FOR_EACH handlers with proper dependencies
+    handlers.FOR_EACH = new ForEachHandler({
+      operationInterpreter: createOperationInterpreter,
+      jsonLogic: jsonLogicService,
+      logger,
+    });
+
+    handlers.IF = new IfHandler({
+      operationInterpreter: createOperationInterpreter,
+      jsonLogic: jsonLogicService,
+      logger,
+    });
 
     // Add QUERY_LOOKUP handler if dataRegistry is provided
     if (dataRegistry) {
@@ -963,6 +992,16 @@ export class ModTestHandlerFactory {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
+      EAT_FROM: new EatFromHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      EAT_ENTIRELY: new EatEntirelyHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
       MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
         entityManager,
         logger,
@@ -981,6 +1020,11 @@ export class ModTestHandlerFactory {
       UNLOCK_GRABBING: {
         execute: jest.fn().mockResolvedValue(undefined),
       },
+      REMOVE_ENTITY: new RemoveEntityHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
     };
   }
 
@@ -1306,22 +1350,32 @@ export class ModTestHandlerFactory {
         return Promise.resolve(true);
       }),
     };
-    const operationInterpreter = () => ({ execute: jest.fn() });
-    const jsonLogicEvaluationService = {
-      evaluate: jest.fn((rule, data) => {
-        if (
-          rule &&
-          typeof rule === 'object' &&
-          Object.prototype.hasOwnProperty.call(rule, 'var')
-        ) {
-          const path = String(rule.var || '')
-            .split('.')
-            .filter(Boolean);
-          return path.reduce((acc, key) => (acc ? acc[key] : undefined), data);
-        }
 
-        return rule ?? data;
-      }),
+    // Will be populated after extended handlers object is created
+    let extendedHandlers = null;
+
+    // Create operationInterpreter that dispatches to extended handlers
+    // Uses late binding so it can see all handlers including REMOVE_ENTITY
+    const operationInterpreter = () => ({
+      execute: async (op, context) => {
+        if (!extendedHandlers) {
+          logger.error(
+            'operationInterpreter called before extendedHandlers initialized'
+          );
+          return { success: false, error: 'Handlers not initialized' };
+        }
+        const handler = extendedHandlers[op.type];
+        if (!handler) {
+          logger.warn(`No handler registered for operation type: ${op.type}`);
+          return { success: false, error: `No handler for ${op.type}` };
+        }
+        return handler.execute(op.parameters, context);
+      },
+    });
+
+    // Use real json-logic-js for condition evaluation
+    const jsonLogicEvaluationService = {
+      evaluate: (rule, data) => jsonLogic.apply(rule, data),
     };
     // Helper function to extract all part IDs from a body component structure
     const getDescendantPartIds = (rootId) => {
@@ -1484,7 +1538,8 @@ export class ModTestHandlerFactory {
       safeEventDispatcher: safeDispatcher,
     });
 
-    return {
+    // Build extended handlers object (assigned to extendedHandlers for late binding)
+    extendedHandlers = {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
         entityManager,
@@ -1705,7 +1760,28 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         moveEntityHandler: systemMoveEntityHandler,
       }),
+      REMOVE_ENTITY: new RemoveEntityHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
     };
+
+    // Override IF and FOR_EACH handlers with instances that use the new operationInterpreter
+    // This ensures they can dispatch to all extended handlers including REMOVE_ENTITY
+    extendedHandlers.IF = new IfHandler({
+      operationInterpreter,
+      jsonLogic: jsonLogicEvaluationService,
+      logger,
+    });
+
+    extendedHandlers.FOR_EACH = new ForEachHandler({
+      operationInterpreter,
+      jsonLogic: jsonLogicEvaluationService,
+      logger,
+    });
+
+    return extendedHandlers;
   }
 }
 

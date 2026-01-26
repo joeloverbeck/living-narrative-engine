@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "food:apple_tart",
+  "components": {
+    "core:name": {
+      "text": "apple tart"
+    },
+    "core:description": {
+      "text": "A small tart with thin apple slices fanned in overlapping spirals across a golden pastry base. The fruit glistens with a caramelized glaze, edges just touched with char."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.25
+    },
+    "eating-states:edible": {},
+    "food:consumable_disappears": {},
+    "food:food_container": {
+      "currentServings": 2,
+      "maxServings": 2,
+      "flavorText": "Caramelized apple meets buttery pastry in each bite. The fruit has softened to jammy sweetness while retaining a hint of tartness.",
+      "tags": ["pastry", "fruit", "sweet", "tart"]
+    }
+  }
+}

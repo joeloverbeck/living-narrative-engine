@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "food:food_container",
+  "description": "Defines food container properties including servings count, flavor text, and optional tags for categorization.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "currentServings": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "The current number of servings remaining in this food item."
+      },
+      "maxServings": {
+        "type": "integer",
+        "exclusiveMinimum": 0,
+        "description": "The maximum number of servings this food item can hold."
+      },
+      "flavorText": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Descriptive text about the taste and experience of eating this food."
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Optional tags for categorizing this food (e.g., 'pastry', 'savory', 'sweet')."
+      }
+    },
+    "required": [
+      "currentServings",
+      "maxServings",
+      "flavorText"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "food:meat_pie",
+  "components": {
+    "core:name": {
+      "text": "hearty meat pie"
+    },
+    "core:description": {
+      "text": "A substantial meat pie with a thick, golden crust. The crimped edges show careful handiwork, and the aroma of savory filling and herbs escapes through the vented top."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.6
+    },
+    "eating-states:edible": {},
+    "food:consumable_disappears": {},
+    "food:food_container": {
+      "currentServings": 4,
+      "maxServings": 4,
+      "flavorText": "The crust breaks apart perfectly, revealing chunks of tender meat swimming in rich, peppery gravy. The filling is warming and deeply satisfying.",
+      "tags": ["pie", "savory", "meat", "filling"]
+    }
+  }
+}

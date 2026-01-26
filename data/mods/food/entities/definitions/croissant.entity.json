@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "food:croissant",
+  "components": {
+    "core:name": {
+      "text": "buttery croissant"
+    },
+    "core:description": {
+      "text": "A perfectly baked croissant with golden-brown layers that promise flaky crispness. The butter-rich pastry glistens slightly, its crescent shape elegant and inviting."
+    },
+    "items-core:item": {},
+    "items-core:portable": {},
+    "core:weight": {
+      "weight": 0.08
+    },
+    "eating-states:edible": {},
+    "food:consumable_disappears": {},
+    "food:food_container": {
+      "currentServings": 1,
+      "maxServings": 1,
+      "flavorText": "The croissant yields with a satisfying crackle, releasing warm, buttery steam. Each flaky layer melts on the tongue, rich and delicate.",
+      "tags": ["pastry", "breakfast", "buttery"]
+    }
+  }
+}

@@ -51,12 +51,15 @@
     "comfort",
     "breaching",
     "drinking",
+    "eating-states",
+    "food",
     "gymnastics",
     "emotions-admiration",
     "emotions-acceptance",
     "cosmetics",
     "movement",
-    "emotions-affection-care"
+    "emotions-affection-care",
+    "emotions-love-attachment"
   ],
   "startWorld": "alicia:alicia"
 }

@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "food:eat_entirely",
+  "name": "Eat Entirely",
+  "description": "Consume the last serving of a food item, finishing it completely.",
+  "targets": {
+    "primary": {
+      "scope": "food:single_serving_food",
+      "placeholder": "primary",
+      "description": "Food item with exactly one serving to finish eating"
+    }
+  },
+  "required_components": {
+    "primary": ["eating-states:edible", "food:food_container"]
+  },
+  "forbidden_components": {
+    "actor": ["physical-control-states:being_restrained", "physical-control-states:restraining"],
+    "primary": ["eating-states:consumed"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to eat."
+    }
+  ],
+  "template": "eat {primary}",
+  "visual": {
+    "backgroundColor": "#8B4513",
+    "textColor": "#FFF8DC",
+    "hoverBackgroundColor": "#A0522D",
+    "hoverTextColor": "#ffffff"
+  }
+}

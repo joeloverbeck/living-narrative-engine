@@ -101,8 +101,11 @@ import PutInContainerHandler from '../../logic/operationHandlers/putInContainerH
 import ValidateContainerCapacityHandler from '../../logic/operationHandlers/validateContainerCapacityHandler.js';
 import DrinkFromHandler from '../../logic/operationHandlers/drinkFromHandler.js';
 import DrinkEntirelyHandler from '../../logic/operationHandlers/drinkEntirelyHandler.js';
+import EatFromHandler from '../../logic/operationHandlers/eatFromHandler.js';
+import EatEntirelyHandler from '../../logic/operationHandlers/eatEntirelyHandler.js';
 import DepleteOxygenHandler from '../../logic/operationHandlers/depleteOxygenHandler.js';
 import RestoreOxygenHandler from '../../logic/operationHandlers/restoreOxygenHandler.js';
+import RemoveEntityHandler from '../../logic/operationHandlers/removeEntityHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -883,6 +886,26 @@ export function registerOperationHandlers(registrar) {
         }),
     ],
     [
+      tokens.EatFromHandler,
+      EatFromHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.EatEntirelyHandler,
+      EatEntirelyHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
       tokens.DepleteOxygenHandler,
       DepleteOxygenHandler,
       (c, Handler) =>
@@ -902,6 +925,16 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           jsonLogicService: c.resolve(tokens.JsonLogicEvaluationService),
+        }),
+    ],
+    [
+      tokens.RemoveEntityHandler,
+      RemoveEntityHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
   ];

@@ -180,8 +180,11 @@ const handlerModuleDefinitions = [
   ],
   ['DrinkFromHandler', `${handlerBasePath}/drinkFromHandler.js`],
   ['DrinkEntirelyHandler', `${handlerBasePath}/drinkEntirelyHandler.js`],
+  ['EatFromHandler', `${handlerBasePath}/eatFromHandler.js`],
+  ['EatEntirelyHandler', `${handlerBasePath}/eatEntirelyHandler.js`],
   ['DepleteOxygenHandler', `${handlerBasePath}/depleteOxygenHandler.js`],
   ['RestoreOxygenHandler', `${handlerBasePath}/restoreOxygenHandler.js`],
+  ['RemoveEntityHandler', `${handlerBasePath}/removeEntityHandler.js`],
   ['ForEachHandler', `${handlerBasePath}/forEachHandler.js`],
   ['IfHandler', `${handlerBasePath}/ifHandler.js`],
 ];
@@ -1034,6 +1037,24 @@ beforeAll(async () => {
       ],
     },
     {
+      token: tokens.EatFromHandler,
+      handlerName: 'EatFromHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.EatEntirelyHandler,
+      handlerName: 'EatEntirelyHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
       token: tokens.DepleteOxygenHandler,
       handlerName: 'DepleteOxygenHandler',
       dependencies: [
@@ -1051,6 +1072,15 @@ beforeAll(async () => {
         { property: 'entityManager', token: IEntityManager },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
         { property: 'jsonLogicService', token: JsonLogicEvaluationServiceToken },
+      ],
+    },
+    {
+      token: tokens.RemoveEntityHandler,
+      handlerName: 'RemoveEntityHandler',
+      dependencies: [
+        { property: 'logger', token: ILogger },
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },
   ];
