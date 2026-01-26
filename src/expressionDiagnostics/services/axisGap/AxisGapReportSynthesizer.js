@@ -125,6 +125,7 @@ export class AxisGapReportSynthesizer {
    * @param {Array<{id?: string, prototypeId?: string, weights?: Record<string, number>}>} [prototypes] - Prototype objects.
    * @param {SplitConflicts} [splitConflicts] - Split conflict types.
    * @param {CandidateAxisResult[]|null} [candidateAxisValidation] - Optional candidate axis validation results.
+   * @param {object|null} [pcaComparison] - Optional two-pass PCA comparison data.
    * @returns {AxisGapReport} Synthesized report.
    */
   synthesize(
@@ -135,7 +136,8 @@ export class AxisGapReportSynthesizer {
     totalPrototypes = 0,
     prototypes = [],
     splitConflicts = {},
-    candidateAxisValidation = null
+    candidateAxisValidation = null,
+    pcaComparison = null
   ) {
     const {
       highAxisLoadings = [],
@@ -145,7 +147,7 @@ export class AxisGapReportSynthesizer {
       complexityAnalysis = null,
     } = splitConflicts;
 
-    const methodsTriggered = this.#countTriggeredMethods(pcaResult, hubs, gaps, conflicts);
+    const triggeredResult = this.#countTriggeredMethods(pcaResult, hubs, gaps, conflicts);
     const prototypeWeightSummaries = this.computePrototypeWeightSummaries(
       prototypes,
       pcaResult,
@@ -153,7 +155,10 @@ export class AxisGapReportSynthesizer {
       gaps,
       conflicts
     );
-    const confidence = this.#computeConfidenceLevel(methodsTriggered, prototypeWeightSummaries);
+    const confidenceResult = this.#computeConfidenceLevel(
+      triggeredResult.count,
+      prototypeWeightSummaries
+    );
 
     let recommendations = [];
     if (this.#recommendationBuilder) {
@@ -191,8 +196,11 @@ export class AxisGapReportSynthesizer {
         totalPrototypesAnalyzed: totalPrototypes,
         recommendationCount: recommendations.length,
         signalBreakdown,
-        confidence,
+        confidence: confidenceResult.level,
+        methodsTriggered: triggeredResult.families,
+        confidenceBoosted: confidenceResult.boosted,
         potentialGapsDetected: recommendations.length,
+        corroborationEnabled: !!this.#config.pcaRequireCorroboration,
       },
       pcaAnalysis: {
         residualVarianceRatio: pcaResult.residualVarianceRatio,
@@ -201,6 +209,7 @@ export class AxisGapReportSynthesizer {
         expectedComponentCount: pcaResult.expectedComponentCount ?? 0,
         significantBeyondExpected: pcaResult.significantBeyondExpected ?? 0,
         axisCount: pcaResult.axisCount ?? 0,
+        totalPrototypesAnalyzed: totalPrototypes,
         topLoadingPrototypes: pcaResult.topLoadingPrototypes,
         cumulativeVariance: pcaResult.cumulativeVariance ?? [],
         explainedVariance: pcaResult.explainedVariance ?? [],
@@ -210,7 +219,10 @@ export class AxisGapReportSynthesizer {
         dimensionsUsed: pcaResult.dimensionsUsed ?? [],
         excludedSparseAxes: pcaResult.excludedSparseAxes ?? [],
         unusedDefinedAxes: pcaResult.unusedDefinedAxes ?? [],
+        unusedDefinedUsedInGates: pcaResult.unusedDefinedUsedInGates ?? [],
+        unusedDefinedNotInGates: pcaResult.unusedDefinedNotInGates ?? [],
         unusedInGates: pcaResult.unusedInGates ?? [],
+        ...(pcaComparison ? { sparseFilteringComparison: pcaComparison } : {}),
       },
       hubPrototypes: hubs,
       hubDiagnostics,
@@ -246,6 +258,8 @@ export class AxisGapReportSynthesizer {
           signTensionSignals: 0,
         },
         confidence: 'low',
+        methodsTriggered: [],
+        confidenceBoosted: false,
         potentialGapsDetected: 0,
       },
       pcaAnalysis: this.#createEmptyPCAResult(),
@@ -398,16 +412,7 @@ export class AxisGapReportSynthesizer {
   }
 
   /**
-   * Count how many detection methods triggered.
-   *
-   * @param {PCAResult} pcaResult - PCA analysis result.
-   * @param {HubResult[]} hubs - Hub prototype results.
-   * @param {CoverageGapResult[]} gaps - Coverage gap results.
-   * @param {ConflictResult[]} conflicts - Multi-axis conflict results.
-   * @returns {number} Number of triggered methods.
-   */
-  /**
-   * Count how many detection methods triggered a signal.
+   * Count how many detection methods triggered a signal, and which families.
    *
    * When pcaRequireCorroboration is true (default), PCA triggers ONLY if:
    * 1. additionalSignificantComponents > 0, OR
@@ -419,10 +424,11 @@ export class AxisGapReportSynthesizer {
    * @param {Array} hubs - Detected hub prototypes.
    * @param {Array} gaps - Detected axis gaps.
    * @param {Array} conflicts - Detected multi-axis conflicts.
-   * @returns {number} Number of triggered detection methods.
+   * @returns {{ count: number, families: string[] }} Number of triggered detection methods and their family names.
    */
   #countTriggeredMethods(pcaResult, hubs, gaps, conflicts) {
     let count = 0;
+    const families = [];
     const pcaThreshold = Number.isFinite(this.#config.pcaResidualVarianceThreshold)
       ? this.#config.pcaResidualVarianceThreshold
       : 0.15;
@@ -439,25 +445,30 @@ export class AxisGapReportSynthesizer {
       // PCA triggers only with significant components OR high residual + other signals
       if (hasSignificantComponents || (hasHighResidual && hasOtherSignals)) {
         count += 1;
+        families.push('pca');
       }
     } else {
       // Original behavior: high residual OR significant components triggers PCA
       if (hasHighResidual || hasSignificantComponents) {
         count += 1;
+        families.push('pca');
       }
     }
 
     if (hasHubs) {
       count += 1;
+      families.push('hubs');
     }
     if (hasGaps) {
       count += 1;
+      families.push('gaps');
     }
     if (hasConflicts) {
       count += 1;
+      families.push('conflicts');
     }
 
-    return count;
+    return { count, families };
   }
 
   /**
@@ -465,14 +476,14 @@ export class AxisGapReportSynthesizer {
    *
    * @param {number} methodsTriggered - Number of detection methods triggered.
    * @param {PrototypeWeightSummary[]} prototypeWeightSummaries - Weight summaries.
-   * @returns {'low'|'medium'|'high'} Confidence level.
+   * @returns {{ level: 'low'|'medium'|'high', baseLevel: 'low'|'medium'|'high', boosted: boolean }} Confidence result.
    */
   #computeConfidenceLevel(methodsTriggered, prototypeWeightSummaries = []) {
-    let baseConfidence = 'low';
+    let baseLevel = 'low';
     if (methodsTriggered >= 3) {
-      baseConfidence = 'high';
+      baseLevel = 'high';
     } else if (methodsTriggered >= 2) {
-      baseConfidence = 'medium';
+      baseLevel = 'medium';
     }
 
     // Use distinct method families instead of raw reason count to avoid
@@ -483,11 +494,12 @@ export class AxisGapReportSynthesizer {
         (summary) => this.#countDistinctFamilies(summary?.reasons) >= 3
       );
 
-    if (hasMultiFamilyPrototype && baseConfidence !== 'high') {
-      return baseConfidence === 'low' ? 'medium' : 'high';
+    if (hasMultiFamilyPrototype && baseLevel !== 'high') {
+      const boostedLevel = baseLevel === 'low' ? 'medium' : 'high';
+      return { level: boostedLevel, baseLevel, boosted: true };
     }
 
-    return baseConfidence;
+    return { level: baseLevel, baseLevel, boosted: false };
   }
 
   /**
@@ -544,6 +556,8 @@ export class AxisGapReportSynthesizer {
       reconstructionErrors: [],
       excludedSparseAxes: [],
       unusedDefinedAxes: [],
+      unusedDefinedUsedInGates: [],
+      unusedDefinedNotInGates: [],
       unusedInGates: [],
     };
   }

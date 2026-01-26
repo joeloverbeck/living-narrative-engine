@@ -72,6 +72,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * @property {number} [ratio] - Imbalance ratio
  * @property {number} [dominant] - Count of dominant direction prototypes
  * @property {number} [minority] - Count of minority direction prototypes
+ * @property {boolean} [expectedImbalance] - True when positive bias is expected (unipolar axes)
  */
 
 /**
@@ -107,6 +108,9 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * @property {HTMLElement} [conflictList] - Multi-axis conflicts list container
  * @property {HTMLElement} [signTensionList] - Sign tensions list container
  * @property {HTMLElement} [polarityAnalysisList] - Polarity analysis container
+ * @property {HTMLElement} [corroborationStatusNote] - Corroboration status note container
+ * @property {HTMLElement} [confidenceExplanation] - Dynamic confidence explanation element
+ * @property {HTMLElement} [signalConfidenceLink] - Signal-to-confidence linking note element
  */
 
 /**
@@ -416,13 +420,18 @@ class AxisGapRenderer {
       return;
     }
 
+    // Determine if any axis represents an unexpected imbalance
+    const hasUnexpectedImbalance = imbalancedAxes.some((a) => a.expectedImbalance !== true);
+    const badgeLabel = hasUnexpectedImbalance ? 'Actionable' : 'Informational';
+    const badgeClass = hasUnexpectedImbalance ? 'actionable-badge' : 'informational-badge';
+
     // Render summary header
     const summaryLi = document.createElement('li');
     summaryLi.className = 'polarity-summary-item';
     summaryLi.innerHTML = `
       <div class="polarity-summary-header">
         <span class="polarity-summary-count">${imbalancedAxes.length} imbalanced ${imbalancedAxes.length === 1 ? 'axis' : 'axes'} detected</span>
-        <span class="polarity-summary-badge actionable-badge">Actionable</span>
+        <span class="polarity-summary-badge ${badgeClass}">${badgeLabel}</span>
       </div>
     `;
     elements.polarityAnalysisList.appendChild(summaryLi);
@@ -442,6 +451,10 @@ class AxisGapRenderer {
       const directionClass = direction === 'positive' ? 'polarity-positive' : 'polarity-negative';
       const oppositeDirection = direction === 'positive' ? 'negative' : 'positive';
 
+      const hintText = axisInfo.expectedImbalance === true
+        ? `Positive weight bias is expected for unipolar axis`
+        : `Consider adding prototypes with ${oppositeDirection} "${this.#escapeHtml(axis)}" weights`;
+
       li.innerHTML = `
         <div class="polarity-item-header">
           <span class="polarity-axis-name">${this.#escapeHtml(axis)}</span>
@@ -452,7 +465,7 @@ class AxisGapRenderer {
             ${dominant} prototypes use ${direction}, only ${minority} use ${oppositeDirection}
           </span>
           <span class="polarity-action-hint">
-            Consider adding prototypes with ${oppositeDirection} "${this.#escapeHtml(axis)}" values
+            ${hintText}
           </span>
         </div>
       `;
@@ -472,6 +485,97 @@ class AxisGapRenderer {
         </ul>
       `;
       elements.polarityAnalysisList.appendChild(warningsLi);
+    }
+  }
+
+  /**
+   * Renders the corroboration status note.
+   * @param {boolean} corroborationEnabled - Whether PCA corroboration is active
+   * @param {AxisGapDomElements} elements - DOM elements for rendering
+   */
+  renderCorroborationStatus(corroborationEnabled, elements) {
+    const container = elements.corroborationStatusNote;
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const note = document.createElement('div');
+    note.className = 'corroboration-status-note';
+
+    if (corroborationEnabled) {
+      note.classList.add('corroboration-on');
+      note.textContent =
+        'Corroboration mode: ON \u2014 PCA signals require hub/gap/conflict ' +
+        'corroboration before triggering HIGH-priority recommendations. ' +
+        'When corroboration is ON, PCA requires broken-stick confirmation or ' +
+        'agreement from other detection methods to trigger.';
+    } else {
+      note.classList.add('corroboration-off');
+      note.textContent =
+        'Corroboration mode: OFF \u2014 PCA signals contribute independently ' +
+        'to recommendations';
+    }
+
+    container.appendChild(note);
+  }
+
+  /**
+   * Renders a dynamic confidence explanation showing which methods triggered
+   * and whether boost was applied.
+   *
+   * @param {object} summary - Report summary containing confidence metadata
+   * @param {string} summary.confidence - Confidence level ('low'|'medium'|'high')
+   * @param {string[]} [summary.methodsTriggered] - Array of triggered family names
+   * @param {boolean} [summary.confidenceBoosted] - Whether confidence was boosted
+   * @param {AxisGapDomElements} elements - DOM elements for rendering
+   */
+  renderConfidenceExplanation(summary, elements) {
+    if (!summary) return;
+
+    const explanationEl = elements.confidenceExplanation;
+    if (explanationEl) {
+      const families = summary.methodsTriggered ?? [];
+      const boosted = summary.confidenceBoosted ?? false;
+      const confidence = summary.confidence ?? 'low';
+
+      const familyLabels = {
+        pca: 'PCA Analysis',
+        hubs: 'Hub Prototypes',
+        gaps: 'Coverage Gaps',
+        conflicts: 'Multi-Axis Conflicts',
+      };
+
+      const triggeredLabels = families.map((f) => familyLabels[f] ?? f);
+      const methodCount = triggeredLabels.length;
+
+      let text;
+      if (boosted) {
+        // Determine base level from method count
+        let baseLabel = 'Low';
+        if (methodCount >= 3) baseLabel = 'High';
+        else if (methodCount >= 2) baseLabel = 'Medium';
+
+        text =
+          `Confidence: ${this.#capitalizeFirst(confidence)} (boosted from ${baseLabel}) ` +
+          `\u2014 3+ method families flagged the same prototype. ` +
+          `${methodCount} method${methodCount !== 1 ? 's' : ''} triggered` +
+          (methodCount > 0 ? ` (${triggeredLabels.join(', ')})` : '') +
+          '.';
+      } else {
+        text =
+          `Confidence: ${this.#capitalizeFirst(confidence)} ` +
+          `\u2014 ${methodCount} method${methodCount !== 1 ? 's' : ''} triggered` +
+          (methodCount > 0 ? ` (${triggeredLabels.join(', ')})` : '') +
+          '. No boost applied.';
+      }
+
+      explanationEl.textContent = text;
+    }
+
+    const linkEl = elements.signalConfidenceLink;
+    if (linkEl) {
+      linkEl.textContent =
+        'The signal statuses above determine the confidence level shown in the summary.';
     }
   }
 
@@ -604,6 +708,16 @@ class AxisGapRenderer {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Capitalizes the first letter of a string.
+   * @param {string} str - The string to capitalize
+   * @returns {string} String with first letter capitalized
+   */
+  #capitalizeFirst(str) {
+    if (typeof str !== 'string' || str.length === 0) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
   /**

@@ -20,6 +20,9 @@ describe('PCAResultsRenderer', () => {
   }
 
   function createMockElements() {
+    const methodologyNote = document.createElement('div');
+    const parent = document.createElement('div');
+    parent.appendChild(methodologyNote);
     return {
       residualVariance: document.createElement('span'),
       significantComponentCount: document.createElement('span'),
@@ -30,11 +33,13 @@ describe('PCAResultsRenderer', () => {
       pcaExcludedAxesList: document.createElement('div'),
       pcaUnusedAxesList: document.createElement('div'),
       pcaUnusedInGatesList: document.createElement('div'),
-      pcaMethodologyNote: document.createElement('div'),
+      pcaMethodologyNote: methodologyNote,
       componentsFor80: document.createElement('span'),
       componentsFor90: document.createElement('span'),
       poorlyFittingList: document.createElement('ul'),
       pcaTopLoading: document.createElement('div'),
+      pcaSparseFilteringComparison: document.createElement('div'),
+      pcaAnalysisScopeNote: document.createElement('div'),
     };
   }
 
@@ -51,6 +56,8 @@ describe('PCAResultsRenderer', () => {
       dimensionsUsed: ['valence', 'arousal', 'dominance', 'potency'],
       excludedSparseAxes: ['rare_axis_1', 'rare_axis_2'],
       unusedDefinedAxes: ['unused_axis'],
+      unusedDefinedUsedInGates: [],
+      unusedDefinedNotInGates: ['unused_axis'],
       unusedInGates: ['no_gate_axis'],
       componentsFor80Pct: 3,
       componentsFor90Pct: 4,
@@ -201,6 +208,17 @@ describe('PCAResultsRenderer', () => {
       renderer.render({ dimensionsUsed: [] }, elements);
       expect(elements.pcaDimensionsUsed.textContent).toBe('--');
     });
+
+    it('should separate dimension names in extracted text', () => {
+      const elements = createMockElements();
+      renderer.render(
+        { dimensionsUsed: ['valence', 'arousal', 'dominance'] },
+        elements
+      );
+      const text = elements.pcaDimensionsList.textContent;
+      expect(text).not.toContain('valencearousal');
+      expect(text).not.toContain('arousaldominance');
+    });
   });
 
   describe('excluded sparse axes rendering', () => {
@@ -247,6 +265,67 @@ describe('PCAResultsRenderer', () => {
         'Unused but Defined Axes (1)'
       );
     });
+
+    it('should render gate-only axes sub-group when unusedDefinedUsedInGates is provided', () => {
+      const elements = createMockElements();
+      renderer.render({
+        unusedDefinedAxes: ['gate_axis', 'truly_unused'],
+        unusedDefinedUsedInGates: ['gate_axis'],
+        unusedDefinedNotInGates: ['truly_unused'],
+      }, elements);
+      const html = elements.pcaUnusedAxesList.innerHTML;
+      expect(html).toContain('Defined Axes Used Only in Gates (1)');
+      expect(html).toContain('gate_axis');
+    });
+
+    it('should render truly unused axes sub-group when unusedDefinedNotInGates is provided', () => {
+      const elements = createMockElements();
+      renderer.render({
+        unusedDefinedAxes: ['gate_axis', 'truly_unused'],
+        unusedDefinedUsedInGates: ['gate_axis'],
+        unusedDefinedNotInGates: ['truly_unused'],
+      }, elements);
+      const html = elements.pcaUnusedAxesList.innerHTML;
+      expect(html).toContain('Truly Unused Defined Axes (1)');
+      expect(html).toContain('truly_unused');
+    });
+
+    it('should fall back to flat rendering when sub-arrays are absent', () => {
+      const elements = createMockElements();
+      renderer.render({
+        unusedDefinedAxes: ['old_axis'],
+      }, elements);
+      const html = elements.pcaUnusedAxesList.innerHTML;
+      // Fallback shows the flat help text without sub-groups
+      expect(html).toContain('Unused but Defined Axes (1)');
+      expect(html).toContain('old_axis');
+      expect(html).not.toContain('Defined Axes Used Only in Gates');
+      expect(html).not.toContain('Truly Unused Defined Axes');
+    });
+
+    it('should not render gate-only sub-group when array is empty', () => {
+      const elements = createMockElements();
+      renderer.render({
+        unusedDefinedAxes: ['truly_unused'],
+        unusedDefinedUsedInGates: [],
+        unusedDefinedNotInGates: ['truly_unused'],
+      }, elements);
+      const html = elements.pcaUnusedAxesList.innerHTML;
+      expect(html).not.toContain('Defined Axes Used Only in Gates');
+      expect(html).toContain('Truly Unused Defined Axes (1)');
+    });
+
+    it('should not render truly unused sub-group when array is empty', () => {
+      const elements = createMockElements();
+      renderer.render({
+        unusedDefinedAxes: ['gate_only'],
+        unusedDefinedUsedInGates: ['gate_only'],
+        unusedDefinedNotInGates: [],
+      }, elements);
+      const html = elements.pcaUnusedAxesList.innerHTML;
+      expect(html).toContain('Defined Axes Used Only in Gates (1)');
+      expect(html).not.toContain('Truly Unused Defined Axes');
+    });
   });
 
   describe('unused in gates rendering', () => {
@@ -285,7 +364,85 @@ describe('PCAResultsRenderer', () => {
       expect(elements.pcaMethodologyNote.textContent).toContain('components');
     });
 
-    it('should hide note when no special case', () => {
+    it('should hide note when no special case and no component data', () => {
+      const elements = createMockElements();
+      renderer.render(
+        { significantBeyondExpected: 0, residualVarianceRatio: 0.05 },
+        elements
+      );
+      expect(elements.pcaMethodologyNote.style.display).toBe('none');
+    });
+
+    it('should show formula note when component counts are provided', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          significantBeyondExpected: 0,
+          residualVarianceRatio: 0.05,
+          significantComponentCount: 3,
+          expectedComponentCount: 6,
+        },
+        elements
+      );
+      expect(elements.pcaMethodologyNote.style.display).toBe('block');
+      expect(elements.pcaMethodologyNote.textContent).toContain('Formula');
+      expect(elements.pcaMethodologyNote.textContent).toContain('broken-stick');
+      expect(elements.pcaMethodologyNote.textContent).toContain('max(0, 3');
+      expect(elements.pcaMethodologyNote.textContent).toContain('6)');
+    });
+
+    it('should show clamping explanation when significant < expected', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          significantBeyondExpected: 0,
+          residualVarianceRatio: 0.05,
+          significantComponentCount: 3,
+          expectedComponentCount: 6,
+        },
+        elements
+      );
+      expect(elements.pcaMethodologyNote.textContent).toContain(
+        'fewer PCA-significant dimensions were found than expected'
+      );
+      expect(elements.pcaMethodologyNote.textContent).toContain(
+        'not that PCA found nothing'
+      );
+    });
+
+    it('should not show clamping explanation when significant >= expected', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          significantBeyondExpected: 2,
+          significantComponentCount: 8,
+          expectedComponentCount: 6,
+        },
+        elements
+      );
+      expect(elements.pcaMethodologyNote.textContent).not.toContain(
+        'fewer PCA-significant dimensions'
+      );
+    });
+
+    it('should show both methodology and formula notes together', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          significantBeyondExpected: 0,
+          residualVarianceRatio: 0.2,
+          significantComponentCount: 3,
+          expectedComponentCount: 6,
+        },
+        elements
+      );
+      // Should have both the warning note and the formula note
+      expect(elements.pcaMethodologyNote.textContent).toContain('Methodology Note');
+      expect(elements.pcaMethodologyNote.textContent).toContain('Formula');
+      expect(elements.pcaMethodologyNote.querySelectorAll('div').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should not show formula note when component counts are missing', () => {
       const elements = createMockElements();
       renderer.render(
         { significantBeyondExpected: 0, residualVarianceRatio: 0.05 },
@@ -454,6 +611,85 @@ describe('PCAResultsRenderer', () => {
     });
   });
 
+  describe('sparse filtering comparison rendering', () => {
+    it('should render comparison section when data is provided', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          sparseFilteringComparison: {
+            deltaSignificant: 1,
+            deltaResidualVariance: 0.05,
+            deltaRMSE: 0.02,
+            filteringImpactSummary: 'Sparse filtering materially changed PCA conclusions.',
+          },
+        },
+        elements
+      );
+      expect(elements.pcaSparseFilteringComparison.style.display).toBe('block');
+      expect(elements.pcaSparseFilteringComparison.textContent).toContain(
+        'Sparse Filtering Impact'
+      );
+    });
+
+    it('should display delta metrics', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          sparseFilteringComparison: {
+            deltaSignificant: 2,
+            deltaResidualVariance: 0.035,
+            deltaRMSE: -0.01,
+            filteringImpactSummary: 'Sparse filtering materially changed PCA conclusions.',
+          },
+        },
+        elements
+      );
+      expect(elements.pcaSparseFilteringComparison.textContent).toContain('+2');
+      expect(elements.pcaSparseFilteringComparison.textContent).toContain('+3.5%');
+      expect(elements.pcaSparseFilteringComparison.textContent).toContain('-0.010');
+    });
+
+    it('should hide comparison when no data is provided', () => {
+      const elements = createMockElements();
+      renderer.render({}, elements);
+      expect(elements.pcaSparseFilteringComparison.style.display).toBe('none');
+    });
+
+    it('should show material-change class when filtering materially changed', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          sparseFilteringComparison: {
+            deltaSignificant: 1,
+            deltaResidualVariance: 0.05,
+            deltaRMSE: 0.02,
+            filteringImpactSummary: 'Sparse filtering materially changed PCA conclusions.',
+          },
+        },
+        elements
+      );
+      const summary = elements.pcaSparseFilteringComparison.querySelector('.comparison-summary');
+      expect(summary.classList.contains('material-change')).toBe(true);
+    });
+
+    it('should show no-change class when filtering did not materially change', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          sparseFilteringComparison: {
+            deltaSignificant: 0,
+            deltaResidualVariance: 0.001,
+            deltaRMSE: 0.0,
+            filteringImpactSummary: 'Sparse filtering did not materially change PCA conclusions.',
+          },
+        },
+        elements
+      );
+      const summary = elements.pcaSparseFilteringComparison.querySelector('.comparison-summary');
+      expect(summary.classList.contains('no-change')).toBe(true);
+    });
+  });
+
   describe('null element handling', () => {
     it('should handle null residualVariance element', () => {
       const elements = createMockElements();
@@ -478,6 +714,78 @@ describe('PCAResultsRenderer', () => {
       expect(() =>
         renderer.render(
           { topLoadingPrototypes: [{ prototypeId: 'test', score: 0.5 }] },
+          elements
+        )
+      ).not.toThrow();
+    });
+
+    it('should handle null pcaAnalysisScopeNote element', () => {
+      const elements = createMockElements();
+      elements.pcaAnalysisScopeNote = null;
+      expect(() =>
+        renderer.render(
+          { totalPrototypesAnalyzed: 10, dimensionsUsed: ['a', 'b'] },
+          elements
+        )
+      ).not.toThrow();
+    });
+  });
+
+  describe('analysis scope note rendering', () => {
+    it('should render scope note with prototype and axis counts', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          totalPrototypesAnalyzed: 12,
+          dimensionsUsed: ['valence', 'arousal', 'dominance'],
+        },
+        elements
+      );
+      expect(elements.pcaAnalysisScopeNote.hidden).toBe(false);
+      expect(elements.pcaAnalysisScopeNote.textContent).toContain(
+        'Analysis scope: 12 prototypes, 3 axes'
+      );
+    });
+
+    it('should use singular form for 1 prototype', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          totalPrototypesAnalyzed: 1,
+          dimensionsUsed: ['valence'],
+        },
+        elements
+      );
+      expect(elements.pcaAnalysisScopeNote.textContent).toContain(
+        '1 prototype,'
+      );
+      expect(elements.pcaAnalysisScopeNote.textContent).toContain('1 axis');
+    });
+
+    it('should hide scope note when both counts are zero', () => {
+      const elements = createMockElements();
+      renderer.render(
+        {
+          totalPrototypesAnalyzed: 0,
+          dimensionsUsed: [],
+        },
+        elements
+      );
+      expect(elements.pcaAnalysisScopeNote.hidden).toBe(true);
+    });
+
+    it('should hide scope note when counts are missing', () => {
+      const elements = createMockElements();
+      renderer.render({}, elements);
+      expect(elements.pcaAnalysisScopeNote.hidden).toBe(true);
+    });
+
+    it('should handle missing pcaAnalysisScopeNote element gracefully', () => {
+      const elements = createMockElements();
+      elements.pcaAnalysisScopeNote = null;
+      expect(() =>
+        renderer.render(
+          { totalPrototypesAnalyzed: 5, dimensionsUsed: ['a'] },
           elements
         )
       ).not.toThrow();

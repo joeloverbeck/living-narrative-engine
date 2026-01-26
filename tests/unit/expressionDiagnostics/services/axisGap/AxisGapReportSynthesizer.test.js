@@ -1035,4 +1035,170 @@ describe('AxisGapReportSynthesizer', () => {
       expect(reportDisabled.summary.confidence).toBe('low');
     });
   });
+
+  describe('confidence scoring transparency (D2)', () => {
+    it('should expose methodsTriggered with correct family names', () => {
+      const pca = createTriggeredPCAResult();
+      const hubs = [createHub('h1')];
+      const prototypes = [createPrototype('h1', { a: 0.5 })];
+
+      const report = synthesizer.synthesize(pca, hubs, [], [], 2, prototypes);
+
+      expect(Array.isArray(report.summary.methodsTriggered)).toBe(true);
+      expect(report.summary.methodsTriggered).toContain('pca');
+      expect(report.summary.methodsTriggered).toContain('hubs');
+      expect(report.summary.methodsTriggered).not.toContain('gaps');
+      expect(report.summary.methodsTriggered).not.toContain('conflicts');
+    });
+
+    it('should expose all four family names when all methods trigger', () => {
+      const pca = createTriggeredPCAResult();
+      const hubs = [createHub('h1')];
+      const gaps = [createGap('g1')];
+      const conflicts = [createConflict('c1')];
+      const prototypes = [createPrototype('h1', { a: 0.5 })];
+
+      const report = synthesizer.synthesize(pca, hubs, gaps, conflicts, 4, prototypes);
+
+      expect(report.summary.methodsTriggered).toEqual(
+        expect.arrayContaining(['pca', 'hubs', 'gaps', 'conflicts'])
+      );
+      expect(report.summary.methodsTriggered).toHaveLength(4);
+    });
+
+    it('should return empty methodsTriggered when no methods trigger', () => {
+      const pca = createEmptyPCAResult();
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+
+      const report = synthesizer.synthesize(pca, [], [], [], 1, prototypes);
+
+      expect(report.summary.methodsTriggered).toEqual([]);
+    });
+
+    it('should set confidenceBoosted to false when no boost applies', () => {
+      const pca = createTriggeredPCAResult();
+      const hubs = [createHub('h1')];
+      // Only 2 families (pca + hubs) - no prototype has 3+ distinct families
+      const prototypes = [createPrototype('h1', { a: 0.5 })];
+
+      const report = synthesizer.synthesize(pca, hubs, [], [], 2, prototypes);
+
+      expect(report.summary.confidenceBoosted).toBe(false);
+    });
+
+    it('should set confidenceBoosted to true when a prototype has 3+ distinct families', () => {
+      // Create a prototype flagged by 3 families BUT with only 2 triggered methods at signal level.
+      // PCA NOT triggered (no significant components, low residual) but reconstruction error still flags prototype.
+      const pca = {
+        ...createEmptyPCAResult(),
+        residualVarianceRatio: 0.05, // low residual → PCA method not triggered
+        additionalSignificantComponents: 0,
+        reconstructionErrors: [{ prototypeId: 'shared', error: 0.7 }], // still flags the prototype
+        topLoadingPrototypes: [],
+      };
+      const hubs = [createHub('shared')];
+      const gaps = [
+        {
+          ...createGap('g1'),
+          centroidPrototypes: ['shared'],
+        },
+      ];
+      const prototypes = [createPrototype('shared', { a: 0.8, b: -0.3 })];
+
+      const report = synthesizer.synthesize(pca, hubs, gaps, [], 1, prototypes);
+
+      // Signal-level: 2 methods triggered (hubs + gaps), baseLevel = 'medium'
+      // Prototype 'shared' has reasons: high_reconstruction_error (pca), hub (hubs), coverage_gap (gaps) = 3 families
+      // Boost fires: medium → high
+      expect(report.summary.confidenceBoosted).toBe(true);
+      expect(report.summary.confidence).toBe('high');
+    });
+
+    it('should include methodsTriggered and confidenceBoosted in empty report', () => {
+      const report = synthesizer.buildEmptyReport();
+
+      expect(report.summary.methodsTriggered).toEqual([]);
+      expect(report.summary.confidenceBoosted).toBe(false);
+    });
+  });
+
+  describe('count-to-confidence monotonicity (D-Inv1)', () => {
+    const CONFIDENCE_ORDER = { low: 0, medium: 1, high: 2 };
+
+    it('should yield non-decreasing confidence as more methods trigger', () => {
+      // 0 methods: empty
+      const r0 = synthesizer.synthesize(createEmptyPCAResult(), [], [], [], 0);
+
+      // 1 method: hubs only
+      const r1 = synthesizer.synthesize(
+        createEmptyPCAResult(),
+        [createHub('h1')],
+        [],
+        [],
+        1,
+        [createPrototype('h1', { a: 0.5 })]
+      );
+
+      // 2 methods: hubs + gaps
+      const r2 = synthesizer.synthesize(
+        createEmptyPCAResult(),
+        [createHub('h1')],
+        [createGap('g1')],
+        [],
+        2,
+        [createPrototype('h1', { a: 0.5 })]
+      );
+
+      // 3 methods: hubs + gaps + conflicts
+      const r3 = synthesizer.synthesize(
+        createEmptyPCAResult(),
+        [createHub('h1')],
+        [createGap('g1')],
+        [createConflict('c1')],
+        3,
+        [createPrototype('h1', { a: 0.5 })]
+      );
+
+      // 4 methods: pca + hubs + gaps + conflicts
+      const r4 = synthesizer.synthesize(
+        createTriggeredPCAResult(),
+        [createHub('h1')],
+        [createGap('g1')],
+        [createConflict('c1')],
+        4,
+        [createPrototype('h1', { a: 0.5 })]
+      );
+
+      const levels = [r0, r1, r2, r3, r4].map(
+        (r) => CONFIDENCE_ORDER[r.summary.confidence]
+      );
+
+      // Each level should be >= the previous one
+      for (let i = 1; i < levels.length; i++) {
+        expect(levels[i]).toBeGreaterThanOrEqual(levels[i - 1]);
+      }
+    });
+  });
+
+  describe('residual-only cap invariant (D-Inv2)', () => {
+    it('should not exceed low confidence with residual-only PCA when corroboration is ON', () => {
+      const synth = new AxisGapReportSynthesizer(
+        { pcaRequireCorroboration: true },
+        mockRecommendationBuilder
+      );
+
+      // High residual but no additional significant components and no other signals
+      const pca = {
+        ...createEmptyPCAResult(),
+        residualVarianceRatio: 0.30,
+        additionalSignificantComponents: 0,
+      };
+      const prototypes = [createPrototype('p1', { a: 0.5 })];
+
+      const report = synth.synthesize(pca, [], [], [], 1, prototypes);
+
+      expect(report.summary.confidence).toBe('low');
+      expect(report.summary.methodsTriggered).toEqual([]);
+    });
+  });
 });

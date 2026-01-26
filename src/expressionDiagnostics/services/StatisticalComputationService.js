@@ -106,7 +106,6 @@ class StatisticalComputationService {
       'sex_inhibition',
       'baseline_libido',
       'sexual_arousal',
-      'sexual_inhibition',
     ];
 
     for (const [axis, weight] of Object.entries(weights)) {

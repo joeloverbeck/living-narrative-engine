@@ -577,6 +577,8 @@ describe('PCAAnalysisService', () => {
         dimensionsUsed: [],
         excludedSparseAxes: [],
         unusedDefinedAxes: [],
+        unusedDefinedUsedInGates: [],
+        unusedDefinedNotInGates: [],
         unusedInGates: [],
         cumulativeVariance: [],
         explainedVariance: [],
@@ -1204,6 +1206,126 @@ describe('PCAAnalysisService', () => {
     });
   });
 
+  describe('unused defined axes sub-categorization', () => {
+    it('should place axis in unusedDefinedUsedInGates when in gates but not weights', () => {
+      const prototypes = [
+        {
+          id: 'proto_a',
+          weights: { valence: 0.5, arousal: 0.3 },
+          gates: ['sex_excitation >= 0.5'],
+        },
+        {
+          id: 'proto_b',
+          weights: { valence: -0.2, arousal: 0.8 },
+          gates: [],
+        },
+        {
+          id: 'proto_c',
+          weights: { valence: 0.7, arousal: -0.1 },
+          gates: [],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // sex_excitation is in gates but not in weights -> unusedDefined + usedInGates
+      expect(result.unusedDefinedAxes).toContain('sex_excitation');
+      expect(result.unusedDefinedUsedInGates).toContain('sex_excitation');
+      expect(result.unusedDefinedNotInGates).not.toContain('sex_excitation');
+    });
+
+    it('should place axis in unusedDefinedNotInGates when in neither gates nor weights', () => {
+      // ALL_PROTOTYPE_WEIGHT_AXES includes axes that may not appear in any prototype
+      const prototypes = [
+        {
+          id: 'proto_a',
+          weights: { valence: 0.5, arousal: 0.3 },
+          gates: [],
+        },
+        {
+          id: 'proto_b',
+          weights: { valence: -0.2, arousal: 0.8 },
+          gates: [],
+        },
+        {
+          id: 'proto_c',
+          weights: { valence: 0.7, arousal: -0.1 },
+          gates: [],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // Any axis in unusedDefinedAxes that is not in any gate should be in unusedDefinedNotInGates
+      for (const axis of result.unusedDefinedNotInGates) {
+        expect(result.unusedDefinedAxes).toContain(axis);
+        expect(result.unusedDefinedUsedInGates).not.toContain(axis);
+      }
+    });
+
+    it('should not place axis in either sub-array when used in weights', () => {
+      const prototypes = [
+        {
+          id: 'proto_a',
+          weights: { valence: 0.5, arousal: 0.3 },
+          gates: ['valence >= 0.3'],
+        },
+        {
+          id: 'proto_b',
+          weights: { valence: -0.2, arousal: 0.8 },
+          gates: [],
+        },
+        {
+          id: 'proto_c',
+          weights: { valence: 0.7, arousal: -0.1 },
+          gates: [],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // valence is used in weights, so it should not be in any unused sub-array
+      expect(result.unusedDefinedUsedInGates).not.toContain('valence');
+      expect(result.unusedDefinedNotInGates).not.toContain('valence');
+    });
+
+    it('should return empty sub-arrays for empty prototypes', () => {
+      const result = service.analyze([]);
+
+      expect(result.unusedDefinedUsedInGates).toEqual([]);
+      expect(result.unusedDefinedNotInGates).toEqual([]);
+    });
+
+    it('should partition unusedDefinedAxes completely', () => {
+      const prototypes = [
+        {
+          id: 'proto_a',
+          weights: { valence: 0.5, arousal: 0.3 },
+          gates: ['sex_excitation >= 0.5'],
+        },
+        {
+          id: 'proto_b',
+          weights: { valence: -0.2, arousal: 0.8 },
+          gates: ['dominance > 0.2'],
+        },
+        {
+          id: 'proto_c',
+          weights: { valence: 0.7, arousal: -0.1 },
+          gates: [],
+        },
+      ];
+
+      const result = service.analyze(prototypes);
+
+      // Every axis in unusedDefinedAxes should be in exactly one sub-array
+      const combined = [
+        ...result.unusedDefinedUsedInGates,
+        ...result.unusedDefinedNotInGates,
+      ].sort();
+      expect(combined).toEqual([...result.unusedDefinedAxes].sort());
+    });
+  });
+
   describe('pcaNormalizationMethod', () => {
     const prototypes = [
       { id: 'a', weights: { x: 1, y: 0.5 } },
@@ -1446,6 +1568,106 @@ describe('PCAAnalysisService', () => {
       // Should still produce a result (may be less accurate)
       expect(result).toBeDefined();
       expect(result.dimensionsUsed.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('analyzeWithComparison', () => {
+    /**
+     * Creates prototypes with both dense and sparse axes.
+     * Dense axes (a, b) are used by all prototypes.
+     * Sparse axis (rare) is used by only 1 prototype.
+     */
+    function createPrototypesWithSparseAxes(count) {
+      return Array.from({ length: count }, (_, i) => ({
+        id: `p${i}`,
+        weights: {
+          a: Math.sin(i * 0.7) * 2,
+          b: Math.cos(i * 0.7) * 2,
+          ...(i === 0 ? { rare: 1.5 } : {}),
+        },
+      }));
+    }
+
+    it('should return dense, full, and comparison results', () => {
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.3 });
+      const prototypes = createPrototypesWithSparseAxes(10);
+
+      const result = svc.analyzeWithComparison(prototypes);
+
+      expect(result.dense).toBeDefined();
+      expect(result.full).toBeDefined();
+      expect(result.comparison).toBeDefined();
+      expect(result.comparison).toHaveProperty('deltaSignificant');
+      expect(result.comparison).toHaveProperty('deltaResidualVariance');
+      expect(result.comparison).toHaveProperty('deltaRMSE');
+      expect(result.comparison).toHaveProperty('filteringImpactSummary');
+    });
+
+    it('should exclude sparse axis in dense pass', () => {
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.3 });
+      const prototypes = createPrototypesWithSparseAxes(10);
+
+      const result = svc.analyzeWithComparison(prototypes);
+
+      expect(result.dense.excludedSparseAxes).toContain('rare');
+      expect(result.dense.dimensionsUsed).not.toContain('rare');
+    });
+
+    it('should include sparse axis in full pass', () => {
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.3 });
+      const prototypes = createPrototypesWithSparseAxes(10);
+
+      const result = svc.analyzeWithComparison(prototypes);
+
+      expect(result.full.excludedSparseAxes).toEqual([]);
+      expect(result.full.dimensionsUsed).toContain('rare');
+    });
+
+    it('should compute numeric delta values', () => {
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.3 });
+      const prototypes = createPrototypesWithSparseAxes(10);
+
+      const result = svc.analyzeWithComparison(prototypes);
+
+      expect(typeof result.comparison.deltaSignificant).toBe('number');
+      expect(typeof result.comparison.deltaResidualVariance).toBe('number');
+      expect(typeof result.comparison.deltaRMSE).toBe('number');
+    });
+
+    it('should produce identical results when no sparse filtering occurs', () => {
+      // With pcaMinAxisUsageRatio: 0, no axes are excluded
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0 });
+      const prototypes = createPrototypesWithSparseAxes(10);
+
+      const result = svc.analyzeWithComparison(prototypes);
+
+      // Both passes should use same axes (no filtering in either)
+      expect(result.dense.dimensionsUsed).toEqual(result.full.dimensionsUsed);
+      expect(result.comparison.deltaSignificant).toBe(0);
+      expect(result.comparison.deltaResidualVariance).toBeCloseTo(0, 5);
+    });
+
+    it('should return filtering impact summary', () => {
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.3 });
+      const prototypes = createPrototypesWithSparseAxes(10);
+
+      const result = svc.analyzeWithComparison(prototypes);
+
+      expect(typeof result.comparison.filteringImpactSummary).toBe('string');
+      expect(result.comparison.filteringImpactSummary).toMatch(
+        /Sparse filtering (materially changed|did not materially change)/
+      );
+    });
+
+    it('should handle insufficient prototypes gracefully', () => {
+      const svc = new PCAAnalysisService({ pcaMinAxisUsageRatio: 0.3 });
+      const prototypes = [{ id: 'single', weights: { a: 1 } }];
+
+      const result = svc.analyzeWithComparison(prototypes);
+
+      expect(result.dense.residualVarianceRatio).toBe(0);
+      expect(result.full.residualVarianceRatio).toBe(0);
+      expect(result.comparison.deltaSignificant).toBe(0);
     });
   });
 });

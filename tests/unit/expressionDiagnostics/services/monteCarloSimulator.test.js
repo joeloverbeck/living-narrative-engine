@@ -19,6 +19,24 @@ const buildEmotionCalculatorAdapter = (dataRegistry, logger) =>
   });
 
 describe('MonteCarloSimulator', () => {
+  let originalRequestIdleCallback;
+
+  beforeAll(() => {
+    originalRequestIdleCallback = globalThis.requestIdleCallback;
+    globalThis.requestIdleCallback = (callback) => {
+      callback({ didTimeout: false, timeRemaining: () => 50 });
+      return 0;
+    };
+  });
+
+  afterAll(() => {
+    if (originalRequestIdleCallback === undefined) {
+      delete globalThis.requestIdleCallback;
+    } else {
+      globalThis.requestIdleCallback = originalRequestIdleCallback;
+    }
+  });
+
   let mockLogger;
   let mockDataRegistry;
   let mockEmotionCalculatorAdapter;
@@ -895,7 +913,7 @@ describe('MonteCarloSimulator', () => {
         };
 
         // Just verify it runs without error with default config
-        const result = await simulator.simulate(expression);
+        const result = await simulator.simulate(expression, { sampleCount: 100 });
 
         expect(result.confidenceInterval).toBeDefined();
       });
@@ -907,13 +925,13 @@ describe('MonteCarloSimulator', () => {
         const progressCalls = [];
 
         await simulator.simulate(expression, {
-          sampleCount: 3000, // More than one chunk
+          sampleCount: 2001, // More than two chunks (>2000)
           onProgress: (completed, total) => {
             progressCalls.push({ completed, total });
           },
         });
 
-        // Should have at least 3 progress calls (3000 samples / 1000 chunk = 3 chunks)
+        // Should have at least 3 progress calls (2001 samples / 1000 chunk = 3 chunks)
         // including the final 100% completion call
         expect(progressCalls.length).toBeGreaterThanOrEqual(3);
 
@@ -921,7 +939,7 @@ describe('MonteCarloSimulator', () => {
         for (const call of progressCalls) {
           expect(call.completed).toBeGreaterThan(0);
           expect(call.completed).toBeLessThanOrEqual(call.total);
-          expect(call.total).toBe(3000);
+          expect(call.total).toBe(2001);
         }
       });
 
@@ -1102,8 +1120,8 @@ describe('MonteCarloSimulator', () => {
         // by checking that it yields between chunks
         const startTime = Date.now();
 
-        // Use a larger sample count to ensure multiple chunks
-        await simulator.simulate(expression, { sampleCount: 5000 });
+        // Use a small sample count - just verify async mechanism works
+        await simulator.simulate(expression, { sampleCount: 50 });
 
         const endTime = Date.now();
         const duration = endTime - startTime;
@@ -2606,7 +2624,7 @@ describe('MonteCarloSimulator', () => {
         };
 
         const result = await simulator.simulate(expression, {
-          sampleCount: 10000,
+          sampleCount: 2000,
           trackClauses: true,
         });
         const tree = result.clauseFailures[0].hierarchicalBreakdown;

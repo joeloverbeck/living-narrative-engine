@@ -420,10 +420,6 @@ class EmotionCalculatorService {
         sexualState,
         'sex_inhibition'
       );
-      const hasSexualInhibition = Object.prototype.hasOwnProperty.call(
-        sexualState,
-        'sexual_inhibition'
-      );
       const hasSexExcitation = Object.prototype.hasOwnProperty.call(
         sexualState,
         'sex_excitation'
@@ -433,13 +429,6 @@ class EmotionCalculatorService {
         this.#assertSexualAxisValue(
           'sex_inhibition',
           sexualState.sex_inhibition,
-          sexualState,
-          'normalizeSexualAxes'
-        );
-      } else if (hasSexualInhibition) {
-        this.#assertSexualAxisValue(
-          'sexual_inhibition',
-          sexualState.sexual_inhibition,
           sexualState,
           'normalizeSexualAxes'
         );
@@ -454,17 +443,8 @@ class EmotionCalculatorService {
         );
       }
 
-      const inhibitionValue =
-        typeof sexualState.sex_inhibition === 'number'
-          ? sexualState.sex_inhibition
-          : typeof sexualState.sexual_inhibition === 'number'
-            ? sexualState.sexual_inhibition
-            : null;
-
-      if (typeof inhibitionValue === 'number') {
-        const normalizedInhibition = clamp01(inhibitionValue / 100);
-        normalized.sex_inhibition = normalizedInhibition;
-        normalized.sexual_inhibition = normalizedInhibition;
+      if (typeof sexualState.sex_inhibition === 'number') {
+        normalized.sex_inhibition = clamp01(sexualState.sex_inhibition / 100);
       }
 
       if (typeof sexualState.sex_excitation === 'number') {

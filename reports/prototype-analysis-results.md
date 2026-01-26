@@ -1,1175 +1,763 @@
-Analysis Results
-Family: emotion
-Prototypes: 91
-Candidates: 190
-Evaluated: 190
-Redundant: 165
-Samples/Pair: 50000
-Filtering Details
-Total possible pairs: 4095
-Passed filtering: 190 (4.6%)
-Rejected by: Axis overlap: 2638 | Sign agreement: 1192 | Cosine sim: 230
-Classification: 1 merge | 158 subsumed | 5 nested | 1 separation | 0 expression | 25 distinct
-Summary: Found 165 redundant pair(s) (1 merge, 158 subsumed). Review recommendations above.
-hypervigilance ↔ alarm
-0.66 Merge Suggestion
-These prototypes behave nearly identically and may be candidates for merging.
-
-Actionable Insight
-Consider merging "hypervigilance" and "alarm" — they behave nearly identically • Alias one to the other to reduce redundancy
-
-contentment ↔ relief
-0.00 Nested Siblings
-These prototypes have a nested relationship where one contains the other.
-
-Actionable Insight
-"contentment" appears to be a specialized version of "relief" • Consider making "contentment" inherit from or reference "relief" • Verify that the nesting relationship is intentional • Add expression-level mutual exclusion rule
-
-euphoria ↔ amusement
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "euphoria" — it's effectively a subset of "amusement" • Tighten "euphoria"'s gates to differentiate it from "amusement"
-
-interest ↔ fascination
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "fascination" — it's effectively a subset of "interest" • Tighten "fascination"'s gates to differentiate it from "interest"
-
-flow ↔ focused_absorption
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "focused_absorption" — it's effectively a subset of "flow" • Tighten "focused_absorption"'s gates to differentiate it from "flow"
-
-numbness ↔ apathy
-0.00 Nested Siblings
-These prototypes have a nested relationship where one contains the other.
-
-Actionable Insight
-"numbness" appears to be a specialized version of "apathy" • Consider making "numbness" inherit from or reference "apathy" • Verify that the nesting relationship is intentional • Add expression-level mutual exclusion rule
-
-stress_acute ↔ panic
-0.00 Nested Siblings
-These prototypes have a nested relationship where one contains the other.
-
-Actionable Insight
-"stress_acute" appears to be a specialized version of "panic" • Consider making "stress_acute" inherit from or reference "panic" • Verify that the nesting relationship is intentional • Add expression-level mutual exclusion rule
-
-stress_acute ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "stress_acute" — it's effectively a subset of "surprise_startle" • Tighten "stress_acute"'s gates to differentiate it from "surprise_startle"
-
-fear ↔ terror
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "terror" — it's effectively a subset of "fear" • Tighten "terror"'s gates to differentiate it from "fear"
-
-fear ↔ panic
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "fear" • Tighten "panic"'s gates to differentiate it from "fear"
-
-terror ↔ panic
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "terror" • Tighten "panic"'s gates to differentiate it from "terror"
-
-terror ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "terror" — it's effectively a subset of "surprise_startle" • Tighten "terror"'s gates to differentiate it from "surprise_startle"
-
-irritation ↔ rage
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "rage" — it's effectively a subset of "irritation" • Tighten "rage"'s gates to differentiate it from "irritation"
-
-rage ↔ wrath
-0.00 Nested Siblings
-These prototypes have a nested relationship where one contains the other.
-
-Actionable Insight
-"rage" appears to be a specialized version of "wrath" • Consider making "rage" inherit from or reference "wrath" • Verify that the nesting relationship is intentional • Add expression-level mutual exclusion rule
-
-embarrassment ↔ humiliation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "humiliation" — it's effectively a subset of "embarrassment" • Tighten "humiliation"'s gates to differentiate it from "embarrassment"
-
-trust ↔ affection
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "affection" — it's effectively a subset of "trust" • Tighten "affection"'s gates to differentiate it from "trust"
-
-admiration ↔ adoration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "admiration" • Tighten "adoration"'s gates to differentiate it from "admiration"
-
-calm ↔ contentment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "contentment" — it's effectively a subset of "calm" • Tighten "contentment"'s gates to differentiate it from "calm"
-
-calm ↔ relief
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "relief" — it's effectively a subset of "calm" • Tighten "relief"'s gates to differentiate it from "calm"
-
-calm ↔ confidence
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "confidence" — it's effectively a subset of "calm" • Tighten "confidence"'s gates to differentiate it from "calm"
-
-calm ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "calm" — it's effectively a subset of "trust" • Tighten "calm"'s gates to differentiate it from "trust"
-
-contentment ↔ amusement
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "contentment" — it's effectively a subset of "amusement" • Tighten "contentment"'s gates to differentiate it from "amusement"
-
-contentment ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "contentment" — it's effectively a subset of "trust" • Tighten "contentment"'s gates to differentiate it from "trust"
-
-contentment ↔ gratitude
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "contentment" — it's effectively a subset of "gratitude" • Tighten "contentment"'s gates to differentiate it from "gratitude"
-
-contentment ↔ affection
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "contentment" — it's effectively a subset of "affection" • Tighten "contentment"'s gates to differentiate it from "affection"
-
-relief ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "relief" — it's effectively a subset of "trust" • Tighten "relief"'s gates to differentiate it from "trust"
-
-release ↔ focused_absorption
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "focused_absorption" — it's effectively a subset of "release" • Tighten "focused_absorption"'s gates to differentiate it from "release"
-
-release ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "release" — it's effectively a subset of "trust" • Tighten "release"'s gates to differentiate it from "trust"
-
-release ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "release" — it's effectively a subset of "love_attachment" • Tighten "release"'s gates to differentiate it from "love_attachment"
-
-confidence ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "confidence" — it's effectively a subset of "trust" • Tighten "confidence"'s gates to differentiate it from "trust"
-
-joy ↔ euphoria
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "euphoria" — it's effectively a subset of "joy" • Tighten "euphoria"'s gates to differentiate it from "joy"
-
-joy ↔ amusement
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "joy" — it's effectively a subset of "amusement" • Tighten "joy"'s gates to differentiate it from "amusement"
-
-joy ↔ triumph
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "triumph" — it's effectively a subset of "joy" • Tighten "triumph"'s gates to differentiate it from "joy"
-
-joy ↔ adoration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "joy" • Tighten "adoration"'s gates to differentiate it from "joy"
-
-euphoria ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "euphoria" — it's effectively a subset of "surprise_startle" • Tighten "euphoria"'s gates to differentiate it from "surprise_startle"
-
-enthusiasm ↔ anticipation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "enthusiasm" — it's effectively a subset of "anticipation" • Tighten "enthusiasm"'s gates to differentiate it from "anticipation"
-
-enthusiasm ↔ admiration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "enthusiasm" — it's effectively a subset of "admiration" • Tighten "enthusiasm"'s gates to differentiate it from "admiration"
-
-enthusiasm ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "enthusiasm" — it's effectively a subset of "surprise_startle" • Tighten "enthusiasm"'s gates to differentiate it from "surprise_startle"
-
-amusement ↔ aesthetic_appreciation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "amusement" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "amusement"
-
-amusement ↔ thrill
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "thrill" — it's effectively a subset of "amusement" • Tighten "thrill"'s gates to differentiate it from "amusement"
-
-amusement ↔ triumph
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "triumph" — it's effectively a subset of "amusement" • Tighten "triumph"'s gates to differentiate it from "amusement"
-
-amusement ↔ trusting_surrender
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "trusting_surrender" — it's effectively a subset of "amusement" • Tighten "trusting_surrender"'s gates to differentiate it from "amusement"
-
-amusement ↔ adoration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "amusement" • Tighten "adoration"'s gates to differentiate it from "amusement"
-
-awe ↔ interest
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "awe" — it's effectively a subset of "interest" • Tighten "awe"'s gates to differentiate it from "interest"
-
-awe ↔ anticipation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "awe" — it's effectively a subset of "anticipation" • Tighten "awe"'s gates to differentiate it from "anticipation"
-
-awe ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "awe" — it's effectively a subset of "surprise_startle" • Tighten "awe"'s gates to differentiate it from "surprise_startle"
-
-aesthetic_appreciation ↔ interest
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "interest" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "interest"
-
-aesthetic_appreciation ↔ nostalgia
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "nostalgia" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "nostalgia"
-
-aesthetic_appreciation ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "trust" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "trust"
-
-aesthetic_appreciation ↔ admiration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "admiration" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "admiration"
-
-aesthetic_appreciation ↔ gratitude
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "gratitude" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "gratitude"
-
-aesthetic_appreciation ↔ affection
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "affection" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "affection"
-
-aesthetic_appreciation ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "aesthetic_appreciation" — it's effectively a subset of "love_attachment" • Tighten "aesthetic_appreciation"'s gates to differentiate it from "love_attachment"
-
-interest ↔ curiosity
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "curiosity" — it's effectively a subset of "interest" • Tighten "curiosity"'s gates to differentiate it from "interest"
-
-interest ↔ flow
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "flow" — it's effectively a subset of "interest" • Tighten "flow"'s gates to differentiate it from "interest"
-
-interest ↔ entranced
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "entranced" — it's effectively a subset of "interest" • Tighten "entranced"'s gates to differentiate it from "interest"
-
-interest ↔ transfixed
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "transfixed" — it's effectively a subset of "interest" • Tighten "transfixed"'s gates to differentiate it from "interest"
-
-interest ↔ quiet_absorption
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "quiet_absorption" — it's effectively a subset of "interest" • Tighten "quiet_absorption"'s gates to differentiate it from "interest"
-
-interest ↔ spellbound_absorption
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "spellbound_absorption" — it's effectively a subset of "interest" • Tighten "spellbound_absorption"'s gates to differentiate it from "interest"
-
-interest ↔ focused_absorption
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "focused_absorption" — it's effectively a subset of "interest" • Tighten "focused_absorption"'s gates to differentiate it from "interest"
-
-interest ↔ executive_focus
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "executive_focus" — it's effectively a subset of "interest" • Tighten "executive_focus"'s gates to differentiate it from "interest"
-
-interest ↔ lonely_yearning
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "lonely_yearning" — it's effectively a subset of "interest" • Tighten "lonely_yearning"'s gates to differentiate it from "interest"
-
-interest ↔ nostalgia
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "nostalgia" — it's effectively a subset of "interest" • Tighten "nostalgia"'s gates to differentiate it from "interest"
-
-interest ↔ craving
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "craving" — it's effectively a subset of "interest" • Tighten "craving"'s gates to differentiate it from "interest"
-
-interest ↔ moral_outrage
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "moral_outrage" — it's effectively a subset of "interest" • Tighten "moral_outrage"'s gates to differentiate it from "interest"
-
-interest ↔ protest_anger
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "protest_anger" — it's effectively a subset of "interest" • Tighten "protest_anger"'s gates to differentiate it from "interest"
-
-interest ↔ adoration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "interest" • Tighten "adoration"'s gates to differentiate it from "interest"
-
-interest ↔ compassion
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "compassion" — it's effectively a subset of "interest" • Tighten "compassion"'s gates to differentiate it from "interest"
-
-interest ↔ empathic_distress
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "empathic_distress" — it's effectively a subset of "interest" • Tighten "empathic_distress"'s gates to differentiate it from "interest"
-
-curiosity ↔ focused_absorption
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "focused_absorption" — it's effectively a subset of "curiosity" • Tighten "focused_absorption"'s gates to differentiate it from "curiosity"
-
-curiosity ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "curiosity" — it's effectively a subset of "trust" • Tighten "curiosity"'s gates to differentiate it from "trust"
-
-curiosity ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "curiosity" — it's effectively a subset of "love_attachment" • Tighten "curiosity"'s gates to differentiate it from "love_attachment"
-
-fascination ↔ transfixed
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "transfixed" — it's effectively a subset of "fascination" • Tighten "transfixed"'s gates to differentiate it from "fascination"
-
-fascination ↔ anticipation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "fascination" — it's effectively a subset of "anticipation" • Tighten "fascination"'s gates to differentiate it from "anticipation"
-
-fascination ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "fascination" — it's effectively a subset of "surprise_startle" • Tighten "fascination"'s gates to differentiate it from "surprise_startle"
-
-flow ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "flow" — it's effectively a subset of "love_attachment" • Tighten "flow"'s gates to differentiate it from "love_attachment"
-
-entranced ↔ nostalgia
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "entranced" — it's effectively a subset of "nostalgia" • Tighten "entranced"'s gates to differentiate it from "nostalgia"
-
-entranced ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "entranced" — it's effectively a subset of "trust" • Tighten "entranced"'s gates to differentiate it from "trust"
-
-entranced ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "entranced" — it's effectively a subset of "love_attachment" • Tighten "entranced"'s gates to differentiate it from "love_attachment"
-
-transfixed ↔ anticipation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "transfixed" — it's effectively a subset of "anticipation" • Tighten "transfixed"'s gates to differentiate it from "anticipation"
-
-transfixed ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "transfixed" — it's effectively a subset of "love_attachment" • Tighten "transfixed"'s gates to differentiate it from "love_attachment"
-
-transfixed ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "transfixed" — it's effectively a subset of "surprise_startle" • Tighten "transfixed"'s gates to differentiate it from "surprise_startle"
-
-quiet_absorption ↔ nostalgia
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "quiet_absorption" — it's effectively a subset of "nostalgia" • Tighten "quiet_absorption"'s gates to differentiate it from "nostalgia"
-
-quiet_absorption ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "quiet_absorption" — it's effectively a subset of "trust" • Tighten "quiet_absorption"'s gates to differentiate it from "trust"
-
-quiet_absorption ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "quiet_absorption" — it's effectively a subset of "love_attachment" • Tighten "quiet_absorption"'s gates to differentiate it from "love_attachment"
-
-spellbound_absorption ↔ nostalgia
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "spellbound_absorption" — it's effectively a subset of "nostalgia" • Tighten "spellbound_absorption"'s gates to differentiate it from "nostalgia"
-
-spellbound_absorption ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "spellbound_absorption" — it's effectively a subset of "trust" • Tighten "spellbound_absorption"'s gates to differentiate it from "trust"
-
-spellbound_absorption ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "spellbound_absorption" — it's effectively a subset of "love_attachment" • Tighten "spellbound_absorption"'s gates to differentiate it from "love_attachment"
-
-focused_absorption ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "focused_absorption" — it's effectively a subset of "trust" • Tighten "focused_absorption"'s gates to differentiate it from "trust"
-
-focused_absorption ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "focused_absorption" — it's effectively a subset of "love_attachment" • Tighten "focused_absorption"'s gates to differentiate it from "love_attachment"
-
-executive_focus ↔ anticipation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "executive_focus" — it's effectively a subset of "anticipation" • Tighten "executive_focus"'s gates to differentiate it from "anticipation"
-
-hope ↔ optimism
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "optimism" — it's effectively a subset of "hope" • Tighten "optimism"'s gates to differentiate it from "hope"
-
-determination ↔ triumph
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "triumph" — it's effectively a subset of "determination" • Tighten "triumph"'s gates to differentiate it from "determination"
-
-determination ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "determination" — it's effectively a subset of "surprise_startle" • Tighten "determination"'s gates to differentiate it from "surprise_startle"
-
-anticipation ↔ stress_acute
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "stress_acute" — it's effectively a subset of "anticipation" • Tighten "stress_acute"'s gates to differentiate it from "anticipation"
-
-anticipation ↔ craving
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "craving" — it's effectively a subset of "anticipation" • Tighten "craving"'s gates to differentiate it from "anticipation"
-
-anticipation ↔ panic
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "anticipation" • Tighten "panic"'s gates to differentiate it from "anticipation"
-
-anticipation ↔ protest_anger
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "protest_anger" — it's effectively a subset of "anticipation" • Tighten "protest_anger"'s gates to differentiate it from "anticipation"
-
-anticipation ↔ empathic_distress
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "empathic_distress" — it's effectively a subset of "anticipation" • Tighten "empathic_distress"'s gates to differentiate it from "anticipation"
-
-sadness ↔ irritation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "sadness" — it's effectively a subset of "irritation" • Tighten "sadness"'s gates to differentiate it from "irritation"
-
-grief ↔ irritation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "grief" — it's effectively a subset of "irritation" • Tighten "grief"'s gates to differentiate it from "irritation"
-
-grief ↔ disgust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "grief" — it's effectively a subset of "disgust" • Tighten "grief"'s gates to differentiate it from "disgust"
-
-grief ↔ hatred
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "hatred" — it's effectively a subset of "grief" • Tighten "hatred"'s gates to differentiate it from "grief"
-
-disappointment ↔ irritation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "disappointment" — it's effectively a subset of "irritation" • Tighten "disappointment"'s gates to differentiate it from "irritation"
-
-disappointment ↔ cynicism
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "cynicism" — it's effectively a subset of "disappointment" • Tighten "cynicism"'s gates to differentiate it from "disappointment"
-
-dissociation ↔ fear
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "dissociation" — it's effectively a subset of "fear" • Tighten "dissociation"'s gates to differentiate it from "fear"
-
-withdrawn_isolation ↔ irritation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "withdrawn_isolation" — it's effectively a subset of "irritation" • Tighten "withdrawn_isolation"'s gates to differentiate it from "irritation"
-
-lonely_yearning ↔ irritation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "lonely_yearning" — it's effectively a subset of "irritation" • Tighten "lonely_yearning"'s gates to differentiate it from "irritation"
-
-lonely_yearning ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "lonely_yearning" — it's effectively a subset of "trust" • Tighten "lonely_yearning"'s gates to differentiate it from "trust"
-
-lonely_yearning ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "lonely_yearning" — it's effectively a subset of "love_attachment" • Tighten "lonely_yearning"'s gates to differentiate it from "love_attachment"
-
-nostalgia ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "nostalgia" — it's effectively a subset of "trust" • Tighten "nostalgia"'s gates to differentiate it from "trust"
-
-nostalgia ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "nostalgia" — it's effectively a subset of "love_attachment" • Tighten "nostalgia"'s gates to differentiate it from "love_attachment"
-
-craving ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "craving" — it's effectively a subset of "surprise_startle" • Tighten "craving"'s gates to differentiate it from "surprise_startle"
-
-thrill ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "thrill" — it's effectively a subset of "surprise_startle" • Tighten "thrill"'s gates to differentiate it from "surprise_startle"
-
-fear ↔ hypervigilance
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "hypervigilance" — it's effectively a subset of "fear" • Tighten "hypervigilance"'s gates to differentiate it from "fear"
-
-fear ↔ courage
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "courage" — it's effectively a subset of "fear" • Tighten "courage"'s gates to differentiate it from "fear"
-
-fear ↔ alarm
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "alarm" — it's effectively a subset of "fear" • Tighten "alarm"'s gates to differentiate it from "fear"
-
-fear ↔ freeze
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "freeze" — it's effectively a subset of "fear" • Tighten "freeze"'s gates to differentiate it from "fear"
-
-fear ↔ humiliation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "humiliation" — it's effectively a subset of "fear" • Tighten "humiliation"'s gates to differentiate it from "fear"
-
-terror ↔ hypervigilance
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "terror" — it's effectively a subset of "hypervigilance" • Tighten "terror"'s gates to differentiate it from "hypervigilance"
-
-terror ↔ alarm
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "terror" — it's effectively a subset of "alarm" • Tighten "terror"'s gates to differentiate it from "alarm"
-
-panic ↔ hypervigilance
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "hypervigilance" • Tighten "panic"'s gates to differentiate it from "hypervigilance"
-
-panic ↔ alarm
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "alarm" • Tighten "panic"'s gates to differentiate it from "alarm"
-
-panic ↔ irritation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "irritation" • Tighten "panic"'s gates to differentiate it from "irritation"
-
-panic ↔ frustration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "frustration" • Tighten "panic"'s gates to differentiate it from "frustration"
-
-panic ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "panic" — it's effectively a subset of "surprise_startle" • Tighten "panic"'s gates to differentiate it from "surprise_startle"
-
-hypervigilance ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "hypervigilance" — it's effectively a subset of "surprise_startle" • Tighten "hypervigilance"'s gates to differentiate it from "surprise_startle"
-
-alarm ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "alarm" — it's effectively a subset of "surprise_startle" • Tighten "alarm"'s gates to differentiate it from "surprise_startle"
-
-irritation ↔ frustration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "frustration" — it's effectively a subset of "irritation" • Tighten "frustration"'s gates to differentiate it from "irritation"
-
-irritation ↔ smoldering_anger
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "smoldering_anger" — it's effectively a subset of "irritation" • Tighten "smoldering_anger"'s gates to differentiate it from "irritation"
-
-irritation ↔ protest_anger
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "protest_anger" — it's effectively a subset of "irritation" • Tighten "protest_anger"'s gates to differentiate it from "irritation"
-
-irritation ↔ wrath
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "wrath" — it's effectively a subset of "irritation" • Tighten "wrath"'s gates to differentiate it from "irritation"
-
-irritation ↔ resentment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "resentment" — it's effectively a subset of "irritation" • Tighten "resentment"'s gates to differentiate it from "irritation"
-
-irritation ↔ contempt
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "contempt" — it's effectively a subset of "irritation" • Tighten "contempt"'s gates to differentiate it from "irritation"
-
-irritation ↔ disgust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "disgust" — it's effectively a subset of "irritation" • Tighten "disgust"'s gates to differentiate it from "irritation"
-
-irritation ↔ cynicism
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "cynicism" — it's effectively a subset of "irritation" • Tighten "cynicism"'s gates to differentiate it from "irritation"
-
-irritation ↔ guilt
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "guilt" — it's effectively a subset of "irritation" • Tighten "guilt"'s gates to differentiate it from "irritation"
-
-irritation ↔ regret
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "regret" — it's effectively a subset of "irritation" • Tighten "regret"'s gates to differentiate it from "irritation"
-
-irritation ↔ empathic_distress
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "empathic_distress" — it's effectively a subset of "irritation" • Tighten "empathic_distress"'s gates to differentiate it from "irritation"
-
-irritation ↔ hatred
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "hatred" — it's effectively a subset of "irritation" • Tighten "hatred"'s gates to differentiate it from "irritation"
-
-frustration ↔ resentment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "resentment" — it's effectively a subset of "frustration" • Tighten "resentment"'s gates to differentiate it from "frustration"
-
-frustration ↔ empathic_distress
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "empathic_distress" — it's effectively a subset of "frustration" • Tighten "empathic_distress"'s gates to differentiate it from "frustration"
-
-smoldering_anger ↔ contempt
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "smoldering_anger" — it's effectively a subset of "contempt" • Tighten "smoldering_anger"'s gates to differentiate it from "contempt"
-
-protest_anger ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "protest_anger" — it's effectively a subset of "surprise_startle" • Tighten "protest_anger"'s gates to differentiate it from "surprise_startle"
-
-rage ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "rage" — it's effectively a subset of "surprise_startle" • Tighten "rage"'s gates to differentiate it from "surprise_startle"
-
-wrath ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "wrath" — it's effectively a subset of "surprise_startle" • Tighten "wrath"'s gates to differentiate it from "surprise_startle"
-
-disgust ↔ hatred
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "hatred" — it's effectively a subset of "disgust" • Tighten "hatred"'s gates to differentiate it from "disgust"
-
-small_victory ↔ admiration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "small_victory" — it's effectively a subset of "admiration" • Tighten "small_victory"'s gates to differentiate it from "admiration"
-
-triumph ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "triumph" — it's effectively a subset of "surprise_startle" • Tighten "triumph"'s gates to differentiate it from "surprise_startle"
-
-shame ↔ humiliation
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "humiliation" — it's effectively a subset of "shame" • Tighten "humiliation"'s gates to differentiate it from "shame"
-
-guilt ↔ envy
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "guilt" — it's effectively a subset of "envy" • Tighten "guilt"'s gates to differentiate it from "envy"
-
-regret ↔ envy
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "regret" — it's effectively a subset of "envy" • Tighten "regret"'s gates to differentiate it from "envy"
-
-trusting_surrender ↔ trust
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "trusting_surrender" — it's effectively a subset of "trust" • Tighten "trusting_surrender"'s gates to differentiate it from "trust"
-
-trusting_surrender ↔ admiration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "trusting_surrender" — it's effectively a subset of "admiration" • Tighten "trusting_surrender"'s gates to differentiate it from "admiration"
-
-trusting_surrender ↔ gratitude
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "trusting_surrender" — it's effectively a subset of "gratitude" • Tighten "trusting_surrender"'s gates to differentiate it from "gratitude"
-
-trusting_surrender ↔ affection
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "trusting_surrender" — it's effectively a subset of "affection" • Tighten "trusting_surrender"'s gates to differentiate it from "affection"
-
-trusting_surrender ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "trusting_surrender" — it's effectively a subset of "love_attachment" • Tighten "trusting_surrender"'s gates to differentiate it from "love_attachment"
-
-trust ↔ adoration
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "trust" • Tighten "adoration"'s gates to differentiate it from "trust"
-
-adoration ↔ gratitude
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "gratitude" • Tighten "adoration"'s gates to differentiate it from "gratitude"
-
-adoration ↔ affection
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "affection" • Tighten "adoration"'s gates to differentiate it from "affection"
-
-adoration ↔ love_attachment
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "adoration" — it's effectively a subset of "love_attachment" • Tighten "adoration"'s gates to differentiate it from "love_attachment"
-
-love_attachment ↔ compassion
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "compassion" — it's effectively a subset of "love_attachment" • Tighten "compassion"'s gates to differentiate it from "love_attachment"
-
-empathic_distress ↔ surprise_startle
-0.00 Subsumption Suggestion
-One prototype appears to be a behavioral subset of the other.
-
-Actionable Insight
-Consider removing "empathic_distress" — it's effectively a subset of "surprise_startle" • Tighten "empathic_distress"'s gates to differentiate it from "surprise_startle"
-
-release ↔ curiosity
-0.00 Needs Separation
-These prototypes overlap significantly but serve different purposes.
-
-Actionable Insight
-"release" and "curiosity" overlap significantly but serve different purposes • Tighten gate conditions to reduce overlap • Add discriminating conditions to clarify when each should apply
-
-amusement ↔ gratitude
-0.00 Nested Siblings
-These prototypes have a nested relationship where one contains the other.
-
-Actionable Insight
-"amusement" appears to be a specialized version of "gratitude" • Consider making "amusement" inherit from or reference "gratitude" • Verify that the nesting relationship is intentional • Add expression-level mutual exclusion rule
-
-Near-Miss Pairs (1)
-These pairs came close to redundancy thresholds but are still behaviorally distinct. Review if you want to further differentiate them.
-
-#1 inspiration ↔ anticipation
-Correlation: 0.881
-Gate Overlap: 27.7%
-Close to threshold: correlation 0.822 (threshold: 0.9)
+Axis Space Analysis [Technical Report]
+Model Integrity Status
+✓
+Axis Registry
+(?)
+✓
+Schema Validation
+(?)
+✓
+Weight Ranges
+(?)
+✓
+No Duplicates
+(?)
+All integrity checks passed. Prototypes validated against axis registry and schema.
+
+Prototypes Analyzed:
+110
+Recommendations:
+2
+Confidence:
+medium
+(?)
+Confidence: Medium — 2 methods triggered (PCA Analysis, Multi-Axis Conflicts). No boost applied.
+
+New Axis Recommended?
+MAYBE
+Residual variance (16.8%) exceeds 15% threshold, indicating unexplained dimensions. However, no strong secondary signals (coverage gaps, hub prototypes) were detected. Consider reviewing poorly fitting prototypes.
+
+How is this determined?
+YES: (High residual AND coverage gaps) OR (Hub prototypes AND multi-axis conflicts)
+MAYBE: High residual alone, OR any other single signal
+NO: Residual ≤15% AND no detection signals
+Important: PCA uses OR logic for triggering. High residual variance (>15%) alone is sufficient for MAYBE verdict, regardless of "Additional Components" count.
+
+Explained by top 4 PCs:
+69.7%
+(?)
+Expected axis count (K):
+6
+(?)
+Explained by top K PCs:
+83.2%
+(?)
+Signal Sources
+✗ FAIL
+PCA Analysis:
+1
+(residual ≥15% triggered)
+✓ PASS
+Hub Prototypes:
+0
+(no connectors)
+✓ PASS
+Coverage Gaps:
+0
+(adaptive threshold)
+✗ FAIL
+Multi-Axis Conflicts:
+1
+(high axis count)
+Detection Logic: PCA signal triggers when residual variance >15% OR additional components >0. Either condition alone is sufficient for triggering INVESTIGATE recommendations.
+
+The signal statuses above determine the confidence level shown in the summary.
+
+Dimensionality Analysis (PCA)
+Principal Component Analysis reveals whether the current axis set captures prototype variance. High residual variance suggests missing dimensions.
+
+Residual Variance:
+16.8%
+(?)
+Significant Components (Broken-Stick):
+3
+(?)
+Expected Components (K):
+6
+(?)
+Significant Beyond K:
+0 *
+(?)
+Methodology Note: The broken-stick null hypothesis test found 0 additional significant components. This means the eigenvalue distribution matches random expectation—variance is diffuse across many small components rather than concentrated in discoverable hidden dimensions. High residual variance (16.8%) with 0 extra components suggests the unexplained variance may be noise or idiosyncratic prototype differences, not a missing axis.
+Formula: The broken-stick model tests whether each eigenvalue exceeds random expectation. Expected(k) = (1/p) × Σ(j=k..p) 1/j, where p is the number of axes. "Beyond expected" = max(0, significant − K) = max(0, 3 − 6) = 0. Since 3 < 6, the clamped result is 0—this means fewer PCA-significant dimensions were found than expected, not that PCA found nothing.
+Sparse Filtering Impact
+Comparison of dense (sparse-filtered) vs full (unfiltered) PCA
+
+Significant components (full − dense): +2
+Residual variance (full − dense): +1.2%
+RMSE (full − dense): -0.024
+Sparse filtering materially changed PCA conclusions.
+
+Components for 80% Variance:
+6
+(?)
+Components for 90% Variance:
+8
+(?)
+affiliationagency_controlarousalbaseline_libidoengagementfuture_expectancyinhibitory_controlruminationself_controlself_evaluationsexual_arousaltemporal_orientationthreatuncertaintyvalence
+Excluded Sparse Axes (10)
+Axes used by <10% of prototypes are excluded to prevent sparse axes from distorting PCA due to unbalanced variance contributions from infrequent usage.
+
+affective_empathy
+cognitive_empathy
+contamination_salience
+disgust_sensitivity
+evaluation_pressure
+evaluation_sensitivity
+harm_aversion
+ruminative_tendency
+sex_excitation
+sex_inhibition
+Unused but Defined Axes (1)
+Truly Unused Defined Axes (1)
+These axes are defined in the registry but appear in neither prototype weights nor gate conditions. Consider adding prototypes that use them, or remove them from the registry if unneeded.
+
+sexual_inhibition
+Used in Weights but Not in Gates (2)
+These axes appear in prototype WEIGHTS but never appear in any prototype gate conditions. Consider adding gates that reference these axes, or verify they are not needed as gates.
+
+baseline_libido
+self_control
+Extreme Prototypes on Additional Component
+Prototypes with highest |projection| on unexplained variance component
+
+aroused_with_shame
+0.751
+sexual_craving
+0.666
+romantic_yearning
+0.653
+sexual_performance_anxiety
+0.636
+sexual_confidence
+0.635
+Poorly Fitting Prototypes
+Prototypes with highest reconstruction error (don't fit well in current axis space)
+
+aroused_with_shame
+RMSE: 0.268
+dread
+RMSE: 0.247
+sexual_performance_anxiety
+RMSE: 0.227
+humiliation
+RMSE: 0.218
+protest_anger
+RMSE: 0.216
+Hub Prototypes
+Prototypes connecting multiple clusters may indicate missing dimensions.
+
+No hub prototypes detected.
+Coverage Gaps
+Behaviorally-similar prototype clusters (grouped by k-means, not dominant axis) whose weight centroids don't align well with any existing axis.
+
+No coverage gaps detected.
+Multi-Axis Conflicts
+Prototypes with unusually high axis counts (statistical outliers via Tukey's fence).
+
+sexual_performance_anxiety
+Axes: 14
+Uses 14 axes with evenly mixed signs
+Sign Tensions (Informational)
+Note: Mixed positive/negative weights are normal for emotional prototypes. This section shows structural patterns for understanding, not defects requiring action. Sign tensions do not contribute to confidence scoring or recommendations.
+
+calm Informational
+6 active axes, 100% sign diversity
++: inhibitory_control, valence
+−: arousal, threat, uncertainty
+contentment Informational
+5 active axes, 80% sign diversity
++: agency_control, valence
+−: arousal, threat, uncertainty
+release Informational
+7 active axes, 86% sign diversity
++: engagement
+−: arousal, inhibitory_control, threat
+joy Informational
+5 active axes, 80% sign diversity
++: arousal, future_expectancy, valence
+−: inhibitory_control
+euphoria Informational
+6 active axes, 67% sign diversity
++: agency_control, arousal, engagement, valence
+−: inhibitory_control, self_control
+enthusiasm Informational
+6 active axes, 67% sign diversity
++: arousal, engagement, future_expectancy, valence
+−: inhibitory_control, self_control
+amusement Informational
+6 active axes, 100% sign diversity
++: arousal, engagement, valence
+−: inhibitory_control, threat
+awe Informational
+7 active axes, 86% sign diversity
++: arousal, engagement, uncertainty, valence
+−: agency_control, inhibitory_control, self_control
+aesthetic_appreciation Informational
+9 active axes, 67% sign diversity
++: engagement, valence
+−: arousal, threat
+fascination Informational
+5 active axes, 80% sign diversity
++: arousal, engagement, valence
+−: inhibitory_control
+entranced Informational
+8 active axes, 75% sign diversity
++: engagement, uncertainty
+−: agency_control, arousal, inhibitory_control, self_control, threat
+transfixed Informational
+8 active axes, 100% sign diversity
++: arousal, engagement, uncertainty
+−: agency_control, inhibitory_control, self_control, threat
+quiet_absorption Informational
+8 active axes, 100% sign diversity
++: engagement, inhibitory_control, self_control, valence
+−: agency_control, arousal, threat, uncertainty
+spellbound_absorption Informational
+8 active axes, 75% sign diversity
++: engagement, uncertainty
+−: agency_control, arousal, inhibitory_control, self_control, threat
+focused_absorption Informational
+7 active axes, 86% sign diversity
++: agency_control, engagement, inhibitory_control, self_control
+−: arousal, threat, uncertainty
+grief Informational
+7 active axes, 86% sign diversity
++: engagement, rumination, ruminative_tendency
+−: agency_control, arousal, temporal_orientation, valence
+numbness Informational
+6 active axes, 67% sign diversity
++: inhibitory_control, self_control
+−: arousal, engagement, future_expectancy, valence
+nostalgia Informational
+7 active axes, 86% sign diversity
++: affiliation, engagement, valence
+−: temporal_orientation, threat
+apathy Informational
+6 active axes, 67% sign diversity
++: inhibitory_control, self_control
+−: arousal, engagement, future_expectancy, valence
+unease Informational
+6 active axes, 67% sign diversity
++: threat
+−: valence
+apprehension Informational
+9 active axes, 67% sign diversity
++: inhibitory_control, self_control, temporal_orientation, threat
+−: future_expectancy
+stress_acute Informational
+9 active axes, 67% sign diversity
++: arousal, engagement, threat
+−: agency_control, future_expectancy, inhibitory_control, self_control, valence
+strain_chronic Informational
+9 active axes, 67% sign diversity
++: inhibitory_control, self_control, threat
+−: agency_control, arousal, engagement, future_expectancy, valence
+anxiety Informational
+9 active axes, 89% sign diversity
++: arousal, temporal_orientation, threat, uncertainty
+−: agency_control, future_expectancy, inhibitory_control, self_control, valence
+craving Informational
+8 active axes, 100% sign diversity
++: arousal, engagement
+−: agency_control, inhibitory_control, self_control, valence
+thrill Informational
+5 active axes, 80% sign diversity
++: arousal, threat, valence
+−: inhibitory_control, self_control
+fear Informational
+6 active axes, 67% sign diversity
++: arousal, threat
+−: agency_control, inhibitory_control, self_control, valence
+terror Informational
+7 active axes, 86% sign diversity
++: arousal, engagement, threat
+−: agency_control, inhibitory_control, self_control, valence
+panic Informational
+8 active axes, 75% sign diversity
++: arousal, engagement, threat
+−: agency_control, future_expectancy, inhibitory_control, self_control, valence
+alarm Informational
+6 active axes, 67% sign diversity
++: arousal, inhibitory_control, self_control, threat
+−: agency_control, valence
+freeze Informational
+7 active axes, 86% sign diversity
++: engagement, inhibitory_control, self_control, threat
+−: agency_control, valence
+suspicion Informational
+5 active axes, 80% sign diversity
++: engagement, threat, uncertainty
+−: affiliation, valence
+irritation Informational
+5 active axes, 80% sign diversity
++: arousal
+−: inhibitory_control, self_control, valence
+frustration Informational
+6 active axes, 67% sign diversity
++: arousal, engagement
+−: agency_control, inhibitory_control, self_control, valence
+smoldering_anger Informational
+8 active axes, 75% sign diversity
++: agency_control, engagement, inhibitory_control, self_control, threat
+−: affiliation, arousal, valence
+protest_anger Informational
+8 active axes, 75% sign diversity
++: affiliation, agency_control, arousal, engagement, threat
+−: valence
+rage Informational
+7 active axes, 86% sign diversity
++: agency_control, arousal, threat
+−: affiliation, inhibitory_control, self_control, valence
+wrath Informational
+9 active axes, 89% sign diversity
++: agency_control, arousal, engagement
+−: affiliation, inhibitory_control, self_control, valence
+resentment Informational
+10 active axes, 80% sign diversity
++: arousal, engagement, inhibitory_control, rumination, ruminative_tendency, self_control
+−: agency_control, self_evaluation, temporal_orientation, valence
+disgust Informational
+7 active axes, 86% sign diversity
++: arousal, contamination_salience, disgust_sensitivity
+−: engagement, inhibitory_control, self_control, valence
+embarrassment Informational
+8 active axes, 75% sign diversity
++: arousal, evaluation_pressure, evaluation_sensitivity, inhibitory_control, self_control
+−: self_evaluation, valence
+awkwardness Informational
+8 active axes, 100% sign diversity
++: arousal, evaluation_pressure, evaluation_sensitivity
+−: agency_control, self_control, valence
+regret Informational
+10 active axes, 100% sign diversity
++: engagement, rumination, ruminative_tendency
+−: future_expectancy, self_evaluation, temporal_orientation, valence
+humiliation Informational
+10 active axes, 80% sign diversity
++: arousal, evaluation_pressure, evaluation_sensitivity, inhibitory_control, threat
+−: affiliation, agency_control, self_evaluation, valence
+submission Informational
+6 active axes, 67% sign diversity
++: engagement, inhibitory_control, self_control, threat
+−: agency_control
+trusting_surrender Informational
+8 active axes, 75% sign diversity
++: engagement, future_expectancy, valence
+−: agency_control, inhibitory_control, self_control, threat
+jealousy Informational
+10 active axes, 80% sign diversity
++: arousal, engagement, threat, uncertainty
+−: affiliation, agency_control, inhibitory_control, self_control, self_evaluation, valence
+gratitude Informational
+6 active axes, 67% sign diversity
++: affiliation, self_control, valence
+−: threat
+empathic_distress Informational
+11 active axes, 91% sign diversity
++: affective_empathy, affiliation, arousal, engagement
+−: agency_control, future_expectancy, inhibitory_control, self_control, self_evaluation, valence
+hatred Informational
+11 active axes, 73% sign diversity
++: agency_control, arousal, engagement, threat
+−: affective_empathy, affiliation, cognitive_empathy, harm_aversion, inhibitory_control, self_control, valence
+surprise_startle Informational
+6 active axes, 100% sign diversity
++: arousal, engagement, threat
+−: agency_control, inhibitory_control, self_control
+passion Informational
+9 active axes, 67% sign diversity
++: arousal, baseline_libido, engagement, sexual_arousal, threat, valence
+−: agency_control, inhibitory_control, self_control
+sexual_sensual_pleasure Informational
+8 active axes, 75% sign diversity
++: self_evaluation, sexual_arousal, valence
+−: inhibitory_control, self_control, threat
+submissive_arousal Informational
+9 active axes, 67% sign diversity
++: arousal, baseline_libido, engagement, sexual_arousal, threat
+−: agency_control, inhibitory_control, self_control
+sexual_playfulness Informational
+9 active axes, 67% sign diversity
++: arousal, engagement, self_evaluation, sexual_arousal, valence
+−: inhibitory_control, self_control, threat
+fearful_arousal Informational
+8 active axes, 100% sign diversity
++: arousal, sexual_arousal, threat
+−: agency_control, inhibitory_control, self_control, valence
+sexual_craving Informational
+10 active axes, 80% sign diversity
++: arousal, baseline_libido, engagement, sex_excitation, sexual_arousal
+−: agency_control, inhibitory_control, self_control
+sexual_performance_anxiety Informational
+14 active axes, 71% sign diversity
++: arousal, evaluation_pressure, evaluation_sensitivity, sexual_arousal, temporal_orientation, threat, uncertainty
+−: agency_control, self_control, self_evaluation, valence
+sexual_frustration Informational
+9 active axes, 89% sign diversity
++: arousal, baseline_libido, engagement, sexual_arousal, threat
+−: agency_control, inhibitory_control, self_control, valence
+aroused_with_disgust Informational
+9 active axes, 89% sign diversity
++: arousal, contamination_salience, disgust_sensitivity, sexual_arousal
+−: inhibitory_control, self_control, self_evaluation, valence
+sexual_indifference Informational
+8 active axes, 100% sign diversity
++: inhibitory_control, self_control, sex_inhibition
+−: arousal, baseline_libido, engagement, threat
+Axis Polarity Coverage
+Identifies axes with imbalanced positive/negative weight distributions. An axis dominated by one polarity suggests missing prototype coverage for the opposite direction.
+
+13 imbalanced axes detected
+Actionable
+ruminative_tendency
+100% positive
+7 prototypes use positive, only 0 use negative
+Positive weight bias is expected for unipolar axis
+contamination_salience
+100% positive
+3 prototypes use positive, only 0 use negative
+Consider adding prototypes with negative "contamination_salience" weights
+disgust_sensitivity
+100% positive
+3 prototypes use positive, only 0 use negative
+Positive weight bias is expected for unipolar axis
+evaluation_sensitivity
+100% positive
+5 prototypes use positive, only 0 use negative
+Positive weight bias is expected for unipolar axis
+sexual_arousal
+100% positive
+17 prototypes use positive, only 0 use negative
+Positive weight bias is expected for unipolar axis
+sex_excitation
+100% positive
+3 prototypes use positive, only 0 use negative
+Positive weight bias is expected for unipolar axis
+baseline_libido
+88% positive
+15 prototypes use positive, only 2 use negative
+Positive weight bias is expected for unipolar axis
+engagement
+87% positive
+74 prototypes use positive, only 11 use negative
+Consider adding prototypes with negative "engagement" weights
+affective_empathy
+83% positive
+5 prototypes use positive, only 1 use negative
+Positive weight bias is expected for unipolar axis
+cognitive_empathy
+83% positive
+5 prototypes use positive, only 1 use negative
+Positive weight bias is expected for unipolar axis
+evaluation_pressure
+83% positive
+5 prototypes use positive, only 1 use negative
+Consider adding prototypes with negative "evaluation_pressure" weights
+rumination
+82% positive
+9 prototypes use positive, only 2 use negative
+Consider adding prototypes with negative "rumination" weights
+harm_aversion
+75% positive
+3 prototypes use positive, only 1 use negative
+Positive weight bias is expected for unipolar axis
+⚠️ Warnings
+Axis "rumination" is 82% positive: 9 prototypes use positive weights, only 2 use negative. Consider adding prototypes with negative "rumination" weights.
+Axis "engagement" is 87% positive: 74 prototypes use positive weights, only 11 use negative. Consider adding prototypes with negative "engagement" weights.
+Axis "ruminative_tendency" is 100% positive: 7 prototypes use positive weights, only 0 use negative. Consider adding prototypes with negative "ruminative_tendency" weights. (expected for unipolar axis)
+Axis "harm_aversion" is 75% positive: 3 prototypes use positive weights, only 1 use negative. Consider adding prototypes with negative "harm_aversion" weights. (expected for unipolar axis)
+Axis "affective_empathy" is 83% positive: 5 prototypes use positive weights, only 1 use negative. Consider adding prototypes with negative "affective_empathy" weights. (expected for unipolar axis)
+Axis "cognitive_empathy" is 83% positive: 5 prototypes use positive weights, only 1 use negative. Consider adding prototypes with negative "cognitive_empathy" weights. (expected for unipolar axis)
+Axis "contamination_salience" is 100% positive: 3 prototypes use positive weights, only 0 use negative. Consider adding prototypes with negative "contamination_salience" weights.
+Axis "disgust_sensitivity" is 100% positive: 3 prototypes use positive weights, only 0 use negative. Consider adding prototypes with negative "disgust_sensitivity" weights. (expected for unipolar axis)
+Axis "evaluation_sensitivity" is 100% positive: 5 prototypes use positive weights, only 0 use negative. Consider adding prototypes with negative "evaluation_sensitivity" weights. (expected for unipolar axis)
+Axis "evaluation_pressure" is 83% positive: 5 prototypes use positive weights, only 1 use negative. Consider adding prototypes with negative "evaluation_pressure" weights.
+Axis "sexual_arousal" is 100% positive: 17 prototypes use positive weights, only 0 use negative. Consider adding prototypes with negative "sexual_arousal" weights. (expected for unipolar axis)
+Axis "sex_excitation" is 100% positive: 3 prototypes use positive weights, only 0 use negative. Consider adding prototypes with negative "sex_excitation" weights. (expected for unipolar axis)
+Axis "baseline_libido" is 88% positive: 15 prototypes use positive weights, only 2 use negative. Consider adding prototypes with negative "baseline_libido" weights. (expected for unipolar axis)
+Prototype Complexity Analysis
+Analyzes the distribution of active axes across prototypes and identifies frequently co-occurring axis bundles that may suggest composite concepts.
+
+Prototypes Analyzed:
+110
+Average Axis Count:
+7.86
+Median:
+8
+Q1 / Q3:
+6 / 9
+Axis Count Distribution
+1
+3
+6
+4
+10
+5
+15
+6
+16
+7
+16
+8
+23
+9
+11
+10
+6
+11
+4
+12
+1
+13
+1
+14
+View as table
+Complexity Outliers (3)
+Prototypes with unusually high axis counts (statistical outliers).
+
+sadness
+3 axes
+moral_outrage
+13 axes
+sexual_performance_anxiety
+14 axes
+Frequently Co-occurring Axis Bundles (20)
+Axes that frequently appear together may suggest composite concepts.
+
+arousal
+valence
+Appears in 95 prototypes Suggested: A_V_composite
+self_control
+valence
+Appears in 91 prototypes Suggested: selfcontrol_V_composite
+inhibitory_control
+valence
+Appears in 84 prototypes Suggested: inhibitorycontrol_V_composite
+engagement
+valence
+Appears in 84 prototypes Suggested: engagement_V_composite
+inhibitory_control
+self_control
+Appears in 83 prototypes Suggested: inhibitorycontrol_selfcontrol_composite
+inhibitory_control
+self_control
+valence
+Appears in 82 prototypes Suggested: multi_axis_bundle_3
+arousal
+self_control
+Appears in 79 prototypes Suggested: A_selfcontrol_composite
+arousal
+self_control
+valence
+Appears in 78 prototypes Suggested: multi_axis_bundle_3
+arousal
+inhibitory_control
+Appears in 76 prototypes Suggested: A_inhibitorycontrol_composite
+agency_control
+valence
+Appears in 76 prototypes Suggested: agencycontrol_V_composite
+arousal
+inhibitory_control
+valence
+Appears in 75 prototypes Suggested: multi_axis_bundle_3
+arousal
+inhibitory_control
+self_control
+Appears in 74 prototypes Suggested: multi_axis_bundle_3
+threat
+valence
+Appears in 74 prototypes Suggested: threat_V_composite
+arousal
+inhibitory_control
+self_control
+valence
+Appears in 73 prototypes Suggested: multi_axis_bundle_4
+arousal
+engagement
+Appears in 72 prototypes Suggested: A_engagement_composite
+engagement
+self_control
+Appears in 72 prototypes Suggested: engagement_selfcontrol_composite
+arousal
+engagement
+valence
+Appears in 71 prototypes Suggested: multi_axis_bundle_3
+engagement
+self_control
+valence
+Appears in 71 prototypes Suggested: multi_axis_bundle_3
+agency_control
+arousal
+Appears in 68 prototypes Suggested: agencycontrol_A_composite
+agency_control
+arousal
+valence
+Appears in 67 prototypes Suggested: multi_axis_bundle_3
+Complexity Recommendations (10)
+consider_new_axis inhibitory_control + self_control + valence 75% of prototypes (82/110) use all these axes together
+consider_new_axis arousal + self_control + valence 71% of prototypes (78/110) use all these axes together
+consider_new_axis arousal + inhibitory_control + valence 68% of prototypes (75/110) use all these axes together
+consider_new_axis arousal + inhibitory_control + self_control 67% of prototypes (74/110) use all these axes together
+consider_new_axis arousal + inhibitory_control + self_control + valence 66% of prototypes (73/110) use all these axes together
+consider_new_axis arousal + engagement + valence 65% of prototypes (71/110) use all these axes together
+consider_new_axis engagement + self_control + valence 65% of prototypes (71/110) use all these axes together
+consider_new_axis agency_control + arousal + valence 61% of prototypes (67/110) use all these axes together
+reduce_complexity moral_outrage + sexual_performance_anxiety 2 prototype(s) have unusually high axis counts (>10 axes)
+balance_complexity sadness 1 prototype(s) have unusually low axis counts (<6 axes)
+Axis Recommendations
+medium
+INVESTIGATE
+PCA analysis suggests unexplained variance. Investigate the top-loading prototypes for potential axis candidates.
+PCA residual variance ratio: 16.8%,Additional significant components: 0,Top loading prototypes: aroused_with_shame, sexual_craving, romantic_yearning, sexual_performance_anxiety, sexual_confidence
+low
+REFINE_EXISTING
+Prototype "sexual_performance_anxiety" shows multi-axis conflict patterns that may be related to the axis gap.
+Active axes: 14,Sign balance: 0.29
+Candidate Axis Validation
+Would adding a new axis help? Tests potential axis directions against improvement metrics.
+
+No candidate axes to validate (extraction found 0 significant components, 0 coverage gaps, 0 hub candidates).
+Flagged Prototypes Analysis
+Prototypes flagged by detection methods with their dominant axis weights.
+
+aroused_with_shame
+Extreme Projection
+Top Axes by Weight
+sexual_arousal
++0.800
+self_evaluation
+-0.800
+arousal
++0.400
+valence
+-0.300
+inhibitory_control
++0.300
+Why flagged: Projection score 0.751 on unexplained component
+sexual_craving
+Extreme Projection
+Top Axes by Weight
+sexual_arousal
++1.000
+engagement
++0.650
+self_control
+-0.650
+inhibitory_control
+-0.550
+arousal
++0.350
+Why flagged: Projection score 0.666 on unexplained component
+romantic_yearning
+Extreme Projection
+Top Axes by Weight
+engagement
++0.600
+sexual_arousal
++0.550
+temporal_orientation
++0.550
+future_expectancy
++0.450
+uncertainty
++0.450
+Why flagged: Projection score 0.653 on unexplained component
+sexual_performance_anxiety
+Extreme Projection
+Top Axes by Weight
+evaluation_pressure
++0.850
+sexual_arousal
++0.750
+uncertainty
++0.650
+self_evaluation
+-0.550
+agency_control
+-0.550
+Why flagged: Projection score 0.636 on unexplained component
+sexual_confidence
+Extreme Projection
+Top Axes by Weight
+sexual_arousal
++0.850
+agency_control
++0.750
+uncertainty
+-0.700
+self_evaluation
++0.350
+inhibitory_control
++0.300
+Why flagged: Projection score 0.635 on unexplained component
+erotic_thrill
+Extreme Projection
+Top Axes by Weight
+sexual_arousal
++0.800
+arousal
++0.600
+threat
++0.500
+engagement
++0.400
+valence
++0.300
+Why flagged: Projection score 0.526 on unexplained component
+sexual_dominant_pleasure
+Extreme Projection
+Top Axes by Weight
+sexual_arousal
++0.800
+agency_control
++0.800
+arousal
++0.400
+valence
++0.300
+self_control
+-0.300
+Why flagged: Projection score 0.522 on unexplained component
+passion
+Extreme Projection
+Top Axes by Weight
+engagement
++1.000
+sexual_arousal
++0.700
+valence
++0.700
+arousal
++0.500
+self_control
+-0.500
+Why flagged: Projection score 0.486 on unexplained component
+wrath
+Extreme Projection
+Top Axes by Weight
+arousal
++1.000
+inhibitory_control
+-0.900
+valence
+-0.750
+self_control
+-0.600
+agency_control
++0.350
+Why flagged: Projection score -0.481 on unexplained component
+submissive_arousal
+Extreme Projection
+Top Axes by Weight
+sexual_arousal
++0.750
+agency_control
+-0.700
+self_control
+-0.400
+arousal
++0.300
+engagement
++0.300
+Why flagged: Projection score 0.471 on unexplained component

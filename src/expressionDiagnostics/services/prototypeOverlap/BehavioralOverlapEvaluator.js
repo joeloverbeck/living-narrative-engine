@@ -17,7 +17,6 @@ import {
 const SEXUAL_AXIS_NAMES = new Set([
   'sex_excitation',
   'sex_inhibition',
-  'sexual_inhibition',
   'baseline_libido',
 ]);
 
@@ -963,9 +962,6 @@ class BehavioralOverlapEvaluator {
     // Sexual axes (sex_excitation, sex_inhibition, baseline_libido)
     if (SEXUAL_AXIS_NAMES.has(axis)) {
       const sexualAxes = context?.sexualAxes ?? context?.sexual ?? {};
-      if (axis === 'sexual_inhibition' || axis === 'sex_inhibition') {
-        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
-      }
       return sexualAxes[axis] ?? null;
     }
 

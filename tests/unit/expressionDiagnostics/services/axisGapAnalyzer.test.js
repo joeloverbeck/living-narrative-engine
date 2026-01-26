@@ -336,7 +336,8 @@ describe('AxisGapAnalyzer', () => {
           prototypes.length,
           prototypes,
           { highAxisLoadings, signTensions, hubDiagnostics: null, polarityAnalysis: null, complexityAnalysis: null },
-          null // candidateAxisValidation is null when validation services not provided
+          null, // candidateAxisValidation is null when validation services not provided
+          null // pcaComparison is null when no sparse axes were excluded
         );
       });
     });

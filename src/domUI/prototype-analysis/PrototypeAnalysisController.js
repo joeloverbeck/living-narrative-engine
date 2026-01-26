@@ -64,6 +64,7 @@ class PrototypeAnalysisController {
   #pcaUnusedAxesList;
   #pcaUnusedInGatesList;
   #pcaMethodologyNote;
+  #pcaAnalysisScopeNote;
   #componentsFor80;
   #componentsFor90;
   #poorlyFittingList;
@@ -75,6 +76,9 @@ class PrototypeAnalysisController {
   #complexityAnalysisContainer;
   #axisRecommendationsList;
   #candidateAxisList;
+  #corroborationStatusNote;
+  #confidenceExplanation;
+  #signalConfidenceLink;
 
   // Signal breakdown elements
   #signalPca;
@@ -198,6 +202,7 @@ class PrototypeAnalysisController {
     this.#pcaUnusedAxesList = document.getElementById('pca-unused-axes-list');
     this.#pcaUnusedInGatesList = document.getElementById('pca-unused-in-gates-list');
     this.#pcaMethodologyNote = document.getElementById('pca-methodology-note');
+    this.#pcaAnalysisScopeNote = document.getElementById('pca-analysis-scope-note');
     this.#componentsFor80 = document.getElementById('components-for-80');
     this.#componentsFor90 = document.getElementById('components-for-90');
     this.#poorlyFittingList = document.getElementById('poorly-fitting-list');
@@ -213,6 +218,15 @@ class PrototypeAnalysisController {
       'axis-recommendations-list'
     );
     this.#candidateAxisList = document.getElementById('candidate-axis-list');
+    this.#corroborationStatusNote = document.getElementById(
+      'corroboration-status-note'
+    );
+    this.#confidenceExplanation = document.getElementById(
+      'confidence-explanation'
+    );
+    this.#signalConfidenceLink = document.getElementById(
+      'signal-confidence-link'
+    );
 
     // Signal breakdown elements
     this.#signalPca = document.getElementById('signal-pca');
@@ -677,6 +691,9 @@ class PrototypeAnalysisController {
       conflictList: this.#conflictList,
       signTensionList: this.#signTensionList,
       polarityAnalysisList: this.#polarityAnalysisList,
+      corroborationStatusNote: this.#corroborationStatusNote,
+      confidenceExplanation: this.#confidenceExplanation,
+      signalConfidenceLink: this.#signalConfidenceLink,
     };
 
     // Update integrity display to show validation passed (delegated to IntegrityRenderer)
@@ -685,6 +702,18 @@ class PrototypeAnalysisController {
 
     // Render summary statistics (delegated to AxisGapRenderer)
     this.#axisGapRenderer.renderSummary(axisGapAnalysis.summary, axisGapElements);
+
+    // Render corroboration status note
+    this.#axisGapRenderer.renderCorroborationStatus(
+      axisGapAnalysis.summary?.corroborationEnabled ?? false,
+      axisGapElements
+    );
+
+    // Render dynamic confidence explanation with method details
+    this.#axisGapRenderer.renderConfidenceExplanation(
+      axisGapAnalysis.summary,
+      axisGapElements
+    );
 
     // Update PCA threshold display to show OR logic (delegated)
     this.#axisGapRenderer.updatePcaThresholdDisplay(axisGapAnalysis.pcaAnalysis, axisGapElements);
@@ -783,6 +812,7 @@ class PrototypeAnalysisController {
       pcaUnusedAxesList: this.#pcaUnusedAxesList,
       pcaUnusedInGatesList: this.#pcaUnusedInGatesList,
       pcaMethodologyNote: this.#pcaMethodologyNote,
+      pcaAnalysisScopeNote: this.#pcaAnalysisScopeNote,
       componentsFor80: this.#componentsFor80,
       componentsFor90: this.#componentsFor90,
       poorlyFittingList: this.#poorlyFittingList,

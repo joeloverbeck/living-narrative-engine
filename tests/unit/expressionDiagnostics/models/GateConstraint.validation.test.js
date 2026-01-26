@@ -95,11 +95,6 @@ describe('GateConstraint Validation', () => {
         expect(constraint.getAxisType()).toBe('sexual');
       });
 
-      it('identifies sexual_inhibition as sexual', () => {
-        const constraint = GateConstraint.parse('sexual_inhibition <= 0.50');
-        expect(constraint.getAxisType()).toBe('sexual');
-      });
-
       it('identifies baseline_libido as sexual', () => {
         const constraint = GateConstraint.parse('baseline_libido >= 0.10');
         expect(constraint.getAxisType()).toBe('sexual');

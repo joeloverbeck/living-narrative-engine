@@ -4,6 +4,8 @@
  * which may indicate underutilized semantic ranges or missing prototype coverage.
  */
 
+import { getAxisCategory } from '../../../constants/prototypeAxisConstants.js';
+
 /**
  * @typedef {object} PolarityStats
  * @property {number} positive - Count of prototypes with positive weights (>0)
@@ -21,6 +23,7 @@
  * @property {number} ratio - How imbalanced (0.5-1.0, higher = more imbalanced)
  * @property {number} dominant - Count in dominant direction
  * @property {number} minority - Count in minority direction
+ * @property {boolean} expectedImbalance - True when positive bias is expected (unipolar axes)
  */
 
 /**
@@ -150,22 +153,36 @@ export class AxisPolarityAnalyzer {
       if (stats.ratio >= this.#config.imbalanceThreshold) {
         const direction = stats.dominantDirection;
         if (direction !== 'balanced') {
+          const category = getAxisCategory(axis);
+          const isUnipolar = category === 'affect_trait' || category === 'sexual';
+          const expectedImbalance = isUnipolar && direction === 'positive';
+
           imbalancedAxes.push({
             axis,
             direction,
             ratio: stats.ratio,
             dominant,
             minority,
+            expectedImbalance,
           });
 
           const pct = Math.round(stats.ratio * 100);
           const oppositeDir = direction === 'positive' ? 'negative' : 'positive';
-          warnings.push(
-            `Axis "${axis}" is ${pct}% ${direction}: ` +
-              `${dominant} prototypes use ${direction} weights, ` +
-              `only ${minority} use ${oppositeDir}. ` +
-              `Consider adding prototypes with ${oppositeDir} "${axis}" values.`
-          );
+          if (expectedImbalance) {
+            warnings.push(
+              `Axis "${axis}" is ${pct}% ${direction}: ` +
+                `${dominant} prototypes use ${direction} weights, ` +
+                `only ${minority} use ${oppositeDir}. ` +
+                `Positive weight bias is expected for this unipolar axis.`
+            );
+          } else {
+            warnings.push(
+              `Axis "${axis}" is ${pct}% ${direction}: ` +
+                `${dominant} prototypes use ${direction} weights, ` +
+                `only ${minority} use ${oppositeDir}. ` +
+                `Consider adding prototypes with ${oppositeDir} "${axis}" weights.`
+            );
+          }
         }
       }
     }

@@ -73,18 +73,9 @@ const normalizeSexualAxes = (sexualState, sexualArousal) => {
   normalized.sexual_arousal = clamp01(resolvedArousal ?? 0);
 
   if (sexualState && typeof sexualState === 'object') {
-    const inhibitionValue =
-      typeof sexualState.sex_inhibition === 'number'
-        ? sexualState.sex_inhibition
-        : typeof sexualState.sexual_inhibition === 'number'
-          ? sexualState.sexual_inhibition
-          : null;
-
-    const normalizedInhibition = normalizeAxisValue(inhibitionValue, 100);
+    const normalizedInhibition = normalizeAxisValue(sexualState.sex_inhibition, 100);
     if (typeof normalizedInhibition === 'number') {
-      const clampedInhibition = clamp01(normalizedInhibition);
-      normalized.sex_inhibition = clampedInhibition;
-      normalized.sexual_inhibition = clampedInhibition;
+      normalized.sex_inhibition = clamp01(normalizedInhibition);
     }
 
     const normalizedExcitation = normalizeAxisValue(

@@ -13,7 +13,6 @@ import { MOOD_AXES, AFFECT_TRAITS } from '../../../constants/moodAffectConstants
 const SEXUAL_AXIS_NAMES = new Set([
   'sex_excitation',
   'sex_inhibition',
-  'sexual_inhibition',
   'baseline_libido',
 ]);
 

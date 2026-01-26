@@ -45,7 +45,6 @@ describe('axisNormalizationUtils', () => {
       expect(normalized).toEqual({
         sexual_arousal: normalized.sexual_arousal,
         sex_inhibition: 0.2,
-        sexual_inhibition: 0.2,
         sex_excitation: 0.8,
         baseline_libido: 0.1,
       });

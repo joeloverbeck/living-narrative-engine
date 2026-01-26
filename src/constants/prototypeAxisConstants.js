@@ -19,7 +19,6 @@ export const SEXUAL_AXES = Object.freeze([
   'sexual_arousal',
   'sex_excitation',
   'sex_inhibition',
-  'sexual_inhibition',
   'baseline_libido',
 ]);
 
