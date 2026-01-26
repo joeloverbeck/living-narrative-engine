@@ -1,42 +1,67 @@
-# Possible errors that suggest the Monte Carlo implementation (or report generator) is wrong
+# Errors that look like reporting/logic bugs (not “Monte Carlo is wrong”)
 
-## A. Definite reporting bug: delta clauses are mislabeled as absolute clauses
+Most of your core Monte Carlo outputs look internally consistent (witnesses exist, the probability funnel multiplies out correctly, and the in-regime vs global counts line up). The stuff that looks wrong is mainly the “sanity check” math/labels.
 
-In Non-Axis Clause Feasibility, the last two rows are shown as:
+## A. The “Expected Trigger Rate Sanity Check” is objectively broken
 
-emotions.remorse >= 0.120
+It says:
 
-emotions.guilt >= 0.120
+Naive expected hits: 19,771.77
 
-But in your prerequisites those are clearly delta constraints inside OR Block #2:
+Actual hits: 66
 
-(emotions.remorse - previousEmotions.remorse) >= 0.12
+then “✅ Normal: Actual hits align with expected”
 
-(emotions.guilt - previousEmotions.guilt) >= 0.12
+That’s a contradiction. 66 is not “aligned” with ~19.8k.
 
-The pass rates shown there (~47% and ~67%) line up with the delta clause rates, so it looks like the evaluator is correct but the label renderer dropped the previous* term. That’s the kind of bug that misleads both humans and LLMs.
+Even worse: your own report prints P(0 hits | expected=19771.77) = 0, which (correctly) screams “this expectation is nonsense,” and then it still green-checks it.
 
-Fix: anywhere you stringify a clause, ensure the full expression AST is preserved (including previous* vars), not “pretty-printed” from a partially-normalized node.
+What’s happening: your “naive probability” is not actually “product of pass rates” in any interpretable way because…
 
-## B. “Impact +0.04 pp” is not credible given zero hits, unless it’s not trigger-rate impact
+## B. “Clause Pass Rate Factors” contains impossible “pass rates”
 
-Your Recommendations claim:
+You have:
 
-Impact (full sample): +0.04 pp
+OR Block (0.8) | 443.37%
 
-If that means “+0.04 percentage points to expression trigger rate,” that would imply ~40 hits per 100k. But you observed 0/100k. That’s not impossible (variance exists), but it’s wildly inconsistent with everything else in the report (and would almost certainly produce some hits).
+OR Block (1) | 1728.16%
 
-So one of these is true:
+A pass rate cannot exceed 100%. Those numbers are some kind of multiplier (and based on your own naive probability calculation, they’re being multiplied in). They’re just mislabeled as pass rates.
 
-“Impact” is actually clause-level pass-rate impact (or “modeled uplift”), not expression trigger uplift, and it’s mislabeled, or
+✅ Fix: rename these to what they are (e.g. OR_inflation_factor or OR_adjustment_multiplier) and show the actual OR union pass rate (e.g. P(OR#1 pass | mood) = 37.32%, P(OR#2 pass | mood) = 95.22%), which you already compute elsewhere.
 
-Your impact estimator is producing unanchored numbers in the zero-hit regime.
+## C. Conditioning is unclear/misleading in the sanity check
 
-Fix: split this into two fields:
+In that same table, your mood-axis clauses are shown as 100% pass rate:
 
-Diagnosis confidence (e.g., “axis sign conflict: high”)
+moodAxes.engagement >= 20 | 100%
+…but later you show the same clause as failing globally ~60%.
 
-Trigger-rate impact confidence (with automatic downgrade to “very low” when baseline hits < K, e.g., K=20)
+That can be true only if the “pass rate factors” table is conditional on mood regime already passing (or uses the regime definition itself). If so, the table must say that explicitly and then the naive expectation must multiply by P(mood-regime pass) (3.47%) at minimum.
 
+Right now it reads like an unconditional calculation and it’s not.
 
+## D. Counting/structure confusion: “AND of 14 conditions”
 
+You describe:
+
+“AND of 14 conditions”
+but then show:
+
+13 required conditions + OR block with 2 leaves = 15 leaf checks
+
+This is probably “14 top-level conjuncts, one is an OR.” That’s fine, but the phrasing confuses readers.
+
+✅ Fix: print both numbers clearly:
+
+Top-level conjuncts: 14 (includes 1 OR block)
+
+Leaf clauses evaluated: 15
+
+## E. One more subtle “looks wrong” thing: the sanity check is conceptually invalid for your system
+
+Even if you fix the OR math, any independence-based expected-hits estimate is not a sanity check for your system because emotions are derived from the same axes, so clause truth values are correlated by construction.
+
+So: mismatch between “naive expected” and “actual” is not evidence the Monte Carlo sampler is wrong. It’s evidence the “naive expected” model is wrong.
+
+✅ Fix: reframe that section as Dependence Diagnostic, not “sanity check”.

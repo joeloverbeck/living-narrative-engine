@@ -64,11 +64,6 @@
             "minimum": -1,
             "maximum": 1
           },
-          "sexual_inhibition": {
-            "type": "number",
-            "minimum": -1,
-            "maximum": 1
-          },
           "affective_empathy": {
             "type": "number",
             "minimum": -1,

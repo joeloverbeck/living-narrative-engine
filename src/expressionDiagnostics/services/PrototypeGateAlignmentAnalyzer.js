@@ -301,7 +301,6 @@ class PrototypeGateAlignmentAnalyzer {
       'sex_inhibition',
       'baseline_libido',
       'sexual_arousal',
-      'sexual_inhibition',
     ]);
 
     // Invariant #7: Sexual axes use [0,1], mood axes use [-1,1]

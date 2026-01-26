@@ -410,6 +410,111 @@ describe('AxisPolarityAnalyzer', () => {
       expect(info).toHaveProperty('ratio');
       expect(info).toHaveProperty('dominant');
       expect(info).toHaveProperty('minority');
+      expect(info).toHaveProperty('expectedImbalance');
+    });
+  });
+
+  describe('analyze - axis category awareness', () => {
+    it('should set expectedImbalance to false for bipolar mood axis', () => {
+      const prototypes = [
+        { id: 'p1', weights: { valence: 0.5 } },
+        { id: 'p2', weights: { valence: 0.8 } },
+        { id: 'p3', weights: { valence: 0.3 } },
+        { id: 'p4', weights: { valence: 0.9 } },
+      ];
+
+      const result = analyzer.analyze(prototypes);
+
+      expect(result.imbalancedAxes[0].axis).toBe('valence');
+      expect(result.imbalancedAxes[0].expectedImbalance).toBe(false);
+    });
+
+    it('should set expectedImbalance to true for positive-biased unipolar axis', () => {
+      const prototypes = [
+        { id: 'p1', weights: { affective_empathy: 0.5 } },
+        { id: 'p2', weights: { affective_empathy: 0.8 } },
+        { id: 'p3', weights: { affective_empathy: 0.3 } },
+        { id: 'p4', weights: { affective_empathy: 0.9 } },
+      ];
+
+      const result = analyzer.analyze(prototypes);
+
+      expect(result.imbalancedAxes[0].axis).toBe('affective_empathy');
+      expect(result.imbalancedAxes[0].expectedImbalance).toBe(true);
+    });
+
+    it('should set expectedImbalance to false for negative-biased unipolar axis', () => {
+      const prototypes = [
+        { id: 'p1', weights: { sexual_arousal: -0.5 } },
+        { id: 'p2', weights: { sexual_arousal: -0.8 } },
+        { id: 'p3', weights: { sexual_arousal: -0.3 } },
+        { id: 'p4', weights: { sexual_arousal: -0.9 } },
+      ];
+
+      const result = analyzer.analyze(prototypes);
+
+      expect(result.imbalancedAxes[0].axis).toBe('sexual_arousal');
+      expect(result.imbalancedAxes[0].direction).toBe('negative');
+      expect(result.imbalancedAxes[0].expectedImbalance).toBe(false);
+    });
+
+    it('should use "weights" not "values" in warning messages', () => {
+      const prototypes = [
+        { id: 'p1', weights: { valence: 0.5 } },
+        { id: 'p2', weights: { valence: 0.8 } },
+        { id: 'p3', weights: { valence: 0.3 } },
+        { id: 'p4', weights: { valence: 0.9 } },
+      ];
+
+      const result = analyzer.analyze(prototypes);
+
+      expect(result.warnings[0]).toContain('weights');
+      expect(result.warnings[0]).not.toContain('values');
+    });
+
+    it('should use informational text for expected unipolar imbalance without recommendation', () => {
+      const prototypes = [
+        { id: 'p1', weights: { affective_empathy: 0.5 } },
+        { id: 'p2', weights: { affective_empathy: 0.8 } },
+        { id: 'p3', weights: { affective_empathy: 0.3 } },
+        { id: 'p4', weights: { affective_empathy: 0.9 } },
+      ];
+
+      const result = analyzer.analyze(prototypes);
+
+      expect(result.warnings[0]).toContain('expected for this unipolar axis');
+      expect(result.warnings[0]).not.toContain('Consider adding');
+    });
+
+    it('should use actionable recommendation for bipolar axis imbalance', () => {
+      const prototypes = [
+        { id: 'p1', weights: { valence: 0.5 } },
+        { id: 'p2', weights: { valence: 0.8 } },
+        { id: 'p3', weights: { valence: 0.3 } },
+        { id: 'p4', weights: { valence: 0.9 } },
+      ];
+
+      const result = analyzer.analyze(prototypes);
+
+      expect(result.warnings[0]).toContain('Consider adding');
+      expect(result.warnings[0]).not.toContain('expected');
+    });
+
+    it('should never produce a warning containing both recommendation and expected text', () => {
+      const prototypes = [
+        { id: 'p1', weights: { affective_empathy: 0.5, valence: 0.5 } },
+        { id: 'p2', weights: { affective_empathy: 0.8, valence: 0.8 } },
+        { id: 'p3', weights: { affective_empathy: 0.3, valence: 0.3 } },
+        { id: 'p4', weights: { affective_empathy: 0.9, valence: 0.9 } },
+      ];
+
+      const result = analyzer.analyze(prototypes);
+
+      for (const warning of result.warnings) {
+        const hasConsider = warning.includes('Consider adding');
+        const hasExpected = warning.includes('expected');
+        expect(hasConsider && hasExpected).toBe(false);
+      }
     });
   });
 });

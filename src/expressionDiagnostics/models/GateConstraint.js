@@ -256,7 +256,6 @@ class GateConstraint {
       'sexual_arousal',
       'sex_excitation',
       'sex_inhibition',
-      'sexual_inhibition',
       'baseline_libido',
     ]);
 

@@ -17,6 +17,10 @@
 7. [V3 vs V2 Mode Differences](#v3-vs-v2-mode-differences)
 8. [Potential Issues and Concerns](#potential-issues-and-concerns)
 9. [Configuration Reference](#configuration-reference)
+10. [PCA Analysis Methodology](#pca-analysis-methodology)
+11. [ChatGPT Suggestion Assessment (A1-A5)](#chatgpt-suggestion-assessment-a1-a5)
+12. [ChatGPT Suggestion Assessment (B1-B3)](#chatgpt-suggestion-assessment-b1-b3)
+13. [ChatGPT Confidence Scoring Assessment (D1-D2)](#chatgpt-confidence-scoring-assessment-d1-d2)
 
 ---
 
@@ -703,6 +707,107 @@ if (activationJaccard < 0.7) return { matches: false };  // Hardcoded!
 
 ---
 
+## PCA Analysis Methodology
+
+### Overview
+
+The axis gap detection system runs Principal Component Analysis (PCA) on prototype weight matrices to identify whether the current set of mood/emotion axes adequately spans the behavioral space. PCA runs **per prototype family** (selected via the UI dropdown), not across all prototypes simultaneously.
+
+### Sparse Axis Filtering
+
+Before PCA, axes with very low usage across prototypes are filtered out based on `pcaMinAxisUsageRatio` (default: 0.1). This prevents near-zero-variance columns from inflating the dimensionality without contributing meaningful signal.
+
+### Broken-Stick Null Hypothesis
+
+The system uses the **broken-stick model** to determine which PCA components are statistically significant:
+
+- **Formula**: `Expected(k) = (1/p) * SUM(j=k..p) 1/j` where `p` = number of axes
+- A component is "significant" if its explained variance exceeds the broken-stick threshold for that rank
+- `significantBeyondExpected = max(0, significantCount - K)` where K = number of existing axes
+- When `significantBeyondExpected = 0`, this means the PCA found **fewer** significant dimensions than expected — it does **not** mean PCA found nothing
+
+### Two-Pass PCA Comparison
+
+When sparse axes are excluded, the system runs a **two-pass comparison**:
+
+1. **Dense pass**: PCA on the filtered (dense) matrix — this is the primary analysis
+2. **Full pass**: PCA on the unfiltered matrix including sparse axes
+3. **Delta metrics**: `deltaSignificant`, `deltaResidualVariance`, `deltaRMSE`
+
+The comparison section ("Sparse Filtering Impact") in the UI shows whether sparse filtering materially changed PCA conclusions. A "material change" threshold is `deltaSignificant >= 1` or `|deltaResidualVariance| >= 0.02`.
+
+### Corroboration Mode
+
+When `pcaRequireCorroboration = true` (default), PCA signals **alone** cannot trigger HIGH-priority recommendations. PCA findings must be corroborated by at least one other signal type (hub detection, coverage gaps, or multi-axis conflicts) before escalating to HIGH priority.
+
+The corroboration status is displayed in the axis gap results section of the UI.
+
+### UI Scope Display
+
+Each PCA results section shows an "Analysis scope" note indicating the number of prototypes and axes included in the analysis. This clarifies that PCA runs per-family, not globally.
+
+---
+
+## ChatGPT Suggestion Assessment (A1-A5)
+
+External review by ChatGPT (January 2026) produced five suggestions for PCA improvements. Assessment and actions taken:
+
+| ID | Suggestion | Verdict | Action Taken |
+|----|-----------|---------|-------------|
+| A1 | Split PCA by family | Already implemented — `analyze()` runs per-family via UI selector | Added UI scope note showing prototype/axis counts |
+| A2 | Two-pass PCA (dense + full) | Partially valid — comparison shows sparse filtering impact | Implemented `analyzeWithComparison()` and UI rendering |
+| A3 | Leave-one-axis-in counterfactual | Over-engineered — `excludedAxisReliance` + `residualEigenvector` already surface this | Skipped |
+| A4 | Broken-stick formula display | Valid — UI showed counts without explaining the math | Added methodology note with formula explanation |
+| A5 | Residual alone shouldn't trigger INVESTIGATE | Already implemented via `pcaRequireCorroboration = true` | Added corroboration status display in UI |
+
+### Files Modified
+
+- `src/expressionDiagnostics/services/axisGap/PCAAnalysisService.js` — Added `analyzeWithComparison()` method
+- `src/expressionDiagnostics/services/axisGap/AxisGapReportSynthesizer.js` — Pass through comparison data, corroboration flag, prototype count
+- `src/expressionDiagnostics/services/AxisGapAnalyzer.js` — Orchestrate two-pass comparison when sparse axes excluded
+- `src/domUI/prototype-analysis/renderers/PCAResultsRenderer.js` — Render methodology note, scope note, sparse filtering comparison
+- `src/domUI/prototype-analysis/renderers/AxisGapRenderer.js` — Render corroboration status note
+- `src/domUI/prototype-analysis/PrototypeAnalysisController.js` — Wire new DOM elements for scope and corroboration display
+
+---
+
+## ChatGPT Suggestion Assessment (B1-B3)
+
+External review by ChatGPT (January 2026) produced three suggestions for axis polarity analysis improvements. Assessment and actions taken:
+
+| ID | Suggestion | Verdict | Action Taken |
+|----|-----------|---------|-------------|
+| B1 | Add axis metadata (polarity, symmetry, weight_sign_expectation) | Partially valid — full metadata system is over-engineered; leveraged existing `getAxisCategory()` to distinguish unipolar vs bipolar axes | Added `expectedImbalance` field to imbalanced axis entries |
+| B2 | Fix wording: says "values" when it means "weights" | Confirmed bug — both analyzer and renderer said "values" when analyzing prototype weight sign distribution | Changed "values" → "weights" in warning messages and UI hint text |
+| B3 | Reclassify polarity imbalance: not always "Actionable" | Valid improvement — positive-weight bias on unipolar axes (affect traits, sexual axes) is expected behavior | Badge now shows "Informational" when all imbalances are expected; per-axis hint explains expected bias |
+
+### B3 Follow-Up: Contradictory Warning Text Fix
+
+**Date**: 2026-01-26
+
+The B3 implementation correctly added `expectedImbalance` logic and per-axis hint branching in `AxisGapRenderer`, but the `warnings[]` array in `AxisPolarityAnalyzer` still unconditionally appended both "Consider adding prototypes with [opposite] weights" and "(expected for unipolar axis)" to the same warning string. This produced contradictory text: a recommendation to act alongside an acknowledgment that no action is needed.
+
+**Fix**: Replaced unconditional warning construction with a conditional branch:
+- **When `expectedImbalance === true`**: Informational text only — `"Positive weight bias is expected for this unipolar axis."` — no "Consider adding" recommendation.
+- **When `expectedImbalance === false`**: Actionable recommendation only — `"Consider adding prototypes with [opposite] weights."` — no "expected" suffix.
+
+**Files modified**:
+- `src/expressionDiagnostics/services/axisGap/AxisPolarityAnalyzer.js` — branched warning text on `expectedImbalance`
+- `tests/unit/expressionDiagnostics/services/axisGap/AxisPolarityAnalyzer.test.js` — updated 1 test, added 2 new tests (bipolar recommendation, no-contradiction invariant)
+
+### Key Insight
+
+ChatGPT conflated axis **value ranges** (runtime state: 0-100 for unipolar axes) with prototype **weight signs** (design-time coefficients: -1.0 to +1.0). Negative weights on unipolar axes ARE valid — they mean "this emotion anti-correlates with this axis." However, a **positive-bias** in weight signs IS expected for unipolar axes because most emotions correlate positively with traits like empathy, arousal, etc.
+
+### Files Modified
+
+- `src/expressionDiagnostics/services/axisGap/AxisPolarityAnalyzer.js` — Added `getAxisCategory` import, `expectedImbalance` field, fixed "values" → "weights"
+- `src/domUI/prototype-analysis/renderers/AxisGapRenderer.js` — Fixed "values" → "weights", conditional badge/hint logic
+- `tests/unit/expressionDiagnostics/services/axisGap/AxisPolarityAnalyzer.test.js` — Added 5 axis category awareness tests, updated field expectation
+- `tests/unit/domUI/prototype-analysis/renderers/AxisGapRenderer.test.js` — Added 3 badge/hint tests
+
+---
+
 ## Summary for Deep Research
 
 This document provides the complete technical specification of the V3 Prototype Analysis System. Key areas for bug investigation:
@@ -716,3 +821,104 @@ This document provides the complete technical specification of the V3 Prototype 
 7. **Vacuous truth handling** in gate implication
 
 Feed this to a deep research system to identify bugs, inconsistencies, or opportunities for algorithm improvements.
+
+---
+
+## ChatGPT Suggestion Assessment (C1/C2)
+
+**Date**: 2026-01-26
+
+### C1: Split "unused axis" into 3 categories — IMPLEMENTED (partial)
+
+ChatGPT suggested splitting the flat `unusedDefinedAxes` list into three categories. The confusion arose because ChatGPT did not understand that PCA analysis is per-family (e.g., `sex_excitation` appearing unused in the emotion family is correct behavior, not a bug).
+
+However, the UI improvement was valid: users could not distinguish gate-only axes from truly unused ones.
+
+**Implemented**: Partitioned `unusedDefinedAxes` into two sub-arrays:
+- `unusedDefinedUsedInGates` — axes not in weights but referenced in gate conditions (informational)
+- `unusedDefinedNotInGates` — axes not in weights AND not in gates (actionable warning)
+
+The original `unusedDefinedAxes` array is preserved for backward compatibility.
+
+**Files modified**:
+- `PCAAnalysisService.js` — partition logic after gate extraction
+- `AxisGapReportSynthesizer.js` — forwards new arrays through report pipeline
+- `PCAResultsRenderer.js` — renders two sub-groups with distinct styling; falls back to flat list when sub-arrays are absent
+
+### C2: Add `expected_usage` metadata — REJECTED
+
+Over-engineered. The metadata does not exist anywhere in the codebase, would require schema changes, validation logic, and ongoing maintenance. The C1 partition achieves the same noise reduction without new metadata.
+
+---
+
+## ChatGPT Confidence Scoring Assessment (D1-D2)
+
+**Date**: 2026-01-26
+
+External review suggested changes to the confidence scoring system. Each claim was assessed against the actual implementation.
+
+### D1: Replace count-based confidence with weighted scoring — REJECTED
+
+**Claim**: Replace `confidence = count(methods)` with `score = w_pca * pca_signal_strength + w_gaps * gap_strength + ...`
+
+**Finding**: The confidence metric intentionally measures **epistemic confidence** (how many independent detection methods agree), not signal strength. The system already has:
+- **PCA corroboration logic** (`pcaRequireCorroboration`): PCA only triggers with `additionalSignificantComponents > 0` OR high residual + other signals present
+- **Family deduplication** (`REASON_TO_FAMILY_MAP`): Prevents correlated signals (e.g., `high_reconstruction_error` and `extreme_projection` both map to `pca` family) from inflating confidence
+- **Boost mechanism**: If any prototype has 3+ distinct method families flagging it, confidence can be boosted
+
+Weighted scoring would conflate signal magnitude with epistemic reliability. No changes made.
+
+### D2: Expose component scores — IMPLEMENTED
+
+**Claim**: Users should see which methods contributed to the confidence level.
+
+**Finding**: Valid improvement. Users previously saw "Confidence: medium" with a static explanation but no connection to which specific methods triggered.
+
+**Implemented**:
+- `AxisGapReportSynthesizer.synthesize()` now returns `methodsTriggered` (array of family names) and `confidenceBoosted` (boolean) in the summary
+- `AxisGapRenderer.renderConfidenceExplanation()` renders dynamic text: which methods triggered, whether boost was applied, and the resulting confidence level
+- Signal-to-confidence linking note added below the signal grid
+- Enhanced corroboration status note explains the mechanism when ON
+- Updated confidence tooltip with boost information
+
+**Files modified**:
+- `AxisGapReportSynthesizer.js` — `#countTriggeredMethods()` returns `{ count, families }`, `#computeConfidenceLevel()` returns `{ level, baseLevel, boosted }`, `synthesize()` and `buildEmptyReport()` expose new fields
+- `prototype-analysis.html` — dynamic confidence explanation element, signal-confidence link, updated tooltip
+- `AxisGapRenderer.js` — new `renderConfidenceExplanation()` method, enhanced corroboration note
+- `PrototypeAnalysisController.js` — wires new DOM elements and calls new renderer method
+
+### D-Inv1: Count-to-confidence monotonicity — Regression test added
+
+**Claim**: Confidence must be monotonic with signal strength.
+
+**Reframed**: More triggered methods should yield same or higher confidence. Added regression test that synthesizes reports with 0, 1, 2, 3, 4 triggered methods and asserts non-decreasing confidence levels.
+
+### D-Inv2: Residual-only cap — Already implemented
+
+**Claim**: If only residual variance triggers but broken-stick says no extra components, confidence cannot exceed "low".
+
+**Finding**: Already implemented via `pcaRequireCorroboration` (default ON). Explicit invariant test added confirming that high residual alone with corroboration ON yields confidence "low" and empty `methodsTriggered`.
+
+---
+
+## ChatGPT Bug Report Assessment (E1-E2)
+
+**Date**: 2026-01-26
+
+External review by ChatGPT identified two bugs in the prototype analysis system. Both were confirmed.
+
+### E1: Dense-Axis List Concatenation (Rendering Bug) — FIXED
+
+**Claim**: `PCAResultsRenderer.#renderDimensionsList()` joins dimension `<span>` tags with `.join('')`, causing dimension names to merge when text is extracted (copy-paste, markdown export): `affiliationagency_controlarousal...`
+
+**Finding**: Confirmed. The HTML rendering looked correct (CSS padding separated the inline-block spans visually), but `textContent` extraction produced concatenated names with no separator.
+
+**Fix**: Changed `.join('')` to `.join(' ')` on `PCAResultsRenderer.js` line 282. A single space ensures readable text extraction without affecting visual HTML rendering.
+
+**Files modified**:
+- `src/domUI/prototype-analysis/renderers/PCAResultsRenderer.js` — `.join('')` → `.join(' ')`
+- `tests/unit/domUI/prototype-analysis/renderers/PCAResultsRenderer.test.js` — added text separation test
+
+### E2: Contradictory Unipolar Axis Warnings (Logic Bug) — FIXED
+
+See [B3 Follow-Up](#b3-follow-up-contradictory-warning-text-fix) above.

@@ -39,6 +39,9 @@ describe('AxisGapRenderer', () => {
       conflictList: document.createElement('ul'),
       signTensionList: document.createElement('ul'),
       polarityAnalysisList: document.createElement('ul'),
+      corroborationStatusNote: document.createElement('div'),
+      confidenceExplanation: document.createElement('p'),
+      signalConfidenceLink: document.createElement('p'),
     };
   }
 
@@ -499,6 +502,52 @@ describe('AxisGapRenderer', () => {
       expect(elements.polarityAnalysisList.innerHTML).toContain('polarity-positive');
       expect(elements.polarityAnalysisList.innerHTML).toContain('polarity-negative');
     });
+
+    it('should render Informational badge when all axes have expectedImbalance true', () => {
+      const elements = createMockElements();
+      const polarity = {
+        imbalancedCount: 2,
+        imbalancedAxes: [
+          { axis: 'empathy', direction: 'positive', ratio: 0.9, dominant: 9, minority: 1, expectedImbalance: true },
+          { axis: 'arousal', direction: 'positive', ratio: 0.85, dominant: 8, minority: 2, expectedImbalance: true },
+        ],
+      };
+
+      renderer.renderPolarityAnalysis(polarity, elements);
+
+      expect(elements.polarityAnalysisList.innerHTML).toContain('Informational');
+      expect(elements.polarityAnalysisList.innerHTML).not.toContain('Actionable');
+    });
+
+    it('should render Actionable badge when any axis has expectedImbalance false', () => {
+      const elements = createMockElements();
+      const polarity = {
+        imbalancedCount: 2,
+        imbalancedAxes: [
+          { axis: 'empathy', direction: 'positive', ratio: 0.9, dominant: 9, minority: 1, expectedImbalance: true },
+          { axis: 'valence', direction: 'positive', ratio: 0.85, dominant: 8, minority: 2, expectedImbalance: false },
+        ],
+      };
+
+      renderer.renderPolarityAnalysis(polarity, elements);
+
+      expect(elements.polarityAnalysisList.innerHTML).toContain('Actionable');
+    });
+
+    it('should use "weights" not "values" in hint text', () => {
+      const elements = createMockElements();
+      const polarity = {
+        imbalancedCount: 1,
+        imbalancedAxes: [
+          { axis: 'valence', direction: 'positive', ratio: 0.85, dominant: 8, minority: 2, expectedImbalance: false },
+        ],
+      };
+
+      renderer.renderPolarityAnalysis(polarity, elements);
+
+      expect(elements.polarityAnalysisList.innerHTML).toContain('weights');
+      expect(elements.polarityAnalysisList.innerHTML).not.toMatch(/\bvalues\b/);
+    });
   });
 
   describe('XSS prevention', () => {
@@ -624,6 +673,133 @@ describe('AxisGapRenderer', () => {
       const elements = createMockElements();
       renderer.renderHubPrototypes([{ prototypeId: 'test', hubScore: NaN }], elements);
       expect(elements.hubList.innerHTML).toContain('--');
+    });
+  });
+
+  describe('renderCorroborationStatus', () => {
+    it('should render ON status when corroboration is enabled', () => {
+      const elements = createMockElements();
+      renderer.renderCorroborationStatus(true, elements);
+      expect(elements.corroborationStatusNote.textContent).toContain(
+        'Corroboration mode: ON'
+      );
+      expect(elements.corroborationStatusNote.textContent).toContain(
+        'hub/gap/conflict corroboration'
+      );
+      const note = elements.corroborationStatusNote.querySelector('.corroboration-status-note');
+      expect(note.classList.contains('corroboration-on')).toBe(true);
+    });
+
+    it('should render OFF status when corroboration is disabled', () => {
+      const elements = createMockElements();
+      renderer.renderCorroborationStatus(false, elements);
+      expect(elements.corroborationStatusNote.textContent).toContain(
+        'Corroboration mode: OFF'
+      );
+      expect(elements.corroborationStatusNote.textContent).toContain(
+        'contribute independently'
+      );
+      const note = elements.corroborationStatusNote.querySelector('.corroboration-status-note');
+      expect(note.classList.contains('corroboration-off')).toBe(true);
+    });
+
+    it('should handle null container element gracefully', () => {
+      const elements = createMockElements();
+      elements.corroborationStatusNote = null;
+      expect(() => renderer.renderCorroborationStatus(true, elements)).not.toThrow();
+    });
+
+    it('should clear previous content before rendering', () => {
+      const elements = createMockElements();
+      elements.corroborationStatusNote.innerHTML = '<p>Old content</p>';
+      renderer.renderCorroborationStatus(true, elements);
+      expect(elements.corroborationStatusNote.innerHTML).not.toContain('Old content');
+      expect(elements.corroborationStatusNote.textContent).toContain('Corroboration mode: ON');
+    });
+  });
+
+  describe('renderConfidenceExplanation', () => {
+    it('should render non-boosted confidence with triggered method names', () => {
+      const elements = createMockElements();
+      const summary = {
+        confidence: 'medium',
+        methodsTriggered: ['pca', 'hubs'],
+        confidenceBoosted: false,
+      };
+
+      renderer.renderConfidenceExplanation(summary, elements);
+
+      expect(elements.confidenceExplanation.textContent).toContain('Confidence: Medium');
+      expect(elements.confidenceExplanation.textContent).toContain('2 methods triggered');
+      expect(elements.confidenceExplanation.textContent).toContain('PCA Analysis');
+      expect(elements.confidenceExplanation.textContent).toContain('Hub Prototypes');
+      expect(elements.confidenceExplanation.textContent).toContain('No boost applied');
+    });
+
+    it('should render boosted confidence with boost information', () => {
+      const elements = createMockElements();
+      const summary = {
+        confidence: 'high',
+        methodsTriggered: ['pca', 'hubs'],
+        confidenceBoosted: true,
+      };
+
+      renderer.renderConfidenceExplanation(summary, elements);
+
+      expect(elements.confidenceExplanation.textContent).toContain('Confidence: High');
+      expect(elements.confidenceExplanation.textContent).toContain('boosted from');
+      expect(elements.confidenceExplanation.textContent).toContain(
+        '3+ method families flagged the same prototype'
+      );
+    });
+
+    it('should render low confidence with zero methods', () => {
+      const elements = createMockElements();
+      const summary = {
+        confidence: 'low',
+        methodsTriggered: [],
+        confidenceBoosted: false,
+      };
+
+      renderer.renderConfidenceExplanation(summary, elements);
+
+      expect(elements.confidenceExplanation.textContent).toContain('Confidence: Low');
+      expect(elements.confidenceExplanation.textContent).toContain('0 methods triggered');
+      expect(elements.confidenceExplanation.textContent).toContain('No boost applied');
+    });
+
+    it('should populate signal-confidence link text', () => {
+      const elements = createMockElements();
+      const summary = {
+        confidence: 'low',
+        methodsTriggered: [],
+        confidenceBoosted: false,
+      };
+
+      renderer.renderConfidenceExplanation(summary, elements);
+
+      expect(elements.signalConfidenceLink.textContent).toContain(
+        'signal statuses above determine the confidence level'
+      );
+    });
+
+    it('should return early if summary is null', () => {
+      const elements = createMockElements();
+      renderer.renderConfidenceExplanation(null, elements);
+
+      expect(elements.confidenceExplanation.textContent).toBe('');
+    });
+
+    it('should handle null confidenceExplanation element gracefully', () => {
+      const elements = createMockElements();
+      elements.confidenceExplanation = null;
+      const summary = {
+        confidence: 'low',
+        methodsTriggered: [],
+        confidenceBoosted: false,
+      };
+
+      expect(() => renderer.renderConfidenceExplanation(summary, elements)).not.toThrow();
     });
   });
 });

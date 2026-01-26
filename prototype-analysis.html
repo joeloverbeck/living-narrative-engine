@@ -98,10 +98,10 @@
           <div class="summary-item">
             <span class="summary-label">Confidence:</span>
             <span id="axis-gap-confidence" class="summary-value confidence-badge">--</span>
-            <span class="help-text" title="Low: 0-1 detection methods triggered | Medium: 2 methods | High: 3-4 methods">(?)</span>
+            <span class="help-text" title="Confidence measures how many independent detection methods agree. Low: 0-1 methods | Medium: 2 methods | High: 3-4 methods. May be boosted if multiple methods flag the same prototype.">(?)</span>
           </div>
         </div>
-        <p class="confidence-explanation">
+        <p id="confidence-explanation" class="confidence-explanation">
           Confidence reflects how many independent detection methods agree:
           <strong>Low</strong> (0-1 methods), <strong>Medium</strong> (2 methods), <strong>High</strong> (3-4 methods).
         </p>
@@ -178,6 +178,7 @@
               for triggering INVESTIGATE recommendations.
             </p>
           </div>
+          <p id="signal-confidence-link" class="signal-confidence-link"></p>
         </div>
 
         <div class="pca-summary">

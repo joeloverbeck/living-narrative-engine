@@ -94,35 +94,43 @@ export class PCAAnalysisService {
     // Axes used in weights (axes from buildWeightMatrix) but not in any gates
     const unusedInGates = axes.filter((axis) => !gateAxes.has(axis)).sort();
 
+    // Partition unusedDefinedAxes into gate-only vs truly unused
+    const unusedDefinedUsedInGates = unusedDefinedAxes.filter((axis) =>
+      gateAxes.has(axis)
+    );
+    const unusedDefinedNotInGates = unusedDefinedAxes.filter(
+      (axis) => !gateAxes.has(axis)
+    );
+
     if (axes.length === 0 || matrix.length < 2) {
-      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates, unusedDefinedUsedInGates, unusedDefinedNotInGates);
     }
 
     const hasNonZero = matrix.some((row) =>
       row.some((value) => Math.abs(value) > 0)
     );
     if (!hasNonZero) {
-      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates, unusedDefinedUsedInGates, unusedDefinedNotInGates);
     }
 
     const normalized = this.#normalizeMatrix(matrix);
     if (!normalized.hasVariance) {
-      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates, unusedDefinedUsedInGates, unusedDefinedNotInGates);
     }
 
     const covariance = this.#computeCovariance(normalized.matrix);
     if (!covariance || covariance.length === 0) {
-      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates, unusedDefinedUsedInGates, unusedDefinedNotInGates);
     }
 
     const eigen = this.#computeEigenDecomposition(covariance);
     if (!eigen || eigen.values.length === 0) {
-      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates, unusedDefinedUsedInGates, unusedDefinedNotInGates);
     }
 
     const totalVariance = eigen.values.reduce((sum, value) => sum + value, 0);
     if (totalVariance <= 0) {
-      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates);
+      return this.#createEmptyResult(excludedSparseAxes, unusedDefinedAxes, unusedInGates, unusedDefinedUsedInGates, unusedDefinedNotInGates);
     }
 
     // Compute cumulative variance from eigenvalues (needed for variance-based K methods)
@@ -207,6 +215,8 @@ export class PCAAnalysisService {
       dimensionsUsed: axes,
       excludedSparseAxes,
       unusedDefinedAxes,
+      unusedDefinedUsedInGates,
+      unusedDefinedNotInGates,
       unusedInGates,
       cumulativeVariance,
       explainedVariance,
@@ -219,14 +229,79 @@ export class PCAAnalysisService {
   }
 
   /**
+   * Perform PCA analysis with a two-pass comparison: dense (sparse-filtered) vs full (unfiltered).
+   *
+   * Runs the standard analyze() on the sparse-filtered matrix, then a second pass with
+   * sparse filtering disabled (pcaMinAxisUsageRatio = 0) on the full matrix. Returns both
+   * results plus comparison metrics showing the impact of sparse filtering.
+   *
+   * @param {Array<{id?: string, prototypeId?: string, weights?: Record<string, number>}>} prototypes - Prototype objects.
+   * @returns {{dense: PCAResult, full: PCAResult, comparison: {deltaSignificant: number, deltaResidualVariance: number, deltaRMSE: number, filteringImpactSummary: string}}} Two-pass comparison results.
+   */
+  analyzeWithComparison(prototypes) {
+    const dense = this.analyze(prototypes);
+
+    // Run second pass with sparse filtering disabled
+    const fullConfig = { ...this.#config, pcaMinAxisUsageRatio: 0 };
+    const fullService = new PCAAnalysisService(fullConfig);
+    const full = fullService.analyze(prototypes);
+
+    // Compute comparison deltas
+    const deltaSignificant =
+      full.significantComponentCount - dense.significantComponentCount;
+    const deltaResidualVariance =
+      full.residualVarianceRatio - dense.residualVarianceRatio;
+
+    // Compute delta RMSE from reconstruction errors
+    const denseRMSE = this.#computeAverageRMSE(dense.reconstructionErrors);
+    const fullRMSE = this.#computeAverageRMSE(full.reconstructionErrors);
+    const deltaRMSE = fullRMSE - denseRMSE;
+
+    // Summarize filtering impact
+    const materialThreshold = 0.02;
+    const materialChange =
+      Math.abs(deltaResidualVariance) > materialThreshold ||
+      Math.abs(deltaSignificant) > 0;
+    const filteringImpactSummary = materialChange
+      ? 'Sparse filtering materially changed PCA conclusions.'
+      : 'Sparse filtering did not materially change PCA conclusions.';
+
+    return {
+      dense,
+      full,
+      comparison: {
+        deltaSignificant,
+        deltaResidualVariance,
+        deltaRMSE,
+        filteringImpactSummary,
+      },
+    };
+  }
+
+  /**
+   * Compute average RMSE from reconstruction errors array.
+   *
+   * @private
+   * @param {Array<{prototypeId: string, error: number}>} errors - Reconstruction errors.
+   * @returns {number} Average RMSE (0 if empty).
+   */
+  #computeAverageRMSE(errors) {
+    if (!errors || errors.length === 0) return 0;
+    const sum = errors.reduce((acc, e) => acc + e.error, 0);
+    return sum / errors.length;
+  }
+
+  /**
    * Create an empty PCA result.
    *
    * @param {string[]} [excludedSparseAxes] - Axes excluded due to sparse usage.
    * @param {string[]} [unusedDefinedAxes] - Axes defined but not used by any prototype.
    * @param {string[]} [unusedInGates] - Axes in weights but not in any gates.
+   * @param {string[]} [unusedDefinedUsedInGates] - Defined axes not in weights but referenced in gates.
+   * @param {string[]} [unusedDefinedNotInGates] - Defined axes not in weights and not in gates.
    * @returns {PCAResult} Empty result object.
    */
-  #createEmptyResult(excludedSparseAxes = [], unusedDefinedAxes = [], unusedInGates = []) {
+  #createEmptyResult(excludedSparseAxes = [], unusedDefinedAxes = [], unusedInGates = [], unusedDefinedUsedInGates = [], unusedDefinedNotInGates = []) {
     return {
       residualVarianceRatio: 0,
       additionalSignificantComponents: 0,
@@ -238,6 +313,8 @@ export class PCAAnalysisService {
       dimensionsUsed: [],
       excludedSparseAxes,
       unusedDefinedAxes,
+      unusedDefinedUsedInGates,
+      unusedDefinedNotInGates,
       unusedInGates,
       cumulativeVariance: [],
       explainedVariance: [],

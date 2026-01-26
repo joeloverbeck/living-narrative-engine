@@ -772,34 +772,6 @@ describe('EmotionCalculatorService', () => {
       expect(result.get('excited_emotion')).toBeCloseTo(0.8, 2);
     });
 
-    it('should handle sexual_inhibition axis alias in weights', () => {
-      mockDataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'lookups' && id === 'core:emotion_prototypes') {
-          return {
-            entries: {
-              inhibited_emotion: {
-                weights: { sexual_inhibition: 1.0 },
-              },
-            },
-          };
-        }
-        return null;
-      });
-
-      const freshService = new EmotionCalculatorService({
-        logger: mockLogger,
-        dataRegistry: mockDataRegistry,
-      });
-
-      const result = freshService.calculateEmotions(
-        {},
-        null,
-        { sex_inhibition: 70 }
-      );
-
-      expect(result.get('inhibited_emotion')).toBeCloseTo(0.7, 2);
-    });
-
     it('should handle sex_excitation axis in gates', () => {
       mockDataRegistry.get.mockImplementation((category, id) => {
         if (category === 'lookups' && id === 'core:emotion_prototypes') {
@@ -1561,43 +1533,6 @@ describe('EmotionCalculatorService', () => {
 
       expect(result.has('empty_weights_emotion')).toBe(true);
       expect(result.get('empty_weights_emotion')).toBe(0);
-    });
-
-    it('should handle sexual_inhibition alias in normalization', () => {
-      // Test that sexual_inhibition (without sex_ prefix) is properly validated
-      mockDataRegistry.get.mockImplementation((category, id) => {
-        if (category === 'lookups' && id === 'core:emotion_prototypes') {
-          return {
-            entries: {
-              test_emotion: {
-                weights: { sexual_inhibition: 1.0 },
-              },
-            },
-          };
-        }
-        return null;
-      });
-
-      const freshService = new EmotionCalculatorService({
-        logger: mockLogger,
-        dataRegistry: mockDataRegistry,
-      });
-
-      // Use sexual_inhibition property (without sex_ prefix)
-      const result = freshService.calculateEmotions(
-        {},
-        null,
-        { sexual_inhibition: 80 }
-      );
-
-      expect(result.has('test_emotion')).toBe(true);
-      expect(result.get('test_emotion')).toBeCloseTo(0.8, 2);
-    });
-
-    it('should throw for invalid sexual_inhibition value', () => {
-      expect(() =>
-        service.calculateEmotions({}, null, { sexual_inhibition: 0.5 })
-      ).toThrow(InvalidArgumentError);
     });
 
     it('should handle moodData with non-number values', () => {

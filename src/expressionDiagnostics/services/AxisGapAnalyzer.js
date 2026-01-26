@@ -207,6 +207,17 @@ class AxisGapAnalyzer {
       additionalComponents: pcaResult.additionalSignificantComponents,
     });
 
+    // Run two-pass comparison when sparse axes were excluded
+    let pcaComparison = null;
+    if (pcaResult.excludedSparseAxes && pcaResult.excludedSparseAxes.length > 0) {
+      const comparisonResult = this.#pcaAnalysisService.analyzeWithComparison(prototypes);
+      pcaComparison = comparisonResult.comparison;
+      this.#logger.debug('AxisGapAnalyzer: Two-pass PCA comparison complete', {
+        deltaSignificant: pcaComparison.deltaSignificant,
+        deltaResidualVariance: pcaComparison.deltaResidualVariance,
+      });
+    }
+
     // Phase 2: Hub Detection
     onProgress('hub_detection', { phase: 2, total: totalPhases });
     const hubResult = this.#hubPrototypeDetector.detect(
@@ -300,7 +311,8 @@ class AxisGapAnalyzer {
       prototypes.length,
       prototypes,
       { highAxisLoadings, signTensions, hubDiagnostics, polarityAnalysis, complexityAnalysis },
-      candidateAxisValidation
+      candidateAxisValidation,
+      pcaComparison
     );
   }
 

@@ -14,7 +14,6 @@ import { MOOD_AXES, AFFECT_TRAITS } from '../../../constants/moodAffectConstants
 const SEXUAL_AXIS_NAMES = new Set([
   'sex_excitation',
   'sex_inhibition',
-  'sexual_inhibition',
   'baseline_libido',
 ]);
 
@@ -331,7 +330,7 @@ class ContextBuilder {
     if (axis === 'baseline_libido') {
       return { min: -50, max: 50, binCount: 101 };
     }
-    if (axis === 'sex_excitation' || axis === 'sex_inhibition' || axis === 'sexual_inhibition') {
+    if (axis === 'sex_excitation' || axis === 'sex_inhibition') {
       return { min: 0, max: 100, binCount: 101 };
     }
     return null;
@@ -377,12 +376,6 @@ class ContextBuilder {
 
     if (SEXUAL_AXIS_NAMES.has(axis)) {
       const sexualAxes = context?.sexualAxes ?? context?.sexual ?? {};
-      if (axis === 'sexual_inhibition') {
-        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
-      }
-      if (axis === 'sex_inhibition') {
-        return sexualAxes.sex_inhibition ?? sexualAxes.sexual_inhibition ?? null;
-      }
       return sexualAxes[axis] ?? null;
     }
 

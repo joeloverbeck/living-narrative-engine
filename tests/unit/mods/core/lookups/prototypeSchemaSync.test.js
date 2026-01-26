@@ -162,9 +162,9 @@ describe('Prototype Schema Synchronization', () => {
     });
 
     it('should have the expected number of axes', () => {
-      // 14 mood axes + 7 affect traits + 5 sexual axes = 26 total
-      // Sexual axes: sexual_arousal, sex_excitation, sex_inhibition, sexual_inhibition, baseline_libido
-      expect(ALL_PROTOTYPE_WEIGHT_AXES).toHaveLength(26);
+      // 14 mood axes + 7 affect traits + 4 sexual axes = 25 total
+      // Sexual axes: sexual_arousal, sex_excitation, sex_inhibition, baseline_libido
+      expect(ALL_PROTOTYPE_WEIGHT_AXES).toHaveLength(25);
     });
   });
 

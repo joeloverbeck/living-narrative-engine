@@ -21,6 +21,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * @property {number} [componentsFor80Pct] - Components needed for 80% variance
  * @property {number} [componentsFor90Pct] - Components needed for 90% variance
  * @property {Array<{prototypeId: string, error: number}>} [reconstructionErrors] - Prototypes with reconstruction errors
+ * @property {number} [totalPrototypesAnalyzed] - Total prototypes included in analysis
  */
 
 /**
@@ -39,6 +40,7 @@ import { validateDependency } from '../../../utils/dependencyUtils.js';
  * @property {HTMLElement} [componentsFor90] - Element for 90% variance threshold
  * @property {HTMLElement} [poorlyFittingList] - List of poorly fitting prototypes
  * @property {HTMLElement} [pcaTopLoading] - Container for top loading prototypes
+ * @property {HTMLElement} [pcaAnalysisScopeNote] - Container for analysis scope note
  */
 
 /**
@@ -133,11 +135,18 @@ class PCAResultsRenderer {
       dimensionsUsed,
       excludedSparseAxes,
       unusedDefinedAxes,
+      unusedDefinedUsedInGates,
+      unusedDefinedNotInGates,
       unusedInGates,
       componentsFor80Pct,
       componentsFor90Pct,
       reconstructionErrors,
+      sparseFilteringComparison,
+      totalPrototypesAnalyzed,
     } = pcaAnalysis;
+
+    // Render analysis scope note at the top
+    this.#renderAnalysisScopeNote(elements, totalPrototypesAnalyzed, dimensionsUsed);
 
     // Render residual variance with warning/alert classes
     this.#renderResidualVariance(elements.residualVariance, residualVarianceRatio);
@@ -161,14 +170,23 @@ class PCAResultsRenderer {
     // Render excluded sparse axes (if any were filtered out)
     this.#renderExcludedSparseAxes(elements, excludedSparseAxes);
 
-    // Render unused but defined axes (0% usage axes)
-    this.#renderUnusedDefinedAxes(elements, unusedDefinedAxes);
+    // Render unused but defined axes (0% usage axes) with sub-categorization
+    this.#renderUnusedDefinedAxes(elements, unusedDefinedAxes, unusedDefinedUsedInGates, unusedDefinedNotInGates);
 
     // Render axes used in weights but not in any prototype gates
     this.#renderUnusedInGates(elements, unusedInGates);
 
     // Render methodology note explaining broken-stick null hypothesis testing
-    this.#renderMethodologyNote(elements, significantBeyondExpected, residualVarianceRatio);
+    this.#renderMethodologyNote(
+      elements,
+      significantBeyondExpected,
+      residualVarianceRatio,
+      significantComponentCount,
+      expectedComponentCount
+    );
+
+    // Render sparse filtering comparison (two-pass PCA)
+    this.#renderSparseFilteringComparison(elements, sparseFilteringComparison);
 
     // Render components for 80% variance
     if (elements.componentsFor80) {
@@ -261,7 +279,7 @@ class PCAResultsRenderer {
       if (Array.isArray(dimensions) && dimensions.length > 0) {
         listElement.innerHTML = dimensions
           .map((dim) => `<span class="dimension-tag">${this.#escapeHtml(dim)}</span>`)
-          .join('');
+          .join(' ');
       } else {
         listElement.innerHTML = '';
       }
@@ -336,13 +354,21 @@ class PCAResultsRenderer {
   }
 
   /**
-   * Renders unused but defined axes section.
+   * Renders unused but defined axes section with sub-categorization.
+   *
+   * When sub-arrays are available, renders two groups:
+   * - Gate-only axes (informational): defined axes used only in gates, not weights
+   * - Truly unused axes (warning): defined axes not in weights or gates
+   *
+   * Falls back to flat rendering when sub-arrays are absent (backward compatibility).
    *
    * @private
    * @param {PCADomElements} elements - DOM elements
-   * @param {string[]|undefined} unusedDefinedAxes - Unused axes
+   * @param {string[]|undefined} unusedDefinedAxes - All unused defined axes
+   * @param {string[]|undefined} unusedDefinedUsedInGates - Axes used only in gates
+   * @param {string[]|undefined} unusedDefinedNotInGates - Axes not in weights or gates
    */
-  #renderUnusedDefinedAxes(elements, unusedDefinedAxes) {
+  #renderUnusedDefinedAxes(elements, unusedDefinedAxes, unusedDefinedUsedInGates, unusedDefinedNotInGates) {
     // Try to find the container, or create it dynamically near excluded axes
     let container = elements.pcaUnusedAxesList;
 
@@ -374,7 +400,96 @@ class PCAResultsRenderer {
     const header = document.createElement('h5');
     header.className = 'unused-axes-header';
     header.textContent = `Unused but Defined Axes (${unusedDefinedAxes.length})`;
+    container.appendChild(header);
 
+    // Use sub-categorized rendering when sub-arrays are available
+    const hasSubArrays =
+      Array.isArray(unusedDefinedUsedInGates) && Array.isArray(unusedDefinedNotInGates);
+
+    if (hasSubArrays) {
+      this.#renderUnusedDefinedSubGroups(container, unusedDefinedUsedInGates, unusedDefinedNotInGates);
+    } else {
+      // Fallback: flat rendering for backward compatibility
+      this.#renderUnusedDefinedFlatList(container, unusedDefinedAxes);
+    }
+  }
+
+  /**
+   * Renders the two sub-groups for unused defined axes.
+   *
+   * @private
+   * @param {HTMLElement} container - Parent container
+   * @param {string[]} gateOnlyAxes - Axes used only in gates
+   * @param {string[]} trulyUnusedAxes - Axes not in weights or gates
+   */
+  #renderUnusedDefinedSubGroups(container, gateOnlyAxes, trulyUnusedAxes) {
+    if (gateOnlyAxes.length > 0) {
+      const gateSection = document.createElement('div');
+      gateSection.className = 'unused-axes-subgroup gate-only';
+
+      const gateHeader = document.createElement('h6');
+      gateHeader.className = 'unused-axes-subgroup-header';
+      gateHeader.textContent = `Defined Axes Used Only in Gates (${gateOnlyAxes.length})`;
+
+      const gateHelp = document.createElement('p');
+      gateHelp.className = 'pca-subtitle unused-axes-help';
+      gateHelp.textContent =
+        'These axes appear in gate conditions but not in any prototype weights. ' +
+        'This is normal — they serve as gate-only filters and do not need weight entries.';
+
+      const gateTags = document.createElement('div');
+      gateTags.className = 'unused-axes-tags';
+      gateOnlyAxes.forEach((axis) => {
+        const tag = document.createElement('span');
+        tag.className = 'dimension-tag gate-only';
+        tag.textContent = this.#escapeHtml(axis);
+        gateTags.appendChild(tag);
+      });
+
+      gateSection.appendChild(gateHeader);
+      gateSection.appendChild(gateHelp);
+      gateSection.appendChild(gateTags);
+      container.appendChild(gateSection);
+    }
+
+    if (trulyUnusedAxes.length > 0) {
+      const unusedSection = document.createElement('div');
+      unusedSection.className = 'unused-axes-subgroup truly-unused';
+
+      const unusedHeader = document.createElement('h6');
+      unusedHeader.className = 'unused-axes-subgroup-header';
+      unusedHeader.textContent = `Truly Unused Defined Axes (${trulyUnusedAxes.length})`;
+
+      const unusedHelp = document.createElement('p');
+      unusedHelp.className = 'pca-subtitle unused-axes-help';
+      unusedHelp.textContent =
+        'These axes are defined in the registry but appear in neither prototype weights nor gate conditions. ' +
+        'Consider adding prototypes that use them, or remove them from the registry if unneeded.';
+
+      const unusedTags = document.createElement('div');
+      unusedTags.className = 'unused-axes-tags';
+      trulyUnusedAxes.forEach((axis) => {
+        const tag = document.createElement('span');
+        tag.className = 'dimension-tag unused';
+        tag.textContent = this.#escapeHtml(axis);
+        unusedTags.appendChild(tag);
+      });
+
+      unusedSection.appendChild(unusedHeader);
+      unusedSection.appendChild(unusedHelp);
+      unusedSection.appendChild(unusedTags);
+      container.appendChild(unusedSection);
+    }
+  }
+
+  /**
+   * Renders a flat list of unused defined axes (backward-compatible fallback).
+   *
+   * @private
+   * @param {HTMLElement} container - Parent container
+   * @param {string[]} unusedDefinedAxes - All unused defined axes
+   */
+  #renderUnusedDefinedFlatList(container, unusedDefinedAxes) {
     const helpText = document.createElement('p');
     helpText.className = 'pca-subtitle unused-axes-help';
     helpText.textContent =
@@ -391,7 +506,6 @@ class PCAResultsRenderer {
       tagContainer.appendChild(tag);
     });
 
-    container.appendChild(header);
     container.appendChild(helpText);
     container.appendChild(tagContainer);
   }
@@ -463,8 +577,16 @@ class PCAResultsRenderer {
    * @param {PCADomElements} elements - DOM elements
    * @param {number|undefined} significantBeyondExpected - Beyond expected count
    * @param {number|undefined} residualVarianceRatio - Variance ratio
+   * @param {number|undefined} significantComponentCount - Significant component count
+   * @param {number|undefined} expectedComponentCount - Expected component count (K)
    */
-  #renderMethodologyNote(elements, significantBeyondExpected, residualVarianceRatio) {
+  #renderMethodologyNote(
+    elements,
+    significantBeyondExpected,
+    residualVarianceRatio,
+    significantComponentCount,
+    expectedComponentCount
+  ) {
     // Try to find the container, or create it dynamically
     let container = elements.pcaMethodologyNote;
 
@@ -486,8 +608,12 @@ class PCAResultsRenderer {
     const beyondValue = significantBeyondExpected ?? 0;
     const residual = residualVarianceRatio ?? 0;
     const highResidual = residual >= 0.15;
+    const sigCount = significantComponentCount ?? undefined;
+    const expCount = expectedComponentCount ?? undefined;
 
-    // Only show note when it's contextually useful
+    // Always show formula explanation when we have component counts
+    const hasComponentData = sigCount !== undefined && expCount !== undefined;
+
     if (beyondValue === 0 && highResidual) {
       // Special case: high residual but no extra components - explain why
       const note = document.createElement('div');
@@ -512,11 +638,141 @@ class PCAResultsRenderer {
         in the current weight space.
       `;
       container.appendChild(note);
+    }
+
+    // Add formula explanation when component data is available
+    if (hasComponentData) {
+      const formulaNote = document.createElement('div');
+      formulaNote.className = 'methodology-formula';
+      const clampedExplanation =
+        sigCount < expCount
+          ? ` Since ${sigCount} &lt; ${expCount}, the clamped result is 0—this means fewer ` +
+            'PCA-significant dimensions were found than expected, not that PCA found nothing.'
+          : '';
+      formulaNote.innerHTML = `
+        <strong>Formula:</strong> The broken-stick model tests whether each eigenvalue exceeds
+        random expectation. Expected(k) = (1/p) &times; &Sigma;(j=k..p) 1/j, where p is the
+        number of axes. "Beyond expected" = max(0, significant &minus; K) =
+        max(0, ${sigCount} &minus; ${expCount}) = ${beyondValue}.${clampedExplanation}
+      `;
+      container.appendChild(formulaNote);
+    }
+
+    // Show or hide based on whether any content was added
+    if (container.children.length === 0) {
+      container.style.display = 'none';
     } else {
-      // No special case - hide the container
+      container.style.display = 'block';
+    }
+  }
+
+  /**
+   * Renders the analysis scope note showing prototype and axis counts.
+   *
+   * @private
+   * @param {PCADomElements} elements - DOM elements
+   * @param {number|undefined} totalPrototypes - Total prototypes analyzed
+   * @param {string[]|undefined} dimensionsUsed - Axis names used in PCA
+   */
+  #renderAnalysisScopeNote(elements, totalPrototypes, dimensionsUsed) {
+    const container = elements.pcaAnalysisScopeNote;
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const protoCount = typeof totalPrototypes === 'number' ? totalPrototypes : 0;
+    const axisCount = Array.isArray(dimensionsUsed) ? dimensionsUsed.length : 0;
+
+    if (protoCount === 0 && axisCount === 0) {
+      container.hidden = true;
+      return;
+    }
+
+    container.hidden = false;
+
+    const note = document.createElement('div');
+    note.className = 'analysis-scope-note';
+    note.textContent = `Analysis scope: ${protoCount} prototype${protoCount !== 1 ? 's' : ''}, ${axisCount} ${axisCount !== 1 ? 'axes' : 'axis'}`;
+    container.appendChild(note);
+  }
+
+  /**
+   * Renders sparse filtering impact comparison (two-pass PCA).
+   *
+   * @private
+   * @param {PCADomElements} elements - DOM elements
+   * @param {object|undefined} comparison - Sparse filtering comparison data
+   */
+  #renderSparseFilteringComparison(elements, comparison) {
+    let container = elements.pcaSparseFilteringComparison;
+
+    if (!container && elements.pcaMethodologyNote) {
+      // Create container dynamically after methodology note
+      container = document.createElement('div');
+      container.id = 'pca-sparse-filtering-comparison';
+      container.className = 'sparse-filtering-comparison';
+      elements.pcaMethodologyNote.parentNode?.insertBefore(
+        container,
+        elements.pcaMethodologyNote.nextSibling
+      );
+      elements.pcaSparseFilteringComparison = container;
+    }
+
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!comparison) {
       container.style.display = 'none';
       return;
     }
+
+    const {
+      deltaSignificant,
+      deltaResidualVariance,
+      deltaRMSE,
+      filteringImpactSummary,
+    } = comparison;
+
+    const header = document.createElement('h4');
+    header.className = 'comparison-header';
+    header.textContent = 'Sparse Filtering Impact';
+    container.appendChild(header);
+
+    const subtitle = document.createElement('p');
+    subtitle.className = 'comparison-subtitle';
+    subtitle.textContent = 'Comparison of dense (sparse-filtered) vs full (unfiltered) PCA';
+    container.appendChild(subtitle);
+
+    const metrics = document.createElement('div');
+    metrics.className = 'comparison-metrics';
+
+    const deltaResidualPct = (deltaResidualVariance * 100).toFixed(1);
+    const deltaRMSEFormatted = deltaRMSE.toFixed(3);
+    const signPrefix = (v) => (v > 0 ? '+' : '');
+
+    metrics.innerHTML = `
+      <div class="comparison-metric">
+        <span class="metric-label">Significant components (full − dense):</span>
+        <span class="metric-value">${signPrefix(deltaSignificant)}${deltaSignificant}</span>
+      </div>
+      <div class="comparison-metric">
+        <span class="metric-label">Residual variance (full − dense):</span>
+        <span class="metric-value">${signPrefix(deltaResidualVariance)}${deltaResidualPct}%</span>
+      </div>
+      <div class="comparison-metric">
+        <span class="metric-label">RMSE (full − dense):</span>
+        <span class="metric-value">${signPrefix(deltaRMSE)}${deltaRMSEFormatted}</span>
+      </div>
+    `;
+    container.appendChild(metrics);
+
+    const summary = document.createElement('p');
+    const isMaterial =
+      filteringImpactSummary.includes('materially changed');
+    summary.className = `comparison-summary ${isMaterial ? 'material-change' : 'no-change'}`;
+    summary.textContent = filteringImpactSummary;
+    container.appendChild(summary);
 
     container.style.display = 'block';
   }
