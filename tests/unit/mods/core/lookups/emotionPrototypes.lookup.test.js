@@ -62,7 +62,6 @@ describe('core:emotion_prototypes lookup', () => {
         'terror',
         'dread',
         'hypervigilance',
-        'alarm',
       ],
       'Anger Family': [
         'irritation',

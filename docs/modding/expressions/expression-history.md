@@ -11,13 +11,13 @@ The Living Narrative Engine has undergone significant changes to its mood axes, 
 | Metric | Count |
 |--------|-------|
 | **Total unique expressions** | 161 |
-| **Currently active** | 5 |
+| **Currently active** | 6 |
 | **Historical (removed)** | 156 |
 | **Unique emotion mods** | 71 |
 
 ## Currently Active Expressions
 
-These 5 expressions are currently present in the codebase:
+These 6 expressions are currently present in the codebase:
 
 | Expression | Mod | Last Updated |
 |------------|-----|--------------|
@@ -26,6 +26,7 @@ These 5 expressions are currently present in the codebase:
 | `comforted_vulnerability` | emotions-affection-care | 2026-01-25 |
 | `flow_absorption` | emotions-absorption | 2026-01-25 |
 | `post_loss_settling` | emotions-acceptance | 2026-01-25 |
+| `alarm_jolt` | emotions-threat | 2026-01-26 |
 
 ## Complete Expression Registry
 
@@ -416,51 +417,6 @@ Below is a categorization of all expressions by their general emotional domain, 
 
 ### Regulation
 - `purposeful_grounding`
-
-## Expressions That Migrated Between Mods
-
-Some expressions existed in multiple mods during refactoring. This table shows which expressions moved between mods (the table above shows the latest mod only):
-
-| Expression | Previous Mod(s) | Latest Mod |
-|------------|-----------------|------------|
-| `comforted_vulnerability` | emotions-affiliation | emotions-affection-care |
-| `compassionate_concern` | emotions-affiliation | emotions-affection-care |
-| `steady_sympathy` | emotions-affiliation | emotions-affection-care |
-| `warm_affection` | emotions-affiliation | emotions-affection-care |
-| `flow_absorption` | emotions-attention | emotions-absorption |
-| `entranced_stillness` | emotions-attention | emotions-absorption |
-| `camaraderie_click` | emotions-affiliation | emotions-bonding-synchrony |
-| `shared_laughter_bond` | emotions-affiliation | emotions-bonding-synchrony |
-| `vicarious_pride_warm_glow` | emotions-affiliation | emotions-bonding-synchrony |
-| `cold_fury` | emotions-anger | emotions-anger-fury-rage |
-| `explosive_anger` | emotions-anger | emotions-anger-fury-rage |
-| `rage_surge` | emotions-anger | emotions-anger-fury-rage |
-| `suppressed_rage` | emotions-anger | emotions-anger-fury-rage |
-| `frustration_spiral` | emotions-anger | emotions-anger-irritation |
-| `mild_irritation` | emotions-anger | emotions-anger-irritation |
-| `hurt_anger` | emotions-anger | emotions-anger-principled-protective |
-| `protective_anger` | emotions-anger | emotions-anger-principled-protective |
-| `righteous_indignation` | emotions-anger | emotions-anger-principled-protective |
-| `curious_lean_in` | emotions-attention | emotions-curiosity-attention |
-| `fascinated_lock_on` | emotions-attention | emotions-curiosity-attention |
-| `interested_attention` | emotions-attention | emotions-curiosity-attention |
-| `bored_disinterest` | emotions-attention | emotions-disengagement |
-| `assertive_boundary_no` | emotions-agency | emotions-assertiveness-boundaries |
-| `confident_composure` | emotions-agency | emotions-assertiveness-boundaries |
-| `choice_paralysis_hesitation` | emotions-agency | emotions-executive-control |
-| `determined_focus` | emotions-agency | emotions-executive-control |
-| `earned_satisfaction_settle` | emotions-agency | emotions-competence-pride |
-| `quiet_pride` | emotions-agency | emotions-competence-pride |
-| `triumphant_release` | emotions-agency | emotions-competence-pride |
-| `victory_afterglow_glow` | emotions-agency | emotions-competence-pride |
-| `lonely_isolation` | emotions-affiliation | emotions-loneliness-connection |
-| `lonely_reach_out` | emotions-affiliation | emotions-loneliness-connection |
-| `lonely_yearning_reach` | emotions-affiliation | emotions-loneliness-connection |
-| `awkward_indebted_gratitude` | emotions-affiliation | emotions-gratitude |
-| `quiet_gratitude` | emotions-affiliation | emotions-gratitude |
-| `tearful_gratitude` | emotions-affiliation | emotions-gratitude |
-| Various sexual expressions | emotions-sexuality | emotions-sexual-* (specialized) |
-| Various trust expressions | emotions-trust-distrust | emotions-trust-repair, emotions-distrust-vigilance |
 
 ## Notes for Future Restoration
 
