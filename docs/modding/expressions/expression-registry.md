@@ -18,7 +18,7 @@ When prerequisites for multiple expressions are satisfied simultaneously, the ex
 |-------|-------|----------|
 | 68-69 | 1 | Moderate emotional states |
 | 70-72 | 3 | Active emotional responses |
-| 76 | 1 | Elevated engagement states |
+| 76-78 | 2 | Elevated engagement states |
 
 **Total: 5 expressions across 5 mods**
 
@@ -73,6 +73,16 @@ Deep love, attachment bonds, reverent affection, and tender devotion.
 | 72 | `emotions-love-attachment:adoring_tenderness` | A soft, reverent warmth—attention settles into quiet appreciation, protective fondness, and the feeling that simply being near is enough. |
 
 **Category**: affection
+
+### emotions-threat (1 expression)
+
+Expressions for threat and alarm-related circumstances.
+
+| Priority | ID | Description |
+|----------|----|----|
+| 78 | `emotions-threat:alarm_jolt` | Alarm jolt—an acute startle + threat appraisal spike. Attention snaps to the source; the body surges into readiness before the mind fully catches up. |
+
+**Category**: threat
 
 ## Expression Categories
 

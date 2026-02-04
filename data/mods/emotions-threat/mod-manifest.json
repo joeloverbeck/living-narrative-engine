@@ -1,0 +1,14 @@
+{
+    "id": "emotions-threat",
+    "version": "1.0.0",
+    "name": "Emotions - Threat",
+    "description": "Expressions for threat and alarm-related circumstances.",
+    "author": "Living Narrative Engine",
+    "gameVersion": ">=0.0.1",
+    "dependencies": [],
+    "content": {
+        "expressions": [
+            "alarm_jolt.expression.json"
+        ]
+    }
+}

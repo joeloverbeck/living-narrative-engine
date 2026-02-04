@@ -1,0 +1,220 @@
+{
+    "$schema": "schema://living-narrative-engine/expression.schema.json",
+    "id": "emotions-threat:alarm_jolt",
+    "description": "Alarm jolt—an acute startle + threat appraisal spike. Attention snaps to the source; the body surges into readiness before the mind fully catches up.",
+    "category": "threat",
+    "priority": 78,
+    "prerequisites": [
+        {
+            "logic": {
+                "and": [
+                    {
+                        ">=": [
+                            {
+                                "var": "emotions.surprise_startle"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "or": [
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    0.28
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.stress_acute"
+                                    },
+                                    0.37
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.panic"
+                            },
+                            0.45
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.terror"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.freeze"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.dissociation"
+                            },
+                            0.55
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.numbness"
+                            },
+                            0.7
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.rage"
+                            },
+                            0.65
+                        ]
+                    },
+                    {
+                        "<=": [
+                            {
+                                "var": "emotions.wrath"
+                            },
+                            0.65
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires an acute startle signal plus a threat response (fear or stress_acute). Suppresses activation if the state has already escalated into panic/terror/freeze, collapsed into dissociation/numbness, or is dominated by intense anger."
+        },
+        {
+            "logic": {
+                "or": [
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.surprise_startle"
+                                    },
+                                    0.35
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.surprise_startle"
+                                    },
+                                    0.35
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.surprise_startle"
+                                    },
+                                    {
+                                        "var": "previousEmotions.surprise_startle"
+                                    }
+                                ]
+                            },
+                            0.12
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.fear"
+                                    },
+                                    0.28
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    0.28
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.fear"
+                                    },
+                                    {
+                                        "var": "previousEmotions.fear"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    },
+                    {
+                        "and": [
+                            {
+                                "<": [
+                                    {
+                                        "var": "previousEmotions.stress_acute"
+                                    },
+                                    0.32
+                                ]
+                            },
+                            {
+                                ">=": [
+                                    {
+                                        "var": "emotions.stress_acute"
+                                    },
+                                    0.32
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ">=": [
+                            {
+                                "-": [
+                                    {
+                                        "var": "emotions.stress_acute"
+                                    },
+                                    {
+                                        "var": "previousEmotions.stress_acute"
+                                    }
+                                ]
+                            },
+                            0.1
+                        ]
+                    }
+                ]
+            },
+            "failure_message": "Requires a detectable onset/spike (crossing thresholds or a meaningful rise) so the alarm jolt doesn't repeatedly fire during a steady elevated threat state."
+        }
+    ],
+    "actor_description": "Something slams into my nervous system—instant, electric. Every neuron fires at once. My head whips toward it before I know I've moved, pulse spiking hard in my throat, flooding my limbs with readiness. I'm not thinking. I'm locked—body coiled, senses thrumming, everything narrowed to that one point. Whatever this is, I'm already bracing for it.",
+    "description_text": "{actor} jolts hard—head snapping toward the source, eyes going wide and fixed. Their entire frame tightens in an instant: shoulders rising, muscles coiling, weight shifting to the balls of their feet. Breath catches sharp and high, then comes quick and shallow. Every line of their body radiates taut readiness, attention laser-focused as if everything else just disappeared.",
+    "alternate_descriptions": {
+        "auditory": "A sharp gasp cuts the air—sudden, involuntary—then nothing. Complete silence, like someone is holding every muscle still to hear better, straining after the threat with their whole body.",
+        "tactile": "Someone goes rigid beside me—muscles locking up, body suddenly thrumming with tension. Their weight shifts forward onto their toes, coiled tight. I can feel the readiness radiating off them: one wrong move and they'll explode into motion."
+    },
+    "diagnosticStatus": "normal",
+    "triggerRate": 0.0177
+}

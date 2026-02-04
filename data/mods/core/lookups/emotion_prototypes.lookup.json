@@ -983,17 +983,20 @@
     },
     "hypervigilance": {
       "weights": {
-        "threat": 0.9,
-        "arousal": 0.8,
-        "engagement": 0.5,
-        "valence": -0.3,
-        "inhibitory_control": 0.2,
-        "self_control": 0.2,
-        "uncertainty": 0.4
+        "threat": 0.75,
+        "uncertainty": 0.80,
+        "engagement": 0.90,
+        "arousal": 0.55,
+        "valence": -0.25,
+        "agency_control": -0.15,
+        "inhibitory_control": 0.10,
+        "self_control": 0.10
       },
       "gates": [
-        "threat >= 0.30",
-        "arousal >= 0.20"
+        "threat >= 0.20",
+        "uncertainty >= 0.20",
+        "engagement >= 0.15",
+        "arousal >= 0.05"
       ]
     },
     "courage": {
@@ -1008,20 +1011,6 @@
       "gates": [
         "threat >= 0.30",
         "agency_control >= 0.5"
-      ]
-    },
-    "alarm": {
-      "weights": {
-        "threat": 0.8,
-        "arousal": 0.9,
-        "agency_control": -0.4,
-        "valence": -0.4,
-        "inhibitory_control": 0.2,
-        "self_control": 0.2
-      },
-      "gates": [
-        "threat >= 0.30",
-        "arousal >= 0.20"
       ]
     },
     "freeze": {
